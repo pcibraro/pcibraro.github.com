@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: webapi | Pablo Cibraro (Cibrax)]]></title>
+  <link href="http://pcibraro.github.io/blog/categories/webapi/atom.xml" rel="self"/>
+  <link href="http://pcibraro.github.io/"/>
+  <updated>2013-09-27T14:02:55-03:00</updated>
+  <id>http://pcibraro.github.io/</id>
+  <author>
+    <name><![CDATA[Cibrax]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Unit Testing Improvements in ASP.NET Web API]]></title>
+    <link href="http://pcibraro.github.io/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/"/>
+    <updated>2013-09-27T12:46:00-03:00</updated>
+    <id>http://pcibraro.github.io/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api</id>
+    <content type="html"><![CDATA[<p>A time ago I discussed some serious issues in ASP.NET Web API for testing controllers that were using the Request or UrlHelper instances as those relying on a HttpConfiguration instance correctly setup. You could initialize the HttpConfiguration instace, but that required a lot of work and some ugly code as part of your tests.</p>
+
+<p>The following method in a controller works to describe the problem,</p>
+
+<p><code>csharp
+public HttpResponseMessage Post(User model)
+{
+  var response = Request.CreateResponse(HttpStatusCode.Created, user);
+  var link = Url.Link("DefaultApi", new { id = id, controller = "Users" });
+  response.Headers.Location = new Uri(link);
+  return response;
+}
+</code></p>
+
+<p>The Request propery is being used to generate a content negotiated response, and the Url property to infer the new location for the resource. If you use ASP.NET Web API as it is today, you will have to write a lot of custom code to initialize the configuration instance as it is shown below.</p>
+
+<p>```csharp
+var controller = new UserController();
+controller.Configuration = new HttpConfiguration();
+var route = controller.Configuration.Routes.MapHttpRoute(</p>
+
+<pre><code>     name: "DefaultApi",
+     routeTemplate: "api/{controller}/{id}",
+     defaults: new { id = RouteParameter.Optional }
+</code></pre>
+
+<p>);
+var routeData = new HttpRouteData(route,</p>
+
+<pre><code>   new HttpRouteValueDictionary 
+   { 
+      { "id", "1" },
+      { "controller", "Users" } 
+   }
+</code></pre>
+
+<p>);
+controller.Request = new HttpRequestMessage(HttpMethod.Post, &ldquo;<a href="http://localhost:9091/">http://localhost:9091/</a>&rdquo;);
+controller.Request.Properties.Add(HttpPropertyKeys.HttpConfigurationKey, controller.Configuration);
+controller.Request.Properties.Add(HttpPropertyKeys.HttpRouteDataKey, routeData);
+```</p>
+
+<p>Glenn Block wrote a very nice extension as part of the Web API Contrib project for making this configuration much more simpler. This extension is available here, <a href="https://github.com/WebApiContrib/WebAPIContrib/blob/master/src/WebApiContrib.Testing/ApiControllerExtensions.cs.">https://github.com/WebApiContrib/WebAPIContrib/blob/master/src/WebApiContrib.Testing/ApiControllerExtensions.cs.</a></p>
+
+<p>However, we can left all this in the past with the new ASP.NET Web API vNext release. The introduction of the IHttpActionResult interface (Equivalent to ActionResult in ASP.NET MVC) has simplified a lot the unit testing story for controllers. A controller method can return now an implementation of IHttpActionResult, which internally uses the Request or the UrlHelper for link generation, so the unit test only cares about the returned IHttpActionResult instance.</p>
+
+<p>The following code shows the same controller method using an instance of IHttpActionResult.</p>
+
+<p>```csharp
+public CreatedAtRouteNegotiatedContentResult<UserModel> Post(UserModel user)
+{
+  user.Id = 1;</p>
+
+<p>  var result = new CreatedAtRouteNegotiatedContentResult<UserModel>(&ldquo;DefaultApi&rdquo;,</p>
+
+<pre><code>new Dictionary&lt;string, object&gt; { { "id", user.Id } },
+user,
+this);
+</code></pre>
+
+<p>  return result;
+}
+```</p>
+
+<p>CreatedAtRouteNegotiatedContentResult is an implementation also included in the framework for handling this scenario. A new resource is created and the location is set in the response message.</p>
+
+<p>The code for the unit test is much simpler too.</p>
+
+<p>```csharp
+[TestMethod]
+public void ShouldCreateUser()
+{</p>
+
+<pre><code>var controller = new UserController();
+var result = controller.Post(new UserModel { Name = "foo" });
+
+Assert.IsInstanceOfType(result.Content, typeof(UserModel));
+Assert.IsNotNull(result);
+</code></pre>
+
+<p>}
+```</p>
+
+<p>The UrlHelper class has also been modified to make most of its methods virtual, so they can be mocked or overriden as part of an unit test. You can use this in case you still need to rely on the Url instance in the controller. For example, if you have a controller method like this one.</p>
+
+<p>```csharp
+public HttpResponseMessage Post(UserModel user)
+{
+  user.Id = 1;</p>
+
+<p>  var response = new HttpResponseMessage(HttpStatusCode.Created);
+  var link = Url.Link(&ldquo;DefaultApi&rdquo;, new { id = user.Id, controller = &ldquo;User&rdquo; });</p>
+
+<p>  response.Headers.Location = new Uri(link);</p>
+
+<p>  return response;
+}
+```</p>
+
+<p>You can create a custom class that derives from UrlHelper and overrides the Link method.</p>
+
+<p>```csharp
+[TestMethod]
+public void ShouldCreateUser()
+{
+  var controller = new UserController();
+  controller.Url = new MyUrlHelper();</p>
+
+<p>  var result = controller.Post(new UserModel { Name = &ldquo;foo&rdquo; });</p>
+
+<p>  Assert.IsNotNull(result);
+}</p>
+
+<p>public class MyUrlHelper : UrlHelper
+{
+  public override string Link(string routeName, object routeValues)
+  {</p>
+
+<pre><code>return "http://example.com/user/1";
+</code></pre>
+
+<p>  }
+}
+```</p>
+]]></content>
+  </entry>
+  
+</feed>
