@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Pablo Cibraro (Cibrax)]]></title>
-  <link href="http://pcibraro.github.io/atom.xml" rel="self"/>
-  <link href="http://pcibraro.github.io/"/>
-  <updated>2013-09-30T10:30:46-03:00</updated>
-  <id>http://pcibraro.github.io/</id>
+  <link href="http://cibrax.me/atom.xml" rel="self"/>
+  <link href="http://cibrax.me/"/>
+  <updated>2013-09-30T10:55:45-03:00</updated>
+  <id>http://cibrax.me/</id>
   <author>
     <name><![CDATA[Cibrax]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Unit Testing Improvements in ASP.NET Web API]]></title>
-    <link href="http://pcibraro.github.io/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/"/>
+    <link href="http://cibrax.me/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/"/>
     <updated>2013-09-27T12:46:00-03:00</updated>
-    <id>http://pcibraro.github.io/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api</id>
+    <id>http://cibrax.me/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api</id>
     <content type="html"><![CDATA[<p>A time ago I discussed some serious issues in ASP.NET Web API for testing controllers that were using the Request or UrlHelper instances because those required a valid HttpConfiguration instance. You could initialize the HttpConfiguration instace, but that required a lot of work and some ugly code as part of your tests.</p>
 
 <p>The following method in a controller works to describe the problem,</p>
@@ -58,6 +58,9 @@
 <span class='line-number'>15</span>
 <span class='line-number'>16</span>
 <span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
 </pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="kt">var</span> <span class="n">controller</span> <span class="p">=</span> <span class="k">new</span> <span class="n">UserController</span><span class="p">();</span>
 </span><span class='line'><span class="n">controller</span><span class="p">.</span><span class="n">Configuration</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpConfiguration</span><span class="p">();</span>
 </span><span class='line'><span class="kt">var</span> <span class="n">route</span> <span class="p">=</span> <span class="n">controller</span><span class="p">.</span><span class="n">Configuration</span><span class="p">.</span><span class="n">Routes</span><span class="p">.</span><span class="n">MapHttpRoute</span><span class="p">(</span>
@@ -72,9 +75,12 @@
 </span><span class='line'>          <span class="p">{</span> <span class="s">&quot;controller&quot;</span><span class="p">,</span> <span class="s">&quot;Users&quot;</span> <span class="p">}</span>
 </span><span class='line'>       <span class="p">}</span>
 </span><span class='line'><span class="p">);</span>
-</span><span class='line'><span class="n">controller</span><span class="p">.</span><span class="n">Request</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpRequestMessage</span><span class="p">(</span><span class="n">HttpMethod</span><span class="p">.</span><span class="n">Post</span><span class="p">,</span> <span class="s">&quot;http://localhost:9091/&quot;</span><span class="p">);</span>
-</span><span class='line'><span class="n">controller</span><span class="p">.</span><span class="n">Request</span><span class="p">.</span><span class="n">Properties</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">HttpPropertyKeys</span><span class="p">.</span><span class="n">HttpConfigurationKey</span><span class="p">,</span> <span class="n">controller</span><span class="p">.</span><span class="n">Configuration</span><span class="p">);</span>
-</span><span class='line'><span class="n">controller</span><span class="p">.</span><span class="n">Request</span><span class="p">.</span><span class="n">Properties</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">HttpPropertyKeys</span><span class="p">.</span><span class="n">HttpRouteDataKey</span><span class="p">,</span> <span class="n">routeData</span><span class="p">);</span>
+</span><span class='line'><span class="n">controller</span><span class="p">.</span><span class="n">Request</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpRequestMessage</span><span class="p">(</span><span class="n">HttpMethod</span><span class="p">.</span><span class="n">Post</span><span class="p">,</span>
+</span><span class='line'>  <span class="s">&quot;http://localhost:9091/&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="n">controller</span><span class="p">.</span><span class="n">Request</span><span class="p">.</span><span class="n">Properties</span>
+</span><span class='line'>  <span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">HttpPropertyKeys</span><span class="p">.</span><span class="n">HttpConfigurationKey</span><span class="p">,</span> <span class="n">controller</span><span class="p">.</span><span class="n">Configuration</span><span class="p">);</span>
+</span><span class='line'><span class="n">controller</span><span class="p">.</span><span class="n">Request</span><span class="p">.</span><span class="n">Properties</span>
+</span><span class='line'>  <span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">HttpPropertyKeys</span><span class="p">.</span><span class="n">HttpRouteDataKey</span><span class="p">,</span> <span class="n">routeData</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
@@ -95,14 +101,16 @@
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
+<span class='line-number'>12</span>
 </pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="n">CreatedAtRouteNegotiatedContentResult</span><span class="p">&lt;</span><span class="n">UserModel</span><span class="p">&gt;</span> <span class="n">Post</span><span class="p">(</span><span class="n">UserModel</span> <span class="n">user</span><span class="p">)</span>
 </span><span class='line'><span class="p">{</span>
 </span><span class='line'>  <span class="n">user</span><span class="p">.</span><span class="n">Id</span> <span class="p">=</span> <span class="m">1</span><span class="p">;</span>
 </span><span class='line'>
-</span><span class='line'>  <span class="kt">var</span> <span class="n">result</span> <span class="p">=</span> <span class="k">new</span> <span class="n">CreatedAtRouteNegotiatedContentResult</span><span class="p">&lt;</span><span class="n">UserModel</span><span class="p">&gt;(</span><span class="s">&quot;DefaultApi&quot;</span><span class="p">,</span>
-</span><span class='line'>  <span class="k">new</span> <span class="n">Dictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">object</span><span class="p">&gt;</span> <span class="p">{</span> <span class="p">{</span> <span class="s">&quot;id&quot;</span><span class="p">,</span> <span class="n">user</span><span class="p">.</span><span class="n">Id</span> <span class="p">}</span> <span class="p">},</span>
-</span><span class='line'>    <span class="n">user</span><span class="p">,</span>
-</span><span class='line'>    <span class="k">this</span><span class="p">);</span>
+</span><span class='line'>  <span class="kt">var</span> <span class="n">result</span> <span class="p">=</span> <span class="k">new</span> <span class="n">CreatedAtRouteNegotiatedContentResult</span><span class="p">&lt;</span><span class="n">UserModel</span><span class="p">&gt;(</span>
+</span><span class='line'>    <span class="s">&quot;DefaultApi&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="k">new</span> <span class="n">Dictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">object</span><span class="p">&gt;</span> <span class="p">{</span> <span class="p">{</span> <span class="s">&quot;id&quot;</span><span class="p">,</span> <span class="n">user</span><span class="p">.</span><span class="n">Id</span> <span class="p">}</span> <span class="p">},</span>
+</span><span class='line'>      <span class="n">user</span><span class="p">,</span>
+</span><span class='line'>      <span class="k">this</span><span class="p">);</span>
 </span><span class='line'>
 </span><span class='line'>  <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
 </span><span class='line'><span class="p">}</span>
@@ -147,12 +155,14 @@
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
+<span class='line-number'>12</span>
 </pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="n">HttpResponseMessage</span> <span class="nf">Post</span><span class="p">(</span><span class="n">UserModel</span> <span class="n">user</span><span class="p">)</span>
 </span><span class='line'><span class="p">{</span>
 </span><span class='line'>  <span class="n">user</span><span class="p">.</span><span class="n">Id</span> <span class="p">=</span> <span class="m">1</span><span class="p">;</span>
 </span><span class='line'>
 </span><span class='line'>  <span class="kt">var</span> <span class="n">response</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpResponseMessage</span><span class="p">(</span><span class="n">HttpStatusCode</span><span class="p">.</span><span class="n">Created</span><span class="p">);</span>
-</span><span class='line'>  <span class="kt">var</span> <span class="n">link</span> <span class="p">=</span> <span class="n">Url</span><span class="p">.</span><span class="n">Link</span><span class="p">(</span><span class="s">&quot;DefaultApi&quot;</span><span class="p">,</span> <span class="k">new</span> <span class="p">{</span> <span class="n">id</span> <span class="p">=</span> <span class="n">user</span><span class="p">.</span><span class="n">Id</span><span class="p">,</span> <span class="n">controller</span> <span class="p">=</span> <span class="s">&quot;User&quot;</span> <span class="p">});</span>
+</span><span class='line'>  <span class="kt">var</span> <span class="n">link</span> <span class="p">=</span> <span class="n">Url</span><span class="p">.</span><span class="n">Link</span><span class="p">(</span><span class="s">&quot;DefaultApi&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="k">new</span> <span class="p">{</span> <span class="n">id</span> <span class="p">=</span> <span class="n">user</span><span class="p">.</span><span class="n">Id</span><span class="p">,</span> <span class="n">controller</span> <span class="p">=</span> <span class="s">&quot;User&quot;</span> <span class="p">});</span>
 </span><span class='line'>
 </span><span class='line'>  <span class="n">response</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">Location</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Uri</span><span class="p">(</span><span class="n">link</span><span class="p">);</span>
 </span><span class='line'>
@@ -181,13 +191,15 @@
 <span class='line-number'>16</span>
 <span class='line-number'>17</span>
 <span class='line-number'>18</span>
+<span class='line-number'>19</span>
 </pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="na">[TestMethod]</span>
 </span><span class='line'><span class="k">public</span> <span class="k">void</span> <span class="nf">ShouldCreateUser</span><span class="p">()</span>
 </span><span class='line'><span class="p">{</span>
 </span><span class='line'>  <span class="kt">var</span> <span class="n">controller</span> <span class="p">=</span> <span class="k">new</span> <span class="n">UserController</span><span class="p">();</span>
 </span><span class='line'>  <span class="n">controller</span><span class="p">.</span><span class="n">Url</span> <span class="p">=</span> <span class="k">new</span> <span class="n">MyUrlHelper</span><span class="p">();</span>
 </span><span class='line'>
-</span><span class='line'>  <span class="kt">var</span> <span class="n">result</span> <span class="p">=</span> <span class="n">controller</span><span class="p">.</span><span class="n">Post</span><span class="p">(</span><span class="k">new</span> <span class="n">UserModel</span> <span class="p">{</span> <span class="n">Name</span> <span class="p">=</span> <span class="s">&quot;foo&quot;</span> <span class="p">});</span>
+</span><span class='line'>  <span class="kt">var</span> <span class="n">result</span> <span class="p">=</span> <span class="n">controller</span><span class="p">.</span><span class="n">Post</span><span class="p">(</span>
+</span><span class='line'>    <span class="k">new</span> <span class="n">UserModel</span> <span class="p">{</span> <span class="n">Name</span> <span class="p">=</span> <span class="s">&quot;foo&quot;</span> <span class="p">});</span>
 </span><span class='line'>
 </span><span class='line'>  <span class="n">Assert</span><span class="p">.</span><span class="n">IsNotNull</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
 </span><span class='line'><span class="p">}</span>

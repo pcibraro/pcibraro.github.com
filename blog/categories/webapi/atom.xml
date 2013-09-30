@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: webapi | Pablo Cibraro (Cibrax)]]></title>
-  <link href="http://pcibraro.github.io/blog/categories/webapi/atom.xml" rel="self"/>
-  <link href="http://pcibraro.github.io/"/>
-  <updated>2013-09-30T10:30:46-03:00</updated>
-  <id>http://pcibraro.github.io/</id>
+  <link href="http://cibrax.me/blog/categories/webapi/atom.xml" rel="self"/>
+  <link href="http://cibrax.me/"/>
+  <updated>2013-09-30T10:55:45-03:00</updated>
+  <id>http://cibrax.me/</id>
   <author>
     <name><![CDATA[Cibrax]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Unit Testing Improvements in ASP.NET Web API]]></title>
-    <link href="http://pcibraro.github.io/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/"/>
+    <link href="http://cibrax.me/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/"/>
     <updated>2013-09-27T12:46:00-03:00</updated>
-    <id>http://pcibraro.github.io/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api</id>
+    <id>http://cibrax.me/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api</id>
     <content type="html"><![CDATA[<p>A time ago I discussed some serious issues in ASP.NET Web API for testing controllers that were using the Request or UrlHelper instances because those required a valid HttpConfiguration instance. You could initialize the HttpConfiguration instace, but that required a lot of work and some ugly code as part of your tests.</p>
 
 <p>The following method in a controller works to describe the problem,</p>
@@ -55,9 +55,12 @@ var routeData = new HttpRouteData(route,</p>
 </code></pre>
 
 <p>);
-controller.Request = new HttpRequestMessage(HttpMethod.Post, &ldquo;<a href="http://localhost:9091/">http://localhost:9091/</a>&rdquo;);
-controller.Request.Properties.Add(HttpPropertyKeys.HttpConfigurationKey, controller.Configuration);
-controller.Request.Properties.Add(HttpPropertyKeys.HttpRouteDataKey, routeData);
+controller.Request = new HttpRequestMessage(HttpMethod.Post,
+  &ldquo;<a href="http://localhost:9091/">http://localhost:9091/</a>&rdquo;);
+controller.Request.Properties
+  .Add(HttpPropertyKeys.HttpConfigurationKey, controller.Configuration);
+controller.Request.Properties
+  .Add(HttpPropertyKeys.HttpRouteDataKey, routeData);
 ```</p>
 
 <p>Glenn Block wrote a very nice extension as part of the Web API Contrib project for making this configuration much more simpler. This extension is available here, <a href="https://github.com/WebApiContrib/WebAPIContrib/blob/master/src/WebApiContrib.Testing/ApiControllerExtensions.cs.">https://github.com/WebApiContrib/WebAPIContrib/blob/master/src/WebApiContrib.Testing/ApiControllerExtensions.cs.</a></p>
@@ -71,11 +74,12 @@ public CreatedAtRouteNegotiatedContentResult<UserModel> Post(UserModel user)
 {
   user.Id = 1;</p>
 
-<p>  var result = new CreatedAtRouteNegotiatedContentResult<UserModel>(&ldquo;DefaultApi&rdquo;,</p>
+<p>  var result = new CreatedAtRouteNegotiatedContentResult<UserModel>(</p>
 
-<pre><code>new Dictionary&lt;string, object&gt; { { "id", user.Id } },
-user,
-this);
+<pre><code>"DefaultApi",
+  new Dictionary&lt;string, object&gt; { { "id", user.Id } },
+  user,
+  this);
 </code></pre>
 
 <p>  return result;
@@ -109,7 +113,10 @@ public HttpResponseMessage Post(UserModel user)
   user.Id = 1;</p>
 
 <p>  var response = new HttpResponseMessage(HttpStatusCode.Created);
-  var link = Url.Link(&ldquo;DefaultApi&rdquo;, new { id = user.Id, controller = &ldquo;User&rdquo; });</p>
+  var link = Url.Link(&ldquo;DefaultApi&rdquo;,</p>
+
+<pre><code>new { id = user.Id, controller = "User" });
+</code></pre>
 
 <p>  response.Headers.Location = new Uri(link);</p>
 
@@ -126,7 +133,10 @@ public void ShouldCreateUser()
   var controller = new UserController();
   controller.Url = new MyUrlHelper();</p>
 
-<p>  var result = controller.Post(new UserModel { Name = &ldquo;foo&rdquo; });</p>
+<p>  var result = controller.Post(</p>
+
+<pre><code>new UserModel { Name = "foo" });
+</code></pre>
 
 <p>  Assert.IsNotNull(result);
 }</p>

@@ -2,24 +2,24 @@
 <urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>
     <url>
         <loc>
-            http://pcibraro.github.io/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/
+            http://cibrax.me/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/
         </loc>
-        <lastmod>2013-09-30T10:30:37-03:00</lastmod>
+        <lastmod>2013-09-30T10:33:49-03:00</lastmod>
     </url>
     <url>
-        <loc>http://pcibraro.github.io/about/</loc>
+        <loc>http://cibrax.me/about/</loc>
         <lastmod>2013-09-27T12:11:22-03:00</lastmod>
     </url>
     <url>
-        <loc>http://pcibraro.github.io/blog/archives/</loc>
-        <lastmod>2013-09-30T10:30:37-03:00</lastmod>
+        <loc>http://cibrax.me/blog/archives/</loc>
+        <lastmod>2013-09-30T10:33:49-03:00</lastmod>
     </url>
     <url>
-        <loc>http://pcibraro.github.io/</loc>
-        <lastmod>2013-09-30T10:30:37-03:00</lastmod>
+        <loc>http://cibrax.me/</loc>
+        <lastmod>2013-09-30T10:33:49-03:00</lastmod>
     </url>
     <url>
-        <loc>http://pcibraro.github.io/robots.txt</loc>
+        <loc>http://cibrax.me/robots.txt</loc>
         <lastmod>2013-09-27T11:11:41-03:00</lastmod>
     </url>
 </urlset>
