@@ -4,7 +4,7 @@
   <title><![CDATA[Pablo Cibraro (Cibrax)]]></title>
   <link href="http://pcibraro.github.io/atom.xml" rel="self"/>
   <link href="http://pcibraro.github.io/"/>
-  <updated>2013-09-27T14:02:55-03:00</updated>
+  <updated>2013-09-30T10:30:46-03:00</updated>
   <id>http://pcibraro.github.io/</id>
   <author>
     <name><![CDATA[Cibrax]]></name>
@@ -18,7 +18,7 @@
     <link href="http://pcibraro.github.io/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/"/>
     <updated>2013-09-27T12:46:00-03:00</updated>
     <id>http://pcibraro.github.io/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api</id>
-    <content type="html"><![CDATA[<p>A time ago I discussed some serious issues in ASP.NET Web API for testing controllers that were using the Request or UrlHelper instances as those relying on a HttpConfiguration instance correctly setup. You could initialize the HttpConfiguration instace, but that required a lot of work and some ugly code as part of your tests.</p>
+    <content type="html"><![CDATA[<p>A time ago I discussed some serious issues in ASP.NET Web API for testing controllers that were using the Request or UrlHelper instances because those required a valid HttpConfiguration instance. You could initialize the HttpConfiguration instace, but that required a lot of work and some ugly code as part of your tests.</p>
 
 <p>The following method in a controller works to describe the problem,</p>
 
