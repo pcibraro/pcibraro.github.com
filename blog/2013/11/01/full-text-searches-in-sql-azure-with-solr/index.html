@@ -5,7 +5,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Pablo Cibraro (Cibrax)</title>
+  <title>Full-Text Searches in SQL Azure with Solr - Pablo Cibraro (Cibrax)</title>
   <meta name="author" content="Cibrax">
 
   
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://cibrax.me">
+  <link rel="canonical" href="http://cibrax.me/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
@@ -77,15 +77,12 @@
 </nav>
   <div id="main">
     <div id="content">
-      <div class="blog-index">
+      <div>
+<article class="hentry" role="article">
   
-  
-  
-    <article>
-      
   <header>
     
-      <h1 class="entry-title"><a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a></h1>
+      <h1 class="entry-title">Full-Text Searches in SQL Azure With Solr</h1>
     
     
       <p class="meta">
@@ -103,14 +100,14 @@
 
 <time datetime="2013-11-01T15:41:00-04:00" pubdate data-updated="true">Nov 1<span>st</span>, 2013</time>
         
-         | <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/#disqus_thread">Comments</a>
+         | <a href="#disqus_thread">Comments</a>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content"><p>Solr is a robust search platform created by the open source community on top of Apache Lucene. It&rsquo;s completelly written in java, and uses the Lucene java implementation at is core for full-text indexing and search. In addition, it exposes an http web interface for doing the full text searches and perform management tasks.
+<div class="entry-content"><p>Solr is a robust search platform created by the open source community on top of Apache Lucene. It&rsquo;s completelly written in java, and uses the Lucene java implementation at is core for full-text indexing and search. In addition, it exposes an http web interface for doing the full text searches and perform management tasks.
 On other hand, we have SQL Azure, which currently does not support full text searches, so these two services complement very well each other.</p>
 
 <p>As Solr is mainly a java implementation, you only have a few alternatives to run it on Windows Azure. You can deploy it as a worker role together with the java runtime machine, or you can deploy it in a VM. As any solution in the cloud, the state persisted in the worker role or VM goes away when the VMs are replaced or they go down. As Solr persists the indexes in disk, you need to make sure it is stored in a permament storage like Azure Drive or the storage service. If you decide to use a worker role, this requires some additional work to make Solr to store the indexes in Azure drive for example, which is a VHD stored in the storage service that can be mounted by the VM as a local disk. Good news is that MS Open Tech has already done this for us. They have a created a template that deployes Solr with a fail-over configuration(master-slave) in two worker roles, one role for the master node, and another role for the slave node. The slave node replicates from the master node, so in case you lost one of them, you still have the other node available. . In addition, it configures a web role with an MVC application that acts as a admin dashboard for doing basic management stuff. This solution is hosted in Github as part of this project <a href="https://github.com/MSOpenTech/Windows-Azure-Solr">Windows-Azure-Solr</a>. The Github site also provides instructions to get the solution deployed in Windows Azure.</p>
@@ -198,22 +195,16 @@ Secondly, we have defined a document, which specifies one or more entities that 
 
 <p>So you have Solr indexing all your data now, but what happens with the security ?. This thing is open to the world. Anyone can do anything with your Solr instances as everything is public. There are some ways to secure Solr pages by changing some settings in the web server, which is Jetty by default. However, the Solr documentation recommends to put Solr behind a reverse proxy that filters the requests. There are several reverse proxy implementations for Solr in Github, but I will use a different approach for Windows Azure here. Given that the MS Open Tech template includes a web role for the MVC dashboard, and two worker roles for running the Solr master and slave instances, we can make the Solr instances available in internal endpoints only and use the MVC application as a facade or reverse proxy to forward all the requests to these instances. The only public and visible face will be the MVC application in the web role. All the requests for Solr must go through this MVC application first, which can filter any request that looks malicious or any request that can damage the existing indexes. A simple way to do this is to allow only get operations and filter the rest. This is the approach I&rsquo;ve been taken and implemented as part of a fork created from the MS OpenTech project in Github. This fork is available <a href="https://github.com/pcibraro/Windows-Azure-Solr">here</a>.</p>
 </div>
-  
-  
 
 
-    </article>
-  
-  
-    <article>
+  <footer>
+    <p class="meta">
       
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a></h1>
-    
-    
-      <p class="meta">
-        
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
 
 
 
@@ -225,225 +216,44 @@ Secondly, we have defined a document, which specifies one or more entities that 
   
 
 
-<time datetime="2013-09-27T12:46:00-04:00" pubdate data-updated="true">Sep 27<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/#disqus_thread">Comments</a>
-        
-      </p>
+<time datetime="2013-11-01T15:41:00-04:00" pubdate data-updated="true">Nov 1<span>st</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/azure/'>azure</a>
+  
+</span>
+
+
+    </p>
     
-  </header>
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/" >Tweet</a>
+  
+  
+  
+</div>
 
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/" title="Previous Post: Unit Testing Improvements in ASP.NET Web API">&laquo; Unit Testing Improvements in ASP.NET Web API</a>
+      
+      
+    </p>
+  </footer>
+</article>
 
-  <div class="entry-content"><p>A time ago I discussed some serious issues in ASP.NET Web API for testing controllers that were using the Request or UrlHelper instances because those required a valid HttpConfiguration instance. You could initialize the HttpConfiguration instace, but that required a lot of work and some ugly code as part of your tests.</p>
-
-<p>The following method in a controller works to describe the problem,</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="n">HttpResponseMessage</span> <span class="nf">Post</span><span class="p">(</span><span class="n">User</span> <span class="n">model</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="kt">var</span> <span class="n">response</span> <span class="p">=</span> <span class="n">Request</span><span class="p">.</span><span class="n">CreateResponse</span><span class="p">(</span><span class="n">HttpStatusCode</span><span class="p">.</span><span class="n">Created</span><span class="p">,</span> <span class="n">user</span><span class="p">);</span>
-</span><span class='line'>  <span class="kt">var</span> <span class="n">link</span> <span class="p">=</span> <span class="n">Url</span><span class="p">.</span><span class="n">Link</span><span class="p">(</span><span class="s">&quot;DefaultApi&quot;</span><span class="p">,</span> <span class="k">new</span> <span class="p">{</span> <span class="n">id</span> <span class="p">=</span> <span class="n">id</span><span class="p">,</span> <span class="n">controller</span> <span class="p">=</span> <span class="s">&quot;Users&quot;</span> <span class="p">});</span>
-</span><span class='line'>  <span class="n">response</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">Location</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Uri</span><span class="p">(</span><span class="n">link</span><span class="p">);</span>
-</span><span class='line'>  <span class="k">return</span> <span class="n">response</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The Request propery is being used to generate a content negotiated response, and the Url property to infer the new location for the resource. If you use ASP.NET Web API as it is today, you will have to write a lot of custom code to initialize the configuration instance as it is shown below.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="kt">var</span> <span class="n">controller</span> <span class="p">=</span> <span class="k">new</span> <span class="n">UserController</span><span class="p">();</span>
-</span><span class='line'><span class="n">controller</span><span class="p">.</span><span class="n">Configuration</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpConfiguration</span><span class="p">();</span>
-</span><span class='line'><span class="kt">var</span> <span class="n">route</span> <span class="p">=</span> <span class="n">controller</span><span class="p">.</span><span class="n">Configuration</span><span class="p">.</span><span class="n">Routes</span><span class="p">.</span><span class="n">MapHttpRoute</span><span class="p">(</span>
-</span><span class='line'>         <span class="n">name</span><span class="p">:</span> <span class="s">&quot;DefaultApi&quot;</span><span class="p">,</span>
-</span><span class='line'>         <span class="n">routeTemplate</span><span class="p">:</span> <span class="s">&quot;api/{controller}/{id}&quot;</span><span class="p">,</span>
-</span><span class='line'>         <span class="n">defaults</span><span class="p">:</span> <span class="k">new</span> <span class="p">{</span> <span class="n">id</span> <span class="p">=</span> <span class="n">RouteParameter</span><span class="p">.</span><span class="n">Optional</span> <span class="p">}</span>
-</span><span class='line'><span class="p">);</span>
-</span><span class='line'><span class="kt">var</span> <span class="n">routeData</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpRouteData</span><span class="p">(</span><span class="n">route</span><span class="p">,</span>
-</span><span class='line'>       <span class="k">new</span> <span class="n">HttpRouteValueDictionary</span>
-</span><span class='line'>       <span class="p">{</span>
-</span><span class='line'>          <span class="p">{</span> <span class="s">&quot;id&quot;</span><span class="p">,</span> <span class="s">&quot;1&quot;</span> <span class="p">},</span>
-</span><span class='line'>          <span class="p">{</span> <span class="s">&quot;controller&quot;</span><span class="p">,</span> <span class="s">&quot;Users&quot;</span> <span class="p">}</span>
-</span><span class='line'>       <span class="p">}</span>
-</span><span class='line'><span class="p">);</span>
-</span><span class='line'><span class="n">controller</span><span class="p">.</span><span class="n">Request</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpRequestMessage</span><span class="p">(</span><span class="n">HttpMethod</span><span class="p">.</span><span class="n">Post</span><span class="p">,</span>
-</span><span class='line'>  <span class="s">&quot;http://localhost:9091/&quot;</span><span class="p">);</span>
-</span><span class='line'><span class="n">controller</span><span class="p">.</span><span class="n">Request</span><span class="p">.</span><span class="n">Properties</span>
-</span><span class='line'>  <span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">HttpPropertyKeys</span><span class="p">.</span><span class="n">HttpConfigurationKey</span><span class="p">,</span> <span class="n">controller</span><span class="p">.</span><span class="n">Configuration</span><span class="p">);</span>
-</span><span class='line'><span class="n">controller</span><span class="p">.</span><span class="n">Request</span><span class="p">.</span><span class="n">Properties</span>
-</span><span class='line'>  <span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">HttpPropertyKeys</span><span class="p">.</span><span class="n">HttpRouteDataKey</span><span class="p">,</span> <span class="n">routeData</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Glenn Block wrote a very nice extension as part of the Web API Contrib project for making this configuration much more simpler. This extension is available here, <a href="https://github.com/WebApiContrib/WebAPIContrib/blob/master/src/WebApiContrib.Testing/ApiControllerExtensions.cs.">https://github.com/WebApiContrib/WebAPIContrib/blob/master/src/WebApiContrib.Testing/ApiControllerExtensions.cs.</a></p>
-
-<p>However, we can left all this in the past with the new ASP.NET Web API vNext release. The introduction of the IHttpActionResult interface (Equivalent to ActionResult in ASP.NET MVC) has simplified a lot the unit testing story for controllers. A controller method can return now an implementation of IHttpActionResult, which internally uses the Request or the UrlHelper for link generation, so the unit test only cares about the returned IHttpActionResult instance.</p>
-
-<p>The following code shows the same controller method using an instance of IHttpActionResult.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="n">CreatedAtRouteNegotiatedContentResult</span><span class="p">&lt;</span><span class="n">UserModel</span><span class="p">&gt;</span> <span class="n">Post</span><span class="p">(</span><span class="n">UserModel</span> <span class="n">user</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="n">user</span><span class="p">.</span><span class="n">Id</span> <span class="p">=</span> <span class="m">1</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="kt">var</span> <span class="n">result</span> <span class="p">=</span> <span class="k">new</span> <span class="n">CreatedAtRouteNegotiatedContentResult</span><span class="p">&lt;</span><span class="n">UserModel</span><span class="p">&gt;(</span>
-</span><span class='line'>    <span class="s">&quot;DefaultApi&quot;</span><span class="p">,</span>
-</span><span class='line'>    <span class="k">new</span> <span class="n">Dictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">object</span><span class="p">&gt;</span> <span class="p">{</span> <span class="p">{</span> <span class="s">&quot;id&quot;</span><span class="p">,</span> <span class="n">user</span><span class="p">.</span><span class="n">Id</span> <span class="p">}</span> <span class="p">},</span>
-</span><span class='line'>      <span class="n">user</span><span class="p">,</span>
-</span><span class='line'>      <span class="k">this</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>CreatedAtRouteNegotiatedContentResult is an implementation also included in the framework for handling this scenario. A new resource is created and the location is set in the response message.</p>
-
-<p>The code for the unit test is much simpler too.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="na">[TestMethod]</span>
-</span><span class='line'><span class="k">public</span> <span class="k">void</span> <span class="nf">ShouldCreateUser</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="kt">var</span> <span class="n">controller</span> <span class="p">=</span> <span class="k">new</span> <span class="n">UserController</span><span class="p">();</span>
-</span><span class='line'>    <span class="kt">var</span> <span class="n">result</span> <span class="p">=</span> <span class="n">controller</span><span class="p">.</span><span class="n">Post</span><span class="p">(</span><span class="k">new</span> <span class="n">UserModel</span> <span class="p">{</span> <span class="n">Name</span> <span class="p">=</span> <span class="s">&quot;foo&quot;</span> <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">Assert</span><span class="p">.</span><span class="n">IsInstanceOfType</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="n">Content</span><span class="p">,</span> <span class="k">typeof</span><span class="p">(</span><span class="n">UserModel</span><span class="p">));</span>
-</span><span class='line'>    <span class="n">Assert</span><span class="p">.</span><span class="n">IsNotNull</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The UrlHelper class has also been modified to make most of its methods virtual, so they can be mocked or overriden as part of an unit test. You can use this in case you still need to rely on the Url instance in the controller. For example, if you have a controller method like this one.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="n">HttpResponseMessage</span> <span class="nf">Post</span><span class="p">(</span><span class="n">UserModel</span> <span class="n">user</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="n">user</span><span class="p">.</span><span class="n">Id</span> <span class="p">=</span> <span class="m">1</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="kt">var</span> <span class="n">response</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpResponseMessage</span><span class="p">(</span><span class="n">HttpStatusCode</span><span class="p">.</span><span class="n">Created</span><span class="p">);</span>
-</span><span class='line'>  <span class="kt">var</span> <span class="n">link</span> <span class="p">=</span> <span class="n">Url</span><span class="p">.</span><span class="n">Link</span><span class="p">(</span><span class="s">&quot;DefaultApi&quot;</span><span class="p">,</span>
-</span><span class='line'>    <span class="k">new</span> <span class="p">{</span> <span class="n">id</span> <span class="p">=</span> <span class="n">user</span><span class="p">.</span><span class="n">Id</span><span class="p">,</span> <span class="n">controller</span> <span class="p">=</span> <span class="s">&quot;User&quot;</span> <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="n">response</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">Location</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Uri</span><span class="p">(</span><span class="n">link</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">return</span> <span class="n">response</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>You can create a custom class that derives from UrlHelper and overrides the Link method.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="na">[TestMethod]</span>
-</span><span class='line'><span class="k">public</span> <span class="k">void</span> <span class="nf">ShouldCreateUser</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="kt">var</span> <span class="n">controller</span> <span class="p">=</span> <span class="k">new</span> <span class="n">UserController</span><span class="p">();</span>
-</span><span class='line'>  <span class="n">controller</span><span class="p">.</span><span class="n">Url</span> <span class="p">=</span> <span class="k">new</span> <span class="n">MyUrlHelper</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="kt">var</span> <span class="n">result</span> <span class="p">=</span> <span class="n">controller</span><span class="p">.</span><span class="n">Post</span><span class="p">(</span>
-</span><span class='line'>    <span class="k">new</span> <span class="n">UserModel</span> <span class="p">{</span> <span class="n">Name</span> <span class="p">=</span> <span class="s">&quot;foo&quot;</span> <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="n">Assert</span><span class="p">.</span><span class="n">IsNotNull</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">MyUrlHelper</span> <span class="p">:</span> <span class="n">UrlHelper</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="k">public</span> <span class="k">override</span> <span class="kt">string</span> <span class="nf">Link</span><span class="p">(</span><span class="kt">string</span> <span class="n">routeName</span><span class="p">,</span> <span class="kt">object</span> <span class="n">routeValues</span><span class="p">)</span>
-</span><span class='line'>  <span class="p">{</span>
-</span><span class='line'>    <span class="k">return</span> <span class="s">&quot;http://example.com/user/1&quot;</span><span class="p">;</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
 
 </div>
-  
-  
 
-
-    </article>
-  
-  <div class="pagination">
-    
-    <a href="/blog/archives">Blog Archives</a>
-    
-  </div>
-</div>
 <aside class="sidebar">
   
     <section>
@@ -467,7 +277,7 @@ Secondly, we have defined a document, which specifies one or more entities that 
 <section>
   <h1>GitHub Repos</h1>
   <ul id="gh_repos">
-    <li class="loading">Status updating&#8230;</li>
+    <li class="loading">Status updating...</li>
   </ul>
   
   <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
@@ -500,6 +310,7 @@ Secondly, we have defined a document, which specifies one or more entities that 
   
 </aside>
 
+
     </div>
   </div>
   <footer role="contentinfo"><p>
@@ -514,7 +325,10 @@ Secondly, we have defined a document, which specifies one or more entities that 
       var disqus_shortname = 'cibrax';
       
         
-        var disqus_script = 'count.js';
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/';
+        var disqus_url = 'http://cibrax.me/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/';
+        var disqus_script = 'embed.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

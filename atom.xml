@@ -4,7 +4,7 @@
   <title><![CDATA[Pablo Cibraro (Cibrax)]]></title>
   <link href="http://cibrax.me/atom.xml" rel="self"/>
   <link href="http://cibrax.me/"/>
-  <updated>2013-09-30T11:46:22-03:00</updated>
+  <updated>2013-11-08T22:32:45-05:00</updated>
   <id>http://cibrax.me/</id>
   <author>
     <name><![CDATA[Cibrax]]></name>
@@ -14,9 +14,107 @@
 
   
   <entry>
+    <title type="html"><![CDATA[Full-Text Searches in SQL Azure with Solr]]></title>
+    <link href="http://cibrax.me/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/"/>
+    <updated>2013-11-01T15:41:00-04:00</updated>
+    <id>http://cibrax.me/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr</id>
+    <content type="html"><![CDATA[<p>Solr is a robust search platform created by the open source community on top of Apache Lucene. It&rsquo;s completelly written in java, and uses the Lucene java implementation at is core for full-text indexing and search. In addition, it exposes an http web interface for doing the full text searches and perform management tasks.
+On other hand, we have SQL Azure, which currently does not support full text searches, so these two services complement very well each other.</p>
+
+<p>As Solr is mainly a java implementation, you only have a few alternatives to run it on Windows Azure. You can deploy it as a worker role together with the java runtime machine, or you can deploy it in a VM. As any solution in the cloud, the state persisted in the worker role or VM goes away when the VMs are replaced or they go down. As Solr persists the indexes in disk, you need to make sure it is stored in a permament storage like Azure Drive or the storage service. If you decide to use a worker role, this requires some additional work to make Solr to store the indexes in Azure drive for example, which is a VHD stored in the storage service that can be mounted by the VM as a local disk. Good news is that MS Open Tech has already done this for us. They have a created a template that deployes Solr with a fail-over configuration(master-slave) in two worker roles, one role for the master node, and another role for the slave node. The slave node replicates from the master node, so in case you lost one of them, you still have the other node available. . In addition, it configures a web role with an MVC application that acts as a admin dashboard for doing basic management stuff. This solution is hosted in Github as part of this project <a href="https://github.com/MSOpenTech/Windows-Azure-Solr">Windows-Azure-Solr</a>. The Github site also provides instructions to get the solution deployed in Windows Azure.</p>
+
+<p>The template that you download from GitHub imports data into Solr by crawling some URLs. That&rsquo;s part of the data-config.xml file that you can find in the configuration folder of the master and slave nodes (SolrMasterWorkerRole\SolrFiles\data-config.xml and SolrSlaveWorkerRole\SolrFiles\data-config.xml). Solr supports the idea of data importers, which can be used to import data from different sources such as existing web sites, files in disk or even a database.</p>
+
+<p>In this case, we will modify that data-config.xml file to use a data importer that pulls data from an existing SQL Azure instance. The following example shows how this data importer configuration looks like,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;dataConfig&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;dataSource</span> <span class="na">type=</span><span class="s">&quot;JdbcDataSource&quot;</span> <span class="na">name=</span><span class="s">&quot;ds1&quot;</span>
+</span><span class='line'>    <span class="na">driver=</span><span class="s">&quot;com.microsoft.sqlserver.jdbc.SQLServerDriver&quot;</span>
+</span><span class='line'>    <span class="na">url=</span><span class="s">&quot;jdbc:sqlserver://[your server];database=[your database];user=[your user];password=[your user];encrypt=true;hostNameInCertificate=*.database.windows.net;loginTimeout=30;&quot;</span>
+</span><span class='line'>    <span class="na">readOnly=</span><span class="s">&quot;true&quot;</span>
+</span><span class='line'>  <span class="nt">/&gt;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nt">&lt;document</span> <span class="na">name=</span><span class="s">&quot;articles&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;article&quot;</span> <span class="na">dataSource=</span><span class="s">&quot;ds1&quot;</span> <span class="na">pk=</span><span class="s">&quot;id&quot;</span>
+</span><span class='line'>  <span class="na">query =</span> <span class="s">&quot;SELECT id, title, description, tags, author, lastupdated from Articles&quot;</span>
+</span><span class='line'>  <span class="na">deltaQuery=</span><span class="s">&quot;select id FROM Articles WHERE LastUpdated &amp;gt; &#39;${dataimporter.last_index_time}&#39;&quot;</span>
+</span><span class='line'>  <span class="na">deltaImportQuery=</span><span class="s">&quot;SELECT id, title, description, tags, author, lastupdated from Articles where id = &#39;${dataimporter.delta.id}&#39;&quot;</span>
+</span><span class='line'>      <span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;field</span> <span class="na">column=</span><span class="s">&quot;id&quot;</span> <span class="na">name=</span><span class="s">&quot;id&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;field</span> <span class="na">column=</span><span class="s">&quot;title&quot;</span> <span class="na">name=</span><span class="s">&quot;title&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;field</span> <span class="na">column=</span><span class="s">&quot;description&quot;</span> <span class="na">name=</span><span class="s">&quot;description&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;field</span> <span class="na">column=</span><span class="s">&quot;tags&quot;</span> <span class="na">name=</span><span class="s">&quot;tags&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;field</span> <span class="na">column=</span><span class="s">&quot;author&quot;</span> <span class="na">name=</span><span class="s">&quot;author&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;field</span> <span class="na">column=</span><span class="s">&quot;lastupdated&quot;</span> <span class="na">name=</span><span class="s">&quot;lastupdated&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/entity&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/document&gt;</span>
+</span><span class='line'><span class="nt">&lt;/dataConfig&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>First of all, we have defined a dataSource element that points to our SQL Azure instance. This is a Jdbc data source that uses the SQL Server driver and sets the connection string in the url attribute.
+Secondly, we have defined a document, which specifies one or more entities that are mapped from the SQL Azure database with a select statement. The fields section maps the different fields in the document to the fields returned by the select statements. This document is what Solr stores in the index using Lucene. As you can see, three queries have been defined. The first one with the &ldquo;query&rdquo; attribute is used by the data importer when a full import of the complete database is done into Solr. The other two queries are used for supporting a delta or partial import scenario. These two are optional and useful only in scenarios where you have frecuent updates and a lot of data to import, which will make the full import considerably slow.</p>
+
+<p>Since this data importer uses the SQL Server driver for the Jdbc data source, you will have to download that package from the Microsoft website and copying it in the folder where Solr looks for the external libraries (SolrMasterWorkerRole\Solr\dist and SolrSlaveWorkerRole\Solr\dist).</p>
+
+<p>We have defined so far the mapping of a document against one or more tables in the database, but Solr still requires the definition of those fields, which are part of the schema. The schema definition can be found in the schema.xml file (SolrMasterWorkerRole\SolrFiles\v44\schema.xml and SolrSlaveWorkerRole\SolrFiles\v44\schema.xml). The following example shows how the schema is modified to include the fields used by the data importer.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;id&quot;</span> <span class="na">type=</span><span class="s">&quot;string&quot;</span> <span class="na">indexed=</span><span class="s">&quot;true&quot;</span> <span class="na">stored=</span><span class="s">&quot;true&quot;</span> <span class="na">required=</span><span class="s">&quot;true&quot;</span> <span class="na">multiValued=</span><span class="s">&quot;false&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'><span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;title&quot;</span> <span class="na">type=</span><span class="s">&quot;string&quot;</span> <span class="na">indexed=</span><span class="s">&quot;true&quot;</span> <span class="na">stored=</span><span class="s">&quot;true&quot;</span> <span class="na">required=</span><span class="s">&quot;true&quot;</span> <span class="na">multiValued=</span><span class="s">&quot;false&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'><span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;description&quot;</span> <span class="na">type=</span><span class="s">&quot;string&quot;</span> <span class="na">indexed=</span><span class="s">&quot;true&quot;</span> <span class="na">stored=</span><span class="s">&quot;true&quot;</span> <span class="na">required=</span><span class="s">&quot;true&quot;</span> <span class="na">multiValued=</span><span class="s">&quot;false&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'><span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;tags&quot;</span> <span class="na">type=</span><span class="s">&quot;string&quot;</span> <span class="na">indexed=</span><span class="s">&quot;true&quot;</span> <span class="na">stored=</span><span class="s">&quot;true&quot;</span> <span class="na">required=</span><span class="s">&quot;true&quot;</span> <span class="na">multiValued=</span><span class="s">&quot;false&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'><span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;author&quot;</span> <span class="na">type=</span><span class="s">&quot;string&quot;</span> <span class="na">indexed=</span><span class="s">&quot;true&quot;</span> <span class="na">stored=</span><span class="s">&quot;true&quot;</span> <span class="na">required=</span><span class="s">&quot;true&quot;</span> <span class="na">multiValued=</span><span class="s">&quot;false&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'><span class="nt">&lt;field</span> <span class="na">name=</span><span class="s">&quot;lastupdated&quot;</span> <span class="na">type=</span><span class="s">&quot;date&quot;</span> <span class="na">indexed=</span><span class="s">&quot;true&quot;</span> <span class="na">stored=</span><span class="s">&quot;true&quot;</span> <span class="na">required=</span><span class="s">&quot;true&quot;</span> <span class="na">multiValued=</span><span class="s">&quot;false&quot;</span> <span class="nt">/&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is enough to get Solr configured to pull data from SQL Azure, so we are in conditions to deploy Solr into an Windows Azure subscription also using the tool provided by MS Open Tech. If you have installed all the pre-requisites and followed the instructions in the wiki page of the Github website, the following command should be enough to perform that deployment.</p>
+
+<p>Inst4WA.exe -XmlConfigPath &ldquo;SolrInstWR_V4.4.xml&rdquo; -subscription &ldquo;[subscription name]&rdquo; -location &ldquo;[location]&rdquo; -DomainName &ldquo;[cloud service name]&rdquo;</p>
+
+<p>If you are lucky enough to get the command to work in the first instance, it will open a new browser instance when the deployment is complete, and it will also redirect you to the MVC dashboard running in the web role.</p>
+
+<p>You are in conditions now to execute a few commands to import the data into Solr. You will see the location and port where the Solr master and slave nodes are running as part of the home page in the dashboard. For doing a full import into the master role, you have to copy that location and port, and append &ldquo;/dataimport?command=full-import&rdquo;. For example, &ldquo;<a href="http://mysamplesolr.cloudapp.net:21000/solr/dataimport?command=full-import">http://mysamplesolr.cloudapp.net:21000/solr/dataimport?command=full-import</a>&rdquo;. That will start a full import that runs asynchronously, so you can use this other command to check the status of the import &ldquo;/dataimport?command=status&rdquo;. For doing a partial import, you only change the command to this one &ldquo;/dataimport?command=delta-import&rdquo;. Once the import is complete, you can do a search to verify that everything looks ok. That can be done with the following command &ldquo;/select?q=[query]&rdquo;. For example, &ldquo;<a href="http://mysamplesolr.cloudapp.net:21000/solr/select?q=azure">http://mysamplesolr.cloudapp.net:21000/solr/select?q=azure</a>&rdquo;</p>
+
+<p>So you have Solr indexing all your data now, but what happens with the security ?. This thing is open to the world. Anyone can do anything with your Solr instances as everything is public. There are some ways to secure Solr pages by changing some settings in the web server, which is Jetty by default. However, the Solr documentation recommends to put Solr behind a reverse proxy that filters the requests. There are several reverse proxy implementations for Solr in Github, but I will use a different approach for Windows Azure here. Given that the MS Open Tech template includes a web role for the MVC dashboard, and two worker roles for running the Solr master and slave instances, we can make the Solr instances available in internal endpoints only and use the MVC application as a facade or reverse proxy to forward all the requests to these instances. The only public and visible face will be the MVC application in the web role. All the requests for Solr must go through this MVC application first, which can filter any request that looks malicious or any request that can damage the existing indexes. A simple way to do this is to allow only get operations and filter the rest. This is the approach I&rsquo;ve been taken and implemented as part of a fork created from the MS OpenTech project in Github. This fork is available <a href="https://github.com/pcibraro/Windows-Azure-Solr">here</a>.</p>
+]]></content>
+    
+      <category scheme="http://cibrax.me/categories/" term="azure" />
+    
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[Unit Testing Improvements in ASP.NET Web API]]></title>
     <link href="http://cibrax.me/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/"/>
-    <updated>2013-09-27T12:46:00-03:00</updated>
+    <updated>2013-09-27T12:46:00-04:00</updated>
     <id>http://cibrax.me/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api</id>
     <content type="html"><![CDATA[<p>A time ago I discussed some serious issues in ASP.NET Web API for testing controllers that were using the Request or UrlHelper instances because those required a valid HttpConfiguration instance. You could initialize the HttpConfiguration instace, but that required a lot of work and some ugly code as part of your tests.</p>
 
