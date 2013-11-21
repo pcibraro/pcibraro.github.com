@@ -1,0 +1,352 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Injecting dynamic content in Windows Azure packages - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="The Windows Azure Tools 1.7 introduced a new feature for adding content to the Windows Azure projects called &ldquo;Role Content Folders&rdquo;. In &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Injecting Dynamic Content in Windows Azure Packages</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-11-21T10:52:00-03:00" pubdate data-updated="true">Nov 21<span>st</span>, 2013</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>The Windows Azure Tools 1.7 introduced a new feature for adding content to the Windows Azure projects called &ldquo;Role Content Folders&rdquo;. In some scenarios, you might want to add custom content such as static pages, documentation, configuration files or external binaries for example. This is useful for example if you want to deploy a solution not written in .NET such as java implementation, and you don&rsquo;t want to mix that with the .NET code in the Role project. The following image shows how the content folders are added in the Azure project.</p>
+
+<p><img src="/images/azure_content/content_folders.png" title="Content Folders" alt="Content Folders" /></p>
+
+<p>That content is included in the generated Azure package, and it is deployed in the AppRoot folder when the package is finally published in VM in the cloud.</p>
+
+<p>One of the problem with this feature is that you might want to include content with an structure that changes often or content with thousands of folders/files, which requires some tedious manual work in Visual Studio to keep that content updated in the project.</p>
+
+<p>Good news is that you can use a MSBuild task to inject that custom content automatically when the package is being generated. You have to include a custom Target &ldquo;BeforeRoleAddContent&rdquo; right after the declaration of the &ldquo;Microsoft.WindowsAzure.targets&rdquo; as it is shown bellow,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;Import</span> <span class="na">Project=</span><span class="s">&quot;$(CloudExtensionsDir)Microsoft.WindowsAzure.targets&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;Target</span> <span class="na">Name=</span><span class="s">&quot;BeforeAddRoleContent&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;ItemGroup&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;AzureRoleContent</span> <span class="na">Include=</span><span class="s">&quot;..\Solr\Solr&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;RoleName&gt;</span>SolrMasterHostWorkerRole<span class="nt">&lt;/RoleName&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;Destination&gt;</span>Solr<span class="nt">&lt;/Destination&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/AzureRoleContent&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;AzureRoleContent</span> <span class="na">Include=</span><span class="s">&quot;..\Solr\jre6&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;RoleName&gt;</span>SolrMasterHostWorkerRole<span class="nt">&lt;/RoleName&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;Destination&gt;</span>jre6<span class="nt">&lt;/Destination&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/AzureRoleContent&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;AzureRoleContent</span> <span class="na">Include=</span><span class="s">&quot;..\Solr\SolrFiles&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;RoleName&gt;</span>SolrMasterHostWorkerRole<span class="nt">&lt;/RoleName&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;Destination&gt;</span>SolrFiles<span class="nt">&lt;/Destination&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/AzureRoleContent&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;AzureRoleContent</span> <span class="na">Include=</span><span class="s">&quot;..\Solr\Solr&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;RoleName&gt;</span>SolrSlaveHostWorkerRole<span class="nt">&lt;/RoleName&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;Destination&gt;</span>Solr<span class="nt">&lt;/Destination&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/AzureRoleContent&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;AzureRoleContent</span> <span class="na">Include=</span><span class="s">&quot;..\Solr\jre6&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;RoleName&gt;</span>SolrSlaveHostWorkerRole<span class="nt">&lt;/RoleName&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;Destination&gt;</span>jre6<span class="nt">&lt;/Destination&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/AzureRoleContent&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;AzureRoleContent</span> <span class="na">Include=</span><span class="s">&quot;..\Solr\SolrFiles&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;RoleName&gt;</span>SolrSlaveHostWorkerRole<span class="nt">&lt;/RoleName&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;Destination&gt;</span>SolrFiles<span class="nt">&lt;/Destination&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/AzureRoleContent&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/ItemGroup&gt;</span>
+</span><span class='line'><span class="nt">&lt;/Target&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The example above injects several content folders in two different roles, &ldquo;SolrMasterHostWorkerRole&rdquo; and &ldquo;SolrSlaveHostWorkerRole&rdquo;. The &ldquo;Include&rdquo; attribute specifies the source folder, and the Destination folder within the AppRoot is specified in the Destination element.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-11-21T10:52:00-03:00" pubdate data-updated="true">Nov 21<span>st</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/azure/'>azure</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/" title="Previous Post: Full-Text Searches in SQL Azure with Solr">&laquo; Full-Text Searches in SQL Azure with Solr</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/';
+        var disqus_url = 'http://cibrax.me/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

@@ -9,7 +9,7 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="Solr is a robust search platform created by the open source community on top of Apache Lucene. It&rsquo;s completelly written in java, and uses the &hellip;">
+  <meta name="description" content="The Windows Azure Tools 1.7 introduced a new feature for adding content to the Windows Azure projects called &ldquo;Role Content Folders&rdquo;. In &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -85,6 +85,117 @@
       
   <header>
     
+      <h1 class="entry-title"><a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-11-21T10:52:00-03:00" pubdate data-updated="true">Nov 21<span>st</span>, 2013</time>
+        
+         | <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>The Windows Azure Tools 1.7 introduced a new feature for adding content to the Windows Azure projects called &ldquo;Role Content Folders&rdquo;. In some scenarios, you might want to add custom content such as static pages, documentation, configuration files or external binaries for example. This is useful for example if you want to deploy a solution not written in .NET such as java implementation, and you don&rsquo;t want to mix that with the .NET code in the Role project. The following image shows how the content folders are added in the Azure project.</p>
+
+<p><img src="/images/azure_content/content_folders.png" title="Content Folders" alt="Content Folders" /></p>
+
+<p>That content is included in the generated Azure package, and it is deployed in the AppRoot folder when the package is finally published in VM in the cloud.</p>
+
+<p>One of the problem with this feature is that you might want to include content with an structure that changes often or content with thousands of folders/files, which requires some tedious manual work in Visual Studio to keep that content updated in the project.</p>
+
+<p>Good news is that you can use a MSBuild task to inject that custom content automatically when the package is being generated. You have to include a custom Target &ldquo;BeforeRoleAddContent&rdquo; right after the declaration of the &ldquo;Microsoft.WindowsAzure.targets&rdquo; as it is shown bellow,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;Import</span> <span class="na">Project=</span><span class="s">&quot;$(CloudExtensionsDir)Microsoft.WindowsAzure.targets&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;Target</span> <span class="na">Name=</span><span class="s">&quot;BeforeAddRoleContent&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;ItemGroup&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;AzureRoleContent</span> <span class="na">Include=</span><span class="s">&quot;..\Solr\Solr&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;RoleName&gt;</span>SolrMasterHostWorkerRole<span class="nt">&lt;/RoleName&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;Destination&gt;</span>Solr<span class="nt">&lt;/Destination&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/AzureRoleContent&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;AzureRoleContent</span> <span class="na">Include=</span><span class="s">&quot;..\Solr\jre6&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;RoleName&gt;</span>SolrMasterHostWorkerRole<span class="nt">&lt;/RoleName&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;Destination&gt;</span>jre6<span class="nt">&lt;/Destination&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/AzureRoleContent&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;AzureRoleContent</span> <span class="na">Include=</span><span class="s">&quot;..\Solr\SolrFiles&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;RoleName&gt;</span>SolrMasterHostWorkerRole<span class="nt">&lt;/RoleName&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;Destination&gt;</span>SolrFiles<span class="nt">&lt;/Destination&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/AzureRoleContent&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;AzureRoleContent</span> <span class="na">Include=</span><span class="s">&quot;..\Solr\Solr&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;RoleName&gt;</span>SolrSlaveHostWorkerRole<span class="nt">&lt;/RoleName&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;Destination&gt;</span>Solr<span class="nt">&lt;/Destination&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/AzureRoleContent&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;AzureRoleContent</span> <span class="na">Include=</span><span class="s">&quot;..\Solr\jre6&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;RoleName&gt;</span>SolrSlaveHostWorkerRole<span class="nt">&lt;/RoleName&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;Destination&gt;</span>jre6<span class="nt">&lt;/Destination&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/AzureRoleContent&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;AzureRoleContent</span> <span class="na">Include=</span><span class="s">&quot;..\Solr\SolrFiles&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;RoleName&gt;</span>SolrSlaveHostWorkerRole<span class="nt">&lt;/RoleName&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;Destination&gt;</span>SolrFiles<span class="nt">&lt;/Destination&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/AzureRoleContent&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/ItemGroup&gt;</span>
+</span><span class='line'><span class="nt">&lt;/Target&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The example above injects several content folders in two different roles, &ldquo;SolrMasterHostWorkerRole&rdquo; and &ldquo;SolrSlaveHostWorkerRole&rdquo;. The &ldquo;Include&rdquo; attribute specifies the source folder, and the Destination folder within the AppRoot is specified in the Destination element.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
       <h1 class="entry-title"><a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a></h1>
     
     
@@ -101,7 +212,7 @@
   
 
 
-<time datetime="2013-11-01T15:41:00-04:00" pubdate data-updated="true">Nov 1<span>st</span>, 2013</time>
+<time datetime="2013-11-01T15:41:00-03:00" pubdate data-updated="true">Nov 1<span>st</span>, 2013</time>
         
          | <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/#disqus_thread">Comments</a>
         
@@ -225,7 +336,7 @@ Secondly, we have defined a document, which specifies one or more entities that 
   
 
 
-<time datetime="2013-09-27T12:46:00-04:00" pubdate data-updated="true">Sep 27<span>th</span>, 2013</time>
+<time datetime="2013-09-27T12:46:00-03:00" pubdate data-updated="true">Sep 27<span>th</span>, 2013</time>
         
          | <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/#disqus_thread">Comments</a>
         
@@ -449,6 +560,10 @@ Secondly, we have defined a document, which specifies one or more entities that 
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>

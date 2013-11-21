@@ -4,7 +4,7 @@
   <title><![CDATA[Category: azure | Pablo Cibraro (Cibrax)]]></title>
   <link href="http://cibrax.me/blog/categories/azure/atom.xml" rel="self"/>
   <link href="http://cibrax.me/"/>
-  <updated>2013-11-08T22:32:45-05:00</updated>
+  <updated>2013-11-21T14:51:11-03:00</updated>
   <id>http://cibrax.me/</id>
   <author>
     <name><![CDATA[Cibrax]]></name>
@@ -14,9 +14,64 @@
 
   
   <entry>
+    <title type="html"><![CDATA[Injecting dynamic content in Windows Azure packages]]></title>
+    <link href="http://cibrax.me/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/"/>
+    <updated>2013-11-21T10:52:00-03:00</updated>
+    <id>http://cibrax.me/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package</id>
+    <content type="html"><![CDATA[<p>The Windows Azure Tools 1.7 introduced a new feature for adding content to the Windows Azure projects called &ldquo;Role Content Folders&rdquo;. In some scenarios, you might want to add custom content such as static pages, documentation, configuration files or external binaries for example. This is useful for example if you want to deploy a solution not written in .NET such as java implementation, and you don&rsquo;t want to mix that with the .NET code in the Role project. The following image shows how the content folders are added in the Azure project.</p>
+
+<p><img src="/images/azure_content/content_folders.png" title="Content Folders" alt="Content Folders" /></p>
+
+<p>That content is included in the generated Azure package, and it is deployed in the AppRoot folder when the package is finally published in VM in the cloud.</p>
+
+<p>One of the problem with this feature is that you might want to include content with an structure that changes often or content with thousands of folders/files, which requires some tedious manual work in Visual Studio to keep that content updated in the project.</p>
+
+<p>Good news is that you can use a MSBuild task to inject that custom content automatically when the package is being generated. You have to include a custom Target &ldquo;BeforeRoleAddContent&rdquo; right after the declaration of the &ldquo;Microsoft.WindowsAzure.targets&rdquo; as it is shown bellow,</p>
+
+<p>```xml
+<Import Project="$(CloudExtensionsDir)Microsoft.WindowsAzure.targets" /></p>
+
+<p><Target Name="BeforeAddRoleContent"></p>
+
+<pre><code>&lt;ItemGroup&gt;
+  &lt;AzureRoleContent Include="..\Solr\Solr"&gt;
+    &lt;RoleName&gt;SolrMasterHostWorkerRole&lt;/RoleName&gt;
+    &lt;Destination&gt;Solr&lt;/Destination&gt;
+  &lt;/AzureRoleContent&gt;
+  &lt;AzureRoleContent Include="..\Solr\jre6"&gt;
+    &lt;RoleName&gt;SolrMasterHostWorkerRole&lt;/RoleName&gt;
+    &lt;Destination&gt;jre6&lt;/Destination&gt;
+  &lt;/AzureRoleContent&gt;
+  &lt;AzureRoleContent Include="..\Solr\SolrFiles"&gt;
+    &lt;RoleName&gt;SolrMasterHostWorkerRole&lt;/RoleName&gt;
+    &lt;Destination&gt;SolrFiles&lt;/Destination&gt;
+  &lt;/AzureRoleContent&gt;
+  &lt;AzureRoleContent Include="..\Solr\Solr"&gt;
+    &lt;RoleName&gt;SolrSlaveHostWorkerRole&lt;/RoleName&gt;
+    &lt;Destination&gt;Solr&lt;/Destination&gt;
+  &lt;/AzureRoleContent&gt;
+  &lt;AzureRoleContent Include="..\Solr\jre6"&gt;
+    &lt;RoleName&gt;SolrSlaveHostWorkerRole&lt;/RoleName&gt;
+    &lt;Destination&gt;jre6&lt;/Destination&gt;
+  &lt;/AzureRoleContent&gt;
+  &lt;AzureRoleContent Include="..\Solr\SolrFiles"&gt;
+    &lt;RoleName&gt;SolrSlaveHostWorkerRole&lt;/RoleName&gt;
+    &lt;Destination&gt;SolrFiles&lt;/Destination&gt;
+  &lt;/AzureRoleContent&gt;
+&lt;/ItemGroup&gt;
+</code></pre>
+
+<p></Target>
+```</p>
+
+<p>The example above injects several content folders in two different roles, &ldquo;SolrMasterHostWorkerRole&rdquo; and &ldquo;SolrSlaveHostWorkerRole&rdquo;. The &ldquo;Include&rdquo; attribute specifies the source folder, and the Destination folder within the AppRoot is specified in the Destination element.</p>
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[Full-Text Searches in SQL Azure with Solr]]></title>
     <link href="http://cibrax.me/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/"/>
-    <updated>2013-11-01T15:41:00-04:00</updated>
+    <updated>2013-11-01T15:41:00-03:00</updated>
     <id>http://cibrax.me/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr</id>
     <content type="html"><![CDATA[<p>Solr is a robust search platform created by the open source community on top of Apache Lucene. It&rsquo;s completelly written in java, and uses the Lucene java implementation at is core for full-text indexing and search. In addition, it exposes an http web interface for doing the full text searches and perform management tasks.
 On other hand, we have SQL Azure, which currently does not support full text searches, so these two services complement very well each other.</p>
