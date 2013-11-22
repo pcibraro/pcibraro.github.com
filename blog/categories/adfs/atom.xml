@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: adfs | Pablo Cibraro (Cibrax)]]></title>
+  <link href="http://cibrax.me/blog/categories/adfs/atom.xml" rel="self"/>
+  <link href="http://cibrax.me/"/>
+  <updated>2013-11-22T13:31:34-03:00</updated>
+  <id>http://cibrax.me/</id>
+  <author>
+    <name><![CDATA[Cibrax]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Automatic Client Cert Detection in ADFS 2.0]]></title>
+    <link href="http://cibrax.me/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/"/>
+    <updated>2013-11-22T12:29:00-03:00</updated>
+    <id>http://cibrax.me/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0</id>
+    <content type="html"><![CDATA[<p>ADFS 2.0 supports multiple authentication methods through authentication handlers that are mutually exclusive. If one of the handlers runs, the others don&rsquo;t. There is no way to implement a fallback logic if one the handlers fail to run or the user was not able to provide the expected credentials, so supporting dual authentication such as username/password and client certificates is sometimes problematic.  The following list shows the handlers included out of the box with ADFS 2.0,</p>
+
+<p>```xml
+&lt;microsoft.identityServer.web></p>
+
+<pre><code>&lt;localAuthenticationTypes&gt;
+    &lt;add name="Forms" page="FormsSignIn.aspx" /&gt;
+    &lt;add name="Integrated" page="auth/integrated/" /&gt;
+    &lt;add name="TlsClient" page="auth/sslclient/" /&gt;
+    &lt;add name="Basic" page="auth/basic/" /&gt;
+&lt;/localAuthenticationTypes&gt;
+</code></pre>
+
+<p>&lt;microsoft.identityServer.web>
+```</p>
+
+<p>Those handlers are for Forms Authentication (Username/Password in an html form), Integrated Windows Authentication, Client Cert Authentication, and finally Http Basic Auth Authentication. The order in this list determines the priority by default unless the priority has been changed in the execution context. The order in the execution context can be changed in multiple ways. For example, when you are doing WS-Federation, the relying party can pass an additional &ldquo;WAuth&rdquo; query string parameter with the expected authentication type such as &ldquo;urn:oasis:names:tc:SAML:1.0:am:password&rdquo; for Forms Authentication or &ldquo;urn:ietf:rfc:2246&rdquo; for Client Cert authentication, which overrides the priority in the list set on the configuration. The same thing can be done for SAML 2.0 by changing the authentication context in the SAML Request message or changing the URL.</p>
+
+<p>However, as I said before, in one of the handlers run, you will not have a chance to run any of the other handlers unless you implement some workaround. For example, you might want to add a checkbox in the html form for Forms authentication to allow the user to authenticate with a client certificate. When the checkbox is clicked, you do an http redirect to ADFS but changing the URL this time to use this new authentication method. If the RP is using WS-Federation, that means a new redirect that includes the WAuth query string variable with the value &ldquo;urn:ietf:rfc:2246&rdquo;, or a redirect to &ldquo;auth/sslclient/&rdquo; in the case of SAML 2.0.</p>
+
+<p>If you want to avoid this manual step and detect the client certificate automatically, more work is involved, and it is what we are going to discuss next.</p>
+
+<ol>
+<li>Enable Forms Authentication as default in the configuration file. The &ldquo;Forms&rdquo; handler must be on top of the list.</li>
+<li>Create a new virtual directory in the ADFS IIS, and configure that virtual directory to require HTTPS and Accept Client Certs.</li>
+</ol>
+
+
+<p><img src="/images/adfs_cert/iis.png" title="IIS Settings" alt="IIS Settings" /></p>
+
+<ol>
+<li>Configure an ASP.NET Generic handler in that virtual directory to check if the certificate is present or not</li>
+</ol>
+
+
+<p>```c#
+using System;
+using System.Web;</p>
+
+<p>public class CertificateHandler : IHttpHandler
+{</p>
+
+<pre><code>public void ProcessRequest(HttpContext context)
+{
+    context.Response.ContentType = "application/javascript";
+
+    if (context.Request.ClientCertificate.IsPresent)
+    {
+        context.Response.Write("if(typeof(certificateCallback) == 'function') 
+            { (certificateCallback) (true); }");
+    }
+    else
+    {
+        context.Response.Write("if(typeof(certificateCallback) == 'function') 
+            { (certificateCallback) (false); }");
+    }
+
+}
+
+public bool IsReusable
+{
+    get
+    {
+        return false;
+    }
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>This code checks if the client certificate is present and invokes a javascript callback with &ldquo;true&rdquo; or &ldquo;false&rdquo; based on that condition. This code does not check the authenticity of the cert or anything else, and it is only for determining if the certificate is present. The rest of the validations will be done by ADFS.</p>
+
+<ol>
+<li>Configure this handler in the web.config of that virtual directory.</li>
+</ol>
+
+
+<p>```xml
+&lt;system.webServer></p>
+
+<pre><code>&lt;handlers&gt;
+  &lt;add name="certificate" type="CertificateHandler" path="Script" verb="GET"/&gt;
+&lt;/handlers&gt;
+</code></pre>
+
+<p>&lt;/system.webServer>
+```</p>
+
+<ol>
+<li>Include a CertCallBack.js javascript file into the ADFS folder with the code required for the callback,</li>
+</ol>
+
+
+<p>```javascript
+window.certificateCallback = function (cert) {</p>
+
+<pre><code>var url;
+if (cert) {
+    url = "auth/sslclient/" + window.location.search;
+    document.location.href = url;
+}
+</code></pre>
+
+<p>};
+```</p>
+
+<p>This code is very simple. It simply does a redirect when the cert is present (the callback was called with a &ldquo;true&rdquo; value). The redirect in this sample is only valid for SAML 2.0</p>
+
+<ol>
+<li>Modify the FormsSign.aspx page to include the following code at the end of the Page_Load event,</li>
+</ol>
+
+
+<p>```c#
+string script = System.IO.File.ReadAllText(Server.MapPath(&ldquo;CertCallBack.js&rdquo;));</p>
+
+<p>this.Page.ClientScript.RegisterClientScriptBlock(this.GetType(), &ldquo;callback&rdquo;, script, true);
+this.Page.ClientScript.RegisterClientScriptInclude(&ldquo;certauth&rdquo;, &ldquo;/CertDetection/Script&rdquo;);
+```</p>
+
+<p>This code injects our CertCallBack.js script in the page and it also includes the script located in the virtual directory configured to accept client certs (/CertDetection/Script invokes the ASP.NET Handler basically)</p>
+
+<p>That should be all. If the browser detects a client certificate when the script in the CertDetection virtual directory is resolved, the callback will be executed with a true value, making the form to do a redirect to authenticate the client with a Client Certificate instead. Otherwise, the client will see the Form to enter the username and password. We are adding a new virtual directory for not interferring with the existing authentication methods in the ADFS virtual directory.</p>
+
+<p>The code for the handler and the javascript callback is included in the <a href="/external/adfs_cert/CertDetection.zip">attached zip file</a></p>
+]]></content>
+  </entry>
+  
+</feed>

@@ -4,7 +4,7 @@
   <title><![CDATA[Pablo Cibraro (Cibrax)]]></title>
   <link href="http://cibrax.me/atom.xml" rel="self"/>
   <link href="http://cibrax.me/"/>
-  <updated>2013-11-21T14:51:11-03:00</updated>
+  <updated>2013-11-22T13:31:34-03:00</updated>
   <id>http://cibrax.me/</id>
   <author>
     <name><![CDATA[Cibrax]]></name>
@@ -12,6 +12,189 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Automatic Client Cert Detection in ADFS 2.0]]></title>
+    <link href="http://cibrax.me/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/"/>
+    <updated>2013-11-22T12:29:00-03:00</updated>
+    <id>http://cibrax.me/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0</id>
+    <content type="html"><![CDATA[<p>ADFS 2.0 supports multiple authentication methods through authentication handlers that are mutually exclusive. If one of the handlers runs, the others don&rsquo;t. There is no way to implement a fallback logic if one the handlers fail to run or the user was not able to provide the expected credentials, so supporting dual authentication such as username/password and client certificates is sometimes problematic.  The following list shows the handlers included out of the box with ADFS 2.0,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;microsoft.identityServer.web&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;localAuthenticationTypes&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;add</span> <span class="na">name=</span><span class="s">&quot;Forms&quot;</span> <span class="na">page=</span><span class="s">&quot;FormsSignIn.aspx&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;add</span> <span class="na">name=</span><span class="s">&quot;Integrated&quot;</span> <span class="na">page=</span><span class="s">&quot;auth/integrated/&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;add</span> <span class="na">name=</span><span class="s">&quot;TlsClient&quot;</span> <span class="na">page=</span><span class="s">&quot;auth/sslclient/&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;add</span> <span class="na">name=</span><span class="s">&quot;Basic&quot;</span> <span class="na">page=</span><span class="s">&quot;auth/basic/&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/localAuthenticationTypes&gt;</span>
+</span><span class='line'><span class="nt">&lt;microsoft.identityServer.web&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Those handlers are for Forms Authentication (Username/Password in an html form), Integrated Windows Authentication, Client Cert Authentication, and finally Http Basic Auth Authentication. The order in this list determines the priority by default unless the priority has been changed in the execution context. The order in the execution context can be changed in multiple ways. For example, when you are doing WS-Federation, the relying party can pass an additional &ldquo;WAuth&rdquo; query string parameter with the expected authentication type such as &ldquo;urn:oasis:names:tc:SAML:1.0:am:password&rdquo; for Forms Authentication or &ldquo;urn:ietf:rfc:2246&rdquo; for Client Cert authentication, which overrides the priority in the list set on the configuration. The same thing can be done for SAML 2.0 by changing the authentication context in the SAML Request message or changing the URL.</p>
+
+<p>However, as I said before, in one of the handlers run, you will not have a chance to run any of the other handlers unless you implement some workaround. For example, you might want to add a checkbox in the html form for Forms authentication to allow the user to authenticate with a client certificate. When the checkbox is clicked, you do an http redirect to ADFS but changing the URL this time to use this new authentication method. If the RP is using WS-Federation, that means a new redirect that includes the WAuth query string variable with the value &ldquo;urn:ietf:rfc:2246&rdquo;, or a redirect to &ldquo;auth/sslclient/&rdquo; in the case of SAML 2.0.</p>
+
+<p>If you want to avoid this manual step and detect the client certificate automatically, more work is involved, and it is what we are going to discuss next.</p>
+
+<ol>
+<li>Enable Forms Authentication as default in the configuration file. The &ldquo;Forms&rdquo; handler must be on top of the list.</li>
+<li>Create a new virtual directory in the ADFS IIS, and configure that virtual directory to require HTTPS and Accept Client Certs.</li>
+</ol>
+
+
+<p><img src="http://cibrax.me/images/adfs_cert/iis.png" title="IIS Settings" alt="IIS Settings" /></p>
+
+<ol>
+<li>Configure an ASP.NET Generic handler in that virtual directory to check if the certificate is present or not</li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="k">using</span> <span class="nn">System</span><span class="p">;</span>
+</span><span class='line'><span class="k">using</span> <span class="nn">System.Web</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">CertificateHandler</span> <span class="p">:</span> <span class="n">IHttpHandler</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">public</span> <span class="k">void</span> <span class="nf">ProcessRequest</span><span class="p">(</span><span class="n">HttpContext</span> <span class="n">context</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">context</span><span class="p">.</span><span class="n">Response</span><span class="p">.</span><span class="n">ContentType</span> <span class="p">=</span> <span class="s">&quot;application/javascript&quot;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">context</span><span class="p">.</span><span class="n">Request</span><span class="p">.</span><span class="n">ClientCertificate</span><span class="p">.</span><span class="n">IsPresent</span><span class="p">)</span>
+</span><span class='line'>        <span class="p">{</span>
+</span><span class='line'>            <span class="n">context</span><span class="p">.</span><span class="n">Response</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="s">&quot;if(typeof(certificateCallback) == &#39;function&#39;) </span>
+</span><span class='line'>              <span class="p">{</span> <span class="p">(</span><span class="n">certificateCallback</span><span class="p">)</span> <span class="p">(</span><span class="k">true</span><span class="p">);</span> <span class="p">}</span><span class="s">&quot;);</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>        <span class="k">else</span>
+</span><span class='line'>        <span class="p">{</span>
+</span><span class='line'>            <span class="n">context</span><span class="p">.</span><span class="n">Response</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="s">&quot;if(typeof(certificateCallback) == &#39;function&#39;) </span>
+</span><span class='line'>              <span class="p">{</span> <span class="p">(</span><span class="n">certificateCallback</span><span class="p">)</span> <span class="p">(</span><span class="k">false</span><span class="p">);</span> <span class="p">}</span><span class="s">&quot;);</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="kt">bool</span> <span class="n">IsReusable</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="k">get</span>
+</span><span class='line'>        <span class="p">{</span>
+</span><span class='line'>            <span class="k">return</span> <span class="k">false</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This code checks if the client certificate is present and invokes a javascript callback with &ldquo;true&rdquo; or &ldquo;false&rdquo; based on that condition. This code does not check the authenticity of the cert or anything else, and it is only for determining if the certificate is present. The rest of the validations will be done by ADFS.</p>
+
+<ol>
+<li>Configure this handler in the web.config of that virtual directory.</li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;system.webServer&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;handlers&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;add</span> <span class="na">name=</span><span class="s">&quot;certificate&quot;</span> <span class="na">type=</span><span class="s">&quot;CertificateHandler&quot;</span> <span class="na">path=</span><span class="s">&quot;Script&quot;</span> <span class="na">verb=</span><span class="s">&quot;GET&quot;</span><span class="nt">/&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/handlers&gt;</span>
+</span><span class='line'><span class="nt">&lt;/system.webServer&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li>Include a CertCallBack.js javascript file into the ADFS folder with the code required for the callback,</li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nb">window</span><span class="p">.</span><span class="nx">certificateCallback</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">cert</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">url</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="nx">cert</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">url</span> <span class="o">=</span> <span class="s2">&quot;auth/sslclient/&quot;</span> <span class="o">+</span> <span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">search</span><span class="p">;</span>
+</span><span class='line'>        <span class="nb">document</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">href</span> <span class="o">=</span> <span class="nx">url</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This code is very simple. It simply does a redirect when the cert is present (the callback was called with a &ldquo;true&rdquo; value). The redirect in this sample is only valid for SAML 2.0</p>
+
+<ol>
+<li>Modify the FormsSign.aspx page to include the following code at the end of the Page_Load event,</li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="kt">string</span> <span class="n">script</span> <span class="p">=</span> <span class="n">System</span><span class="p">.</span><span class="n">IO</span><span class="p">.</span><span class="n">File</span><span class="p">.</span><span class="n">ReadAllText</span><span class="p">(</span><span class="n">Server</span><span class="p">.</span><span class="n">MapPath</span><span class="p">(</span><span class="s">&quot;CertCallBack.js&quot;</span><span class="p">));</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">this</span><span class="p">.</span><span class="n">Page</span><span class="p">.</span><span class="n">ClientScript</span><span class="p">.</span><span class="n">RegisterClientScriptBlock</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">GetType</span><span class="p">(),</span> <span class="s">&quot;callback&quot;</span><span class="p">,</span> <span class="n">script</span><span class="p">,</span> <span class="k">true</span><span class="p">);</span>
+</span><span class='line'><span class="k">this</span><span class="p">.</span><span class="n">Page</span><span class="p">.</span><span class="n">ClientScript</span><span class="p">.</span><span class="n">RegisterClientScriptInclude</span><span class="p">(</span><span class="s">&quot;certauth&quot;</span><span class="p">,</span> <span class="s">&quot;/CertDetection/Script&quot;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This code injects our CertCallBack.js script in the page and it also includes the script located in the virtual directory configured to accept client certs (/CertDetection/Script invokes the ASP.NET Handler basically)</p>
+
+<p>That should be all. If the browser detects a client certificate when the script in the CertDetection virtual directory is resolved, the callback will be executed with a true value, making the form to do a redirect to authenticate the client with a Client Certificate instead. Otherwise, the client will see the Form to enter the username and password. We are adding a new virtual directory for not interferring with the existing authentication methods in the ADFS virtual directory.</p>
+
+<p>The code for the handler and the javascript callback is included in the <a href="http://cibrax.me/external/adfs_cert/CertDetection.zip">attached zip file</a></p>
+]]></content>
+    
+      <category scheme="http://cibrax.me/categories/" term="adfs" />
+    
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Injecting dynamic content in Windows Azure packages]]></title>
@@ -106,7 +289,7 @@
     <content type="html"><![CDATA[<p>Solr is a robust search platform created by the open source community on top of Apache Lucene. It&rsquo;s completelly written in java, and uses the Lucene java implementation at is core for full-text indexing and search. In addition, it exposes an http web interface for doing the full text searches and perform management tasks.
 On other hand, we have SQL Azure, which currently does not support full text searches, so these two services complement very well each other.</p>
 
-<p>As Solr is mainly a java implementation, you only have a few alternatives to run it on Windows Azure. You can deploy it as a worker role together with the java runtime machine, or you can deploy it in a VM. As any solution in the cloud, the state persisted in the worker role or VM goes away when the VMs are replaced or they go down. As Solr persists the indexes in disk, you need to make sure it is stored in a permament storage like Azure Drive or the storage service. If you decide to use a worker role, this requires some additional work to make Solr to store the indexes in Azure drive for example, which is a VHD stored in the storage service that can be mounted by the VM as a local disk. Good news is that MS Open Tech has already done this for us. They have a created a template that deployes Solr with a fail-over configuration(master-slave) in two worker roles, one role for the master node, and another role for the slave node. The slave node replicates from the master node, so in case you lost one of them, you still have the other node available. . In addition, it configures a web role with an MVC application that acts as a admin dashboard for doing basic management stuff. This solution is hosted in Github as part of this project <a href="https://github.com/MSOpenTech/Windows-Azure-Solr">Windows-Azure-Solr</a>. The Github site also provides instructions to get the solution deployed in Windows Azure.</p>
+<p>As Solr is mainly a java implementation, you only have a few alternatives to run in on Windows Azure. You can deploy it as a worker role together with the java runtime machine, or you can deploy it in a VM. As any solution in the cloud, the state persisted in the worker role or VM goes away when the VMs are replaced or they go down. As Solr persists the indexes in disk, you need to make sure it is stored in a permament storage like Azure Drive or the storage service. If you decide to use a worker role, this requires some additional work to make Solr to store the indexes in Azure drive for example, which is a VHD stored in the storage service that can be mounted by the VM as a local disk. Good news is that MS Open Tech has already done this for us. They have a created a template that deployes Solr with a fail-over configuration(master-slave) in two worker roles, one role for the master node, and another role for the slave node. The slave node replicates from the master node, so in case you lost one of them, you still have the other node available. . In addition, it configures a web role with an MVC application that acts as a admin dashboard for doing basic management stuff. This solution is hosted in Github as part of this project <a href="https://github.com/MSOpenTech/Windows-Azure-Solr">Windows-Azure-Solr</a>. The Github site also provides instructions to get the solution deployed in Windows Azure.</p>
 
 <p>The template that you download from GitHub imports data into Solr by crawling some URLs. That&rsquo;s part of the data-config.xml file that you can find in the configuration folder of the master and slave nodes (SolrMasterWorkerRole\SolrFiles\data-config.xml and SolrSlaveWorkerRole\SolrFiles\data-config.xml). Solr supports the idea of data importers, which can be used to import data from different sources such as existing web sites, files in disk or even a database.</p>
 
