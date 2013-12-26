@@ -1,0 +1,24 @@
+---
+layout: post
+title: "Making WSE 3.0 work with WSS4J and X509 certificates"
+date: 2006-06-19
+comments: true
+categories: ASP.NET
+---
+
+Today I found this interesting [blog
+entry](http://www.oftedal.no/~erlend/?blogid=12 "blog entry") to making
+WSS4J (Axis) work with WSE 3.0 using a Mutual X509 scenario (There are
+two certificates, the first one for client authentication and the second
+one for message protection).\
+Since WSE 3.0 and WCF are compatible at wire level (I have already
+developed a [sample](/cibrax/archive/2006/04/19/443402.aspx "sample") to
+show this), this entry is also useful for interop testing between WCF
+and WSS4J.
+
+Some points to consider:
+
+​1. It uses the August 2004 WS-Adressing Spec (The only one supported in
+WSE 3.0)\
+2. It uses WS-Security 1.0 (MutualCertificate10Security assertion) 
+

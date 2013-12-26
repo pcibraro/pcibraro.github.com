@@ -1,0 +1,333 @@
+---
+layout: post
+title: "WS-I BSP Sample Application for WSE 3"
+date: 2005-07-19
+comments: true
+categories: Web-Services
+---
+
+The **"WS-I Basic Security Profile Sample Application"** preview for WSE
+3.0 is out, you can get it in the [GDN
+workspace](http://practices.gotdotnet.com/projects/wsibsp).\
+This sample illustrates how to build secure and interoperable web
+services based in the specification [WS-I Basic Profile
+1.1](http://www.ws-i.org/Profiles/BasicProfile-1.1-2004-08-24.html). \
+When we started to develop this application, we faced some challenges,
+all of them related to the new policy framework shipped in WSE 3.0. \
+Some parts of the policies used by the previous version of this
+application weren't easy to migrate, so we had to develop some custom
+assertions.\
+In this post, I will give a brief description about the new WSE "Policy
+framework", and the custom assertion shipped in this preview.
+(CustomX509Assertion)
+
+### Policy framework
+
+![](/images/legacy/ArchitectureWSE.gif)\
+\
+**Policies**\
+\
+A policy allows to apply different claims for incoming and outgoing
+messages on the client and the service (All messages to a particular
+endpoint).\
+It is used to describe the requirements for a service and as a factory
+for runtime objects - Pipeline and Assertions. \
+As you can see in the image, the policy is converted in a pipeline at
+runtime. This pipeline contains an ordered list of assertions, \
+each assertion performs different message transformations through the
+use of Filters. \
+\
+Policy definition sample: \
+
+\<policies\>\
+  \<extensions\>\
+    \<extension name="mutualX509Security"
+type="Microsoft.Web.Services3.Design.MutualX509Assertion,
+Microsoft.Web.Services3, Version=3.0.0.0, Culture=neutral,
+PublicKeyToken=31bf3856ad364e35" /\>\
+    \<extension name="x509"
+type="Microsoft.Web.Services3.Design.X509TokenProvider,
+Microsoft.Web.Services3, Version=3.0.0.0, Culture=neutral,
+PublicKeyToken=31bf3856ad364e35" /\>\
+  \</extensions\>\
+  \<policy name="MyPolicy"\>\
+    \<mutualX509Security establishSecurityContext="false"
+renewExpiredSecurityContext="true" signatureConfirmation="true"
+protectionOrder="SignBeforeEncryptingAndEncryptSignature"
+deriveKeys="true" actor=""\>\
+      \<clientToken\>\
+        \<x509 storeLocation="CurrentUser" storeName="My"
+findValue="CN=WSE2QuickStartClient"
+findType="FindBySubjectDistinguishedName" /\>\
+      \</clientToken\>\
+      \<serviceToken\>\
+        \<x509 storeLocation="CurrentUser" storeName="AddressBook"
+findValue="CN=WSE2QuickStartServer"
+findType="FindBySubjectDistinguishedName" /\>\
+      \</serviceToken\>\
+      \<protection\>\
+        \<request signatureOptions="IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody" encryptBody="true" /\>\
+        \<response signatureOptions="IncludeAddressing,
+IncludeTimestamp, IncludeSoapBody" encryptBody="true" /\>\
+        \<fault signatureOptions="IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody" encryptBody="false" /\>\
+      \</protection\>\
+    \</mutualX509Security\>\
+  \</policy\>\
+\</policies\>\
+\
+
+In this case, the policy specifies security requirements for the
+service. ( Some parts of the message should be encrypted and signed with
+X509 certificates) \
+\
+A policy can be assigned to a proxy or a service using a declarative or
+imperative way. The following examples show how to assign a policy \
+to a proxy and a service:\
+\
+**Client proxy with PolicyAttribute:** \
+\
+
+[PolicyAttribute("MyPolicy")]\
+public partial class MyService :
+Microsoft.Web.Services3.WebServicesClientProtocol \
+{\
+  public string HelloWorld() {\
+    object[] results = this.Invoke("HelloWorld", new object[0]);\
+    return ((string)(results[0]));\
+  }\
+}\
+
+\
+**Imperative use of policy on the client** \
+\
+
+MyService service = new MyService();\
+service.SetPolicy("MyPolicy");
+
+\
+**Web Service with PolicyAttribute:** \
+\
+
+[PolicyAttribute("MyPolicy")]\
+public class MyService : System.Web.Services.WebService \
+{\
+  [WebMethod]\
+  public string HelloWorld() {\
+    return "Hello world";\
+  }\
+}\
+
+\
+**Assertions**\
+\
+An assertion uses filters to perform message processing in different
+stages. Each assertion is capable of creating up to four soap filters: \
+\
+
+**ClientOutputFilter:** for outgoing messages on the client
+
+**ClientInputFilter:** for incoming messages on the client
+
+**ServiceOutputFilter:** for outgoing messages on the service
+
+**ServiceInputFilter:** for incoming messages on the service \
+\
+An assertion may not create a filter in one of the four locations. In
+that case, this assertion does not affect message processing in this
+location.\
+For example, a security assertion could use the output stages to protect
+a soap document, and the input stages to validate that protection \
+\
+**Assertion code sample :** \
+\
+
+class MyAssertion : PolicyAssertion\
+{\
+  public override SoapFilter
+CreateClientInputFilter(FilterCreationContext context)\
+  {\
+    return null;\
+   }\
+\
+   public override SoapFilter
+CreateClientOutputFilter(FilterCreationContext context)\
+   {\
+     return null;\
+   }\
+\
+   public override SoapFilter
+CreateServiceInputFilter(FilterCreationContext context)\
+   {\
+     return null;\
+   }\
+\
+   public override SoapFilter
+CreateServiceOutputFilter(FilterCreationContext context)\
+   {\
+     return null;\
+   }\
+}\
+
+\
+This assertion does not return any filter, it is useless in a real
+scenario. \
+\
+WSE includes the following list of assertions:\
+\
+
+  ------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
+  AnonymousOverCertificateAssertion                 The client is not authenticated and the security protection is via a server's X.509 certificate
+  CertificateMutualAuthenticationProfileAssertion   X.509 certificates are used for authentication and message protection. It doesn't use the WS-Security 1.1 extensions
+  KerberosAssertion                                 Kerberos tickets are used for authentication and message protection
+  MutualCertificateAssertion                        X.509 certificates are used for authentication and message protection. It uses the WS-Security 1.1 extensions
+  UsernameOverCertificateAssertion                  The client is authenticated via a suplied "UsernameToken" ( user and password ) and the security protection is performed by a X.509 certificate
+  UsernameOverTransportAssertion                    The client is authenticated via a supplied "UsernameToken" and the security protection is performed at the transport level
+  AuthorizationAssertion                            It performs authorization checks using the identity token. The identity token is determined after the client authentication
+  ------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
+
+\
+**Filters**\
+\
+Soap filters use lower level mechanisms to perform different message
+processing tasks. For example, a security filter could use signatures
+and encryption tokens to protect a message.\
+All filters inherit from the base class "SoapFilter" and implement the
+abstract method "ProcessMessage". \
+\
+
+public abstract class SoapFilter\
+{\
+  protected SoapFilter();\
+  public virtual T GetBehavior();\
+  public abstract SoapFilterResult ProcessMessage(SoapEnvelope
+envelope);\
+}
+
+\
+That method returns a "SoapFilterResult" class, which is used to control
+the pipeline execution. It can take the following values:\
+\
+
+Continue: To keep executing the next filters in the pipeline
+
+Terminate: To terminate the pipeline execution\
+\
+WSE also includes the classes "SendSecurityFilter" and
+"ReceiveSecurityFitler" to build security filters. These classes inherit
+from "SoapFilter", but they implement the "ProcessMessage" method in
+order to parse the security headers included in the soap document. \
+\
+
+public abstract class SendSecurityFilter : SoapFilter\
+{\
+  protected abstract void SecureMessage(SoapEnvelope envelope, Security
+security);\
+} \
+\
+public abstract class SendSecurityFilter : SoapFilter\
+{\
+  protected abstract void ValidateMessageSecurity(SoapEnvelope envelope,
+Security security);\
+}
+
+### Custom Security Assertion
+
+The "MutualCertificateAssertion" did not solve some security aspects
+required \
+by the application, so we had to develop a custom security assertion (
+"X509CustomSecurityAssertion" ) \
+This assertion allows us to fulfill the following requeriments: \
+\
+1. Sign and encrypt the messages with different X509 certificates ( One
+certificate to sign the message and \
+another to encrypt it ). The "MutualCertificateAssertion" assertion only
+signs and encrypts the messages with a key derived from\
+the same certificate.\
+2. Different certificates for requests and responses. The
+"MutualCertificateAssertion" does not allow to specify that\
+3. Custom headers encryption. The "MutualCertificateAssertion" only
+signs custom headers, but it does not encrypt them.\
+4. Different protection order for the request and response. The
+"MutualCertificateAssertion" specifies the same protection order\
+for the request and the response ( Protection order =
+SignBeforeEncryptingAndEncryptSignature, SignBeforeEncrypting,
+EncryptBeforeSigning).\
+\
+This policy is used by client application to consume the Retailer
+services:\
+
+\<policy name="RetailerServices"\>\
+  \<customX509Security actor=""\>\
+    **\<request\>**\
+      \<clientToken\>\
+        \<!-- WebClient Signing Certificate --\>\
+        \<x509 storeLocation="LocalMachine" storeName="My"
+findValue="8d5f67d8991bc6517785b3266a333fb871cf2c6f"
+findType="FindBySubjectKeyIdentifier" /\>\
+      \</clientToken\>\
+      \<serviceToken\>\
+        \<!-- Retailer Encrypting Certificate --\>\
+        \<x509 storeLocation="LocalMachine" storeName="My"
+findValue="944e5a12f31f6f8456ae6ad479581792af15eb6b"
+findType="FindBySubjectKeyIdentifier" /\>\
+      \</serviceToken\>\
+    **\</request\>**\
+    **\<response\>**\
+      \<clientToken\>\
+        \<!--Retailer Signing Certificate--\> \
+        \<x509 storeLocation="LocalMachine" storeName="My"
+findValue="4cd379e9caff8759da99b17c85ffa15b66c60dcb"
+findType="FindBySubjectKeyIdentifier" /\>\
+      \</clientToken\>\
+      \<serviceToken\>\
+        \<!-- WebClient Encrypting Certificate --\>\
+        \<x509 storeLocation="LocalMachine" storeName="My"
+findValue="399cb4ee8d3339c36618f667dfa03183948f145c"
+findType="FindBySubjectKeyIdentifier" /\>\
+      \</serviceToken\>\
+    **\</response\>**\
+    \<!-- getCatalog --\>\
+    \<protection requestAction="getCatalog"\>\
+      \<request signatureOptions="IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody" encryptBody="false"
+**protectionOrder="SignBeforeEncrypting"**\>\
+        **\<customHeader name="UsernameToken"
+ns="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+signed="true" encrypted="false"\>\</customHeader\>**\
+      \</request\>\
+      \<response signatureOptions="IncludeTimestamp, IncludeSoapBody"
+encryptBody="true"
+**protectionOrder="SignBeforeEncryptingAndEncryptSignature"** /\>\
+    \</protection\>\
+    \<!-- submitOrder --\>\
+    \<protection requestAction="submitOrder"\>\
+      \<request signatureOptions="IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody" encryptBody="true"
+**protectionOrder="SignBeforeEncryptingAndEncryptSignature"**\>\
+        **\<customHeader name="Configuration"
+ns="http://www.ws-i.org/SampleApplications/SupplyChainManagement/2002-08/Configuration.xsd"
+signed="true" encrypted="false"\>\</customHeader\>**\
+        **\<customHeader name="UsernameToken"
+ns="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+signed="true" encrypted="true"\>\</customHeader\>**\
+      \</request\>\
+      \<response signatureOptions="IncludeTimestamp, IncludeSoapBody"
+encryptBody="true"
+**protectionOrder="SignBeforeEncryptingAndEncryptSignature"** /\>\
+    \</protection\>\
+  \</customX509Security\>\
+\</policy\>
+
+\
+Many changes were introduced to the policy. It supports different X509
+certificates for requests and responses ("Request" and "Response"
+elements ).\
+Also, it specifies different protection requirements for custom headers
+and different protection order for each message. \
+\
+If you are interested to build secure and interoperable web services,
+then you should look this application, it is a good starting point.\
+That is all for now, I will blog more about WSE and WSI soon.
+

@@ -1,0 +1,121 @@
+---
+layout: post
+title: "Installing a SQL database with WIX"
+date: 2005-03-30
+comments: true
+categories: Wix
+---
+
+I like to share a sample about how to install a Sql database using a
+custom action shipped within WIX, it is an easy task and it can be
+useful in many scenarios.\
+Let's take a look to this source file "sql.wxs":
+
+\
+
+\<Wix xmlns='http://schemas.microsoft.com/wix/2003/01/wi'\>\
+  \<Product Name='SQL app 1.0' Id='DB501C18-86C7-4D14-AEC0-86416A69ABDE'
+Language='1033' Codepage='1252'\
+     Version='1.0.0' Manufacturer='Cibrax Ltd.'\>\
+            \<Package Id='????????-????-????-????-????????????'
+Keywords='Installer' Description="SQL App 1.0 Installer"\
+              Comments='SQL app is a registered trademark of Cibrax
+Ltd.' Manufacturer='Cibrax Ltd.' InstallerVersion='100'\
+              Languages='1033' Compressed='yes' SummaryCodepage='1252'
+/\>\
+        \<Media Id='1' Cabinet='Sample.cab' EmbedCab='yes' /\>\
+        \<User Id="MySQLUser" Name="[SQLUSER]"
+Password="[SQLUSERPASSWORD]"\>\</User\>\
+        \<Directory Id='TARGETDIR' Name='SourceDir'\>\
+            \<Directory Id='ProgramFilesFolder' Name='PFiles'\>\
+                \<Directory Id='INSTALLDIR' Name='TestSQL'\>\
+                      \<Component Id="MySqlComponent"
+Guid="C50999A0-02FD-42d5-9F65-7375318DD328"\>\
+                        \<SqlDatabase Id="MySqlDatabase"
+Database="MyDatabase" Server="[SQLSERVER]" Instance="[SQLINSTANCE]"\
+                            CreateOnInstall="yes" DropOnUninstall="yes"
+User="MySQLUser" ContinueOnError="yes"\>\
+                              \<SqlScript Id="CreateTables"
+ExecuteOnInstall="yes" BinaryKey="CreateTablesBin"\>\</SqlScript\>\
+                        \</SqlDatabase\>\
+                      \</Component\>\
+                \</Directory\>\
+             \</Directory\>\
+         \</Directory\>\
+        \<Binary Id="CreateTablesBin"
+src="CreateTables.sql"\>\</Binary\>\
+        \<Feature Id='Complete' Level='1' Description="Full" Title="Full
+Installation"\>\
+            \<ComponentRef Id='MySqlComponent' /\>\
+        \</Feature\>\
+    \</Product\>\
+\</Wix\>\
+
+I'll start describing the most important elements in this script:
+
+**\<User\>** \
+
+It contains authentication settings necessary to sign on against the Sql
+database server. \
+As you can see, the user and password are properties, so you can change
+them later in runtime maybe using a user dialog or custom action. Other
+point to consider, you can nest this element within the component, in
+that case, the installer will create a windows user account user during
+the install, and we don't need that in this sample.
+
+**\<SqlDatabase\>** \
+
+Using this element we can specify some settings required to create the
+database, such as database name, server, instance and user. The user
+attribute contains a reference to the existing user element, in this
+case, "MySQLUser". \
+It supports other conditional attributes, such as CreateOnInstall,
+DropUnistall and ContinueOnError. These attributes specifies what to do
+during the install, uninstall and when an error occurs. \
+The properties will take default values if you do not provided them, for
+example, the default value for Server is “localhost”.
+
+**\<SqlScript\>** \
+
+I will use this element to execute a sql script because the previous
+element only creates an empty database, but in this sample, I also want
+to create some empty tables within the database.\
+The BinaryKey contains a reference to the script file in the Binary
+table.
+
+The CreateTables.sql file is a simple script to create a new table, and
+looks like this:
+
+CREATE TABLE [dbo].[Test] (\
+    [Test\_Id] [int] NOT NULL \
+) ON [PRIMARY]\
+
+At this point, we have a simple wix script to install a new database,
+but what is next? Obviously, we need to compile this file using
+"candle.exe" and then, "light.exe". \
+We will start compiling this script in a wix object file using
+"candle.exe" ( Replace "[Wix Path]" with the current wix path in your
+machine ):\
+\
+
+[Wix path]\\candle.exe sql.wxs
+
+If everything goes fine, you will able to find a sql.wixobj file in the
+same folder than sql.wxs. \
+As next step, we will use "light.exe" to create the final msi file.
+
+[Wix path]\\light.exe sql.wixobj
+
+Ughh, you will get a wix linker error after running this command, but
+what is wrong with the script? Well, to install a sql database, wix uses
+some custom actions, which will run along the msi, and we did not
+specify any of these custom actions in our script. \
+Do we need to include these custom actions in our script? Not exactly,
+"light.exe" can include them automatically when the msi is generated. \
+To do that, we need to provide some extra parameters:
+
+[Wix path]\\light.exe -out sql.msi sql.wixobj [Wix path]\\ca\\sca.wixlib
+
+After running this command, you will find a new sql.msi file. Now, you
+can use it to install your database in any machine.
+

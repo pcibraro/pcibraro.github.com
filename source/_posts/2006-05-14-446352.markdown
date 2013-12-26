@@ -1,0 +1,30 @@
+---
+layout: post
+title: "New work - New Life"
+date: 2006-05-14
+comments: true
+categories: My-work
+---
+
+A month ago, a person from the Inter-American development bank offered
+me a job as .NET consultant in that bank.
+
+After thinking a while, I decided to accept his offer and travel to
+Washington DC to starting work there in a project to develop some web
+applications and provide consulting in .NET development.
+
+This decision was really hard for me since it implied two important
+things, working abroad in a completely different country and leaving a
+wonderful company, Lagash.
+
+The years I worked in Lagash were awesome, I had to chance to work with
+the Microsoft P&P team in different projects like application blocks,
+application frameworks and quickstarts, which gave me a deep knowledge
+and experience with the .NET platform and I very grateful to the
+
+Lagash guys.
+
+I think it is the best company in Argentina to work in software
+development with Microsoft technologies and you always will find good
+challenges there.
+

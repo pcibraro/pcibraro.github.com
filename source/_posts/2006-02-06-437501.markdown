@@ -1,0 +1,175 @@
+---
+layout: post
+title: "Proxy factory"
+date: 2006-02-06
+comments: true
+categories: WCF
+---
+
+Last week, Sergio, a friend of mine asked me the following question
+about WCF "Hey Pablo, do you know how WCF does to create a channel with
+a specific interface on the fly ?".
+
+He was talking about this piece of code:
+
+\
+
+ChannelFactory\<IMyService\> factory = new
+ChannelFactory\<IMyService\>();
+
+IMyService myService = factory.CreateChannel();
+
+\
+
+My answer at that moment was "Nice question but I don't have idea, let
+me take a look".
+
+That trigger my curiosity so I decided to find out the way to do
+something similar. After all, that could be useful in some scenarios
+where a Service interface is required (A way to separate the service
+interface from the service implementation).
+
+After some investigation, I could reproduce something similar although I
+am not sure if this code is the same code as WCF.
+
+\
+
+As first step, I used some code provided by Cristofer Gonzales to build
+a template for a proxy. The code for that class looks as follows:
+
+\
+
+public class MyProxy\<T\> : System.Runtime.Remoting.Proxies.RealProxy
+where T : class
+
+{
+
+  public MyProxy() : base(typeof(T))
+
+  {
+
+  }
+
+  public new T GetTransparentProxy()
+
+  {
+
+    return (T)base.GetTransparentProxy();
+
+  }
+
+  public override System.Runtime.Remoting.Messaging.IMessage
+Invoke(System.Runtime.Remoting.Messaging.IMessage imsg)
+
+  {  
+
+    Console.WriteLine("Invoking the transparent Proxy ...");
+
+    ReturnMessage retmsg = null;
+
+   
+
+    int result = 0;
+
+    if (imsg is IMethodCallMessage)
+
+    {
+
+      IMethodCallMessage call = imsg as IMethodCallMessage;
+
+      Console.WriteLine("Calling to the method:");
+
+      Console.WriteLine("\\Name: {0}", call.MethodName);
+
+    }
+
+    else if (imsg is IMethodReturnMessage)
+
+    {
+
+      Console.WriteLine("Returning ...");
+
+      retmsg = new ReturnMessage(null, null, 0, null,
+(IMethodCallMessage)imsg);
+
+    
+
+      return retmsg;
+
+    }
+
+  }
+
+}
+
+\
+
+This proxy class will contain the same methods as the class specified as
+T and will intercept all the calls to those methods (Using a Transparent
+proxy).
+
+\
+
+Secondly, I defined a factory for the proxies. This class pretend to be
+equivalent to the class FactoryChannel in WCF.
+
+\
+
+class Factory\<T\>
+
+{
+
+  public Factory()
+
+  {
+
+  }
+
+  public T Create()
+
+  {
+
+    MyProxy\<IMyService\> proxy = new MyProxy\<IMyService\>();
+
+    return (T)proxy.GetTransparentProxy();
+
+  }
+
+}
+
+\
+
+Finally, I created some classes to test the factory and proxy classes.
+
+public interface IMyService
+
+{
+
+  void HelloWorld(string message);
+
+}
+
+class Program
+
+{
+
+  static void Main(string[] args)
+
+  {
+
+    Factory\<IMyService\> factory = new Factory\<IMyService\>();
+
+    IMyService service = factory.Create();
+
+    service.HelloWorld("Cibrax");
+
+  }
+
+}
+
+\
+
+This is really cool, isn't it ?.
+
+
+

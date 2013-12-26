@@ -1,0 +1,60 @@
+---
+layout: post
+title: "Authentication in Web APIs. Keys, OAuth or HMAC"
+date: 2013-05-21
+comments: true
+categories: Security
+---
+
+Most of the Web APIs available out there in the web nowadays use some
+kind of authentication for identifying client applications. Although
+they implement authentication in different ways, they can be typically
+categorized in three main groups, services that use Keys, OAuth or HMAC.
+
+Keys is the first scenario and probably the simplest one. Every client
+application is identified with a simple and fixed application key. This
+authentication mechanism is perhaps a bit weak, but the data that the
+service has to offer is not sensitive at all. The data is available for
+everyone with a key, and it’s pretty much used for public services such
+as Google maps or a search for public pictures in Instagram for example.
+The only purpose of the key is to identify clients and apply different
+SLA (service level agreements) such as api quotas, availability, etc.
+
+HMAC is typically used for consuming sensitive data that is only
+consumed by his owner and not shared with anyone else. This kind of
+authentication is typically used in multitenant applications, where a
+tenant is the owner of the data. This model fits real well with cloud
+computing where a vendor such as AWS or Windows Azure use a key for
+identifying the tenant and provide the right services and private data.
+No matter which client application is used to consume the services and
+data, the main purpose of the key is to identify the tenant. Hawk is new
+specification born in this area to standardize how HMAC
+authentication.  
+
+OAuth is last one and probably the most complicated one. It was born
+with the idea of delegating authorization in the web 2.0. The service
+who owns the data can use OAuth to share that data with other services
+or applications without compromising the owner credentials.
+
+The analogy given by Eran Hammer Lahav in this post "[Explaining
+OAuth](http://www.hueniverse.com/hueniverse/2007/09/explaining-oaut.html)"
+is very close to what the specification tries to address,
+
+*"Many luxury cars today come with a valet key. It is a special key you
+give the parking attendant and unlike your regular key, will not allow
+the car to drive more than a mile or two. Some valet keys will not open
+the trunk, while others will block access to your onboard cell phone
+address book. Regardless of what restrictions the valet key imposes, the
+idea is very clever. You give someone limited access to your car with a
+special key, while using another key to unlock everything else."*
+
+This kind of authentication makes a lot of sense in social media
+services like Twitter, Facebook, Windows Live or Google to name a few,
+where the service owns some private data like contacts or pictures that
+can shared with other applications without putting the user credentials
+into risk.
+
+OAuth assigns a key to every different client application allowed to
+consume the data, so the access can easily be revoked by disabling the
+key associated that client application.
+

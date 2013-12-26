@@ -1,0 +1,451 @@
+---
+layout: post
+title: "Client-side token cache for WCF"
+date: 2006-03-27
+comments: true
+categories: WCF
+---
+
+WCF by default maintains a cache for security tokens per channel
+instance (A channel is related to a contract). Therefore, it is not
+possible to reuse the same token for different channel instances.
+
+Consider the following sample, a client application that consumes
+different services using a SAML token.
+
+ 
+
+IHelloWorldChannel helloWorldService = factory.CreateChannel();
+
+string response = helloWorldService.HelloWorld("John Doe");
+
+Console.WriteLine(response);
+
+helloWorldService = factory.CreateChannel();
+
+response = helloWorldService.HelloWorld("John Doe 2");
+
+Console.WriteLine(response);
+
+factory = new ChannelFactory\<IAnotherChannel\>("anotherService");
+
+helloWorldService = factory.CreateChannel();
+
+response = helloWorldService.HelloWorld("John Doe 3");
+
+Console.WriteLine(response);
+
+ 
+
+In this case, I used three different channel instances and therefore a
+different SAML token for each service. (Each channel made an addition
+call to the STS in order to ask for a SAML token).
+
+Fortunately, WCF provides a way to cache tokens outside the scope of a
+channel and reuse them later until they expire. 
+
+During the course of this post, I will show the required steps to build
+a client-side token cache to reuse tokens obtained from a STS.  
+
+ 
+
+First of all, I created a custom ClientCredentials class in order to
+return a custom SecurityTokenManager class. The SecurityTokenManager
+class is a kind of entry point to modify the process involved in the
+creation of a security token.
+
+ 
+
+/// \<summary\>
+
+/// Custom implementation
+
+/// \</summary\>
+
+class CustomClientCredentials : ClientCredentials
+
+{
+
+  public CustomClientCredentials()
+
+      : base()
+
+  {
+
+  }
+
+  protected CustomClientCredentials(ClientCredentials other)
+
+     : base(other)
+
+  {
+
+  }
+
+  protected override ClientCredentials CloneCore()
+
+  {
+
+    return new CustomClientCredentials(this);
+
+  }
+
+  /// \<summary\>
+
+  /// Returns a custom security token manager
+
+  /// \</summary\>
+
+  /// \<returns\>\</returns\>
+
+  public override System.IdentityModel.Selectors.SecurityTokenManager
+CreateSecurityTokenManager()
+
+  {
+
+    return new CustomClientCredentialsSecurityTokenManager(this);
+
+  }
+
+}
+
+ 
+
+Secondly, I declared my own SecurityTokenManager.
+
+ 
+
+class CustomClientCredentialsSecurityTokenManager :
+ClientCredentialsSecurityTokenManager
+
+{
+
+  private static Dictionary\<Uri, CustomIssuedSecurityTokenProvider\>
+providers = new Dictionary\<Uri, CustomIssuedSecurityTokenProvider\>();
+
+  public CustomClientCredentialsSecurityTokenManager(ClientCredentials
+credentials)
+
+       : base(credentials)
+
+  {
+
+  }
+
+  /// \<summary\>
+
+  /// Returns a custom token provider when a issued token is required
+
+  /// \</summary\>
+
+  public override System.IdentityModel.Selectors.SecurityTokenProvider
+CreateSecurityTokenProvider(System.IdentityModel.Selectors.SecurityTokenRequirement
+tokenRequirement)
+
+  {
+
+    if (this.IsIssuedSecurityTokenRequirement(tokenRequirement))
+
+    {
+
+      IssuedSecurityTokenProvider baseProvider =
+(IssuedSecurityTokenProvider)base.CreateSecurityTokenProvider(tokenRequirement);
+
+      CustomIssuedSecurityTokenProvider provider = new
+CustomIssuedSecurityTokenProvider(baseProvider);
+
+      return provider;
+
+    }
+
+    else
+
+    {
+
+      return base.CreateSecurityTokenProvider(tokenRequirement);
+
+    }
+
+  }
+
+}
+
+ 
+
+For this sample, I only want to cache issued tokens (Tokens obtained
+from a STS) and thefore I am using the IsIssuedSecurityTokenRequeriment
+method to determine if the channel is requesting an issued token or
+not. 
+
+ 
+
+Lastly, I created a simple Cache helper and a custom token provider to
+reuse the issued tokens.
+
+ 
+
+/// \<summary\>
+
+/// Helper class used as cache for security tokens
+
+/// \</summary\>
+
+class TokenCache
+
+{
+
+   private const int DefaultTimeout = 1000;
+
+   private static Dictionary\<Uri, SecurityToken\> tokens = new
+Dictionary\<Uri, SecurityToken\>();
+
+   private static ReaderWriterLock tokenLock = new ReaderWriterLock();
+
+   private TokenCache()
+
+   {
+
+   }
+
+   public static SecurityToken GetToken(Uri endpoint)
+
+   {
+
+     SecurityToken token = null;
+
+     tokenLock.AcquireReaderLock(DefaultTimeout);
+
+     try
+
+     {
+
+       tokens.TryGetValue(endpoint, out token);
+
+       return token;
+
+     }
+
+     finally
+
+     {
+
+       tokenLock.ReleaseReaderLock();
+
+     }
+
+   }
+
+   public static void AddToken(Uri endpoint, SecurityToken token)
+
+   {
+
+     tokenLock.AcquireWriterLock(DefaultTimeout);
+
+     try
+
+     {
+
+       if (tokens.ContainsKey(endpoint))
+
+         tokens.Remove(endpoint);
+
+         tokens.Add(endpoint, token);
+
+     }
+
+     finally
+
+     {
+
+       tokenLock.ReleaseWriterLock();
+
+     }
+
+   }
+
+ }
+
+ 
+
+ /// \<summary\>
+
+ /// Custom token provider. This class keeps the tokens outside of the
+channel
+
+ /// so they can be reused
+
+ /// \</summary\>
+
+ class CustomIssuedSecurityTokenProvider : IssuedSecurityTokenProvider
+
+ {
+
+   private IssuedSecurityTokenProvider innerProvider;
+
+   /// \<summary\>
+
+   /// Constructor
+
+   /// \</summary\>
+
+   public CustomIssuedSecurityTokenProvider(IssuedSecurityTokenProvider
+innerProvider)
+
+            : base()
+
+   {
+
+      this.innerProvider = innerProvider;
+
+      this.CacheIssuedTokens = innerProvider.CacheIssuedTokens;
+
+      this.IdentityVerifier = innerProvider.IdentityVerifier;
+
+      this.IssuedTokenRenewalThresholdPercentage =
+innerProvider.IssuedTokenRenewalThresholdPercentage;
+
+      this.IssuerAddress = innerProvider.IssuerAddress;
+
+      this.IssuerBinding = innerProvider.IssuerBinding;
+
+      foreach (IEndpointBehavior behavior in
+innerProvider.IssuerChannelBehaviors)
+
+      {
+
+        this.IssuerChannelBehaviors.Add(behavior);
+
+      }
+
+      this.KeyEntropyMode = innerProvider.KeyEntropyMode;
+
+      this.MaxIssuedTokenCachingTime =
+innerProvider.MaxIssuedTokenCachingTime;
+
+      this.MessageSecurityVersion =
+innerProvider.MessageSecurityVersion;
+
+      this.SecurityAlgorithmSuite =
+innerProvider.SecurityAlgorithmSuite;
+
+      this.SecurityTokenSerializer =
+innerProvider.SecurityTokenSerializer;
+
+      this.TargetAddress = innerProvider.TargetAddress;
+
+      foreach (XmlElement parameter in
+innerProvider.TokenRequestParameters)
+
+      {
+
+        this.TokenRequestParameters.Add(parameter);
+
+      }
+
+      this.innerProvider.Open();
+
+    }                              
+
+ 
+
+   /// \<summary\>
+
+   /// Gets the security token
+
+   /// \</summary\>
+
+   /// \<param name="timeout"\>\</param\>
+
+   /// \<returns\>\</returns\>
+
+   protected override System.IdentityModel.Tokens.SecurityToken
+GetTokenCore(TimeSpan timeout)
+
+   {
+
+     SecurityToken securityToken = null;
+
+     if (this.CacheIssuedTokens)
+
+     {
+
+       securityToken =
+TokenCache.GetToken(this.innerProvider.IssuerAddress.Uri);
+
+       if (securityToken == null ||
+!IsServiceTokenTimeValid(securityToken))
+
+       {
+
+         securityToken = innerProvider.GetToken(timeout);
+
+         TokenCache.AddToken(this.innerProvider.IssuerAddress.Uri,
+securityToken);
+
+       }
+
+     }
+
+     else
+
+     {
+
+       securityToken = innerProvider.GetToken(timeout);
+
+     }
+
+     return securityToken;
+
+   }
+
+ 
+
+   /// \<summary\>
+
+   /// Checks the token expiration.
+
+   /// A more complex algorithm can be used here to determine whether
+the token is valid or not.
+
+   /// \</summary\>
+
+   private bool IsServiceTokenTimeValid(SecurityToken serviceToken)
+
+   {
+
+     return (DateTime.UtcNow \<=
+serviceToken.ValidTo.ToUniversalTime());
+
+   }
+
+ 
+
+  \~CustomIssuedSecurityTokenProvider()
+
+  {
+
+    this.innerProvider.Close();
+
+  }
+
+ 
+
+The provider is quite simple, it caches the tokens by IssuerAddress and
+checks the token expiration before returning it. When the token is
+expired, it gets a new token calling the inner token provider.
+
+In order to register the CustomClientCredentials class, the following
+configuration is required (Using the "type" attribute)
+
+ 
+
+\<behavior name="ServiceBehavior"\>
+
+  \<clientCredentials type="CustomClientCredentials, MyAssembly"\>
+
+  \</clientCredentials\>
+
+\</behavior\>
+
+ 
+

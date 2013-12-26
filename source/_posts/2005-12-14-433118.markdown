@@ -1,0 +1,34 @@
+---
+layout: post
+title: "Web service security patterns released"
+date: 2005-12-14
+comments: true
+categories: Web-Services
+---
+
+The Patterns & Practices team has released the web service security
+patterns in the MSDN.\
+This guide provides excellent material about many security patterns and
+how they can be applied in different scenarios. For example, to
+authenticate a client or to validate a message as well.
+
+The patterns are grouped under the following categories:
+
+Authentication patterns
+
+Message protection patterns
+
+Implementing Transport and Message Layer Security
+
+Resource Access Patterns
+
+Service Boundary Protection Patterns
+
+Service Deployment Patterns
+
+If are looking for good security practices or "security" is one of your
+main concerns, I recommend you to take a look. \
+\
+You can find them under the following link
+[http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnpag2/html/wssp.asp](http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnpag2/html/wssp.asp)
+

@@ -1,0 +1,98 @@
+---
+layout: post
+title: "X509 Turn-Key Scenarios for WSE 3.0"
+date: 2005-10-04
+comments: true
+categories: Web-Services
+---
+
+If you got the chance to look into the WSE 3.0 code, maybe you noticed
+that it comes with two turn-key scenarios for X509 tokens,
+“CertificateMutualAuthenticationProfileAssertion” and
+“MutualCertficateAssertion” (This assertion adds some new features from
+WS 1.1). \
+Both scenarios are completely different, so I decided to write this post
+to describe how they work and how the keys are interchanged in each
+one.\
+First of all, I will give a brief description about a new class
+“EncryptedKeyToken” introduced in this version of WSE.\
+This introduction is really important since this token is used in many
+places for the assertions to encrypt messages.\
+
+### What is an “EncryptedKeyToken” ?
+
+Asymmetric keys require more CPU cycles than symmetric keys to encrypt
+data.\
+Therefore, when a SOAP message is encrypted or digitally signed using an
+X509SecurityToken security token, an EncryptedKeyToken containing a
+symmetric session key is generated to encrypt the SOAP message. That
+session key is encrypted using the public key of the asymmetric key pair
+associated with the X509SecurityToken.\
+This token also existed in the previous versions of WSE, but it was
+something internal and the developer could not use it as he can do now.\
+
+### Turn-key scenarios for X509 tokens
+
+**CertificateMutualAuthenticationProfileAssertion**\
+\
+
+1.  **Client Output Filter**\
+  a.  Signs the message with the client token, which is an X509 token
+containing the client private key. Adds the client token to the message\
+  b.  Creates an EncryptedKeyToken with a session key using the X509
+service token (Public key). This token is used to encrypt the message,
+and after that, it is added to the message.\
+\
+2.  **Service Input Filter**\
+  a.  Gets the EncryptedKeyToken and the X509 client token from the
+message.\
+  b.  Validates the EncryptedKeyToken with the X509 service token
+configured in the server.\
+  c.  Decrypts the message using the EncryptedKeyToken received in the
+message.\
+  d.  Verifies the message signature using the X509 client token
+received in the message.\
+\
+3.  **Service Output Filter**\
+  a.  Creates an EncryptedKeyToken with a session key using the X509
+client token received in the request message. Encrypts the message with
+that token. The token is added to the response message.\
+  b.  Signs the message using the X509 service token (Private key). This
+token is not added to the message since the client has the service
+public key.\
+\
+4.  **Client Input Filter**\
+  a.   Gets the EncryptedKeyToken from the response message.\
+  b.  Validates the EncryptedKeyToken with the X509 client token
+configured in the client.\
+  c.  Decrypts the response message using the EncryptedKeyToken\
+  d.  Verifies the signature using the X509 service token configured in
+the client. (Public key).\
+
+**MutualCertificateAssertion**\
+\
+
+1.  **Client Output Filter**\
+  a.  Creates an EncryptedKeyToken with a session key using the X509
+service token (Public key).\
+  b.  Adds the configured X509 client token in the message.\
+  c.  Signs and encrypts the request message using the
+EncryptedKeyToken. (Including the X509 client token).\
+\
+2.  **Service Input Filter**\
+  a.  Gets the EncryptedKeyToken and the X509 client token from the
+message.\
+  b.  Validates the EncryptedKeyToken with the X509 service token
+configured in the server. \
+  c.  Decrypts the message using the EncryptedKeyToken.\
+  d.  Verifies the signature using the EncryptedKeyToken.\
+\
+3.  **Service Output filter**\
+  a.  Signs and encrypts the message using the EncryptedKeyToken
+received in the request message.\
+\
+4.  **Client Input filter**\
+  a.  Decrypts the message and verifies the signature using the
+EncryptedKeyToken created in the Client output filter.\
+
+

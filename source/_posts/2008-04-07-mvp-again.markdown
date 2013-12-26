@@ -1,0 +1,17 @@
+---
+layout: post
+title: "MVP Again 2008!!!"
+date: 2008-04-07
+comments: true
+categories: Personal
+---
+
+I am so excited, this is third time I received the Microsoft MVP award.
+Thanks to all people involved in the evaluation process and my MVP lead
+[Fernando Garcia Loera](http://blogs.msdn.com/mvplead).
+
+I am looking forward to continue that collaborating throughout this
+year.
+
+Thanks again Microsoft!!!
+

@@ -1,0 +1,76 @@
+---
+layout: post
+title: "HTTP Endpoints in SQL Server 2005"
+date: 2005-04-22
+comments: true
+categories: SQL-Server-2005
+---
+
+SQL Server 2005 ( Codenamed "Yukon" )  provides a new interesting
+feature to execute stores procedures or Transact-SQL statements through
+web services published in the server, without need to use IIS.\
+This new feature exposes Http endpoints using the Http Api provided in
+Windows XP SP2 and Windows 2003.\
+These endpoints are published in a specific URI, and they listen for
+incoming soap requests, so they facilitate interoperability because any
+application, which talks soap, can communicate with SQL server without
+requiring additional sql libraries or MDAC.
+
+The syntax to create an endpoint is quite simple, and looks like this:
+
+CREATE ENDPOINT MyEndpoint\
+STATE = STARTED\
+AS HTTP (\
+  AUTHENTICATION = (INTEGRATED),\
+  PATH = '/sql/myendpoint',\
+  PORTS = (CLEAR) )\
+FOR SOAP (\
+  BATCHES = ENABLED,\
+  WSDL = DEFAULT\
+)\
+
+In this case I created a new endpoint called MyEndpoint, which listen
+for Transact-SQL statements on http://localhost/sql/myendpoint. You can
+test it browsing to http://localhost/sql/myendpoint?wsdl.\
+This sentence supports additional parameters, all of them are very well
+described in the SQL online help.\
+
+This sample shows how to execute a Transact-SQL statement from a simple
+java script.
+
+function SendBatchRequest( strServerName, strUrlPath, strQuery )\
+{\
+   var objXmlHttp = null;\
+   var strRequest = "";\
+\
+   objXmlHttp = new ActiveXObject( "microsoft.xmlhttp" );\
+   objXmlHttp.open( "POST", "http://" + strServerName + strUrlPath,
+false );\
+   objXmlHttp.setrequestheader( "Content-Type", "text/xml" );\
+   objXmlHttp.setRequestHeader( "Host", strServerName );\
+\
+   strRequest = "\<SOAP-ENV:Envelope\
+                           xmlns:SOAP-ENV='http://schemas.xmlsoap.org/soap/envelope/'\
+                           xmlns:sql='http://schemas.microsoft.com/sqlserver/2004/SOAP'\>\
+                              \<SOAP-ENV:Body\>\
+                                 \<sql:sqlbatch\>\
+                                    \<sql:BatchCommands\>" + strQuery +
+"\</sql:BatchCommands\>\
+                                 \</sql:sqlbatch\>\
+                              \</SOAP-ENV:Body\>\
+                        \</SOAP-ENV:Envelope\>";\
+\
+   objXmlHttp.send( strRequest );\
+\
+   if( objXmlHttp.status == 200 )\
+      return objXmlHttp.responseXML.xml;\
+   else\
+      return "";\
+}\
+\
+var response = SendBatchRequest( 'localhost', '/sql/myendpoint', 'Select
+\* from sys.http\_endpoints' );\
+
+Actually, I'm writing a .NET managed data provider to consume these web
+services, so I'll be blogging a lot more about this topic soon.
+

@@ -1,0 +1,224 @@
+---
+layout: post
+title: "Service interface factory"
+date: 2006-03-31
+comments: true
+categories: My-work
+---
+
+Last week I received some feedback from the web services guru [Christian
+Weyer](http://blogs.thinktecture.com/cweyer) (By the way, a cool guy
+too) about my post ["Proxy
+Factory"](/cibrax/archive/2006/02/06/437501.aspx "'"), so I decided to
+develop a complete and usable sample to show that concept.
+
+In that post, I described a way to separate the service interface from
+the service implementation doing something similar to what WCF does when
+it creates a channel for a specific interface.
+
+During this post, I will give a brief description about the main parts
+of this sample.
+
+First of all, I defined a service interface or contract for my service.
+I did not use my imagination at all and I decided to call this interface
+"IHelloWorld".
+
+public interface IHelloWorld
+
+{
+
+  string HelloWorld(string message);
+
+}
+
+The client application uses that interface and the service factory to
+create a proxy for the service implementation without care about any
+details of this last one.
+
+class Program
+
+{
+
+  static void Main(string[] args)
+
+  {
+
+     //Default implementation
+
+     ServiceFactory\<IHelloWorld\> factory = new
+ServiceFactory\<IHelloWorld\>();
+
+     IHelloWorld service = factory.Create();
+
+     Console.WriteLine(service.HelloWorld("John Doe"));
+
+ 
+
+     //Remote implementation
+
+     factory = new
+ServiceFactory\<IHelloWorld\>("RemoteImplementation");
+
+     service = factory.Create();
+
+     Console.WriteLine(service.HelloWorld("John Doe"));
+
+   }
+
+}
+
+The proxy for the service implementation perform the following steps
+
+1.  Looks for the correct service implementation using the provided
+    interface
+2.  Creates an instance of the service implementation
+3.  Invokes the right method on the service implementation
+
+For this sample, the proxy is quite simple and invokes the real service
+in the current machine, but more complex tasks could be performed, such
+as message interception or remote invocation. (WCF performs both things,
+it uses message interception to create a soap message and remote
+invocation to execute the service implementation in other machine).
+
+public class ServiceProxy : System.Runtime.Remoting.Proxies.RealProxy
+
+{
+
+  private Type type;
+
+  private string configurationName;
+
+ 
+
+  public ServiceProxy(string configurationName, Type type) : base(type)
+
+  {
+
+    this.type = type;
+
+    this.configurationName = configurationName;
+
+  }
+
+ 
+
+  public override System.Runtime.Remoting.Messaging.IMessage
+Invoke(System.Runtime.Remoting.Messaging.IMessage imsg)
+
+  {
+
+    Type implementationType = null;
+
+    string type = this.type.FullName;
+
+    foreach (ServiceInterfaceDefinition definition in
+ServiceInterfaceConfiguration.Current.Interfaces)
+
+    {
+
+      if ((this.configurationName == null || this.configurationName ==
+definition.Name) && type == definition.Type)
+
+      {
+
+        implementationType = definition.ImplementationType;
+
+        break;
+
+      }
+
+    }
+
+ 
+
+    if(implementationType == null)
+
+      throw new Exception("The implementation type can not be null");
+
+ 
+
+    object implementation =
+Activator.CreateInstance(implementationType);
+
+    ReturnMessage retmsg = null;
+
+    if (imsg is IMethodCallMessage)
+
+    {
+
+      IMethodCallMessage call = imsg as IMethodCallMessage;
+
+      object returnValue =
+implementationType.InvokeMember(call.MethodName,
+System.Reflection.BindingFlags.InvokeMethod,
+
+              null, implementation, call.Args);
+
+      retmsg = new ReturnMessage(returnValue, null, 0, null, call);
+
+    }
+
+ 
+
+    return retmsg;
+
+  }
+
+}
+
+The configuration for the client application contains two service
+implementations in this case, "LocalImplementation" for a component in
+the same application and "RemoteImplementation" for a web service proxy.
+
+\<serviceInterfaces\>
+
+  \<interfaces\>
+
+    \<add name="LocalImplementation"
+
+        implementationType="ServiceInterfaces.Client.LocalHelloWorld,
+ServiceInterfaces.Client"
+
+        type="ServiceInterfaces.IHelloWorld"\>
+
+    \</add\>
+
+    \<add name="RemoteImplementation"
+
+         implementationType="ServiceInterfaces.Client.RemoteHelloWorld,
+ServiceInterfaces.Client"
+
+         type="ServiceInterfaces.IHelloWorld"\>
+
+    \</add\>
+
+  \</interfaces\>
+
+\</serviceInterfaces\>
+
+The code below shows the service implementation configured as
+"LocalImplementation".
+
+class LocalHelloWorld : IHelloWorld
+
+{
+
+  \#region IHelloWorld Members
+
+  public string HelloWorld(string message)
+
+  {
+
+    return String.Format("Local Hello World : {0}", message);
+
+  }
+
+  \#endregion
+
+}
+
+Download the complete sample from
+[here](/images/legacy/ServiceFactory.zip "here ")
+
+
+

@@ -1,0 +1,16 @@
+---
+layout: post
+title: "MVP - Connected System Developer"
+date: 2006-04-04
+comments: true
+categories: My-work
+---
+
+I just received the confirmation email from the MVP Lead Ben Miller.
+Thank you Microsoft :-). \
+I also would like to give special thanks to [Julie
+Lerman](http://www.thedatafarm.com/blog) and [Jason
+Hogg](http://blogs.msdn.com/TheHoggBlog), who have helped me a lot to
+obtain this award.\
+
+

@@ -1,0 +1,13 @@
+---
+layout: post
+title: "WS-Compression for WSE 3"
+date: 2006-02-13
+comments: true
+categories: Web-Services
+---
+
+[Roldolfo Finochietti](http://weblogs.shockbyte.com.ar/rodolfof) has
+written a nice implementation of WS-Compression for WSE 3.0. \
+You can download
+it [here](http://weblogs.shockbyte.com.ar/rodolfof/archive/2006/02/07/4585.aspx).
+

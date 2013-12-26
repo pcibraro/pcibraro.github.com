@@ -1,0 +1,18 @@
+---
+layout: post
+title: "Jason Hogg is blogging"
+date: 2006-02-14
+comments: true
+categories: Web-Services
+---
+
+Jason Hogg is blogging, what good news. I have been working with Jason
+for almost two years on different projects (Shadowfax, some applications
+blocks, and other projects for web services). \
+Jason is program manager on the Patterns & Practices team, a smart guy
+and guru on web services. \
+He has been writing excellent articles about WSE, SAML and his work on
+Microsoft.  Check out his blog at
+[http://blogs.msdn.com/thehoggblog/](http://blogs.msdn.com/thehoggblog/)\
+
+

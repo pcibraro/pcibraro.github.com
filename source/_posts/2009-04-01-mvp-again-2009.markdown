@@ -1,0 +1,17 @@
+---
+layout: post
+title: "MVP again 2009!!"
+date: 2009-04-01
+comments: true
+categories: MVP
+---
+
+I just got great news!  MVP in Connected Systems for another year.
+
+I want to thank Ed Hickey, my MVP lead [Fernando Garcia
+Loera](http://blogs.msdn.com/mvplead), and the rest of people involved
+in the evaluation process for once again considering my efforts in the
+community worthy of recognition.
+
+Thanks again Microsoft!!!
+

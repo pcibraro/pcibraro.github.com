@@ -1,0 +1,18 @@
+---
+layout: post
+title: "Intellisense support for WCF configuration files - February CTP"
+date: 2006-03-07
+comments: true
+categories: WCF
+---
+
+Juval Lowy has posted an updated version of the WCF configuration schema
+[here](http://www.idesign.net/idesign/temp/dotNetConfig.zip).
+
+If you want to have intellisence support to modify the WCF configuration
+files in the February CTP, you will have to download that schema and
+replace the existing schema in C:\\Program Files\\Microsoft Visual
+Studio 8\\Xml\\Schemas.
+
+This is a temporary fix for a bug in the February CTP.
+

@@ -1,0 +1,262 @@
+---
+layout: post
+title: "Improve the performance of your services with Secure conversation"
+date: 2006-02-21
+comments: true
+categories: WCF
+---
+
+Secure Conversation is a feature designed to improve the performance of
+an application that needs to interchange more than one messages with a
+service.
+
+When SC is enabled, the token negotiation and authentication happens
+once compared to other tokens where that negotiation is done for each
+request to the service.
+
+In the first negotiation, the client sends a "RequestSecurityToken"
+message to the service in order to ask for a session token. That message
+is part of the WS-Trust specification and it is protected (encrypted and
+signed) with a security token that will be the base token for the
+session token.
+
+After that, the service creates a new token called Secure context token
+(SCT), which contains a reference to the original token and a symmetric
+key to perform cryptographic operations like encrypt or sign messages.
+(Message confidentiality and integrity).
+
+WSE and WCF, both implement this feature and the service itself is
+responsible to emit the SCT. Therefore, the service is also a "Security
+token service" or STS.
+
+The service returns the SCT to the client application and keeps the
+state of the original token using different strategies (Cookies,
+in-memory stores, etc). This
+[article](http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnwebsrv/html/sctinfarm.asp "article") 
+in the MSDN describes very well what are the different approaches that a
+STS can use to maintain the state of a session.
+
+The most import benefits of using a SCT to protect the communication
+between a client and service are:
+
+ 
+
+1. The service execution is three or four times faster than the same
+execution with other tokens.
+
+​2. It is valid for a short time but it can be automatically renewed. As
+consequence, the  client application does not need to keep the original
+token.
+
+   This is really important when the original token contains some
+sensitive information such an user name or password. (Username Token).
+
+ 
+
+**Secure conversation in WSE**
+
+ 
+
+Activating SC in WSE is really easy, it is just a flag in the policy
+configuration. All the policies for the turn-key scenarios support two
+attributes, "establishSecurityContext" to turn on the SC feature and
+renewExpiredSecurityContext to automatically renew the SCT when it
+expires (This attribute is helpful when storing the original token in
+the client is not a feasible solution).
+
+ 
+
+The sample below shows how to activate SC for a "MutualCertificate"
+turn-key scenario:
+
+ 
+
+\<mutualCertificate10Security **establishSecurityContext="true"**
+**renewExpiredSecurityContext="true"**\>
+
+  \<serviceToken\>
+
+    \<x509 storeLocation="LocalMachine" storeName="My"
+findValue="CN=WSE2QuickStartServer"
+findType="FindBySubjectDistinguishedName" /\>
+
+  \</serviceToken\>
+
+  \<protection\>
+
+    \<request signatureOptions="IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody" encryptBody="true" /\>
+
+    \<response signatureOptions="IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody" encryptBody="true" /\>
+
+    \<fault signatureOptions="IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody" encryptBody="false" /\>
+
+  \</protection\>
+
+\</mutualCertificate10Security\>
+
+ 
+
+WSE supports two modes to mantain the state of the original security
+token for a particular session.
+
+-   Cookie mode, where the state is stored in a temporary cookie. This
+    mode was designed to support web farm scenarios.
+-   In-Memory cache in the STS
+
+ 
+
+\<microsoft.web.services3\>
+
+  \<tokenIssuer\>
+
+    \<statefulSecurityContextToken enabled="false" /\>
+
+  \</tokenIssuer\>
+
+\</microsoft.web.services3\>
+
+ 
+
+The default value for this setting is "true", which enables the Cookie
+mode. The state for a kerberos token can not be maintained in a cookie
+and therefore it is the only turn-key scenario that doesn't support
+stateful SCT.
+
+ 
+
+The code below shows how to reuse a SCT from a client application.
+
+ 
+
+HelloWorldServiceWse serviceProxy = new HelloWorldServiceWse();
+
+UsernameToken usernameToken = new UsernameToken("user", "password");
+
+serviceProxy.SetClientCredential(usernameToken);
+
+serviceProxy.SetPolicy("ClientPolicy");
+
+serviceProxy.HelloWorld();
+
+SecureConversationCorrelationState correlationState =
+serviceProxy.ResponseSoapContext.SessionState.Get\<SecureConversationCorrelationState\>("");
+
+if (correlationState != null)
+
+{
+
+    SecurityContextToken sct = correlationState.Token as
+SecurityContextToken;
+
+    if (sct != null)
+
+    {
+
+        serviceProxy = new HelloWorldServiceWse();
+
+        serviceProxy.SetClientCredential(sct);
+
+        // Set the ClientPolicy onto the proxy
+
+        serviceProxy.SetPolicy("ClientPolicy");
+
+        serviceProxy.HelloWorld();
+
+        sct.Cancel();
+
+    }
+
+}
+
+ 
+
+   
+
+**Secure conversation in WCF**
+
+ 
+
+****
+
+WCF turn on SC by default for all binding that support WS-Security
+(WsHttpBinding, NetTcpBinding, netMsmqBinding).
+
+The Custom binding also offers the possibility to enable SC depending on
+the value of the attribute "authenticationMode" (The value for this
+attribute must be "SecureConversation"). In addition, you can configure
+a binding that will be used to establish a communication with the STS by
+means of the element "secureConversationBootstrap".
+
+WCF is completely different from WSE since it hides the SCT from the
+client application and automatically maintains a copy of this
+token at channel level (A channel is related to a contract). That is, it
+will reuse the SCT as long as the client application uses the same
+instance of the client channel.
+
+When the channel is closed in a normal fashion, a message is sent to the
+service to release the SCT.  If the channel closes abruptly, the SCT
+will eventually be released on the service after after a period of
+in-actively.
+
+ 
+
+The configuration below shows two equivalent bindings that use the SC
+feature:
+
+ 
+
+\<bindings\>
+
+  \<wsHttpBinding\>
+
+    \<binding name="ServiceBinding"\>
+
+      \<security mode="Message"\>
+
+        \<message clientCredentialType="Certificate"
+establishSecurityContext="true"/\>
+
+      \</security\>
+
+    \</binding\>
+
+  \</wsHttpBinding\>
+
+  \<customBinding\>
+
+    \<binding name="ServiceBinding"\>
+
+      \<security authenticationMode="SecureConversation"
+
+            requireSecurityContextCancellation ="false"\>
+
+         \<secureConversationBootstrap
+authenticationMode="MutualCertificate"\>
+
+         \</secureConversationBootstrap\>
+
+      \</security\>
+
+      \<httpTransport/\>
+
+    \</binding\>
+
+   \</customBinding\>
+
+\</bindings\>
+
+ 
+
+****
+
+****
+
+The "requireSecurityContextCancellation" attribute specifies if the
+client application must send a "shutdown" message to the service after
+closing the client channel.
+
+
+

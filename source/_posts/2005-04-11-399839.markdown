@@ -1,0 +1,231 @@
+---
+layout: post
+title: "Hosting the CLR within a custom action"
+date: 2005-04-11
+comments: true
+categories: Wix
+---
+
+Today, in order to develop a custom action for a Window Installer setup,
+you can choose between two options:
+
+  1. Writing a Native custom action using the C language\
+  2. Writing a Managed custom action using any .NET compliant language
+
+Both options have different pros and cons, so I will start enumerating
+some of them:
+
+Native custom actions
+
+  Pros:
+
+    1. Access to the installer context information.\
+    2. Interop code not required.
+
+  Cons:
+
+    1. Require some understanding of Windows programming and C language
+as well.\
+    2. Lack of code protection and memory management, you are
+responsible to acquire and release all used resources.\
+    3. Find a problem can be a nightmare, for example, a memory leak
+problem.\
+    4. Hard to debug.\
+
+Managed custom actions
+
+  Pros:
+
+    1. Extremely easy to develop in any CLR compliant language.\
+    2. Easy to debug and find problems.
+
+  Cons:
+
+    1. Inability to get context information.\
+    2. Only deferred custom actions ( They run at the end, you can't
+change any condition or property during the install ).\
+
+### A new option
+
+To overcome the disadvantages of both options, the last week I developed
+a native custom action which hosts the CRL Runtime and executes a
+managed custom action. This solution combines the best of both worlds,
+and you can get many benefits of using it. \
+It contains three parts, a native custom action, a managed custom
+action, and a small msi framework to be used within the managed custom
+action. I will describe each one in detail next.
+
+### Native custom action project
+
+The native custom action is a normal custom action written in C, which
+is responsible to host the CLR runtime and call to the managed custom
+action. \
+Basically, this custom action contains code to do the following things:
+
+​1. Loads the CLR runtime\
+2. Gets the managed custom action assembly from the msi binary table\
+3. Copies the assembly to the user temp folder\
+4. Loads the assembly within the CLR instance\
+5. Executes the managed custom action\
+6. Unloads the CLR runtime\
+
+You can find all this code under the CLRHosting folder. This code is
+always the same, and you won't have to change almost anything of it,
+except some parameters located in the file "String.h":
+
+// CLR version\
+static LPCWSTR szCLRVersion = L"v1.1.4322";\
+\
+// CLR flavor, workstation or server\
+static LPCWSTR szCLRFlavor = L"wks";\
+\
+// Application domain name\
+static LPCWSTR szApplicationName = L"MsiHosting";\
+\
+// Configuration file assigned to the application domain. You can attach
+this file to the binary table in the msi\
+static TCHAR\* szApplicationConfigFile = "MsiHosting.config";\
+\
+// Entry point of the managed custom action\
+static OLECHAR FAR\* szCustomActionMember = L"RunActions";\
+\
+// Managed custom action assembly\
+static TCHAR\* szAssemblyName = "CustomActionRuntime";\
+\
+// Managed custom action class name\
+static TCHAR\* szClassName = "CustomActionRuntime.Runtime";\
+\
+// Key used to locate the assembly file within the msi binary table\
+static TCHAR\* szCustomActionRuntimeBinaryKey = "CustomActionRuntime";\
+\
+// Key used to locate the configuration file within the msi binary
+table\
+static TCHAR\* szApplicationConfigFileBinaryKey = "MsiHostingConfig";
+
+### Managed custom action project
+
+I wrote the project using C\#, it includes the managed custom action and
+a small framework to manipulate the installer context.\
+You can find this code under the CustomActionRuntime folder.\
+The managed custom action should be implemented in "CustomAction.cs",
+and usually looks like this:
+
+public class CustomAction\
+{\
+  \#region Constructors\
+\
+  public CustomAction()\
+  {\
+  }\
+\
+  \#endregion\
+\
+  public void Run( InstallerContext context )\
+  {\
+    // TODO: do something\
+  }\
+}\
+
+The context parameter represents a facade to the msi framework, through
+this framework you can query and modify different things of the
+installer context, not to mention the fact of executing dynamic SQL
+query against the msi tables.
+
+This sample makes use of this framework to query all available
+properties, it is a useless sample, but helps to show that
+functionality:
+
+public class CustomAction\
+{\
+  \#region Constructors\
+\
+  public CustomAction()\
+  {\
+  }\
+\
+  \#endregion\
+\
+  public void Run( InstallerContext context )\
+  {\
+    View view = context.OpenView( "SELECT \* FROM Property" );\
+    RecordCollection records = view.Execute();\
+\
+    foreach( Record record in records )\
+    {\
+      foreach( Field field in record.Fields )\
+      {\
+       string value = field.GetString();\
+      }\
+    }\
+\
+    view.Close();\
+  }\
+}
+
+### Using this custom action within Wix
+
+Until here I described the different parts of this solution, now I will
+describe how to integrate it in your installer using Wix.\
+To start I picked up a sample provided in this
+[tutorial](http://www.tramontana.co.hu/wix/lesson3.html#custom_actions),
+by the way an excellent tutorial to learn Wix.\
+This sample shows how to validate a PID using a custom action, so I'll
+modify it a little bit to use this solution.
+
+**1. "Including the native custom action"**\
+
+Go to the custom action definition section, and replace this line :
+
+\<CustomAction Id="CheckingPID" BinaryKey="CheckPID" DllEntry="CheckPID"
+/\>
+
+For
+
+\<CustomAction Id="CheckingPID" BinaryKey="CheckPID" DllEntry="Execute"
+/\>
+
+You have to change only the DllEntry attribute, because my solution
+exports a different dll entry. ( "Execute" instead of "CheckPID" )
+
+**2. "Modifying the binary table"**\
+
+Go to the binaries definition section, and replace this line :
+
+\<Binary Id="CheckPID" src="Binary\\CheckPID.dll" /\>
+
+For
+
+\<!-- Files required to run the .NET custom action --\>\
+\<!-- Native custom action --\>\
+\<Binary Id="CheckPID" src="Binary\\CLRHosting.dll" /\>\
+\
+\<!-- Managed custom action assembly file, this key can be changed from
+Strings.h --\>\
+\<Binary Id="CustomActionRuntime" src="Binary\\CustomActionRuntime.dll"
+/\>\
+\
+\<!-- AppDomain config file, this key can be changed from Strings.h
+--\>\
+\<Binary Id="MsiHostingConfig" src="Binary\\MsiHosting.config" /\>\
+
+This change includes the files required to run my solution.
+
+**3. "Compiling the solution"**\
+
+Open the "MSIHosting.sln" solution file with visual studio and compile
+it. This compilation will produce the binary files required to run the
+custom action.
+
+**4. "Copying the binary files"**\
+
+Copy the following files to the "Binary" folder:\
+\
+CLRHosting\\Debug\\CLRHosting.dll\
+CustomActionRuntime\\bin\\debug\\CustomActionRuntime.dll\
+CustomActionRuntime\\MsiHosting.config\
+
+After all these steps, you will able to compile the wix source file to
+get the final msi.\
+\
+[Download Source Code](/images/legacy/MSIHosting.zip)
+

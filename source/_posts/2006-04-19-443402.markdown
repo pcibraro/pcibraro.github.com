@@ -1,0 +1,19 @@
+---
+layout: post
+title: "WSE and WCF interop sample"
+date: 2006-04-19
+comments: true
+categories: WCF
+---
+
+Yes, I know, [Mark Fusell](http://blogs.msdn.com/mfussell/) has
+already demonstrated the interoperability between WSE and WCF many
+times. This is another example that shows a WSE client consuming a WCF
+service. The client and the service, both use a AnonymousForCertificate
+turn-key assertion.
+
+You can download it from this
+[location](/images/legacy/WSEAndIndigo.zip "location")
+
+
+

@@ -1,0 +1,53 @@
+---
+layout: post
+title: "Binding an ADAM principal to Azman"
+date: 2005-09-28
+comments: true
+categories: ASP.NET
+---
+
+As I mentioned in a previous post, I had a lot of problems last
+week trying to bind an ADAM principal to Azman.\
+I found a way to do that using the Azman PIA but unfortunately it is not
+supported by the Azman Role provider shipped within ASP.NET 2.0.\
+There are two available versions of Azman PIA, 1.0 and 1.2. The latest
+version was released within the W2k3 SP 1 and contains some improvements
+compared with the version 1.0.\
+The only way I found to bind an ADAM principal to Azman was through the
+user’s SID\
+
+//ADAM Provider was configured in the Web.Config file\
+MembershipUser user = Membership.GetUser("myuser@MyDomain.com");\
+\
+AzAuthorizationStoreClass store = new AzAuthorizationStoreClass();\
+\
+store.Initialize(0,
+"msldap://localhost:389/CN=AzManADAMStore,CN=Users,DC=MyDomain,DC=Com",
+null); \
+\
+IAzApplication2 azApp = store.OpenApplication2("MyApp", null);\
+\
+//We need to use the SID instead of the user name, so the
+ProviderUserKey is used.\
+IAzClientContext context =
+azApp.InitializeClientContextFromStringSid(user.ProviderUserKey.ToString(),
+1, null);\
+\
+object roles = context.GetRoles("");\
+
+Some notes about this code:\
+\
+1. The ADAM membership provider was configured in the application. \
+2. The code is using the AzMan PIA directly. \
+3. The method InitializeClientContextFromStringSid must be used instead
+of InitializeClientContextFromName. The last method only works for
+Windows principals and it is the one used by the
+AuthorizationRoleProvider class in ASP.NET. That's why it only works for
+windows principals. \
+4. A SID is required instead of a user-friendly name (We can get the SID
+from the ProviderUserKey property).\
+
+As far I know the only possible solution is to develop a custom Role
+Provider, which is not a good one because a SID is required instead of a
+friendly-name.
+

@@ -1,0 +1,57 @@
+---
+layout: post
+title: "Interoperability between WSE 2.0 and WSE 3.0"
+date: 2005-11-25
+comments: true
+categories: Web-Services
+---
+
+This is probably one of the main concerns for people involved in the
+development of web services using WSE. \
+Unfortunately, WSE 3.0 was designed from the beginning to be compatible
+at wire level with Indigo and therefore it doesn't interoperate well
+with WSE 2.0.\
+To be clear, "Wire compatible" means equivalent messages. \
+I wrote this post to provide some necessary points to obtain
+interoperability between both versions.\
+
+### WS-Security xx specs
+
+At this moment, there are two available versions of this specification,
+1.0 and 1.1 (Also called WS-Security extensions). \
+WSE 2.0 only implements the first version whereas WSE 3.0 uses features
+of both versions (such as signature confirmation and key derivation). \
+Both endpoints, the client and the server should use features provided
+only by WS-Security 1.0.\
+
+### Secure conversation
+
+Secure Conversation is a special feature provided by WSE, in which
+client and server negotiate a session token to protect the communication
+for a specific period of time. This feature decrease the response time
+because the token negotiation happens once compared to other turn-key
+scenarios where the negotiation is done for each message. (This feature
+is really important when the client and the server interchange many
+messages during a period of time). \
+The SecureContext token used in WSE 3.0 is not compatible with WSE 2.0
+since it was modified to support new features like "Stateful secure
+context tokens".\
+
+### WS-Addressing xx specs
+
+WSE 3.0 uses a newer version of this specification (The same as Indigo)
+and therefore the messages produced by both versions are not
+compatible.\
+There is not a good way to fix this problem, but probably a SoapFilter
+to update the addressing headers can be a solution.\
+
+### Algorithm suite
+
+WSE 3.0 uses by default the same algorithm suite as Indigo, AES256 for
+symmetric encryption and RSA-OAEP for key wrap. On the other hand, WSE
+2.0 uses AES128 and RSA-15.\
+You will have to update the configuration settings in both endpoints in
+order to use the same algorithm suite.\
+I explained how to change this setting in a previous
+[post](http://weblogs.asp.net/cibrax/archive/2005/09/19/425555.aspx)
+

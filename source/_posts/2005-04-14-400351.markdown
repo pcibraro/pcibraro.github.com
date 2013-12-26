@@ -1,0 +1,56 @@
+---
+layout: post
+title: "Writing managed custom actions in an easy way"
+date: 2005-04-14
+comments: true
+categories: Wix
+---
+
+In my last post, I talked about hosting the CRL within a native custom
+action. \
+This week I found an easier way to execute a managed custom action, it
+is based on a hack and not extra C++ code is required.\
+Actually, you can't write a C\# custom action because the compiler
+doesn't allow you to create a \_\_stdcall function to be  \
+called from the outside. \
+Well, take a look to this
+[article](http://www.c-sharpcorner.com/Code/2003/Aug/ExportManagedCodeasUnmanaged.asp),
+it shows how to overcome that problem.
+
+Let's use this article to write our managed custom action, I'll start
+writing the custom action's skeleton:
+
+using System;\
+\
+namespace CustomActions\
+{\
+    public class MyCustomAction\
+    {\
+        public static int Execute( long handle )\
+        {\
+            System.Windows.Forms.MessageBox.Show( String.Format( "Hello
+World {0}", handle ) );\
+\
+            return 0;\
+\
+        }\
+    }\
+}
+
+When the installer calls to this custom action, it will show a message
+box with the current msi handler number. \
+As next step, you will have to read that article and do the same things,
+but changing the "SayHello" method by "Execute".\
+After finishing the last article step, you will have a managed assembly,
+which exports an "Execute" method. \
+You will able to use that method as "DllEntry" when you define the
+custom action in the custom actions table. \
+
+Using wix, the custom action definition should look like this:
+
+\<CustomAction Id="CustomActions" BinaryKey="CustomActions"
+DllEntry="Execute" /\>
+
+I hope this can help you to develop more custom actions in an easy way
+:)
+

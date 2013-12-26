@@ -1,0 +1,39 @@
+---
+layout: post
+title: "Remote pair programming"
+date: 2006-03-15
+comments: true
+categories: My-work
+---
+
+As most of you know, Pair programming is one of practices included in
+Extreme Programming. It is a programming technique that provides
+line-of-sight-and-hearing learning.
+
+I have only applied this technique a few times in the past,  finding it
+very useful to learn both programming techniques and problem domain.
+
+During the last week I started to work with a very cool guy, Dustin, in
+an interesting project to build some proof-of-concept applications
+for his company. Dustin usually reads my blog and he decided to hire me
+as a kind of consultant or mentor to guide him in the building of those
+applications.
+
+The main problem in this case was the distance, I am currently living in
+Argentina and he is in USA. It was impossible to me to travel to USA
+this month so we decided to use a sort of "Remote Pair Programming"
+technique.  
+
+We have a meeting almost every day and he shares his screen with me
+using a tool called TighVNC (A great tool indeed, and it is open source
+too).
+
+ ![](/images/legacy/Pairing.JPG)
+
+I can not say how useful it was, we are making a lot of progress and
+learning something new every day. I have just wanted to write this post
+in order to share this experience since I find it very rewarding.\
+\
+If you know about other tools to do something similar, please, post a
+comment.
+

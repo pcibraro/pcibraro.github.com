@@ -1,0 +1,88 @@
+---
+layout: post
+title: "Default algorithms in WSE 3.0"
+date: 2005-09-19
+comments: true
+categories: Web-Services
+---
+
+WSE 2.0 and 3.0, both provide AES128 + RSA 1.5 as default algorithms for
+symmetric encryption and key-wrap.\
+However, AES256 + RSA-OAEP are always recommended for these purposes,
+and Indigo will ship with that combination as default.
+
+In WSE 2.0, these algorithms could be changed adding some settings in
+the configuration file:
+
+\<microsoft.web.services2\>\
+...\
+  \<security\>\
+  .... \
+    \<binarySecurityTokenManager\
+      valueType="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0\#X509v3"\>\
+      \<sessionKeyAlgorithm name="TripleDES"/\>   \<!-- add this to
+switch to TripleDes from default AES128 --\>\
+      \<keyAlgorithm name="RSAOAEP"/\>  \<!-- add this to switch to
+RSA-OEAP from default RSA15 --\>\
+    \</binarySecurityTokenManager\>\
+  \</securityç\>\
+...\
+\<microsoft.web.services2\>\
+
+These settings don't affect in the same way to WSE 3.0 because it
+implements some changes in the code used to secure messages. The
+security assertions\
+shipped within WSE 3.0 use different tokens to secure messages, they
+don't use an X509 security token anymore, instead they use derived
+tokens.\
+
+**EncryptedToken**: Usually, this token is used by the security
+assertions to sign and encrypt messages.
+
+**DerivedKeyToken**: Only used when the flag "DeriveKeys" is on.
+
+**SecureContextToken**: Only used in secure conversations. (When the
+flag "establishSecurityContext" is on)
+
+The following configuration shows how to override the default algorithm
+used by these tokens: \
+
+\<microsoft.web.services3\>\
+  \<security\>\
+\<binarySecurityTokenManager\>\
+  \<add \
+    type="Microsoft.Web.Services3.Security.Tokens.X509SecurityTokenManager,
+Microsoft.Web.Services3, Version=3.0.0.0, Culture=neutral,
+PublicKeyToken=31BF3856AD364E35"\
+   valueType="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0\#X509v3"\>\
+    \<keyAlgorithm name="RSAOAEP"/\>\
+  \</add\>\
+\</binarySecurityTokenManager\>\
+\<securityTokenManager\>\
+  \<add localName="EncryptedKey"\
+   type="Microsoft.Web.Services3.Security.Tokens.EncryptedKeyTokenManager,
+Microsoft.Web.Services3, Version=3.0.0.0, Culture=neutral,
+PublicKeyToken=31BF3856AD364E35"\
+    namespace="http://www.w3.org/2001/04/xmlenc\#"\>\
+    \<keyAlgorithm name="AES256"/\>\
+  \</add\>\
+  \<add localName="DerivedKeyToken"\>\
+    type="Microsoft.Web.Services3.Security.Tokens.DerivedKeyTokenManager,
+Microsoft.Web.Services3, Version=3.0.0.0, Culture=neutral,
+PublicKeyToken=31BF3856AD364E35"\
+    namespace="http://schemas.xmlsoap.org/ws/2005/02/sc"\>\
+    \<keyAlgorithm name="AES256"/\>\
+  \</add\>\
+  \<add localName="SecurityContextToken" \
+    type="Microsoft.Web.Services3.Security.Tokens.SecurityContextTokenManager,
+Microsoft.Web.Services3, Version=3.0.0.0, Culture=neutral,
+PublicKeyToken=31BF3856AD364E35" \
+    namespace="http://schemas.xmlsoap.org/ws/2005/02/sc"\>\
+    \<keyAlgorithm name="AES256"/\>\
+  \</add\>\
+\</securityTokenManager\>\
+\</security\>\
+\</microsoft.web.services3\>\
+
+ 
+

@@ -1,0 +1,23 @@
+---
+layout: post
+title: "Problems with Azman and ADAM"
+date: 2005-09-19
+comments: true
+categories: ASP.NET
+---
+
+Configuring both products to work together can be a nightmare. \
+I've spent almost three days trying to configure Azman and ADAM
+membership providers in a normal ASP.NET application, but I couldn't.\
+I wanted to use ADAM as user/group repository and Azman as authorization
+repository (to have fine grained access control and manage roles). \
+This
+[article](http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnpag2/html/paght000018.asp)
+from MSDN has helped me a lot to configure both products, but it's a
+little tricky. It shows how to use ADAM as a repository for the Azman
+schema, but not as authentication server. Instead it uses a windows user
+to get the azman roles.\
+
+Has anybody configured both products?. I would appreciate any help or
+comments on this.
+
