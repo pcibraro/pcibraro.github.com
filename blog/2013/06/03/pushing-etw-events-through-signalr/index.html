@@ -1,0 +1,637 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Pushing ETW events through SignalR - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="ETW or Event Tracing for Windows is a very efficient pub/sub built-in
+mechanism that runs in Kernel Mode for doing event tracing. That implies
+there &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2013/06/03/pushing-etw-events-through-signalr">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Pushing ETW Events Through SignalR</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-03T00:00:00-03:00" pubdate data-updated="true">Jun 3<span>rd</span>, 2013</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>ETW or Event Tracing for Windows is a very efficient pub/sub built-in
+mechanism that runs in Kernel Mode for doing event tracing. That implies
+there is just a little overhead in using this feature compared to other
+traditional tracing solutions that are I/O bound and drop the traces in
+different storages like files or databases for example. As it is a
+built-in mechanism in Windows, many of the operating systems services
+and components make good use of it. You can not only troubleshoot your
+application but also many of the OS components involved in the execution
+of that application.</p>
+
+<p>In ETW, you have applications publishing events in queues (or providers)
+and other applications consuming events from those queues in real-time
+through ETW sessions. When an event is published in a provider, it goes
+nowhere unless there is session collecting events on that queue. (The
+events are not persisted).</p>
+
+<p>The adoption of ETW in .NET application was pretty low as it was very
+hard to configure and use. However, things might change now that .NET
+4.5 supports a new EventSource class for publishing events easily in any
+.NET application. Another way to publish events in the past was to use
+.NET diagnostics infrastructure with the trace listener for ETW,
+“EventProviderTraceListener”.</p>
+
+<p>About this last one, it can be easily configured and associated to a
+trace source as it is shown bellow,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="p">&lt;</span><span class="n">system</span><span class="p">.</span><span class="n">diagnostics</span><span class="p">&gt;</span>
+</span><span class='line'>  <span class="p">&lt;</span><span class="n">sources</span><span class="p">&gt;</span>
+</span><span class='line'>    <span class="p">&lt;</span><span class="n">source</span> <span class="n">name</span><span class="p">=</span><span class="s">&quot;MyConsoleApp&quot;</span> <span class="n">switchValue</span><span class="p">=</span><span class="s">&quot;Verbose&quot;</span><span class="p">&gt;</span>
+</span><span class='line'>      <span class="p">&lt;</span><span class="n">listeners</span><span class="p">&gt;</span>
+</span><span class='line'>        <span class="p">&lt;</span><span class="k">add</span> <span class="n">name</span><span class="p">=</span><span class="s">&quot;ETWListener&quot;</span> <span class="n">type</span><span class="p">=</span><span class="s">&quot;System.Diagnostics.Eventing.EventProviderTraceListener, System.Core, Version=3.5.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089&quot;</span>
+</span><span class='line'>               <span class="n">initializeData</span><span class="p">=</span><span class="s">&quot;13D5F7EF-9404-47ea-AF13-85484F09F2A7&quot;</span> <span class="p">/&gt;</span>
+</span><span class='line'>      <span class="p">&lt;/</span><span class="n">listeners</span><span class="p">&gt;</span>
+</span><span class='line'>    <span class="p">&lt;/</span><span class="n">source</span><span class="p">&gt;</span>
+</span><span class='line'>  <span class="p">&lt;/</span><span class="n">sources</span><span class="p">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="p">&lt;</span><span class="n">trace</span> <span class="n">autoflush</span><span class="p">=</span><span class="s">&quot;true&quot;</span><span class="p">/&gt;</span>
+</span><span class='line'><span class="p">&lt;/</span><span class="n">system</span><span class="p">.</span><span class="n">diagnostics</span><span class="p">&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The trace listener is associated to a GUID through the initializeData
+attribute. That identifier is used by ETW and associated to the
+provider, so it’s the one you will use to collect the events in a
+session.</p>
+
+<p>Once the listener is configured, you can start publishing events in that
+provider through a the trace source.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="n">TraceSource</span> <span class="n">myTraceSource</span> <span class="p">=</span> <span class="k">new</span> <span class="n">TraceSource</span><span class="p">(</span><span class="s">&quot;MyConsoleApp&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">myTraceSource</span><span class="p">.</span><span class="n">TraceEvent</span><span class="p">(</span><span class="n">TraceEventType</span><span class="p">.</span><span class="n">Error</span><span class="p">,</span> <span class="m">1</span><span class="p">,</span> <span class="s">&quot;Tracing Error Message.&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="n">myTraceSource</span><span class="p">.</span><span class="n">TraceEvent</span><span class="p">(</span><span class="n">TraceEventType</span><span class="p">.</span><span class="n">Warning</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="s">&quot;Tracing Warning Message.&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="n">myTraceSource</span><span class="p">.</span><span class="n">TraceEvent</span><span class="p">(</span><span class="n">TraceEventType</span><span class="p">.</span><span class="n">Information</span><span class="p">,</span> <span class="m">3</span><span class="p">,</span> <span class="s">&quot;Tracing Information.&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="n">myTraceSource</span><span class="p">.</span><span class="n">TraceEvent</span><span class="p">(</span><span class="n">TraceEventType</span><span class="p">.</span><span class="n">Verbose</span><span class="p">,</span> <span class="m">4</span><span class="p">,</span> <span class="s">&quot;Tracing Verbose Message.&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="n">myTraceSource</span><span class="p">.</span><span class="n">TraceEvent</span><span class="p">(</span><span class="n">TraceEventType</span><span class="p">.</span><span class="n">Critical</span><span class="p">,</span> <span class="m">5</span><span class="p">,</span> <span class="s">&quot;Tracing Critical Message.&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">myTraceSource</span><span class="p">.</span><span class="n">Close</span><span class="p">();</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Listening for those events in a ETW session is a different story. The
+standard procedure is to use a set of tools for starting an ETW session
+and dump the events into a binary file with a proprietary format (these
+are “etl” files), that can be imported in the event log viewer or an
+specific tool for this kind of file. You also have a tool for converting
+“etl” files to more user readable formats like xml or cvs. However, you
+can also use the ETW unmanaged API to start a new session and subscribe
+to the events as it was done with the <a href="http://archive.msdn.microsoft.com/EventTraceWatcher">EventTraceWatcher
+implementation</a> in
+this sample.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="kt">var</span> <span class="n">providerId</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Guid</span><span class="p">(</span><span class="s">&quot;13D5F7EF-9404-47ea-AF13-85484F09F2A7&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">using</span> <span class="p">(</span><span class="n">EventTraceWatcher</span> <span class="n">watcher</span> <span class="p">=</span> <span class="k">new</span> <span class="n">EventTraceWatcher</span><span class="p">(</span><span class="s">&quot;MySession&quot;</span><span class="p">,</span> <span class="n">providerId</span><span class="p">))</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">watcher</span><span class="p">.</span><span class="n">EventArrived</span> <span class="p">+=</span> <span class="k">delegate</span><span class="p">(</span><span class="kt">object</span> <span class="n">sender</span><span class="p">,</span> <span class="n">EventArrivedEventArgs</span> <span class="n">e</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">Error</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>      <span class="n">Console</span><span class="p">.</span><span class="n">Error</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">Error</span><span class="p">);</span>
+</span><span class='line'>      <span class="n">Environment</span><span class="p">.</span><span class="n">Exit</span><span class="p">(-</span><span class="m">1</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Dump properties (key/value)</span>
+</span><span class='line'>    <span class="k">foreach</span> <span class="p">(</span><span class="kt">var</span> <span class="n">p</span> <span class="k">in</span> <span class="n">e</span><span class="p">.</span><span class="n">Properties</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>      <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;Event&quot;</span><span class="p">,</span> <span class="s">&quot;\t&quot;</span> <span class="p">+</span> <span class="n">p</span><span class="p">.</span><span class="n">Key</span> <span class="p">+</span> <span class="s">&quot; -- &quot;</span> <span class="p">+</span> <span class="n">p</span><span class="p">.</span><span class="n">Value</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Start listening</span>
+</span><span class='line'>    <span class="n">watcher</span><span class="p">.</span><span class="n">Start</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;Listening...Press &lt;Enter&gt; to exit&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">Console</span><span class="p">.</span><span class="n">ReadLine</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You use the EventTraceWatcher to subscribe to events generated by an ETW
+provider, which are received as part of an event. What’s really
+interesting about this code is that it runs out of process. You could be
+collecting the events in a completely different application in the same
+host and doing whatever you want with those events like persisting them
+in a database for example. The performance of the application generating
+the events would not be affected at all.</p>
+
+<p>Now, imagine that you have a service running in one of your servers,
+which can be used to start a new ETW session and publish those events
+via SignalR. In that way, you can connect with a browser to the SignalR
+hub created by that service and get the events realtime, which
+represents an interesting way to see what’s going on your server at a
+given time.</p>
+
+<p>You can do an slight change to the code using the EventTraceWatcher to
+publish the events to a SignalR hub as it is shown bellow,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">class</span> <span class="nc">Program</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">static</span> <span class="k">void</span> <span class="nf">Main</span><span class="p">(</span><span class="kt">string</span><span class="p">[]</span> <span class="n">args</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">string</span> <span class="n">url</span> <span class="p">=</span> <span class="s">&quot;http://localhost:8080&quot;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">using</span> <span class="p">(</span><span class="n">WebApplication</span><span class="p">.</span><span class="n">Start</span><span class="p">&lt;</span><span class="n">Startup</span><span class="p">&gt;(</span><span class="n">url</span><span class="p">))</span>
+</span><span class='line'>        <span class="p">{</span>
+</span><span class='line'>            <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;Server running on {0}&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="kt">var</span> <span class="n">hubConnection</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HubConnection</span><span class="p">(</span><span class="s">&quot;http://localhost:8080/&quot;</span><span class="p">);</span>
+</span><span class='line'>            <span class="kt">var</span> <span class="n">serverHub</span> <span class="p">=</span> <span class="n">hubConnection</span><span class="p">.</span><span class="n">CreateHubProxy</span><span class="p">(</span><span class="s">&quot;EventsHub&quot;</span><span class="p">);</span>
+</span><span class='line'>            <span class="n">hubConnection</span><span class="p">.</span><span class="n">Start</span><span class="p">().</span><span class="n">Wait</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="kt">var</span> <span class="n">providerId</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Guid</span><span class="p">(</span><span class="s">&quot;13D5F7EF-9404-47ea-AF13-85484F09F2A7&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="k">using</span> <span class="p">(</span><span class="n">EventTraceWatcher</span> <span class="n">watcher</span> <span class="p">=</span> <span class="k">new</span> <span class="n">EventTraceWatcher</span><span class="p">(</span><span class="s">&quot;MySession&quot;</span><span class="p">,</span> <span class="n">providerId</span><span class="p">))</span>
+</span><span class='line'>            <span class="p">{</span>
+</span><span class='line'>                <span class="n">watcher</span><span class="p">.</span><span class="n">EventArrived</span> <span class="p">+=</span> <span class="k">delegate</span><span class="p">(</span><span class="kt">object</span> <span class="n">sender</span><span class="p">,</span> <span class="n">EventArrivedEventArgs</span> <span class="n">e</span><span class="p">)</span>
+</span><span class='line'>                <span class="p">{</span>
+</span><span class='line'>                    <span class="k">if</span> <span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">Error</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span>
+</span><span class='line'>                    <span class="p">{</span>
+</span><span class='line'>                        <span class="n">Console</span><span class="p">.</span><span class="n">Error</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">Error</span><span class="p">);</span>
+</span><span class='line'>                        <span class="n">Environment</span><span class="p">.</span><span class="n">Exit</span><span class="p">(-</span><span class="m">1</span><span class="p">);</span>
+</span><span class='line'>                    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>                    <span class="c1">// Dump properties (key/value)</span>
+</span><span class='line'>                    <span class="k">foreach</span> <span class="p">(</span><span class="kt">var</span> <span class="n">p</span> <span class="k">in</span> <span class="n">e</span><span class="p">.</span><span class="n">Properties</span><span class="p">)</span>
+</span><span class='line'>                    <span class="p">{</span>
+</span><span class='line'>                        <span class="n">serverHub</span><span class="p">.</span><span class="n">Invoke</span><span class="p">(</span><span class="s">&quot;PushEvent&quot;</span><span class="p">,</span> <span class="s">&quot;\t&quot;</span> <span class="p">+</span> <span class="n">p</span><span class="p">.</span><span class="n">Key</span> <span class="p">+</span> <span class="s">&quot; -- &quot;</span> <span class="p">+</span> <span class="n">p</span><span class="p">.</span><span class="n">Value</span><span class="p">).</span><span class="n">Wait</span><span class="p">();</span>
+</span><span class='line'>                    <span class="p">}</span>
+</span><span class='line'>                <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>                <span class="c1">// Start listening</span>
+</span><span class='line'>                <span class="n">watcher</span><span class="p">.</span><span class="n">Start</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>                <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;Listening...Press &lt;Enter&gt; to exit&quot;</span><span class="p">);</span>
+</span><span class='line'>                <span class="n">Console</span><span class="p">.</span><span class="n">ReadLine</span><span class="p">();</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">Console</span><span class="p">.</span><span class="n">ReadLine</span><span class="p">();</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Startup</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">Configuration</span><span class="p">(</span><span class="n">IAppBuilder</span> <span class="n">app</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="c1">// Turn cross domain on </span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">config</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HubConfiguration</span> <span class="p">{</span> <span class="n">EnableCrossDomain</span> <span class="p">=</span> <span class="k">true</span> <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// This will map out to http://localhost:8080/signalr by default</span>
+</span><span class='line'>        <span class="n">app</span><span class="p">.</span><span class="n">MapHubs</span><span class="p">(</span><span class="n">config</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">EventsHub</span> <span class="p">:</span> <span class="n">Hub</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">PushEvent</span><span class="p">(</span><span class="kt">string</span> <span class="n">message</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;Event: &quot;</span> <span class="p">+</span> <span class="n">message</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">Clients</span><span class="p">.</span><span class="n">All</span><span class="p">.</span><span class="n">PushEvent</span><span class="p">(</span><span class="n">message</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This uses SignalR hosted in a console application with OWIN, so it could
+be literally moved to a windows service as well. Every time an event is
+captured from the ETW session, it is published in the SignalR hub.</p>
+
+<p>On the other side, you can also use SignalR to subscribe to the same hub
+and receive the generated messages at real time.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="kd">var</span> <span class="nx">messages</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#messages&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">var</span> <span class="nx">connection</span> <span class="o">=</span> <span class="nx">$</span><span class="p">.</span><span class="nx">hubConnection</span><span class="p">(</span><span class="s1">&#39;http://localhost:8080&#39;</span><span class="p">);</span>
+</span><span class='line'>        <span class="nx">connection</span><span class="p">.</span><span class="nx">start</span><span class="p">()</span>
+</span><span class='line'>            <span class="p">.</span><span class="nx">done</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>                <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;Connected, transport = &quot;</span> <span class="o">+</span> <span class="nx">connection</span><span class="p">.</span><span class="nx">transport</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
+</span><span class='line'>            <span class="p">})</span>
+</span><span class='line'>            <span class="p">.</span><span class="nx">fail</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Could not connect&#39;</span><span class="p">);</span> <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">var</span> <span class="nx">proxy</span> <span class="o">=</span> <span class="nx">connection</span><span class="p">.</span><span class="nx">createHubProxy</span><span class="p">(</span><span class="s1">&#39;EventsHub&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="nx">proxy</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;PushEvent&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">message</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nx">messages</span><span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="nx">message</span> <span class="o">+</span> <span class="s2">&quot;&lt;br&gt;&quot;</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">});</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'><span class="nt">&lt;/script&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The code is available at Github,
+<a href="https://github.com/pcibraro/RealtimeTracing">https://github.com/pcibraro/RealtimeTracing</a></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-03T00:00:00-03:00" pubdate data-updated="true">Jun 3<span>rd</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2013/06/03/pushing-etw-events-through-signalr/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2013/06/03/pushing-etw-events-through-signalr/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/05/22/ip-throttling-in-asp-net-web-api/" title="Previous Post: IP Throttling in ASP.NET Web API">&laquo; IP Throttling in ASP.NET Web API</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/07/22/getting-started-with-owin-and-katana/" title="Next Post: Getting started with Owin and Katana">Getting started with Owin and Katana &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2013/06/03/pushing-etw-events-through-signalr/';
+        var disqus_url = 'http://cibrax.me/blog/2013/06/03/pushing-etw-events-through-signalr/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,442 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Mutual Certificate Authentication for WCF REST services - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="When Mutual Certificate Authentication is configured for REST services,
+both, the client and the service perform identity verification or &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2009/04/16/mutual-certificate-authentication-for-wcf-rest-services">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Mutual Certificate Authentication for WCF REST Services</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-04-16T00:00:00-03:00" pubdate data-updated="true">Apr 16<span>th</span>, 2009</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>When Mutual Certificate Authentication is configured for REST services,
+both, the client and the service perform identity verification or
+authentication through X509 certificates.</p>
+
+<p>The client authenticates the service during the initial SSL handshake,
+when the server sends the client a certificate to authenticate itself.
+More information about this process can be <a href="http://support.microsoft.com/default.aspx/kb/257587">found
+here</a>.</p>
+
+<p>The service on the other hand, performs similar validations on the
+certificate attached by the client consumer to the request message.</p>
+
+<p>Some specific configuration settings are required in WCF to use this
+authentication scenario with REST services. The service must be
+configured with transport security (SSL), “certificate” as client
+credential type.</p>
+
+<p>&lt;webHttpBinding></p>
+
+<p>  &lt;binding name=&ldquo;mutual&rdquo;></p>
+
+<p>    &lt;security mode=&ldquo;Transport&rdquo;></p>
+
+<p>      &lt;transport clientCredentialType=&ldquo;Certificate&rdquo;/></p>
+
+<p>    &lt;/security>   &lt;/binding></p>
+
+<p>&lt;/webHttpBinding></p>
+
+<p>For example, the complete configuration for a REST service that provides
+ATOM feeds would be the following,</p>
+
+<p>&lt;system.serviceModel></p>
+
+<p>  &lt;serviceHostingEnvironment aspNetCompatibilityEnabled=&ldquo;true&rdquo;/></p>
+
+<p>  &lt;services></p>
+
+<p>    &lt;service name=&ldquo;MutualAuthenticationRest.FeedService&rdquo;></p>
+
+<p>      &lt;endpoint address=&ldquo;&rdquo;
+contract=&ldquo;MutualAuthenticationRest.IFeedService&rdquo;
+binding=&ldquo;webHttpBinding&rdquo; bindingConfiguration=&ldquo;mutual&rdquo;
+behaviorConfiguration=&ldquo;mutual&rdquo;>&lt;/endpoint></p>
+
+<p>     &lt;/service></p>
+
+<p>  &lt;/services></p>
+
+<p>  &lt;bindings></p>
+
+<p>    &lt;webHttpBinding></p>
+
+<p>      &lt;binding name=&ldquo;mutual&rdquo;></p>
+
+<p>        &lt;security mode=&ldquo;Transport&rdquo;></p>
+
+<p>          &lt;transport clientCredentialType=&ldquo;Certificate&rdquo;/></p>
+
+<p>         &lt;/security></p>
+
+<p>       &lt;/binding></p>
+
+<p>     &lt;/webHttpBinding></p>
+
+<p>    &lt;/bindings></p>
+
+<p>    &lt;behaviors></p>
+
+<p>      &lt;endpointBehaviors></p>
+
+<p>        &lt;behavior name=&ldquo;mutual&rdquo;></p>
+
+<p>          &lt;webHttp/></p>
+
+<p>        &lt;/behavior></p>
+
+<p>     &lt;/endpointBehaviors></p>
+
+<p>   &lt;/behaviors></p>
+
+<p>&lt;/system.serviceModel></p>
+
+<p>The virtual directory used for hosting the service in IIS must also be
+configured with the same security settings.</p>
+
+<p><a href="/images/legacy/MutualCertificateAuthenticationforWCFRES_B433/MutualCertificate.jpg"><img src="/images/legacy/MutualCertificateAuthenticationforWCFRES_B433/MutualCertificate_thumb.jpg" title="MutualCertificate" alt="MutualCertificate" /></a></p>
+
+<p>The client application only need to attach the certificate at the moment
+of consuming the service. This can be easily done with the new
+HttpClient class shipped as part of the WCF REST Starter kit,</p>
+
+<p>class Program</p>
+
+<p>{</p>
+
+<p>    static void Main(string[] args)</p>
+
+<p>    {</p>
+
+<p>        X509Certificate2 certificate =
+CertificateUtil.GetCertificate(StoreName.My, StoreLocation.LocalMachine,
+&ldquo;CN=clientCert&rdquo;);</p>
+
+<p>        HttpClient client = new HttpClient();</p>
+
+<p>        client.TransportSettings.ClientCertificates.Add(certificate);
+//Cert attached to the request</p>
+
+<p>        string content =
+client.Get(&ldquo;<a href="https://localhost/MutualAuthentication/Service.svc?numItems=10">https://localhost/MutualAuthentication/Service.svc?numItems=10</a>&rdquo;).Content.ReadAsString();</p>
+
+<p>        Console.WriteLine(content);</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>CertificateUtil is an helper class that looks for an specific X509
+certificate in the windows certificate store. In addition, if you are
+using test certificates, you might want to disable the service
+authentication on the client side, that can be done with a callback
+attached to the static class “ServicePointManager”.</p>
+
+<p>For instance,</p>
+
+<p>public class PermissiveCertificatePolicy</p>
+
+<p>{</p>
+
+<p>    public static void Enable()</p>
+
+<p>    {</p>
+
+<p>        ServicePointManager.ServerCertificateValidationCallback +=</p>
+
+<p>           new RemoteCertificateValidationCallback(RemoteCertValidate);</p>
+
+<p>    }</p>
+
+<p>    static bool RemoteCertValidate(object sender, X509Certificate cert,
+X509Chain chain, System.Net.Security.SslPolicyErrors error)</p>
+
+<p>    {</p>
+
+<p>        return true;</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>The method PermissiveCertificatePolicy.Enable should be called before
+consuming the service.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-04-16T00:00:00-03:00" pubdate data-updated="true">Apr 16<span>th</span>, 2009</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/rest/'>REST</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2009/04/16/mutual-certificate-authentication-for-wcf-rest-services/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2009/04/16/mutual-certificate-authentication-for-wcf-rest-services/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2009/04/08/sharing-the-security-context-between-asp-net-and-wcf-rest-services/" title="Previous Post: Sharing the security context between ASP.NET and WCF REST Services">&laquo; Sharing the security context between ASP.NET and WCF REST Services</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2009/04/17/developing-restful-services-with-json-and-pox-support-in-the-asp-net-mvc/" title="Next Post: Developing RESTful services with JSON and POX support in the ASP.NET MVC">Developing RESTful services with JSON and POX support in the ASP.NET MVC &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2009/04/16/mutual-certificate-authentication-for-wcf-rest-services/';
+        var disqus_url = 'http://cibrax.me/blog/2009/04/16/mutual-certificate-authentication-for-wcf-rest-services/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

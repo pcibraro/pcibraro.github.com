@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: AWS | Pablo Cibraro (Cibrax)]]></title>
+  <link href="http://cibrax.me/blog/categories/aws/atom.xml" rel="self"/>
+  <link href="http://cibrax.me/"/>
+  <updated>2013-12-26T15:03:47-03:00</updated>
+  <id>http://cibrax.me/</id>
+  <author>
+    <name><![CDATA[Cibrax]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Multitenant domain routing with AWS Route 53]]></title>
+    <link href="http://cibrax.me/blog/2013/02/12/multitenant-domain-routing-with-aws-route-53/"/>
+    <updated>2013-02-12T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2013/02/12/multitenant-domain-routing-with-aws-route-53</id>
+    <content type="html"><![CDATA[<p>A common requirement in SaaS applications is the ability to route
+requests to different tenants based on a URL routing strategy.</p>
+
+<p>In most cases, a domain prefix is good enough to identify tenants (e.g.
+mytenant.xxxxx.com). That approach typically relies on CName records for
+mapping the prefixes or tenants and the domain name to an URL where the
+application is actually hosted. Many cloud providers support the idea of
+mapping custom domains to their web hosted services, so this approach
+with CName works just fine.</p>
+
+<p>An evident problem is that you would require a different CName record
+per prefix or tenant. If you have to create those records manually, this
+approach simply does not scale as the number of tenants increase.</p>
+
+<p>An alternative is to use a wildcard CName, and route all the requests
+that match that wildcard to the hosted application in the cloud. For
+example, *.xxxxxx.com to your web application url.</p>
+
+<p>Many DNS servers don’t support wildcards in CName such as the ones
+offered by free for GoDaddy or NameCheap. However, AWS Route 53 supports
+wildcards and also an API to manage almost everything in the DNS tables.</p>
+
+<p>Configuring AWS Route 53 is relatively easy. Assuming that you already
+have a AWS account, you need to create first a hosted zone, which
+represents the association of a domain name with a set of name servers
+provided by Route 53. Once you specified the domain name (e.g
+cibrax.me), and the hosted zone is created. Route53 will show you a list
+of name servers you need to use. If you already own a domain in other
+place like GoDaddy or NameCheap, you need to go there and update the
+list of name servers associated to that domain.</p>
+
+<p>Afterwards, you need to create a resource record set, which is basically
+the CName record containing the wildcard or prefix you want to use.
+Here, you can specify the CNAme record and the mapped URL. For example,
+*.cibrax.me goes to <a href="http://www.xxxxxxxx.com">www.xxxxxxxx.com</a>.</p>
+
+<p>That’s all from the point of view of DNS configuration. The rest is part
+of the implementation of your web application.</p>
+]]></content>
+  </entry>
+  
+</feed>

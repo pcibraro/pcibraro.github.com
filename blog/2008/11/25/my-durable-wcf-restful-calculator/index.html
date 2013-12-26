@@ -1,0 +1,554 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>My durable WCF RESTful calculator - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="A durable service in WCF is by a definition a service that can persist
+all its internal state across calls in some durable storage. For every &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2008/11/25/my-durable-wcf-restful-calculator">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">My Durable WCF RESTful Calculator</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-11-25T00:00:00-03:00" pubdate data-updated="true">Nov 25<span>th</span>, 2008</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>A durable service in WCF is by a definition a service that can persist
+all its internal state across calls in some durable storage. For every
+operation, the service state is retrieved from the storage, the
+operation is executed and finally the state is persisted again in the
+storage. Therefore, there is not need to keep the service instance idle
+in memory while waiting for client calls. It is equivalent to a long run
+session, which make this feature something ideal for long-running
+processes like workflows (In fact, workflow services are mount on top of
+this feature),</p>
+
+<p>In order to create a durable service, WCF provides a &ldquo;DurableService&rdquo;
+attribute (It&rsquo;s a service behavior) that can be applied to a regular
+service definition. The service itself has to be either serializable or
+have members decorated with DataContract or DataMember attributes to be
+serialized and stored in the persistent storage.</p>
+
+<p>The service activation, as in workflow services, is managed by the WCF
+context correlation mechanism. Once a service instance has been created,
+the client application has to propagate some context information(which
+includes the service instance id) in order to route all the new messages
+to the right service instance. Jesus has already discussed how this
+mechanism works more in detail in this
+<a href="http://weblogs.asp.net/gsusx/archive/2007/06/14/orcas-durable-services.aspx">post</a>
+(Although the post is bit old and some names have changed since then, it
+is worth reading).</p>
+
+<p>For purposes of this post, I decided to create a simple calculator
+example that exposes different operations through the classic http
+verbs,</p>
+
+<p>[ServiceContract(Namespace =
+&ldquo;<a href="http://Microsoft.WorkflowServices.Samples">http://Microsoft.WorkflowServices.Samples</a>&rdquo;)]</p>
+
+<p>public interface ICalculator</p>
+
+<p>{</p>
+
+<p>    [OperationContract()]</p>
+
+<p>    [WebInvoke(Method = &ldquo;POST&rdquo;)]</p>
+
+<p>    int PowerOn();</p>
+
+<p> </p>
+
+<p>    [OperationContract()]</p>
+
+<p>    [WebInvoke(Method = &ldquo;PUT&rdquo;, UriTemplate = &ldquo;add&rdquo;)]</p>
+
+<p>    int Add(int value);</p>
+
+<p> </p>
+
+<p>    [OperationContract()]</p>
+
+<p>    [WebInvoke(Method = &ldquo;PUT&rdquo;, UriTemplate = &ldquo;subtract&rdquo;)]</p>
+
+<p>    int Subtract(int value);</p>
+
+<p> </p>
+
+<p>    [OperationContract()]</p>
+
+<p>    [WebInvoke(Method = &ldquo;PUT&rdquo;, UriTemplate = &ldquo;multiply&rdquo;)]</p>
+
+<p>    int Multiply(int value);</p>
+
+<p> </p>
+
+<p>    [OperationContract()]</p>
+
+<p>    [WebInvoke(Method = &ldquo;PUT&rdquo;, UriTemplate = &ldquo;divide&rdquo;)]</p>
+
+<p>    int Divide(int value);</p>
+
+<p> </p>
+
+<p>    [OperationContract()]</p>
+
+<p>    [WebInvoke(Method = &ldquo;DELETE&rdquo;)]</p>
+
+<p>    void PowerOff();</p>
+
+<p>} </p>
+
+<p>The implementation of this service is also quite straightforward.</p>
+
+<p>[Serializable]</p>
+
+<p>[DurableService]</p>
+
+<p>public class DurableCalculator : ICalculator</p>
+
+<p>{</p>
+
+<p>    int _currentValue = 0;</p>
+
+<p> </p>
+
+<p>    [DurableOperation(CanCreateInstance=true)]</p>
+
+<p>    public int PowerOn()</p>
+
+<p>    {</p>
+
+<p>        return _currentValue;</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    [DurableOperation]</p>
+
+<p>    public int Add(int value)</p>
+
+<p>    {</p>
+
+<p>        return (_currentValue += value);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    [DurableOperation]</p>
+
+<p>    public int Subtract(int value)</p>
+
+<p>    {</p>
+
+<p>        return (_currentValue &ndash;= value);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    [DurableOperation]</p>
+
+<p>    public int Multiply(int value)</p>
+
+<p>    {</p>
+
+<p>        return (_currentValue *= value);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    [DurableOperation]</p>
+
+<p>    public int Divide(int value)</p>
+
+<p>    {</p>
+
+<p>        return (_currentValue /= value);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    [DurableOperation(CompletesInstance=true)]</p>
+
+<p>    public void PowerOff()</p>
+
+<p>    {</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>As you can see, I decorated the service implementation with the
+&ldquo;DurableService&rdquo; and &ldquo;DurableOperation&rdquo; attributes to make this simple
+service a durable one.</p>
+
+<p>WCF only comes with built-in support for transferring the context
+information between the client and service with Http Cookies or Soap
+Headers. While cookies would be the right mechanism for http REST
+services, unfortunately they do not work as expected. The path that WCF
+uses for creating the cookies is relative, so the context manager throws
+the following exception on the client side,</p>
+
+<p><strong><em>Unhandled Exception: System.Net.CookieException: An error occurred
+when parsing the Cookie header for Uri
+&lsquo;<a href="http://localhost:8080/DurableCalculator">http://localhost:8080/DurableCalculator</a>&rsquo;. &mdash;&ndash;>
+System.Net.CookieException: The &lsquo;Path&rsquo;=&lsquo;/DurableCalculator/PowerOn&rsquo; part
+of the cookie  is invalid.</em></strong></p>
+
+<p>As workaround, we can use for this scenario the custom context binding I
+created <a href="http://weblogs.asp.net/cibrax/archive/2008/10/30/rest-and-workflow-services-play-well-together-part-ii.aspx">some weeks
+ago</a>
+to exchange the context information as regular http headers.</p>
+
+<p>&lt;connectionStrings></p>
+
+<p>  &lt;add name=&ldquo;DurableService&rdquo; connectionString=&ldquo;Initial
+Catalog=SQLWorkflows;Data Source=.\SQLEXPRESS;Integrated
+Security=SSPI;&rdquo;/></p>
+
+<p>&lt;/connectionStrings></p>
+
+<p>&lt;system.serviceModel></p>
+
+<p>  &lt;services></p>
+
+<p>    &lt;service name=&ldquo;ServiceConsole.DurableCalculator&rdquo;
+behaviorConfiguration=&ldquo;MyServiceBehavior&rdquo;></p>
+
+<p>      &lt;endpoint address=&ldquo;&rdquo; behaviorConfiguration=&ldquo;MyServiceBehavior&rdquo;
+<strong>binding=&ldquo;webHttpContext&rdquo;</strong> contract=&ldquo;ServiceConsole.ICalculator&rdquo; /></p>
+
+<p>    &lt;/service></p>
+
+<p>&lt;/services></p>
+
+<p>&lt;behaviors></p>
+
+<p>  &lt;endpointBehaviors></p>
+
+<p>    &lt;behavior name=&ldquo;MyServiceBehavior&rdquo;></p>
+
+<p>      &lt;webHttp /></p>
+
+<p>    &lt;/behavior></p>
+
+<p>  &lt;/endpointBehaviors></p>
+
+<p>  &lt;serviceBehaviors></p>
+
+<p>    &lt;behavior name=&ldquo;MyServiceBehavior&rdquo;></p>
+
+<p>      &lt;persistenceProvider
+type=&ldquo;System.ServiceModel.Persistence.SqlPersistenceProviderFactory,
+System.WorkflowServices, Version=3.5.0.0, Culture=neutral,
+PublicKeyToken=31bf3856ad364e35&rdquo;
+connectionStringName=&ldquo;DurableService&rdquo;/></p>
+
+<p>    &lt;/behavior></p>
+
+<p>  &lt;/serviceBehaviors></p>
+
+<p>&lt;/behaviors></p>
+
+<p>&lt;extensions></p>
+
+<p>  &lt;bindingExtensions></p>
+
+<p>    &lt;add name=&ldquo;webHttpContext&rdquo;
+type=&ldquo;Microsoft.ServiceModel.Samples.WebHttpContextBindingCollectionElement,
+WebHttpContext, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null&rdquo;
+/></p>
+
+<p>  &lt;/bindingExtensions></p>
+
+<p>&lt;/extensions></p>
+
+<p>&lt;/system.serviceModel></p>
+
+<p>If you pay special attention to the configuration settings above, in
+addition to the binding configuration, I also included the
+&ldquo;persitenceProvider&rdquo; behavior for configuring the persistence provider
+that will serialize and store the service instance (In this case, the
+SQL server provider).</p>
+
+<p>Now, thanks to this support, my calculator service will survive to
+application and server restarts :). Download the complete code from this
+<a href="/images/legacy/DurableRestCalculator.zip">location</a>.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-11-25T00:00:00-03:00" pubdate data-updated="true">Nov 25<span>th</span>, 2008</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/rest/'>REST</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2008/11/25/my-durable-wcf-restful-calculator/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2008/11/25/my-durable-wcf-restful-calculator/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2008/11/19/open-source-alternatives-in-net-for-building-restful-services/" title="Previous Post: Open Source alternatives in .NET for building RESTful services">&laquo; Open Source alternatives in .NET for building RESTful services</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2008/12/03/wcf-workflow-services-in-business-applications/" title="Next Post: WCF Workflow services in business applications">WCF Workflow services in business applications &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2008/11/25/my-durable-wcf-restful-calculator/';
+        var disqus_url = 'http://cibrax.me/blog/2008/11/25/my-durable-wcf-restful-calculator/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

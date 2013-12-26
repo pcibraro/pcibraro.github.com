@@ -1,0 +1,683 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Http Processors in the WCF Web Programming Model - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="The code drop recently released as part of wcf.codeplex.com introduced a
+new feature for injecting cross-cutting concerns through a pipeline into
+any &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2010/11/15/http-processors-in-the-wcf-web-programming-model">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Http Processors in the WCF Web Programming Model</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-11-15T00:00:00-03:00" pubdate data-updated="true">Nov 15<span>th</span>, 2010</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>The code drop recently released as part of wcf.codeplex.com introduced a
+new feature for injecting cross-cutting concerns through a pipeline into
+any existing service. The idea is simple, when you move to the http
+world, there are some aspects that might want to move out of your
+operation implementation. A typical example is content negotiation, in
+which the http messages are serialized or deserialized into specific
+entity or object graph expected by the service based on the
+“content-type” or “accept” http headers.  You don’t want to have all
+that logic spread across all the service implementations or tie your
+operation to an specific format as it happened with previous model with
+the WebInvoke and WebGet attributes. For that kind of logic, it’s really
+useful to have that concern implemented in a specific class that you can
+test individually and inject into your service to support new message
+formats.</p>
+
+<p>From a high level, if you look at how the WCF service model works, this
+new pipeline runs just after the operation has been selected and right
+after the operation has been executed, meaning that you have two
+pipeline instances, one for request messages and another one for the
+responses.</p>
+
+<p>The image above illustrates the service model architecture, and the
+pipelines are implemented in the message formatting stage.</p>
+
+<p><img src="http://weblogs.asp.net/blogs/cibrax/processors_architecture_06A7E5E2.jpg" title="processors_architecture" alt="processors_architecture" /></p>
+
+<p>The pipeline is a collection a processors or handlers that perform a
+transformation task. A simple processor receives a set of input
+arguments and returns some output arguments. The nice thing about how
+the processors and pipeline are implemented in this new model is that
+you can chain the output results from a processor into another processor
+as input arguments.</p>
+
+<p>The following image shows how the pipeline works at first glance.</p>
+
+<p><img src="http://weblogs.asp.net/blogs/cibrax/processors_pipeline_6B5F6713.jpg" title="processors_pipeline" alt="processors_pipeline" /></p>
+
+<p>The first processor in the pipeline injects some output values into the
+context (A and B), and that context is then passed to the successive
+processors until the service operation is finally executed. The
+arguments that the operation is expecting  are also be resolved from the
+available values in the pipeline context.</p>
+
+<p>The UriTemplateProcessor is a built-in processor implementation that WCF
+always inject by default in the request pipeline to transform the values
+passed as uri templates to the http resource (or service) as output
+arguments that other processors can reuse as input. For example, if you
+have an UriTemplate with a variable argument “culture” as part of your
+operation definition like this one,</p>
+
+<p>[WebGet(UriTemplate=&ldquo;{culture}&rdquo;)]</p>
+
+<p>And you pass a value for that template in the URL,</p>
+
+<p><a href="http://localhost/helloworld/en-us">http://localhost/helloworld/en-us</a>
+(being en-us the {culture} template in the url)</p>
+
+<p>The UriTemplateProcessor will catch the “en-us” value and add it to the
+pipeline context as “culture”.</p>
+
+<p>For other processors that you can implement on your own, you can either
+derive your implementation from the base class
+“System.ServiceModel.Dispatcher.Processor” or one of the existing
+definitions that use generic templates for the input and output
+arguments.</p>
+
+<p>public abstract class Processor&lt;T, TOutput> : Processor \
+public abstract class Processor&lt;T1, T2, TOutput> : Processor \
+public abstract class Processor&lt;T1, T2, T3, TOutput> : Processor \
+&hellip;&hellip; \
+public abstract class Processor&lt;T1, T2, T3, T4, T5, T6, T7, T8, T9,
+T10, T11, T12, T13, T14, T15, T16, TOutput> : Processor</p>
+
+<p>The main difference with these class definitions is that you can specify
+a type for the input or output arguments that the processor can handle.
+When you implement a processor, in addition to specify the types the
+processor might expect for the input or output arguments, you also need
+to give names to those arguments so the pipeline knows how to map the
+values for those arguments from the existing context.</p>
+
+<p>In the given example with the “culture” argument, and assuming that
+UriTemplateProcessor has already run and added the value for that
+argument into the pipeline context, a pipeline processor can get access
+to that value by naming an input argument with the same name.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+public class CultureProcessor : Processor&lt;string, CultureInfo>
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public CultureProcessor()
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    : base()
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    this.InArguments[0].Name = "culture";
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    this.OutArguments[0].Name = "culture";
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p>The example above receives an input argument culture as string, and
+returns an output argument with the same name as an instance of the
+CultureInfo. Either the service or any other processor in the chain will
+able to receive now an instance of CultureInfo if they expect an
+argument with a name “culture”.</p>
+
+<p>A processor can also receive an instance of the object representing the
+request (HttpRequestMessage) or response messages (HttpResponseMessage),
+which are the two new message primitive classes added in this release
+for giving better access to developers to the http context. You can
+receive either of these messaging classes by naming the arguments
+HttpPipelineFormatter.ArgumentHttpRequestMessage (HttpRequestMessage) or
+HttpPipelineFormatter.ArgumentHttpResponseMessage (HttpResponseMessage)
+respectively.</p>
+
+<p>As we have discussed so far, a processor runs late in the WCF pipeline
+and there much after the Http transport channels have done their job.
+For that reason, it would not make much sense to implement Http
+transport concerns like security in a processor.</p>
+
+<p>The framework also ships with a processor implementation for handling
+content negotiation “Microsoft.ServiceModel.Http.MediaTypeProcessor”,
+which provides several abstraction methods that you can override for
+participating in the process. </p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+public abstract class MediaTypeProcessor : Processor
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public abstract IEnumerable&lt;string&gt; SupportedMediaTypes { get; }
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public abstract void WriteToStream(object instance, Stream stream, HttpRequestMessage request);
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public abstract object ReadFromStream(Stream stream, HttpRequestMessage request);
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+}
+</del></p>
+
+<p>The names for these method pretty much say everything. You have a method
+“SupportedMediaTypes” for specifying the supported content types that
+your implementation can handle (for example text/xml or text/html), and
+two methods for serializing and deserializing an object instance
+representing the request body or response body into one of the supported
+media types. Some implementations come with the framework the handling
+the most common media types like XmlProcessor, HtmlProcessor,
+JsonProcessor, PlainTextProcessor or FormUrlEncodedProcessor.</p>
+
+<p>You are also free to implement your own media type processors to support
+custom media types that makes sense for your services. A typical example
+is when you want to support media types “+xml” or “+json” in your
+services like “application/x-order-process+xml” or “
+application/x-order-process+json” for example or support a versioning
+schema based on custom media types as it is discussed here,
+<a href="http://barelyenough.org/blog/2008/05/versioning-rest-web-services/">http://barelyenough.org/blog/2008/05/versioning-rest-web-services/</a> </p>
+
+<p>Finally, the processors are injected into any existing service using a
+concrete implementation of
+“Microsoft.ServiceModel.Http.HostConfiguration” class, which is usually
+wired up with host initialization.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+public class ContactManagerConfiguration : HostConfiguration
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public override void RegisterRequestProcessorsForOperation(HttpOperationDescription operation, IList&lt;Processor&gt; processors, MediaTypeProcessorMode mode)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    if(operation.Name == "Get" &amp;&amp; operation.DeclaringContract.Name == "ContactResource")
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        processors.Add(new CultureProcessor());
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    processors.Add(new JsonProcessor(operation, mode));
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    processors.Add(new FormUrlEncodedProcessor(operation, mode));
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public override void RegisterResponseProcessorsForOperation(HttpOperationDescription operation, IList&lt;Processor&gt; processors, MediaTypeProcessorMode mode)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    processors.Add(new JsonProcessor(operation, mode));
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    processors.Add(new PngProcessor(operation, mode));
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+}
+</del></p>
+
+<p>Two abstract methods are provided with that class, one for registering
+the processors for the request pipeline, and another one for the
+response pipeline respectively. The example below passes this custom
+configuration as part of the routing configuration for a service hosted
+in ASP.NET,</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+public class Global : System.Web.HttpApplication
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>protected void Application_Start(object sender, EventArgs e)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    var configuration = new ContactManagerConfiguration();
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    RouteTable.Routes.AddServiceRoute&lt;ContactResource&gt;("contact/", configuration);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    RouteTable.Routes.AddServiceRoute&lt;ContactsResource&gt;("contacts", configuration);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    RouteTable.Routes.AddServiceRoute&lt;HelloWorldResource&gt;("hello", configuration);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+}
+</del></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-11-15T00:00:00-03:00" pubdate data-updated="true">Nov 15<span>th</span>, 2010</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2010/11/15/http-processors-in-the-wcf-web-programming-model/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2010/11/15/http-processors-in-the-wcf-web-programming-model/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2010/11/10/generating-wcf-configuration-from-the-so-aware-repository/" title="Previous Post: Generating WCF configuration from the SO-Aware Repository">&laquo; Generating WCF configuration from the SO-Aware Repository</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2010/11/19/versioning-rest-services-with-wcf-http-processors/" title="Next Post: Versioning REST Services with WCF Http Processors">Versioning REST Services with WCF Http Processors &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2010/11/15/http-processors-in-the-wcf-web-programming-model/';
+        var disqus_url = 'http://cibrax.me/blog/2010/11/15/http-processors-in-the-wcf-web-programming-model/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,332 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Monitoring your services with SO-Aware - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="One of the features that you get out of the box with SO-Aware is the
+ability of monitoring your services. You can either monitoring the
+traffic for &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2010/12/02/monitoring-your-services-with-so-aware">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Monitoring Your Services With SO-Aware</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-12-02T00:00:00-03:00" pubdate data-updated="true">Dec 2<span>nd</span>, 2010</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>One of the features that you get out of the box with SO-Aware is the
+ability of monitoring your services. You can either monitoring the
+traffic for your REST or SOAP services, and see the details of all the
+incoming or outgoing messages, or any fault that got generated during
+the execution. In addition, that data is used to compute some metrics
+and provide several reports about the service usage.</p>
+
+<p>The following images illustrates some of the reports provided by
+SO-Aware.</p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/110210_1941_monitoringa1_676A9FA4.png"><img src="http://weblogs.asp.net/blogs/cibrax/110210_1941_monitoringa1_thumb_7D60E569.png" title="110210_1941_monitoringa1" alt="110210_1941_monitoringa1" /></a> </p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/110210_1941_monitoringa2_157429F8.png"><img src="http://weblogs.asp.net/blogs/cibrax/110210_1941_monitoringa2_thumb_1E340C77.png" title="110210_1941_monitoringa2" alt="110210_1941_monitoringa2" /></a></p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/110210_1941_monitoringa4_0594495A.png"><img src="http://weblogs.asp.net/blogs/cibrax/110210_1941_monitoringa4_thumb_0C17A31D.png" title="110210_1941_monitoringa4" alt="110210_1941_monitoringa4" /></a></p>
+
+<p>All the monitoring in SO-Aware is performed by a custom WCF service
+behavior that needs to be configured in any existing service. If you are
+using the service host provided by SO-Aware to automatically configure
+the service from the configuration in the repository, you also get
+monitoring for free, as that service host automatically injects the
+service behavior for monitoring according to the tracking profile
+selected for the service in the configuration page.</p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/tracking_38B03729.png"><img src="http://weblogs.asp.net/blogs/cibrax/tracking_thumb_7A86F6AA.png" title="tracking" alt="tracking" /></a></p>
+
+<p>SO-Aware supports four different tracking profiles, InformationSoap,
+InformationRest, VerboseSoap and VerboseRest. Information or Verbose
+specifies the level of detail that you want to track for the service,
+and this should be chosen carefully to avoid affecting the service
+performance in general. Soap or Rest specifies the tracking service that
+you want to use. SO-Aware provides two tracking service versions by
+default, one SOAP implementation that uses binary encoding with tcp for
+better performance, and a http implementation that provides better
+interoperability.</p>
+
+<p>An important thing to consider is that SO-Aware does not compete with
+Windows AppFabric in the monitoring aspect by any means, but it can be
+used as a good complement. The monitoring behavior in SO-Aware can be
+configured as an additional tracking participant in AppFabric to send
+more information and details about the messages to the AppFabric
+tracking database.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-12-02T00:00:00-03:00" pubdate data-updated="true">Dec 2<span>nd</span>, 2010</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2010/12/02/monitoring-your-services-with-so-aware/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2010/12/02/monitoring-your-services-with-so-aware/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2010/11/19/versioning-rest-services-with-wcf-http-processors/" title="Previous Post: Versioning REST Services with WCF Http Processors">&laquo; Versioning REST Services with WCF Http Processors</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2011/01/27/workarounds-for-supporting-mvvm-in-the-silverlight-treeview-control/" title="Next Post: Workarounds for supporting MVVM in the Silverlight TreeView Control">Workarounds for supporting MVVM in the Silverlight TreeView Control &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2010/12/02/monitoring-your-services-with-so-aware/';
+        var disqus_url = 'http://cibrax.me/blog/2010/12/02/monitoring-your-services-with-so-aware/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,477 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Implementing an identity provider and relying party with Zermatt and ASP.NET MVC - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="Zermatt is the framework recently released by Microsoft to develop
+claim-aware applications. You can find some announcements
+here
+and
+here. This &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2008/09/01/implementing-an-identity-provider-and-relying-party-with-zermatt-and-asp-net-mvc">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Implementing an Identity Provider and Relying Party With Zermatt and ASP.NET MVC</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-09-01T00:00:00-03:00" pubdate data-updated="true">Sep 1<span>st</span>, 2008</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Zermatt is the framework recently released by Microsoft to develop
+claim-aware applications. You can find some announcements
+<a href="http://blogs.msdn.com/vbertocci/archive/2008/07/09/announcing-the-beta-release-of-zermatt-developer-identity-framework.aspx">here</a>
+and
+<a href="http://www.leastprivilege.com/TryQuotZermattquotAndGiveFeedback.aspx">here</a>.</p>
+
+<p>This framework supports the WS-Federation active and passive profiles.
+This last one was initially designed with an unique purpose in mind,
+allow the integration of &ldquo;dumb clients&rdquo; into the <a href="http://en.wikipedia.org/wiki/Identity_Metasystem">identity
+metasystem</a>. As &ldquo;dumb
+clients&rdquo;, I am talking about clients like web browsers that do not have
+the ability to handle cryptographic material.</p>
+
+<p>All the magic is done through some consecutive Http redirects, and today
+we will see how develop an identity provider and a relying party web
+(with ASP.NET MVC) that are involved in the whole process.</p>
+
+<p>The identity provider is based on the quickstart that is automatically
+generated in Visual Studio when you create a new MVC web application.
+This quickstart uses FormsAuthentication to authenticate the application
+users and also provides an Account controller (that internally uses
+ASP.NET Membership) to manage all those users. In order to integrate
+Zermatt in this application, I added a new controller STSController that
+knows to process messages for getting issue tokens with the user&rsquo;s
+claims.</p>
+
+<p><img src="/images/legacy/Zermatt-MVC.gif" alt="" /></p>
+
+<p>For the relying party, Zermatt provides some web controls to
+authenticate the user against the identity provider using the passive
+profile. Unfortunately, for the simple fact that ASP.NET MVC does not
+support controls with view state, we can not use them here. As
+workaround, I created a couple of extensions methods that generate the
+Urls for sending the corresponding messages to the identity provider
+(Login and Logout).</p>
+
+<p>public static class LoginUrlExtensions</p>
+
+<p>{</p>
+
+<p>   public static string LoginUrl(this UrlHelper helper, string
+actionName, string controllerName, string stsUrl)</p>
+
+<p>   {</p>
+
+<p>       string host =
+helper.ViewContext.HttpContext.Request.Url.Authority;</p>
+
+<p>       string schema =
+helper.ViewContext.HttpContext.Request.Url.Scheme;</p>
+
+<p> </p>
+
+<p>       string realm = string.Format(&ldquo;{0}://{1}&rdquo;, schema, host);</p>
+
+<p>       string reply = helper.Action(actionName,
+controllerName).Substring(1);</p>
+
+<p> </p>
+
+<p>       return
+string.Format(&ldquo;{0}?wa=wsignin1.0&amp;wtrealm={1}&amp;wreply={2}&amp;wctx=rm=0&amp;id=FederatedPassiveSignIn1&amp;wct={3}&rdquo;,</p>
+
+<p>          stsUrl, realm, reply, XmlConvert.ToString(DateTime.Now));</p>
+
+<p>   }</p>
+
+<p> </p>
+
+<p>   public static string LogoutUrl(this UrlHelper helper, string
+actionName, string controllerName, string stsUrl)</p>
+
+<p>   {</p>
+
+<p>       string host =
+helper.ViewContext.HttpContext.Request.Url.Authority;</p>
+
+<p>       string schema =
+helper.ViewContext.HttpContext.Request.Url.Scheme;</p>
+
+<p> </p>
+
+<p>       string realm = string.Format(&ldquo;{0}://{1}&rdquo;, schema, host);</p>
+
+<p>       string reply = string.Format(&ldquo;{0}{1}&rdquo;, realm,
+helper.Action(actionName, controllerName));</p>
+
+<p> </p>
+
+<p>       return string.Format(&ldquo;{0}?wa=wsignout1.0&amp;wreply={1}&rdquo;, stsUrl,
+reply);</p>
+
+<p>   }</p>
+
+<p>}</p>
+
+<p>The &ldquo;actionName&rdquo; and &ldquo;controllerName&rdquo; are just used to generate the
+reply address where the user must be redirect after being authenticated
+in the identity provider. These extension methods can be used in the
+view as follow,</p>
+
+<p>&lt;a href=&ldquo;&lt;%=Url.LoginUrl(&#8220;Login&rdquo;, &ldquo;Home&rdquo;,
+&ldquo;localhost://STS&rdquo;)%>&ldquo;>Login&lt;/a></p>
+
+<p>We also need a method in the relying party to parse the RRST message and
+generate a cookie with the user credentials and claims.</p>
+
+<p> </p>
+
+<p>public interface IFederatedAuthentication</p>
+
+<p>{</p>
+
+<p>   IClaimsPrincipal Authenticate();</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public class FederatedAuthentication : IFederatedAuthentication</p>
+
+<p>{</p>
+
+<p>     private string logoutUrl;</p>
+
+<p> </p>
+
+<p>     public FederatedAuthentication(string logoutUrl)</p>
+
+<p>     {</p>
+
+<p>         this.logoutUrl = logoutUrl;</p>
+
+<p>     }</p>
+
+<p> </p>
+
+<p>     public IClaimsPrincipal Authenticate()</p>
+
+<p>     {</p>
+
+<p>         string securityTokenXml =
+FederatedAuthenticationModule.Current.GetXmlTokenFromPassiveSignInResponse(System.Web.HttpContext.Current.Request,
+null);</p>
+
+<p> </p>
+
+<p>         FederatedAuthenticationModule current =
+FederatedAuthenticationModule.Current;</p>
+
+<p> </p>
+
+<p>         SecurityToken token = null;</p>
+
+<p>         IClaimsPrincipal authContext =
+current.AuthenticateUser(securityTokenXml, out token);</p>
+
+<p> </p>
+
+<p>         TicketGenerationContext context = new
+TicketGenerationContext(authContext, false, logoutUrl,
+typeof(SignInControl).Name);</p>
+
+<p>         current.IssueTicket(context);</p>
+
+<p> </p>
+
+<p>         return authContext;</p>
+
+<p>     }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>As you can see in the code above, the Zermatt module
+(FederatedAuthenticationModule) that parses the response message is tied
+to the Request object, something that we do not have direct access from
+a MVC controller (Well, it is bad practice if we want to test our code).
+That&rsquo;s the reason I decided to put all that code in a pluggin that can
+be injected later in the controller.</p>
+
+<p>The complete solution is available to download from <a href="/images/legacy/MVC.Zermatt.zip">this
+location</a>. Any feedback
+would be great!!. Enjoy!!.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-09-01T00:00:00-03:00" pubdate data-updated="true">Sep 1<span>st</span>, 2008</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/asp-dot-net/'>ASP.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2008/09/01/implementing-an-identity-provider-and-relying-party-with-zermatt-and-asp-net-mvc/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2008/09/01/implementing-an-identity-provider-and-relying-party-with-zermatt-and-asp-net-mvc/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2008/08/21/dependency-injection-made-easy-for-the-asp-net-mvc/" title="Previous Post: Dependency injection made easy for the ASP.NET MVC">&laquo; Dependency injection made easy for the ASP.NET MVC</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2008/09/12/codecamp-buenos-aires-2008/" title="Next Post: Codecamp Buenos Aires 2008">Codecamp Buenos Aires 2008 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2008/09/01/implementing-an-identity-provider-and-relying-party-with-zermatt-and-asp-net-mvc/';
+        var disqus_url = 'http://cibrax.me/blog/2008/09/01/implementing-an-identity-provider-and-relying-party-with-zermatt-and-asp-net-mvc/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

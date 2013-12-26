@@ -1,0 +1,1222 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Implementing resource oriented controllers in ASP.NET MVC - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="One common problem with the naming convention and default routing
+mechanism in ASP.NET MVC is that we tend to group actions in a
+controller for &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2012/01/25/implementing-resource-oriented-controllers-in-asp-net-mvc">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Implementing Resource Oriented Controllers in ASP.NET MVC</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-01-25T00:00:00-03:00" pubdate data-updated="true">Jan 25<span>th</span>, 2012</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>One common problem with the naming convention and default routing
+mechanism in ASP.NET MVC is that we tend to group actions in a
+controller for sharing an URL space.  This basically leads to complex
+controllers with a lot of unrelated methods that break the SOLID
+principles.  Too many responsibilities in a simple class affects
+maintainability in the long run and causes secondary effects that
+complicates unit testing. For example, we usually end up with class
+constructors that receives too many dependencies as it is discussed
+<a href="http://stackoverflow.com/questions/6025482/strategy-to-refactor-when-too-many-dependencies-injected-into-service-or-control">here in
+SO</a>.</p>
+
+<p>A service façade or a service locator are not the solution for this
+problem either. I personally think the solution here is to use
+controllers with fewer responsibilities and define the right routing in
+case you want to share the URL space. There are some <a href="http://lostechies.com/chadmyers/2009/06/18/going-controller-less-in-mvc-the-way-fowler-meant-it/">discussions
+around</a>
+the idea of using what was called controller-less actions, in which a
+controller only performs a single thing. Without going to that extreme,
+we can use a more resource oriented approach for assigning
+responsibilities to a controller.  A resource in http is uniquely
+identified by an URI  and can be manipulated through an unified
+interface with http verbs. Although some verbs do not make much sense
+when working with a browser like “delete” or “put”, we can replace those
+with “post”.</p>
+
+<p>Implementing a delete action with an http get is definitely wrong, as an
+http get should be
+<a href="http://en.wikipedia.org/wiki/Idempotence">idempotent</a>.</p>
+
+<p>Let’s start an example by defining a simple scenario for managing a set
+of customers. We can initially define two resources, Customers for
+performing actions in the collection, and Customers/{id} for performing
+actions in a single customer. Although they both share the same URL
+space “Customers”, it does not mean we need to implement all the
+functionality in a single controller called “Customers”. We can still
+have a “CustomersController” for the collection, and a
+“CustomerController” for the individual customers. We can use routing
+for share the same URL and still forward the requests to the right
+controller.</p>
+
+<p>We can define the following operations in the “CustomersController”,</p>
+
+<ul>
+<li>Add (GET Customers/Add): Retrieves the Html form representation for
+creating a new customer</li>
+<li>Add (POST Customers/Add): Receives a representation (encoded in the
+form) for creating a new customer in the collection</li>
+<li>Delete (POST Customers/{id}/Delete: Removes a customer from the
+collection</li>
+<li>Index (GET Customers): Retrieves a Html view representing a list of
+customers</li>
+</ul>
+
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+public class CustomersController : Controller
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>ICustomerRepository repository;
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>public CustomersController()
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    : this(new CustomerRepository())
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>public CustomersController(ICustomerRepository repository)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    this.repository = repository;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>public ActionResult Index(string filter = null)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    IEnumerable&lt;Customer&gt; customers = null;
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    if (!string.IsNullOrEmpty(filter))
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>        customers = this.repository.GetAll()
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>            .Where(c =&gt; c.FirstName.Contains(filter) || c.LastName.Contains(filter));
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    }
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    else
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>        customers = this.repository.GetAll();
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    }
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    return View(customers);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>[HttpGet]
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>public ActionResult Add()
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    return View();
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>[HttpPost]
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>public ActionResult Add(Customer customer)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    if(ModelState.IsValid)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>        this.repository.Add(customer);
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    return RedirectToAction("Index");
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>[HttpPost]
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>public ActionResult Delete(int id)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    this.repository.Delete(id);
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    if (Request.IsAjaxRequest())
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>        return new HttpStatusCodeResult((int)HttpStatusCode.OK);
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    return RedirectToAction("Index");
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+}
+</del></p>
+
+<p>The “CustomerController” can have the following operations:</p>
+
+<ul>
+<li>Get (GET Customers/{id}): Retrieves an Html form representing an
+specific customer</li>
+<li>Update (POST Customers/{id}): Receives a representation (encoded in
+the form) for updating the customer</li>
+</ul>
+
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+public class CustomerController : Controller
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>ICustomerRepository repository;
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>public CustomerController()
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    : this(new CustomerRepository())
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>public CustomerController(ICustomerRepository repository)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    this.repository = repository;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>[HttpGet]
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>public ActionResult Get(int id)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    var customer = this.repository.GetAll()
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>        .Where(c =&gt; c.Id == id)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>        .FirstOrDefault();
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    if (customer == null)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>        return new HttpStatusCodeResult((int)HttpStatusCode.NotFound);
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    return View(customer);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>[HttpPost]
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>public ActionResult Update(Customer customer)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    if (ModelState.IsValid)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>        this.repository.Update(customer);
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    return RedirectToAction("Index", "Customers");
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+}
+</del></p>
+
+<p>This is how the routing table looks like,</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+public static void RegisterRoutes(RouteCollection routes)
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>//This map is required so the Add segment is not used as {id}
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>routes.MapRoute(
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>  name: "CustomerAdd",
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>  url: "Customers/Add",
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>  defaults: new { controller = "Customers", action = "Add" }
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>  );
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>routes.MapRoute(
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>   name: "CustomerGet",
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>   url: "Customers/{id}",
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>   defaults: new { controller = "Customer", action = "Get" },
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>   constraints: new { httpMethod = new HttpMethodConstraint("GET") }
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>   );
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>routes.MapRoute(
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    name: "CustomerUpdate",
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    url: "Customers/{id}",
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    defaults: new { controller = "Customer", action = "Update" },
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    constraints: new { httpMethod = new HttpMethodConstraint("POST") }
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    );
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>routes.MapRoute(
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    name: "MVC Default",
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    url: "{controller}/{action}/{id}",
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    defaults: new { controller = "Home", action = "Index", id = UrlParameter.Optional }
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>);
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+}
+</del></p>
+
+<p>You can override the default route for “Customers/{id}” for getting or
+updating an specific customer by using an http method constraint. I also
+added the first  route for adding a new customer so the “Add” segment is
+not used as the “{id}” wildcard.</p>
+
+<p>As you could see, we could split all the responsibilities in two
+controllers, which look simpler at first glance. In conclusion, you
+don’t need to assume the same URL means the same controller.</p>
+
+<p>The “delete” action is implemented as an http post. This can be sent
+from the browser by using an Ajax call or a Http form. For example, the
+following code shows how to do that using a JQuery Ajax call.</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+@Html.ActionLink(&#8220;Delete&rdquo;, &ldquo;Delete&rdquo;, new { id = item.Id }, new { @class = &ldquo;delete&rdquo; })
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<script type="text/javascript" language="javascript">   1:  
+~~~~
+
+~~~~ {style="margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: "Courier New", courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);"}
+   2:     $(function () {
+~~~~
+
+~~~~ {style="margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: "Courier New", courier, monospace; font-size: 8pt; direction: ltr; background-color: white;"}
+   3:         $('.delete').click(function () {
+~~~~
+
+~~~~ {style="margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: "Courier New", courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);"}
+   4:             var that = $(this);
+~~~~
+
+~~~~ {style="margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: "Courier New", courier, monospace; font-size: 8pt; direction: ltr; background-color: white;"}
+   5:             var url = that.attr('href');
+~~~~
+
+~~~~ {style="margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: "Courier New", courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);"}
+   6:  
+~~~~
+
+~~~~ {style="margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: "Courier New", courier, monospace; font-size: 8pt; direction: ltr; background-color: white;"}
+   7:             $.post(url, function () {
+~~~~
+
+~~~~ {style="margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: "Courier New", courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);"}
+   8:                 alert('delete called');
+~~~~
+
+~~~~ {style="margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: "Courier New", courier, monospace; font-size: 8pt; direction: ltr; background-color: white;"}
+   9:             });
+~~~~
+
+~~~~ {style="margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: "Courier New", courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);"}
+  10:  
+~~~~
+
+~~~~ {style="margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: "Courier New", courier, monospace; font-size: 8pt; direction: ltr; background-color: white;"}
+  11:             return false;
+~~~~
+
+~~~~ {style="margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: "Courier New", courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);"}
+  12:         });
+~~~~
+
+~~~~ {style="margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: "Courier New", courier, monospace; font-size: 8pt; direction: ltr; background-color: white;"}
+  13:     });
+~~~~
+
+\</script\>
+
+
+<p>The code is available for download from
+<a href="/images/legacy/MVCResources.zip">here</a></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-01-25T00:00:00-03:00" pubdate data-updated="true">Jan 25<span>th</span>, 2012</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2012/01/25/implementing-resource-oriented-controllers-in-asp-net-mvc/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2012/01/25/implementing-resource-oriented-controllers-in-asp-net-mvc/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2012/01/02/the-liike-project-mobile-web-guidance-from-microsoft-p-amp-p/" title="Previous Post: The “Liike” project. Mobile Web guidance from Microsoft P&amp;P">&laquo; The “Liike” project. Mobile Web guidance from Microsoft P&amp;P</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2012/01/27/the-rise-of-simple-page-applications-spa-in-web-mobile/" title="Next Post: The rise of Single Page Applications (SPA) in Web Mobile">The rise of Single Page Applications (SPA) in Web Mobile &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2012/01/25/implementing-resource-oriented-controllers-in-asp-net-mvc/';
+        var disqus_url = 'http://cibrax.me/blog/2012/01/25/implementing-resource-oriented-controllers-in-asp-net-mvc/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

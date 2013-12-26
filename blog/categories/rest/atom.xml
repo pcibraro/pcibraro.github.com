@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: REST | Pablo Cibraro (Cibrax)]]></title>
+  <link href="http://cibrax.me/blog/categories/rest/atom.xml" rel="self"/>
+  <link href="http://cibrax.me/"/>
+  <updated>2013-12-26T15:03:47-03:00</updated>
+  <id>http://cibrax.me/</id>
+  <author>
+    <name><![CDATA[Cibrax]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Mutual Certificate Authentication for WCF REST services]]></title>
+    <link href="http://cibrax.me/blog/2009/04/16/mutual-certificate-authentication-for-wcf-rest-services/"/>
+    <updated>2009-04-16T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2009/04/16/mutual-certificate-authentication-for-wcf-rest-services</id>
+    <content type="html"><![CDATA[<p>When Mutual Certificate Authentication is configured for REST services,
+both, the client and the service perform identity verification or
+authentication through X509 certificates.</p>
+
+<p>The client authenticates the service during the initial SSL handshake,
+when the server sends the client a certificate to authenticate itself.
+More information about this process can be <a href="http://support.microsoft.com/default.aspx/kb/257587">found
+here</a>.</p>
+
+<p>The service on the other hand, performs similar validations on the
+certificate attached by the client consumer to the request message.</p>
+
+<p>Some specific configuration settings are required in WCF to use this
+authentication scenario with REST services. The service must be
+configured with transport security (SSL), “certificate” as client
+credential type.</p>
+
+<p>&lt;webHttpBinding></p>
+
+<p>  &lt;binding name=&ldquo;mutual&rdquo;></p>
+
+<p>    &lt;security mode=&ldquo;Transport&rdquo;></p>
+
+<p>      &lt;transport clientCredentialType=&ldquo;Certificate&rdquo;/></p>
+
+<p>    &lt;/security>   &lt;/binding></p>
+
+<p>&lt;/webHttpBinding></p>
+
+<p>For example, the complete configuration for a REST service that provides
+ATOM feeds would be the following,</p>
+
+<p>&lt;system.serviceModel></p>
+
+<p>  &lt;serviceHostingEnvironment aspNetCompatibilityEnabled=&ldquo;true&rdquo;/></p>
+
+<p>  &lt;services></p>
+
+<p>    &lt;service name=&ldquo;MutualAuthenticationRest.FeedService&rdquo;></p>
+
+<p>      &lt;endpoint address=&ldquo;&rdquo;
+contract=&ldquo;MutualAuthenticationRest.IFeedService&rdquo;
+binding=&ldquo;webHttpBinding&rdquo; bindingConfiguration=&ldquo;mutual&rdquo;
+behaviorConfiguration=&ldquo;mutual&rdquo;>&lt;/endpoint></p>
+
+<p>     &lt;/service></p>
+
+<p>  &lt;/services></p>
+
+<p>  &lt;bindings></p>
+
+<p>    &lt;webHttpBinding></p>
+
+<p>      &lt;binding name=&ldquo;mutual&rdquo;></p>
+
+<p>        &lt;security mode=&ldquo;Transport&rdquo;></p>
+
+<p>          &lt;transport clientCredentialType=&ldquo;Certificate&rdquo;/></p>
+
+<p>         &lt;/security></p>
+
+<p>       &lt;/binding></p>
+
+<p>     &lt;/webHttpBinding></p>
+
+<p>    &lt;/bindings></p>
+
+<p>    &lt;behaviors></p>
+
+<p>      &lt;endpointBehaviors></p>
+
+<p>        &lt;behavior name=&ldquo;mutual&rdquo;></p>
+
+<p>          &lt;webHttp/></p>
+
+<p>        &lt;/behavior></p>
+
+<p>     &lt;/endpointBehaviors></p>
+
+<p>   &lt;/behaviors></p>
+
+<p>&lt;/system.serviceModel></p>
+
+<p>The virtual directory used for hosting the service in IIS must also be
+configured with the same security settings.</p>
+
+<p><a href="/images/legacy/MutualCertificateAuthenticationforWCFRES_B433/MutualCertificate.jpg"><img src="/images/legacy/MutualCertificateAuthenticationforWCFRES_B433/MutualCertificate_thumb.jpg" title="MutualCertificate" alt="MutualCertificate" /></a></p>
+
+<p>The client application only need to attach the certificate at the moment
+of consuming the service. This can be easily done with the new
+HttpClient class shipped as part of the WCF REST Starter kit,</p>
+
+<p>class Program</p>
+
+<p>{</p>
+
+<p>    static void Main(string[] args)</p>
+
+<p>    {</p>
+
+<p>        X509Certificate2 certificate =
+CertificateUtil.GetCertificate(StoreName.My, StoreLocation.LocalMachine,
+&ldquo;CN=clientCert&rdquo;);</p>
+
+<p>        HttpClient client = new HttpClient();</p>
+
+<p>        client.TransportSettings.ClientCertificates.Add(certificate);
+//Cert attached to the request</p>
+
+<p>        string content =
+client.Get(&ldquo;<a href="https://localhost/MutualAuthentication/Service.svc?numItems=10">https://localhost/MutualAuthentication/Service.svc?numItems=10</a>&rdquo;).Content.ReadAsString();</p>
+
+<p>        Console.WriteLine(content);</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>CertificateUtil is an helper class that looks for an specific X509
+certificate in the windows certificate store. In addition, if you are
+using test certificates, you might want to disable the service
+authentication on the client side, that can be done with a callback
+attached to the static class “ServicePointManager”.</p>
+
+<p>For instance,</p>
+
+<p>public class PermissiveCertificatePolicy</p>
+
+<p>{</p>
+
+<p>    public static void Enable()</p>
+
+<p>    {</p>
+
+<p>        ServicePointManager.ServerCertificateValidationCallback +=</p>
+
+<p>           new RemoteCertificateValidationCallback(RemoteCertValidate);</p>
+
+<p>    }</p>
+
+<p>    static bool RemoteCertValidate(object sender, X509Certificate cert,
+X509Chain chain, System.Net.Security.SslPolicyErrors error)</p>
+
+<p>    {</p>
+
+<p>        return true;</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>The method PermissiveCertificatePolicy.Enable should be called before
+consuming the service.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Sharing the security context between ASP.NET and WCF REST Services]]></title>
+    <link href="http://cibrax.me/blog/2009/04/08/sharing-the-security-context-between-asp-net-and-wcf-rest-services/"/>
+    <updated>2009-04-08T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2009/04/08/sharing-the-security-context-between-asp-net-and-wcf-rest-services</id>
+    <content type="html"><![CDATA[<p>It is very common for WCF services that work as Ajax callbacks and
+ASP.NET pages that live in the same web application to share a common
+security context for the authenticated user. However, in order to make
+this happens, the <a href="http://blogs.msdn.com/wenlong/archive/2006/01/23/516041.aspx">ASP.NET compatibility
+mode</a> must
+be enabled for the WCF service. When that setting is enabled, WCF
+basically includes the service call within the ASP.NET pipeline, all the
+ASP.NET modules configured for the application are executed, and as
+result, the HttpContext get initialized for that service as it was a
+normal page. </p>
+
+<p>Optionally, an IAuthorizationPolicy can be used to inject the
+HttpContext.User into the WCF security context, and completely decouple
+in that way, the service implementation from the Http security context.</p>
+
+<p>For example, we can have a web application configured with Forms
+Authentication or the new FederationModule in geneva framework for
+authenticating users with passive federation, and share that security
+context with the services or ajax callbacks that the web pages consume.</p>
+
+<p>For this scenario, the WCF REST Starter kit already includes an
+IAuthorizationPolicy implementation for initialization the WCF security
+context with the authenticated user in the web application. That
+authorization policy is automatically injected in the service execution
+pipeline by the WebServiceHost2 host shipped also within the kit. If you
+are using that WCF host, you do not have to do anything extra other than
+enabling the ASP.NET compatibility mode for the services.</p>
+
+<p>Configuring the ASP.NET compatibility mode requires two steps.</p>
+
+<p>​1. Add a configuration settings in the configuration file,</p>
+
+<p>&lt;system.serviceModel></p>
+
+<p>&lt;serviceHostingEnvironment aspNetCompatibilityEnabled=&ldquo;true&rdquo; /></p>
+
+<p>&lt;/system.serviceModel></p>
+
+<p> 2. Add support for this mode in the service implementation. This is
+done through an special attribute “AspNetCompatibilityRequirements”
+added to the class definition</p>
+
+<p>[AspNetCompatibilityRequirements(RequirementsMode =
+AspNetCompatibilityRequirementsMode.Required)] </p>
+
+<p>[ServiceContract]</p>
+
+<p>public class ClaimsService</p>
+
+<p>Once you have done that, the user principal will become available to the
+service through the WCF security context or the Thread.CurrentPrincipal
+property.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Support for Form-UrlEncoded data in WCF Rest services]]></title>
+    <link href="http://cibrax.me/blog/2009/04/01/support-for-form-urlencoded-data-in-wcf-rest-services/"/>
+    <updated>2009-04-01T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2009/04/01/support-for-form-urlencoded-data-in-wcf-rest-services</id>
+    <content type="html"><![CDATA[<p>Some people have been asking around in the MSDN forums or
+<a href="http://stackoverflow.com/questions/604463/best-way-to-support-application-x-www-form-urlencoded-post-data-with-wcf">stackoverflow</a>
+about a possible way to pass form-urlencoded data to an existing WCF
+REST service. Although this is not a core feature in WCF from my point
+view, there is still some support for addressing this scenario in the
+REST Starter kit.</p>
+
+<p>This feature takes the form of a new message formatter,
+FormsPostDispatchMessageFormatter, which is automatically injected to
+any existing service hosted within the new WebServiceHost2 host (shipped
+as part of the kit)</p>
+
+<p>This formatter basically intercepts all messages, and handle those that
+contains “application/x-www-form-urlencoded” as content type in the
+request header. The rest of the messages are handled by the existing
+formatters as usual.</p>
+
+<p>The service operation must expose a NameValueCollection argument in the
+method signature in order to receive the data. This collection will
+contain the key/value pairs that were parsed from request body.</p>
+
+<p>For example,</p>
+
+<p>[WebInvoke(UriTemplate = &ldquo;SetData&rdquo;)]</p>
+
+<p>[OperationContract]</p>
+
+<p>void SetData(NameValueCollection formsData)</p>
+
+<p>{</p>
+
+<p>    this.value = Int32.Parse(formsData[&ldquo;counter&rdquo;]);</p>
+
+<p>}</p>
+
+<p>“Counter”  in this case represents a field in the form that was posted
+to the service.</p>
+
+<p>&lt;</p>
+
+<p>FORM action=&ldquo;service.svc/SetData&rdquo; method=&ldquo;post&rdquo;></p>
+
+<p>Input Counter value and hit enter:</p>
+
+<p>&lt;INPUT type=&ldquo;text&rdquo; name=&ldquo;Counter&rdquo;></p>
+
+<p>&lt;/FORM></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Streaming large content from a WCF RESTFul service]]></title>
+    <link href="http://cibrax.me/blog/2009/03/27/streaming-large-content-from-a-wcf-restful-service/"/>
+    <updated>2009-03-27T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2009/03/27/streaming-large-content-from-a-wcf-restful-service</id>
+    <content type="html"><![CDATA[<p>Streaming large content such as media content, images or files is a
+common scenario for RESTful services. If a scenario like this is not
+well addressed or implemented on the service side, there is a high risk
+of consuming server resources like memory or CPU in a matter of seconds.
+This usually happens when the complete content is loaded in memory
+before it is transferred to the service consumer.</p>
+
+<p>The WCF REST Starter kit introduced a new mechanism for addressing this
+scenario, an “AdapterStream” utility class, which basically pushes small
+pieces of content (and thus, only small memory buffers are used) to the
+client application as it becomes necessary.</p>
+
+<p>The kit also comes with an example “PushStyleStreaming” that shows this
+class in action</p>
+
+<p>Stream GetImage(string text)</p>
+
+<p>{</p>
+
+<p>    if (string.IsNullOrEmpty(text))</p>
+
+<p>    {</p>
+
+<p>        throw new WebProtocolException(HttpStatusCode.BadRequest, &ldquo;text
+must be specified&rdquo;, null);</p>
+
+<p>    }</p>
+
+<p>    Bitmap theBitmap = GenerateImage(text);</p>
+
+<p>    WebOperationContext.Current.OutgoingResponse.ContentType =
+&ldquo;image/jpeg&rdquo;;</p>
+
+<p>    return new AdapterStream((stream) => theBitmap.Save(stream,
+ImageFormat.Jpeg));</p>
+
+<p>}</p>
+
+<p>In the code above, the AdapterStream is used to transfer an image to a
+service consumer. As you can also notice in that code, that class
+receives a lambda  expression or Action&lt;T> delegate in the
+constructor. That provides some flexibility at the moment of generating
+the final stream that will be sent to the client application.</p>
+
+<p>Another example that uses an TextWriter for generating text content,</p>
+
+<p>  new AdapterStream((writer) =></p>
+
+<p>    {</p>
+
+<p>        writer.WriteLine(&ldquo;You said: &rdquo;);</p>
+
+<p>        writer.WriteLine(text);</p>
+
+<p>        writer.WriteLine(&ldquo;Didn&rsquo;t you?&rdquo;);</p>
+
+<p>        writer.Flush();</p>
+
+<p>    }, Encoding.UTF8);</p>
+
+<p>In addition to this feature, you might also want to have a better
+control of service usage by restricting the <a href="http://kennyw.com/indigo/150">throttling
+settings</a>. This is a good thing about REST
+services implemented with the WCF stack. Other implementations such as
+the ASP.NET MVC rely on the ASP.NET for handling this aspect, where
+these settings are applied only at application domain level (For all
+services running in the same app).</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Custom Basic Authentication for RESTful services]]></title>
+    <link href="http://cibrax.me/blog/2009/03/21/custom-basic-authentication-for-restful-services/"/>
+    <updated>2009-03-21T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2009/03/21/custom-basic-authentication-for-restful-services</id>
+    <content type="html"><![CDATA[<p>It’s very common when developing RESTful services to authenticate users
+against a proprietary user database. This is generally done with a
+combination of username and password through http basic authentication.
+Unfortunately, basic authentication is tied to windows accounts in IIS,
+which leads us to find out some alternatives or workarounds to support
+this scenario. WCF 3.5 made possible to authenticate transport
+credentials with one of the existing UsernamePasswordValidator
+extensions, however, this approach does not work for IIS hosted
+services.</p>
+
+<p><a href="http://www.leastprivilege.com/CommentView.aspx?guid=f9453fb0-6e2a-4faf-8cf9-62162dc7531e">Dominick</a>
+solved this problem with a module plugged directly in the ASP.NET
+pipeline that works like a charm, but it requires some additional WCF
+settings and a custom IAuthorization policy to flow the user principal
+to the WCF service instance. His solution works for ASP.NET applications
+as well.</p>
+
+<p>This problem can be also solved at a deeper level in the WCF transport
+model using a message interceptor. The message interceptor can receive a
+traditional Membership provider in the constructor class, and use it
+later for authenticating the users. In addition, this message
+interceptor can also automatically pass the user credentials to the WCF
+service instance.</p>
+
+<p>As any other message interceptor, it can be configured directly in the
+WCF service factory with no need of having additional configuration.
+This can be easily done in the “svc” file hosted in IIS.</p>
+
+<p>&lt;%@ ServiceHost Language=&ldquo;C#&rdquo; Debug=&ldquo;true&rdquo; Service=&ldquo;Service&rdquo;
+Factory=&ldquo;AppServiceHostFactory&rdquo; %></p>
+
+<p>class AppServiceHostFactory : ServiceHostFactory</p>
+
+<p>{</p>
+
+<p>   protected override ServiceHost CreateServiceHost(Type serviceType,
+Uri[] baseAddresses)</p>
+
+<p>   {</p>
+
+<p>     WebServiceHost2 result = new WebServiceHost2(serviceType, true,
+baseAddresses);</p>
+
+<p>     result.Interceptors.Add(new BasicAuthenticationInterceptor(</p>
+
+<p>                System.Web.Security.Membership.Provider, &ldquo;foo&rdquo;));</p>
+
+<p>     return result;</p>
+
+<p>   }</p>
+
+<p>}</p>
+
+<p>BasicAuthenticationInterceptor is the message interceptor I built for
+this post, it receives the MembershipProvider and a default realm that
+will be returned together with an 401 http error (Unauthorized) in case
+the user was not correctly authenticated.</p>
+
+<p>The example is available to download from
+<a href="/images/legacy/BasicAuthentication.zip">here</a>.</p>
+]]></content>
+  </entry>
+  
+</feed>

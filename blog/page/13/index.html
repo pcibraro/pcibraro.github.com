@@ -1,0 +1,1216 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="OpenRasta
+(OR) is the name of a new open source framework for developing Restful
+applications (Web applications or services) created by Sebastien &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/page/13">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/04/22/openrasta-an-open-source-alternative-for-developing-restful-services/">OpenRasta, an Open Source Alternative for Developing Restful Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-04-22T00:00:00-03:00" pubdate data-updated="true">Apr 22<span>nd</span>, 2009</time>
+        
+         | <a href="/blog/2009/04/22/openrasta-an-open-source-alternative-for-developing-restful-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><a href="http://serialseb.blogspot.com/2008/12/openrasta-is-available.html">OpenRasta</a>
+(OR) is the name of a new open source framework for developing Restful
+applications (Web applications or services) created by <a href="http://serialseb.blogspot.com/">Sebastien
+Lambla</a>. As the ASP.NET MVC, this
+framework is also an implementation of the MVC pattern, which focus
+mainly on a good separation of concerns, and provide different
+extensibility points where the developer can plugging custom code at the
+moment of developing applications.</p>
+
+<p>The framework is now on Beta 2 stage, Sebastien and other guys are
+currently working on improving the hosting infrastructure and public
+API. They are, of course, very open at this point to receive feedback or
+suggestions for new features, or improvements to existing ones. If you
+have some interest in participating of this project, you can start
+joining the <a href="http://groups.google.com/group/openrasta/">mailing list</a>.</p>
+
+<p>In order to understand how OR works under the hood, I will start by
+describing some basic concepts that a developer should know to implement
+an application from scratch with this framework.</p>
+
+<p><strong>Handlers</strong></p>
+
+<p>A “handler” is one of the main building blocks in OR. It represents the
+implementation of the service itself, and it is generally mapped to
+single resource through an URI. Therefore, any access to an URI will get
+resolved by OR to an specific handler.</p>
+
+<p>From an implementation point of view, a handler is simple class that
+expose methods for handling different http verbs. By convention, a
+method should be called as the Http verb that supports, for example, Get
+or Post. However, nothing prevent you from giving more friendly names to
+the methods (or handler operations), there is an special custom
+attribute “HttpOperationAttribute” that you can use to associate the
+method with an http verb.</p>
+
+<p>public class CustomerHandler</p>
+
+<p>{</p>
+
+<p>    public Customer Get(int customerId)</p>
+
+<p>    {</p>
+
+<p>        return new Customer { FirstName = &ldquo;foo&rdquo;, LastName = &ldquo;bar&rdquo; };</p>
+
+<p>    }</p>
+
+<p>    public OperationResult Put(int id, Customer customer)</p>
+
+<p>    {</p>
+
+<p>        return new OperationResult.Modified { ResponseResource =
+customer };</p>
+
+<p>    }</p>
+
+<p>    [HttpOperation(HttpMethod.POST)]</p>
+
+<p>    public OperationResult MyFriendlyMethod(int id, Customer customer)</p>
+
+<p>    {</p>
+
+<p>        return new OperationResult.Modified { ResponseResource =
+customer };</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>If you want to have a better control of the Http status code, as it is
+shown in the code above, you can also return an instance of
+OperationResult.</p>
+
+<p><strong>Codecs</strong></p>
+
+<p>As you can see, the handlers have not been wired to any content type at
+this point. Serializing/Deserializing a resource instance into an
+specific representation is responsibility of the codecs. Some codecs are
+provided out of the box in OR, for example, Json, Xml, Html or
+Form-Url-Encoded data.</p>
+
+<p>A codec generally implement two interfaces, IMediaTypeReader (for
+deserializing content) and IMediaTypeWriter(for serializing). The
+following code shows the implementation of the Json codec,</p>
+
+<p>[MediaType(&ldquo;application/json;q=0.5&rdquo;, &ldquo;json&rdquo;)]</p>
+
+<p>public class JsonDataContractCodec : IMediaTypeReader, IMediaTypeWriter</p>
+
+<p>{</p>
+
+<p>    public object Configuration { get; set; }</p>
+
+<p>    public object ReadFrom(IHttpEntity request, System.Type
+destinationType, string paramName)</p>
+
+<p>    {</p>
+
+<p>        DataContractJsonSerializer serializer = new
+DataContractJsonSerializer(destinationType);</p>
+
+<p>        return serializer.ReadObject(request.Stream);</p>
+
+<p>    }</p>
+
+<p>    public void WriteTo(object entity, IHttpEntity response, string[]
+paramneters)</p>
+
+<p>    {</p>
+
+<p>        if (entity == null)</p>
+
+<p>            return;</p>
+
+<p>        DataContractJsonSerializer serializer = new
+DataContractJsonSerializer(entity.GetType());</p>
+
+<p>        serializer.WriteObject(response.Stream, entity);</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p><strong>Putting Handlers and Codecs together</strong></p>
+
+<p>By means of a fluent configuration, we can later wire up an URI with the
+corresponding handler and one or more codecs according to the
+content-types that the service should support.</p>
+
+<p>ConfigureServer(() => ResourceSpace.Has.ResourcesOfType&lt;Customer>()</p>
+
+<p>                          .AtUri(&ldquo;/customer/{id}&rdquo;)</p>
+
+<p>                          .HandledBy&lt;CustomerHandler>()</p>
+
+<p>                         
+.AndTranscodedBy&lt;OpenRasta.Codecs.JsonDataContractCodec>()</p>
+
+<p>                         
+.AndBy&lt;OpenRasta.Codecs.XmlSerializerCodec>());</p>
+
+<p>This is one of the big differences with the ASP.NET MVC or the Web
+Programming Model in WCF.</p>
+
+<p>In the MVC, the supported content types are inherently tied to the
+ActionResult returned by the controller action. Therefore, the action
+implementation must be modified in order to support new content types. 
+Or a more specialized implementation of an ActionResult is required,
+which has to be smart enough to accommodate these changes.</p>
+
+<p>Same thing happens with WCF, you have to either decorate the service
+operation with the supported content-type (Only Json or Pox supported
+today) or return a Message/Stream instance from the operation and write
+the resource representation yourself in the operation implementation. As
+I said, only Json/Pox are supported today, and adding new content types
+is something complicated to do. You basically need to write a custom
+IDispatchMessageFormatter extension, and a custom WebServiceHost to
+replace the formatter provided out of the box. (This is the approach
+taken in the WCF REST Starter kit for supporting form-url-encoded data).</p>
+
+<p><strong>Pipeline Contributors</strong></p>
+
+<p>Let’s go back to OpenRasta for a moment, “Handlers” and “Codecs” are not
+the only supported extensibility points in this framework. All the
+processing of incoming/outgoing messages is performed in a pipeline that
+contains contributors or filters. A pipeline contributor perform simple
+tasks such as initializing the security context, routing the messages or
+processing exceptions to name a few. You can write your own
+contributors, or customize the pipeline to support different
+configurations or scenarios</p>
+
+<p><strong>More information about OpenRasta</strong> </p>
+
+<p>You can find more information about this framework in the <a href="http://serialseb.blogspot.com/">Sebastien’s
+blog</a>. The current project status is
+also available
+<a href="http://serialseb.blogspot.com/2008/10/openrasta-status-update.html">here</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/04/17/webcast-para-el-programa-microsoft-student-partner-building-web-services/">Webcast Para El Programa Microsoft Student Partner “Building Web Services”</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-04-17T00:00:00-03:00" pubdate data-updated="true">Apr 17<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/04/17/webcast-para-el-programa-microsoft-student-partner-building-web-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><a href="/images/legacy/WebServices.ppt">Aqui</a> pueden encontrar
+el material de la prestacion que di en el dia de hoy acerca de
+construccion de web services con ASP.NET y WCF en Visual Studio 2008.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/04/17/developing-restful-services-with-json-and-pox-support-in-the-asp-net-mvc/">Developing RESTful Services With JSON and POX Support in the ASP.NET MVC</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-04-17T00:00:00-03:00" pubdate data-updated="true">Apr 17<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/04/17/developing-restful-services-with-json-and-pox-support-in-the-asp-net-mvc/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Many of the features available out of the box today in the ASP.NET MVC
+framework are only intended to develop web applications using REST
+principles. There is not support for accepting incoming messages encoded
+as JSON or plain old XML (POX), or even support for returning POX from a
+controller action. Only form-urlencoded data is accepted by default for
+incoming messages, and JSON/HTML (with support of the view engines) for
+outgoing messages in controller actions.</p>
+
+<p>However, thanks to the different extensibility points that the MVC
+provides for hooking up custom code, supporting different scenarios for
+RESTful services tend to be something really easy to implement.</p>
+
+<p>In this framework, we basically have two extensibility points that
+deserve some attention, Action Filters and Action Results.</p>
+
+<p>Action filters intercept messages before they are dispatched to the
+controller action (or operation), and just after the operation returns a
+result. They are basically equivalent to the Dispatch Message
+Interceptors in WCF, or the new Message Interceptors in the WCF REST
+Starter kit (although they work more at a deeper level in the WCF
+processing pipeline).</p>
+
+<p>Action results know how to serialize and write an object (the controller
+action result) into the response stream. Since they also have access to
+the Response object, additional work can be done there to manipulate
+some response settings or add output headers.</p>
+
+<p>The framework also support Model Binders, which basically knows how to
+create an object representing the model expected by the controller
+action from some scalar values. Those scalar values are parsed from the
+incoming message (encoded as form-urlencoded), and then passed to the
+binder. However, they do not seem to add any value for implementing
+RESTful services with support for JSON or XML.</p>
+
+<p>Omar Al Zabir has already written <a href="http://weblogs.asp.net/omarzabir/archive/2008/10/03/create-rest-api-using-asp-net-mvc-that-speaks-both-json-and-plain-xml.aspx">an nice
+post</a>
+on how to implement RESTful services with the ASP.NET MVC that speak
+JSON and XML using action filters and action results.</p>
+
+<p>ATOM and other syndication formats can also be handled as XML. For this,
+the Web Programming Model in WCF comes with a couple of classes,
+Rss20FeedFormatter and Atom10FeedFormator, which are Data Contracts and
+also IXmlSerializable classes. Therefore, if your operation returns an
+instance of any of these classes, the filters created by Omar would
+address this scenario as well. Regarding Conditional get support, you
+will have to implement it in the action itself or a custom filter. (You
+will have to do the same thing if you decide to go with the WCF Web
+Programming Model).</p>
+
+<p>Caching is another feature that you might want to use at the moment of
+developing RESTful services. Fortunately, the MVC also comes with an
+special action filter “OutputCache” that was built on top the ASP.NET
+cache, so it provides the same caching capabilities that you may use for
+normal ASP.NET pages.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/04/16/mutual-certificate-authentication-for-wcf-rest-services/">Mutual Certificate Authentication for WCF REST Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-04-16T00:00:00-03:00" pubdate data-updated="true">Apr 16<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/04/16/mutual-certificate-authentication-for-wcf-rest-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>When Mutual Certificate Authentication is configured for REST services,
+both, the client and the service perform identity verification or
+authentication through X509 certificates.</p>
+
+<p>The client authenticates the service during the initial SSL handshake,
+when the server sends the client a certificate to authenticate itself.
+More information about this process can be <a href="http://support.microsoft.com/default.aspx/kb/257587">found
+here</a>.</p>
+
+<p>The service on the other hand, performs similar validations on the
+certificate attached by the client consumer to the request message.</p>
+
+<p>Some specific configuration settings are required in WCF to use this
+authentication scenario with REST services. The service must be
+configured with transport security (SSL), “certificate” as client
+credential type.</p>
+
+<p>&lt;webHttpBinding></p>
+
+<p>  &lt;binding name=&ldquo;mutual&rdquo;></p>
+
+<p>    &lt;security mode=&ldquo;Transport&rdquo;></p>
+
+<p>      &lt;transport clientCredentialType=&ldquo;Certificate&rdquo;/></p>
+
+<p>    &lt;/security>   &lt;/binding></p>
+
+<p>&lt;/webHttpBinding></p>
+
+<p>For example, the complete configuration for a REST service that provides
+ATOM feeds would be the following,</p>
+
+<p>&lt;system.serviceModel></p>
+
+<p>  &lt;serviceHostingEnvironment aspNetCompatibilityEnabled=&ldquo;true&rdquo;/></p>
+
+<p>  &lt;services></p>
+
+<p>    &lt;service name=&ldquo;MutualAuthenticationRest.FeedService&rdquo;></p>
+
+<p>      &lt;endpoint address=&ldquo;&rdquo;
+contract=&ldquo;MutualAuthenticationRest.IFeedService&rdquo;
+binding=&ldquo;webHttpBinding&rdquo; bindingConfiguration=&ldquo;mutual&rdquo;
+behaviorConfiguration=&ldquo;mutual&rdquo;>&lt;/endpoint></p>
+
+<p>     &lt;/service></p>
+
+<p>  &lt;/services></p>
+
+<p>  &lt;bindings></p>
+
+<p>    &lt;webHttpBinding></p>
+
+<p>      &lt;binding name=&ldquo;mutual&rdquo;></p>
+
+<p>        &lt;security mode=&ldquo;Transport&rdquo;></p>
+
+<p>          &lt;transport clientCredentialType=&ldquo;Certificate&rdquo;/></p>
+
+<p>         &lt;/security></p>
+
+<p>       &lt;/binding></p>
+
+<p>     &lt;/webHttpBinding></p>
+
+<p>    &lt;/bindings></p>
+
+<p>    &lt;behaviors></p>
+
+<p>      &lt;endpointBehaviors></p>
+
+<p>        &lt;behavior name=&ldquo;mutual&rdquo;></p>
+
+<p>          &lt;webHttp/></p>
+
+<p>        &lt;/behavior></p>
+
+<p>     &lt;/endpointBehaviors></p>
+
+<p>   &lt;/behaviors></p>
+
+<p>&lt;/system.serviceModel></p>
+
+<p>The virtual directory used for hosting the service in IIS must also be
+configured with the same security settings.</p>
+
+<p><a href="/images/legacy/MutualCertificateAuthenticationforWCFRES_B433/MutualCertificate.jpg"><img src="/images/legacy/MutualCertificateAuthenticationforWCFRES_B433/MutualCertificate_thumb.jpg" title="MutualCertificate" alt="MutualCertificate" /></a></p>
+
+<p>The client application only need to attach the certificate at the moment
+of consuming the service. This can be easily done with the new
+HttpClient class shipped as part of the WCF REST Starter kit,</p>
+
+<p>class Program</p>
+
+<p>{</p>
+
+<p>    static void Main(string[] args)</p>
+
+<p>    {</p>
+
+<p>        X509Certificate2 certificate =
+CertificateUtil.GetCertificate(StoreName.My, StoreLocation.LocalMachine,
+&ldquo;CN=clientCert&rdquo;);</p>
+
+<p>        HttpClient client = new HttpClient();</p>
+
+<p>        client.TransportSettings.ClientCertificates.Add(certificate);
+//Cert attached to the request</p>
+
+<p>        string content =
+client.Get(&ldquo;<a href="https://localhost/MutualAuthentication/Service.svc?numItems=10">https://localhost/MutualAuthentication/Service.svc?numItems=10</a>&rdquo;).Content.ReadAsString();</p>
+
+<p>        Console.WriteLine(content);</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>CertificateUtil is an helper class that looks for an specific X509
+certificate in the windows certificate store. In addition, if you are
+using test certificates, you might want to disable the service
+authentication on the client side, that can be done with a callback
+attached to the static class “ServicePointManager”.</p>
+
+<p>For instance,</p>
+
+<p>public class PermissiveCertificatePolicy</p>
+
+<p>{</p>
+
+<p>    public static void Enable()</p>
+
+<p>    {</p>
+
+<p>        ServicePointManager.ServerCertificateValidationCallback +=</p>
+
+<p>           new RemoteCertificateValidationCallback(RemoteCertValidate);</p>
+
+<p>    }</p>
+
+<p>    static bool RemoteCertValidate(object sender, X509Certificate cert,
+X509Chain chain, System.Net.Security.SslPolicyErrors error)</p>
+
+<p>    {</p>
+
+<p>        return true;</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>The method PermissiveCertificatePolicy.Enable should be called before
+consuming the service.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/04/08/sharing-the-security-context-between-asp-net-and-wcf-rest-services/">Sharing the Security Context Between ASP.NET and WCF REST Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-04-08T00:00:00-03:00" pubdate data-updated="true">Apr 8<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/04/08/sharing-the-security-context-between-asp-net-and-wcf-rest-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>It is very common for WCF services that work as Ajax callbacks and
+ASP.NET pages that live in the same web application to share a common
+security context for the authenticated user. However, in order to make
+this happens, the <a href="http://blogs.msdn.com/wenlong/archive/2006/01/23/516041.aspx">ASP.NET compatibility
+mode</a> must
+be enabled for the WCF service. When that setting is enabled, WCF
+basically includes the service call within the ASP.NET pipeline, all the
+ASP.NET modules configured for the application are executed, and as
+result, the HttpContext get initialized for that service as it was a
+normal page. </p>
+
+<p>Optionally, an IAuthorizationPolicy can be used to inject the
+HttpContext.User into the WCF security context, and completely decouple
+in that way, the service implementation from the Http security context.</p>
+
+<p>For example, we can have a web application configured with Forms
+Authentication or the new FederationModule in geneva framework for
+authenticating users with passive federation, and share that security
+context with the services or ajax callbacks that the web pages consume.</p>
+
+<p>For this scenario, the WCF REST Starter kit already includes an
+IAuthorizationPolicy implementation for initialization the WCF security
+context with the authenticated user in the web application. That
+authorization policy is automatically injected in the service execution
+pipeline by the WebServiceHost2 host shipped also within the kit. If you
+are using that WCF host, you do not have to do anything extra other than
+enabling the ASP.NET compatibility mode for the services.</p>
+
+<p>Configuring the ASP.NET compatibility mode requires two steps.</p>
+
+<p>​1. Add a configuration settings in the configuration file,</p>
+
+<p>&lt;system.serviceModel></p>
+
+<p>&lt;serviceHostingEnvironment aspNetCompatibilityEnabled=&ldquo;true&rdquo; /></p>
+
+<p>&lt;/system.serviceModel></p>
+
+<p> 2. Add support for this mode in the service implementation. This is
+done through an special attribute “AspNetCompatibilityRequirements”
+added to the class definition</p>
+
+<p>[AspNetCompatibilityRequirements(RequirementsMode =
+AspNetCompatibilityRequirementsMode.Required)] </p>
+
+<p>[ServiceContract]</p>
+
+<p>public class ClaimsService</p>
+
+<p>Once you have done that, the user principal will become available to the
+service through the WCF security context or the Thread.CurrentPrincipal
+property.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/04/01/support-for-form-urlencoded-data-in-wcf-rest-services/">Support for Form-UrlEncoded Data in WCF Rest Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-04-01T00:00:00-03:00" pubdate data-updated="true">Apr 1<span>st</span>, 2009</time>
+        
+         | <a href="/blog/2009/04/01/support-for-form-urlencoded-data-in-wcf-rest-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Some people have been asking around in the MSDN forums or
+<a href="http://stackoverflow.com/questions/604463/best-way-to-support-application-x-www-form-urlencoded-post-data-with-wcf">stackoverflow</a>
+about a possible way to pass form-urlencoded data to an existing WCF
+REST service. Although this is not a core feature in WCF from my point
+view, there is still some support for addressing this scenario in the
+REST Starter kit.</p>
+
+<p>This feature takes the form of a new message formatter,
+FormsPostDispatchMessageFormatter, which is automatically injected to
+any existing service hosted within the new WebServiceHost2 host (shipped
+as part of the kit)</p>
+
+<p>This formatter basically intercepts all messages, and handle those that
+contains “application/x-www-form-urlencoded” as content type in the
+request header. The rest of the messages are handled by the existing
+formatters as usual.</p>
+
+<p>The service operation must expose a NameValueCollection argument in the
+method signature in order to receive the data. This collection will
+contain the key/value pairs that were parsed from request body.</p>
+
+<p>For example,</p>
+
+<p>[WebInvoke(UriTemplate = &ldquo;SetData&rdquo;)]</p>
+
+<p>[OperationContract]</p>
+
+<p>void SetData(NameValueCollection formsData)</p>
+
+<p>{</p>
+
+<p>    this.value = Int32.Parse(formsData[&ldquo;counter&rdquo;]);</p>
+
+<p>}</p>
+
+<p>“Counter”  in this case represents a field in the form that was posted
+to the service.</p>
+
+<p>&lt;</p>
+
+<p>FORM action=&ldquo;service.svc/SetData&rdquo; method=&ldquo;post&rdquo;></p>
+
+<p>Input Counter value and hit enter:</p>
+
+<p>&lt;INPUT type=&ldquo;text&rdquo; name=&ldquo;Counter&rdquo;></p>
+
+<p>&lt;/FORM></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/04/01/mvp-again-2009/">MVP Again 2009!!</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-04-01T00:00:00-03:00" pubdate data-updated="true">Apr 1<span>st</span>, 2009</time>
+        
+         | <a href="/blog/2009/04/01/mvp-again-2009/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I just got great news!  MVP in Connected Systems for another year.</p>
+
+<p>I want to thank Ed Hickey, my MVP lead <a href="http://blogs.msdn.com/mvplead">Fernando Garcia
+Loera</a>, and the rest of people involved
+in the evaluation process for once again considering my efforts in the
+community worthy of recognition.</p>
+
+<p>Thanks again Microsoft!!!</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/03/27/streaming-large-content-from-a-wcf-restful-service/">Streaming Large Content From a WCF RESTFul Service</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-03-27T00:00:00-03:00" pubdate data-updated="true">Mar 27<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/03/27/streaming-large-content-from-a-wcf-restful-service/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Streaming large content such as media content, images or files is a
+common scenario for RESTful services. If a scenario like this is not
+well addressed or implemented on the service side, there is a high risk
+of consuming server resources like memory or CPU in a matter of seconds.
+This usually happens when the complete content is loaded in memory
+before it is transferred to the service consumer.</p>
+
+<p>The WCF REST Starter kit introduced a new mechanism for addressing this
+scenario, an “AdapterStream” utility class, which basically pushes small
+pieces of content (and thus, only small memory buffers are used) to the
+client application as it becomes necessary.</p>
+
+<p>The kit also comes with an example “PushStyleStreaming” that shows this
+class in action</p>
+
+<p>Stream GetImage(string text)</p>
+
+<p>{</p>
+
+<p>    if (string.IsNullOrEmpty(text))</p>
+
+<p>    {</p>
+
+<p>        throw new WebProtocolException(HttpStatusCode.BadRequest, &ldquo;text
+must be specified&rdquo;, null);</p>
+
+<p>    }</p>
+
+<p>    Bitmap theBitmap = GenerateImage(text);</p>
+
+<p>    WebOperationContext.Current.OutgoingResponse.ContentType =
+&ldquo;image/jpeg&rdquo;;</p>
+
+<p>    return new AdapterStream((stream) => theBitmap.Save(stream,
+ImageFormat.Jpeg));</p>
+
+<p>}</p>
+
+<p>In the code above, the AdapterStream is used to transfer an image to a
+service consumer. As you can also notice in that code, that class
+receives a lambda  expression or Action&lt;T> delegate in the
+constructor. That provides some flexibility at the moment of generating
+the final stream that will be sent to the client application.</p>
+
+<p>Another example that uses an TextWriter for generating text content,</p>
+
+<p>  new AdapterStream((writer) =></p>
+
+<p>    {</p>
+
+<p>        writer.WriteLine(&ldquo;You said: &rdquo;);</p>
+
+<p>        writer.WriteLine(text);</p>
+
+<p>        writer.WriteLine(&ldquo;Didn&rsquo;t you?&rdquo;);</p>
+
+<p>        writer.Flush();</p>
+
+<p>    }, Encoding.UTF8);</p>
+
+<p>In addition to this feature, you might also want to have a better
+control of service usage by restricting the <a href="http://kennyw.com/indigo/150">throttling
+settings</a>. This is a good thing about REST
+services implemented with the WCF stack. Other implementations such as
+the ASP.NET MVC rely on the ASP.NET for handling this aspect, where
+these settings are applied only at application domain level (For all
+services running in the same app).</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/03/21/custom-basic-authentication-for-restful-services/">Custom Basic Authentication for RESTful Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-03-21T00:00:00-03:00" pubdate data-updated="true">Mar 21<span>st</span>, 2009</time>
+        
+         | <a href="/blog/2009/03/21/custom-basic-authentication-for-restful-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>It’s very common when developing RESTful services to authenticate users
+against a proprietary user database. This is generally done with a
+combination of username and password through http basic authentication.
+Unfortunately, basic authentication is tied to windows accounts in IIS,
+which leads us to find out some alternatives or workarounds to support
+this scenario. WCF 3.5 made possible to authenticate transport
+credentials with one of the existing UsernamePasswordValidator
+extensions, however, this approach does not work for IIS hosted
+services.</p>
+
+<p><a href="http://www.leastprivilege.com/CommentView.aspx?guid=f9453fb0-6e2a-4faf-8cf9-62162dc7531e">Dominick</a>
+solved this problem with a module plugged directly in the ASP.NET
+pipeline that works like a charm, but it requires some additional WCF
+settings and a custom IAuthorization policy to flow the user principal
+to the WCF service instance. His solution works for ASP.NET applications
+as well.</p>
+
+<p>This problem can be also solved at a deeper level in the WCF transport
+model using a message interceptor. The message interceptor can receive a
+traditional Membership provider in the constructor class, and use it
+later for authenticating the users. In addition, this message
+interceptor can also automatically pass the user credentials to the WCF
+service instance.</p>
+
+<p>As any other message interceptor, it can be configured directly in the
+WCF service factory with no need of having additional configuration.
+This can be easily done in the “svc” file hosted in IIS.</p>
+
+<p>&lt;%@ ServiceHost Language=&ldquo;C#&rdquo; Debug=&ldquo;true&rdquo; Service=&ldquo;Service&rdquo;
+Factory=&ldquo;AppServiceHostFactory&rdquo; %></p>
+
+<p>class AppServiceHostFactory : ServiceHostFactory</p>
+
+<p>{</p>
+
+<p>   protected override ServiceHost CreateServiceHost(Type serviceType,
+Uri[] baseAddresses)</p>
+
+<p>   {</p>
+
+<p>     WebServiceHost2 result = new WebServiceHost2(serviceType, true,
+baseAddresses);</p>
+
+<p>     result.Interceptors.Add(new BasicAuthenticationInterceptor(</p>
+
+<p>                System.Web.Security.Membership.Provider, &ldquo;foo&rdquo;));</p>
+
+<p>     return result;</p>
+
+<p>   }</p>
+
+<p>}</p>
+
+<p>BasicAuthenticationInterceptor is the message interceptor I built for
+this post, it receives the MembershipProvider and a default realm that
+will be returned together with an 401 http error (Unauthorized) in case
+the user was not correctly authenticated.</p>
+
+<p>The example is available to download from
+<a href="/images/legacy/BasicAuthentication.zip">here</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/03/20/murl-and-mservice-two-new-dsls-for-rest-services/">“MUrl” and “MService”, Two New DSLs for REST Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-03-20T00:00:00-03:00" pubdate data-updated="true">Mar 20<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/03/20/murl-and-mservice-two-new-dsls-for-rest-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Doug Purdy and Chris Sells announced today in the mix the availability
+of two new DSLs for RESTful services. MUrl for defining RESTful clients,
+and MService for defining the service implementation.</p>
+
+<p>More information about MUrl can be found in the Doug’s blog,
+<a href="http://www.douglaspurdy.com/2009/03/20/murl-a-dsl-for-restful-clients/">http://www.douglaspurdy.com/2009/03/20/murl-a-dsl-for-restful-clients/</a>
+. An example is also available to download from the Oslo Dev Center,
+<a href="http://msdn.microsoft.com/en-us/oslo/default.aspx">http://msdn.microsoft.com/en-us/oslo/default.aspx</a></p>
+
+<p>MService, on the other hand, is a DSL for defining or creating RESTful
+services. Doug just posted new information about it,
+<a href="http://www.douglaspurdy.com/2009/03/20/mservice-a-dsl-for-restful-services/">http://www.douglaspurdy.com/2009/03/20/mservice-a-dsl-for-restful-services/</a></p>
+
+<p>The mix session where these new technologies were shown will be
+available soon at <a href="http://sessions.visitmix.com/MIX09/T11F">this
+location</a></p>
+
+<p>Enjoy.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/14/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/blog/page/12/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

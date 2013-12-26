@@ -1,0 +1,702 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Http Message Channels in WCF Web Apis Preview 4 - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="The new WCF Web Apis Preview 4 released yesterday in the
+wcf.codeplex.com introduced a new extensibility point for intercepting
+messages at channel &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2011/04/15/http-message-channels-in-wcf-web-apis-preview-4">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Http Message Channels in WCF Web Apis Preview 4</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-04-15T00:00:00-03:00" pubdate data-updated="true">Apr 15<span>th</span>, 2011</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>The new WCF Web Apis Preview 4 released yesterday in the
+wcf.codeplex.com introduced a new extensibility point for intercepting
+messages at channel level. The name for this new feature is “Http
+Message Channels” and the good thing is that you don’t need to rely
+anymore on the REST Starter Kit request interceptors for doing the same
+thing. Actually, a Http Message Channel is more useful as you can
+intercept either request or response messages, and also you get an Http
+message with all the context information you might need and not a WCF
+generic message, which usually requires some additional processing.</p>
+
+<p>A Http Message Channel uses the new Task-Based Asynchronous pattern for
+implementing asynchronous work, which simplifies the implementation a
+lot. This is how a generic Http Message Channel looks like,</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+public class MyHttpChannel : DelegatingChannel
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public MyHttpChannel(HttpMessageChannel innerChannel)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    : base(innerChannel)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>protected override Task&lt;HttpResponseMessage&gt; SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    // DO YOUR WORK Here
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+}
+</del></p>
+
+<p>You need to derive the base class “DelegatingChannel” and override the
+method “SendAsync” to provide your implementation. You only receive the
+request message as input argument, but you can call the inner channel in
+the stack for processing the request and getting an instance of the
+response message if you want to do some processing on the response as
+well.</p>
+
+<p>The following example shows a typical channel for validating a API key.
+The API key is passed in a custom header “X-AuthKey” as part of the
+request message-</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+public class ApiKeyVerificationChannel : DelegatingChannel
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public const string KeyHeaderName = "X-AuthKey";
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>IKeyVerifier keyVerifier;
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public ApiKeyVerificationChannel(HttpMessageChannel innerChannel)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    : this(innerChannel, new KeyVerifier())
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public ApiKeyVerificationChannel(HttpMessageChannel innerChannel, IKeyVerifier keyVerifier)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    : base(innerChannel)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    this.keyVerifier = keyVerifier;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>protected override Task&lt;HttpResponseMessage&gt; SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    IEnumerable&lt;string&gt; values = null;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    if (request.Headers.TryGetValues(KeyHeaderName, out values))
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        var key = values.First();
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        if (this.keyVerifier.Verify(key))
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>            return base.SendAsync(request, cancellationToken);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        }
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    }
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    return Task.Factory.StartNew(() =&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>            var response = new HttpResponseMessage(HttpStatusCode.Unauthorized, "You need to provide a valid key for consume these Apis");
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>            return response;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        });
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+}
+</del></p>
+
+<p>This implementation basically validates the received key in the http
+header and calls the inner channel for further processing of the request
+(base.SendAsync). However, if the key is not provided or it is invalid,
+a new response is returned and the execution is interrupted.</p>
+
+<p>As you can see, this interception mechanism is also great for
+implementing common concerns like security that needs to run much before
+the service is invoked.</p>
+
+<p>Finally, a custom Http Message Channel can be injected in the WCF
+pipeline with the new fluent configuration interface as it is showed
+bellow,</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+public class Global : System.Web.HttpApplication
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>private void Application_Start(object sender, EventArgs e)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    var config = HttpHostConfiguration.Create().
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        SetMessageHandlerFactory(typeof(ApiKeyVerificationChannel));
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    // setting up contacts services
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    RouteTable.Routes.MapServiceRoute&lt;ContactsResource&gt;("contacts", config);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+}
+</del></p>
+
+<p>The SetMessageHandlerFactory receives either an array of “Type”s
+representing the channels or an instance of a HttpMessageHandlerFactory
+that knows how to instantiate new channels. You might want to extend the
+default HttpMessageHandlerFactory to use your favorite DI framework to
+resolve the channels.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-04-15T00:00:00-03:00" pubdate data-updated="true">Apr 15<span>th</span>, 2011</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2011/04/15/http-message-channels-in-wcf-web-apis-preview-4/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2011/04/15/http-message-channels-in-wcf-web-apis-preview-4/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2011/03/23/troubleshooting-your-wcf-web-apis-with-appfabric/" title="Previous Post: Troubleshooting your WCF Web Apis with AppFabric">&laquo; Troubleshooting your WCF Web Apis with AppFabric</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2011/04/19/configuring-your-wcf-web-apis/" title="Next Post: Configuring your WCF Web Apis">Configuring your WCF Web Apis &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2011/04/15/http-message-channels-in-wcf-web-apis-preview-4/';
+        var disqus_url = 'http://cibrax.me/blog/2011/04/15/http-message-channels-in-wcf-web-apis-preview-4/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

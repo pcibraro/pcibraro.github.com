@@ -1,0 +1,2359 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="While I was working for one of my customers, we ran into a very strange
+problem when they tried to deploy some WCF services in a web farm using &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/page/18">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/07/29/wcf-issue-with-secure-conversation-in-web-farms/">WCF - Issue With Secure Conversation in Web Farms</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-07-29T00:00:00-03:00" pubdate data-updated="true">Jul 29<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/07/29/wcf-issue-with-secure-conversation-in-web-farms/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>While I was working for one of my customers, we ran into a very strange
+problem when they tried to deploy some WCF services in a web farm using
+cookie sessions (In order to enable secure conversation in this kind of
+scenario, cookies must be used to track the state of the Secure
+Conversation Tokens).</p>
+
+<p>At some point, we start receiving a random exception with the following
+message,</p>
+
+<p><strong><em>System.ServiceModel.Security.MessageSecurityException: Message
+security verification failed. &mdash;&ndash;&gt; System.Xml.XmlException: There was
+an error deserializing the security token XML. Please see the inner
+exception for more details. &mdash;&ndash;&gt; System.ArgumentException: The
+SecurityContextSecurityToken with
+context-id=urn:uuid:502e208e-8db2-4814-8623-d3050273e875 (no key
+generation-id) has expired</em></strong></p>
+
+<p>Later, we found out that a time skew setting was not supported in WCF
+for the SCT cookies, and the error was happening because of an slight
+difference in time between the servers in the farm.</p>
+
+<p>Fortunately, <a href="http://blogs.msdn.com/brentschmaltz">Brent Schmaltz</a> has
+made public a hot fix for that problem in his blog. You can find the
+complete solution and a better description of the problem in <a href="http://blogs.msdn.com/brentschmaltz/archive/2008/06/20/cookie-sessions-and-wcf.aspx">this
+post</a>.</p>
+
+<p>Enjoy.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/06/25/microsoft-technight-buenos-aires/">Microsoft Technight - Buenos Aires</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-06-25T00:00:00-03:00" pubdate data-updated="true">Jun 25<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/06/25/microsoft-technight-buenos-aires/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Tonight, <a href="http://weblogs.asp.net/cazzu">Daniel</a> and I will be presenting
+a session about &ldquo;synchronization on the web&rdquo; in the Microsoft Technight
+event (Microsoft offices in Buenos Aires). </p>
+
+<p>We are going to talk about some of the areas in which data
+synchronization is very important, and the available technologies that
+can be used in those scenarios. (&ldquo;FeedSync&rdquo;, Microsoft Framework,
+Mesh4x and Live Mesh to name a few).</p>
+
+<p>I hope to see you there.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/06/10/streaming-large-content-with-wcf-and-deferred-execution/">Streaming Large Content With WCF and Deferred Execution</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-06-10T00:00:00-03:00" pubdate data-updated="true">Jun 10<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/06/10/streaming-large-content-with-wcf-and-deferred-execution/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I will use this post to discuss an scenario that you may run into while
+working with WCF, a service that returns a lot of objects (Or large
+data) to the client applications. This scenario is not about
+transferring files, that is a completely different story, and I already
+discussed it some time ago in another post.</p>
+
+<p>The scalability of the service&rsquo;s host may be affected if the service is
+not well designed or configured. WCF will use large memory buffers to
+keep the complete message before it start sending that message through
+the wire.</p>
+
+<p>Using data contracts or XML serializable classes in this scenario does
+not scale well because the complete object graph has to be loaded in
+memory before the corresponding serializer (Data Contract serializer or
+Xml Serializer) transform it into an stream of bytes.</p>
+
+<p>In addition, if the service throttling settings are not configured
+carefully for that service, a large number of requests will practically
+consume all the available resources (If that happens, the server will
+stop processing additional requests and you may run into a OutOfMemory
+exception as well). For more information about Service Throttling, I
+recommend this <a href="http://kennyw.com/indigo/150">Kenny Wolf&rsquo;s post</a>.</p>
+
+<p>Before getting into the streaming solution, which looks very complex at
+first glance, you should consider refactoring your service&rsquo;s API to
+support data paging. If you use paging, the design of the final service
+will be simpler and you should not have any of the mentioned problems.
+What&rsquo;s more, streaming does not work well with message security, the
+default behavior for WCF is to buffer all messages when message security
+is set for the channel. In order to combine message security with
+streaming you should use the Chunking Channel.</p>
+
+<p>Data Paging design sample,</p>
+
+<p>[XmlRoot(&ldquo;Customer&rdquo;)]</p>
+
+<p>public class Customer</p>
+
+<p>{</p>
+
+<p>  public string FirstName { get; set; }</p>
+
+<p> </p>
+
+<p>  public string LastName { get; set; }</p>
+
+<p> </p>
+
+<p>  public string Address { get; set; }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>[XmlRoot(&ldquo;Customers&rdquo;)]</p>
+
+<p>public class Customers</p>
+
+<p>{</p>
+
+<p>    public Customer[] Customers { get; set; }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public interface ISampleService</p>
+
+<p>{</p>
+
+<p>  [OperationContract]</p>
+
+<p>  Customers GetAllCustomers(int page, int count, out int
+totalCustomers); </p>
+
+<p>}</p>
+
+<p>The client application will have to call that method as many times as it
+needs to retrieve all the customers. The service should have a limit in
+the number of customers it can return per call, otherwise, we will have
+the same problems if the client application asks for a large number of
+customers.</p>
+
+<p>Deferred execution is a cool feature introduced in .NET 2.0 for
+enumerations. Basically the enumeration does not happen until some
+calling code wants to examine the enumeration.</p>
+
+<p>Let&rsquo;s discuss now how deferred execution can be achieved in WCF with the
+help of the streaming model.</p>
+
+<p>​1. The first extensibility point that we will need for this solution is
+a custom BodyWriter class. A BodyWriter has the knowledge to serialize
+an entire object graph as xml into the body of a soap message. The class
+Message has an static method to create a new message from a  BodyWriter
+instance.</p>
+
+<p>public abstract class Message : &hellip;.</p>
+
+<p>{</p>
+
+<p>    public static Message CreateMessage(MessageVersion version, string
+action, BodyWriter body)</p>
+
+<p>}</p>
+
+<p>The &ldquo;BodyWriter&rdquo; class is an abstract and contains a single method to
+serialize the complete object graph into the soap body.</p>
+
+<p>public class CustomBodyWriter : BodyWriter</p>
+
+<p>  {</p>
+
+<p>    private IEnumerable&lt;Customer> customers;</p>
+
+<p> </p>
+
+<p>    public CustomBodyWriter(IEnumerable&lt;Customer> customers)</p>
+
+<p>      : base(false) // False should be passed here to avoid buffering
+the message</p>
+
+<p>    {</p>
+
+<p>      this.customers = customers;</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    protected override void
+OnWriteBodyContents(System.Xml.XmlDictionaryWriter writer)</p>
+
+<p>    {</p>
+
+<p>      XmlSerializer serializer = new XmlSerializer(typeof(Customer));</p>
+
+<p>      writer.WriteStartElement(&ldquo;customers&rdquo;);</p>
+
+<p>      foreach (Customer customer in customers)</p>
+
+<p>      {</p>
+
+<p>        serializer.Serialize(writer, customer);</p>
+
+<p>      }</p>
+
+<p>      writer.WriteEndElement();</p>
+
+<p>    }</p>
+
+<p>  }</p>
+
+<p>As you can see in the code above, our custom implementation of the
+&ldquo;OnWriteBodyContents&rdquo; receives an enumeration of objects that we want to
+serialize into the message. A &ldquo;false&rdquo; value is passed as argument in the
+constructor to the base class to specify that our custom implementation
+can not be buffered.</p>
+
+<p>​2. We will use deferred execution to retrieve all the customers from
+the database (The following code actually emulates that),</p>
+
+<p>public IEnumerable&lt;Customer> GetAllCustomersImpl()</p>
+
+<p>{</p>
+
+<p>   for(long i = 0; i &lt; 1000; i++) //All the customers should be read
+from the database</p>
+
+<p>   {</p>
+
+<p>      yield return new Customer { FirstName = &ldquo;Foo&rdquo;, LastName = &ldquo;Bar&rdquo;,
+Address = &ldquo;FooBar 123&rdquo; };</p>
+
+<p>   }</p>
+
+<p> </p>
+
+<p>   yield break;</p>
+
+<p>}</p>
+
+<p>What&rsquo;s it is important here is that we are not returning all the
+customer objects at the same time (we are returning one at time, so they
+are not loaded in memory) using the &ldquo;yield&rdquo; operator.</p>
+
+<p>​3. The service implementation returns a new message created from the
+custom &ldquo;CustomBodyWriter&rdquo; class.</p>
+
+<p>public class SampleService : ISampleService</p>
+
+<p>  {</p>
+
+<p>    #region ISampleService Members</p>
+
+<p> </p>
+
+<p>    public Message GetAllCustomers()</p>
+
+<p>    {</p>
+
+<p>      Message message = Message.CreateMessage(MessageVersion.Soap11,
+&ldquo;GetAllCustomers&rdquo;, new CustomBodyWriter(GetAllCustomersImpl()));</p>
+
+<p>      return message;</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    #endregion</p>
+
+<p>    </p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>The first two arguments of the CreateMessage method specifies the soap
+version and soap action for the response message.</p>
+
+<p>​4. The client application also reads one customer object at time from
+the response message,</p>
+
+<p>static IEnumerable&lt;Customer> GetAllCustomers(Message message)</p>
+
+<p>{</p>
+
+<p>  XmlReader reader = message.GetReaderAtBodyContents();</p>
+
+<p>  if (reader.LocalName != &ldquo;customers&rdquo;)</p>
+
+<p>  {</p>
+
+<p>     throw new Exception(&ldquo;The service returned an invalid message&rdquo;);</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  XmlSerializer serializer = new XmlSerializer(typeof(Customer));</p>
+
+<p>  reader.ReadStartElement(&ldquo;customers&rdquo;);</p>
+
+<p> </p>
+
+<p>  while(!reader.EOF &amp;&amp; reader.LocalName == &ldquo;Customer&rdquo;)</p>
+
+<p>  {</p>
+
+<p>     Customer customer = (Customer)serializer.Deserialize(reader);</p>
+
+<p>     yield return customer;</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  reader.ReadEndElement();</p>
+
+<p>}</p>
+
+<p>​5. Finally, the client and the service, both have to be configured to
+use an &ldquo;streamed&rdquo; as transfer mode. Otherwise, all the messages will be
+buffered in memory.</p>
+
+<p>&lt;basicHttpBinding></p>
+
+<p>   &lt;binding name=&ldquo;basic&rdquo; transferMode=&ldquo;StreamedResponse&rdquo;
+maxReceivedMessageSize=&ldquo;10000000&rdquo;></p>
+
+<p>      &lt;security mode=&ldquo;None&rdquo;>&lt;/security></p>
+
+<p>   &lt;/binding></p>
+
+<p>&lt;/basicHttpBinding></p>
+
+<p>The &ldquo;maxReceivedMessageSize&rdquo; setting is also important because it limits
+the amount of data that the service can return. You should adjust it to
+a value according to the amount of data you might return in the service
+implementation.</p>
+
+<p>You can download the complete sample from this
+<a href="/images/legacy/StreamingObjects.zip">location</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/05/20/unit-tests-for-wcf-and-moq-part-ii/">Unit Tests for WCF (and Moq) Part II</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-05-20T00:00:00-03:00" pubdate data-updated="true">May 20<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/05/20/unit-tests-for-wcf-and-moq-part-ii/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p> </p>
+
+<p>My latest post about &ldquo;creating wrapper classes&rdquo; for mocking the WCF
+context has started generating some
+<a href="http://weblogs.asp.net/rosherove/archive/2008/05/19/two-faced-commits-how-the-alt-net-community-is-becoming-more-and-more-dogmatic.aspx">controversies</a>.
+I initially wrote those classes to decouple my service implementation
+from the concrete implementation of the WCF context,  something that 
+did not have anything to do with the static nature of the context. (I
+can still pass the current instance as an argument to my service
+implementation).</p>
+
+<p>As I mentioned in my previous post, the WCF context is neither a base
+class (with virtual methods) nor an interface, so it can not easily
+mocked, that is main issue here.</p>
+
+<p>I am not sure if TypeMock allows mocking this kind of class as well,
+probably yes, I have never used that tool before so I do not know.  It
+would be great to have a natural or easy support in C# for mocking
+non-virtual methods or statics, but it is not there now. I personally
+prefer writing some simple wrapper classes or <a href="http://www.elilopian.com/2008/05/19/mocking-frameworks-dream-feature/">&ldquo;utterly useless
+wrappers&rdquo; as someone call
+them</a> 
+(In fact, it only took me 5 minutes to write them, and I do not think my
+productive was affected by that) rather than creating code that can only
+be tested by an specific tool. I am not saying that you should not use
+TypeMock, anyone is free to use the tool that works best for his needs.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/05/16/unit-tests-for-wcf/">Unit Tests for WCF (and Moq)</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-05-16T00:00:00-03:00" pubdate data-updated="true">May 16<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/05/16/unit-tests-for-wcf/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As you may know, testing WCF services is not as simple as referencing a
+service implementation and start writing unit tests against it. If the
+service we want to test has a high dependency with the operation
+context, which is an static class, testing that service can be a very
+complicated task.</p>
+
+<p>Many times that dependency can be removed thanks to the help of some WCF
+extensibility points like behaviors, authorization managers or
+authorization policies to name a few. For instance, if an operation
+implementation in our service is looking for specific security claims to
+check user permissions, that code could be moved to an authorization
+manager to make the resulting code easier to test.</p>
+
+<p>However, there are some cases where the dependency with the context or
+other objects can not be completely removed (Or it is not solution), and
+therefore the Dependency Injection pattern comes to help us. I have
+already discussed how to use <a href="http://weblogs.asp.net/cibrax/archive/2007/12/13/wcf-dependency-injection-behavior.aspx">DI in
+WCF</a>
+before, and <a href="http://javicrespotech.blogspot.com/2008/05/dependency-injection-in-wcf-services.html">other
+people</a>
+have also done the same.</p>
+
+<p>Ok, let&rsquo;s say that we are in that scenario and we want to use DI to
+remove all the dependencies of our service with the WCF operation
+context. How can we do that ?. The WCF context is neither a base class
+nor an interface, we can not mock it at all at first glance.
+Fortunately, there is a easy workaround to solve this problem, it
+consists of creating a public interface with all the properties and
+methods that we want to use (and mock) from the WCF context.</p>
+
+<p>public interface IOperationContext</p>
+
+<p>{</p>
+
+<p>     event EventHandler OperationCompleted;</p>
+
+<p> </p>
+
+<p>     // Methods</p>
+
+<p>     T GetCallbackChannel&lt;T>();</p>
+
+<p>     void SetTransactionComplete();</p>
+
+<p> </p>
+
+<p>     // Properties</p>
+
+<p>     IContextChannel Channel { get; }</p>
+
+<p>     IExtensionCollection&lt;OperationContext> Extensions { get; }</p>
+
+<p>     bool HasSupportingTokens { get; }</p>
+
+<p>     ServiceHostBase Host { get; }</p>
+
+<p>     MessageHeaders IncomingMessageHeaders { get; }</p>
+
+<p>     MessageProperties IncomingMessageProperties { get; }</p>
+
+<p>     MessageVersion IncomingMessageVersion { get; }</p>
+
+<p>     InstanceContext InstanceContext { get; }</p>
+
+<p>     bool IsUserContext { get; }</p>
+
+<p>     MessageHeaders OutgoingMessageHeaders { get; }</p>
+
+<p>     MessageProperties OutgoingMessageProperties { get; }</p>
+
+<p>     RequestContext RequestContext { get; set; }</p>
+
+<p>     IServiceSecurityContext ServiceSecurityContext { get; }</p>
+
+<p>     string SessionId { get; }</p>
+
+<p>     ICollection&lt;SupportingTokenSpecification> SupportingTokens { get;
+}</p>
+
+<p>}</p>
+
+<p>Same thing can be done for the ServiceSecurityContext and
+WebOperationContext.</p>
+
+<p>public interface IServiceSecurityContext</p>
+
+<p>{</p>
+
+<p>    AuthorizationContext AuthorizationContext { get; }</p>
+
+<p>    ReadOnlyCollection&lt;IAuthorizationPolicy> AuthorizationPolicies {
+get; }</p>
+
+<p>    bool IsAnonymous { get; }</p>
+
+<p>    IIdentity PrimaryIdentity { get; }</p>
+
+<p>    WindowsIdentity WindowsIdentity { get; }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public interface IWebOperationContext</p>
+
+<p>{</p>
+
+<p>  IIncomingWebRequestContext IncomingRequest { get; }</p>
+
+<p>  IOutgoingWebResponseContext OutgoingResponse { get; }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>Secondly, we need a default implementation to wrap the existing WCF
+context functionality, this wrapper will only delegates method calls to
+the original context.</p>
+
+<p>public class OperationContextWrapper : IOperationContext</p>
+
+<p>  {</p>
+
+<p>    OperationContext context;</p>
+
+<p> </p>
+
+<p>    public OperationContextWrapper(OperationContext context)</p>
+
+<p>    {</p>
+
+<p>      this.context = context;</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    #region IOperationContext Members</p>
+
+<p> </p>
+
+<p>    public event EventHandler OperationCompleted;</p>
+
+<p> </p>
+
+<p>    public T GetCallbackChannel&lt;T>()</p>
+
+<p>    {</p>
+
+<p>      return context.GetCallbackChannel&lt;T>();</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public void SetTransactionComplete()</p>
+
+<p>    {</p>
+
+<p>      context.SetTransactionComplete();</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public IContextChannel Channel</p>
+
+<p>    {</p>
+
+<p>      get { return context.Channel; }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public IExtensionCollection&lt;OperationContext> Extensions</p>
+
+<p>    {</p>
+
+<p>      get { return context.Extensions; }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public bool HasSupportingTokens</p>
+
+<p>    {</p>
+
+<p>      get { return context.HasSupportingTokens; }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public ServiceHostBase Host</p>
+
+<p>    {</p>
+
+<p>      get { return context.Host; }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public System.ServiceModel.Channels.MessageHeaders
+IncomingMessageHeaders</p>
+
+<p>    {</p>
+
+<p>      get { return context.IncomingMessageHeaders; }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public System.ServiceModel.Channels.MessageProperties
+IncomingMessageProperties</p>
+
+<p>    {</p>
+
+<p>      get { return context.IncomingMessageProperties; }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public System.ServiceModel.Channels.MessageVersion
+IncomingMessageVersion</p>
+
+<p>    {</p>
+
+<p>      get { return context.IncomingMessageVersion; }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public InstanceContext InstanceContext</p>
+
+<p>    {</p>
+
+<p>      get { return context.InstanceContext; }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public bool IsUserContext</p>
+
+<p>    {</p>
+
+<p>      get { return context.IsUserContext; }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public System.ServiceModel.Channels.MessageHeaders
+OutgoingMessageHeaders</p>
+
+<p>    {</p>
+
+<p>      get { return context.OutgoingMessageHeaders; }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public System.ServiceModel.Channels.MessageProperties
+OutgoingMessageProperties</p>
+
+<p>    {</p>
+
+<p>      get { return context.OutgoingMessageProperties; }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public System.ServiceModel.Channels.RequestContext RequestContext</p>
+
+<p>    {</p>
+
+<p>      get</p>
+
+<p>      {</p>
+
+<p>        return context.RequestContext;</p>
+
+<p>      }</p>
+
+<p>      set</p>
+
+<p>      {</p>
+
+<p>        context.RequestContext = value;</p>
+
+<p>      }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public IServiceSecurityContext ServiceSecurityContext</p>
+
+<p>    {</p>
+
+<p>      get { return new
+ServiceSecurityContextWrapper(context.ServiceSecurityContext); }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public string SessionId</p>
+
+<p>    {</p>
+
+<p>      get { return context.SessionId; }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public
+ICollection&lt;System.ServiceModel.Security.SupportingTokenSpecification>
+SupportingTokens</p>
+
+<p>    {</p>
+
+<p>      get { return context.SupportingTokens; }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    #endregion</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>public class ServiceSecurityContextWrapper : IServiceSecurityContext</p>
+
+<p>  {</p>
+
+<p>    ServiceSecurityContext context;</p>
+
+<p> </p>
+
+<p>    public ServiceSecurityContextWrapper(ServiceSecurityContext context)</p>
+
+<p>    {</p>
+
+<p>      this.context = context;</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    #region IServiceSecurityContext Members</p>
+
+<p> </p>
+
+<p>    public System.IdentityModel.Policy.AuthorizationContext
+AuthorizationContext</p>
+
+<p>    {</p>
+
+<p>      get</p>
+
+<p>      {</p>
+
+<p>        return this.context.AuthorizationContext;</p>
+
+<p>      }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public ReadOnlyCollection&lt;IAuthorizationPolicy>
+AuthorizationPolicies</p>
+
+<p>    {</p>
+
+<p>      get</p>
+
+<p>      {</p>
+
+<p>        return this.context.AuthorizationPolicies;</p>
+
+<p>      }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public bool IsAnonymous</p>
+
+<p>    {</p>
+
+<p>      get</p>
+
+<p>      {</p>
+
+<p>        return this.context.IsAnonymous;</p>
+
+<p>      }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public System.Security.Principal.IIdentity PrimaryIdentity</p>
+
+<p>    {</p>
+
+<p>      get</p>
+
+<p>      {</p>
+
+<p>        return this.context.PrimaryIdentity;</p>
+
+<p>      }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public System.Security.Principal.WindowsIdentity WindowsIdentity</p>
+
+<p>    {</p>
+
+<p>      get</p>
+
+<p>      {</p>
+
+<p>        return this.context.WindowsIdentity;</p>
+
+<p>      }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    #endregion</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>public class WebOperationContextWrapper : IWebOperationContext</p>
+
+<p>  {</p>
+
+<p>    private WebOperationContext context;</p>
+
+<p> </p>
+
+<p>    public WebOperationContextWrapper(WebOperationContext context)</p>
+
+<p>    {</p>
+
+<p>      this.context = context;</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    #region IWebOperationContext Members</p>
+
+<p> </p>
+
+<p>    public IIncomingWebRequestContext IncomingRequest</p>
+
+<p>    {</p>
+
+<p>      get { return new
+IncomingWebRequestContextWrapper(context.IncomingRequest); }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public IOutgoingWebResponseContext OutgoingResponse</p>
+
+<p>    {</p>
+
+<p>      get { return new
+OutgoingWebResponseContextWrapper(context.OutgoingResponse); }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    #endregion</p>
+
+<p>  }</p>
+
+<p>Thirdly, the context must be injected as a dependency into the service.
+This can be done through a constructor or a property setter, (This is
+what our Unit test is going to use). If you do not want to deal with a
+DI framework at all because it can complicates the service
+implementation somehow, the service can have a default constructor to
+set up the default context implementation (the wrapper). This is the
+constructor that WCF will call by default when the service is created.
+In the example bellow, I will show how to do that for a simple REST
+service that uses the WCF WebOperationContext.</p>
+
+<p>[ServiceContract]</p>
+
+<p>public interface ICustomerService</p>
+
+<p>{</p>
+
+<p>    [OperationContract]</p>
+
+<p>    [WebGet(UriTemplate = &ldquo;/customers/{id}&rdquo;)]</p>
+
+<p>    Customer FindCustomer(string id);</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public class CustomerService : ICustomerService</p>
+
+<p>{</p>
+
+<p>  IWebOperationContext context;</p>
+
+<p> </p>
+
+<p>  public CustomerService()</p>
+
+<p>  {</p>
+
+<p>    context = new
+WebOperationContextWrapper(WebOperationContext.Current);</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  public CustomerService(IWebOperationContext context)</p>
+
+<p>  {</p>
+
+<p>    this.context = context;</p>
+
+<p>  }</p>
+
+<p>Now that we have all the infrastructure in place, we only need a good
+mocking framework that helps us to create the mock objects for our
+tests. In this part, I should recommend
+<a href="http://code.google.com/p/moq/">Moq</a> as the framework to use :). My
+friend <a href="http://weblogs.asp.net/cazzu">Daniel Cazzulino</a> has made an
+excellent work developing this framework.</p>
+
+<p>The pattern for using Moq or other similar framework in a unit test is
+the following:</p>
+
+<p>​1. You create a mock object from an existing interface or base class.
+(The framework provides a way to do this).</p>
+
+<p>​2. You set the expectations for that mock object. This is what you want
+to be called, returned, set, etc.</p>
+
+<p>​3. You pass the mock object to the object under testing.</p>
+
+<p>​4. You call some methods on the object under testing, and afterwards,
+you verify that all the expectations were met.</p>
+
+<p>An interesting thing that we can do with Moq is to mock the complete
+object graph of the WebOperationContext so we can reuse across all our
+tests.</p>
+
+<p>public class MockWebContext : Mock&lt;IWebOperationContext></p>
+
+<p>{</p>
+
+<p>    Mock&lt;IIncomingWebRequestContext> requestContextMock = new
+Mock&lt;IIncomingWebRequestContext>();</p>
+
+<p>    Mock&lt;IOutgoingWebResponseContext> responseContextMock = new
+Mock&lt;IOutgoingWebResponseContext>();</p>
+
+<p> </p>
+
+<p>    public MockWebContext()</p>
+
+<p>      : base()</p>
+
+<p>    {</p>
+
+<p>      this.ExpectGet(webContext =>
+webContext.OutgoingResponse).Returns(responseContextMock.Object);</p>
+
+<p>      this.ExpectGet(webContext =>
+webContext.IncomingRequest).Returns(requestContextMock.Object);</p>
+
+<p> </p>
+
+<p>      WebHeaderCollection requestHeaders = new WebHeaderCollection();</p>
+
+<p>      WebHeaderCollection responseHeaders = new WebHeaderCollection();</p>
+
+<p>      UriTemplateMatch uriTemplateMatch = new UriTemplateMatch();</p>
+
+<p> </p>
+
+<p>      requestContextMock.ExpectGet(requestContext =>
+requestContext.Headers).Returns(requestHeaders);</p>
+
+<p>      requestContextMock.ExpectGet(requestContext =>
+requestContext.UriTemplateMatch).Returns(uriTemplateMatch);</p>
+
+<p>      responseContextMock.ExpectGet(responseContext =>
+responseContext.Headers).Returns(responseHeaders);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public Mock&lt;IIncomingWebRequestContext> IncomingRequest</p>
+
+<p>    {</p>
+
+<p>      get { return requestContextMock; }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public Mock&lt;IOutgoingWebResponseContext> OutgoingResponse</p>
+
+<p>    {</p>
+
+<p>      get { return responseContextMock; }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public override void Verify()</p>
+
+<p>    {</p>
+
+<p>      base.Verify();</p>
+
+<p>      requestContextMock.Verify();</p>
+
+<p>      responseContextMock.Verify();</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public override void VerifyAll()</p>
+
+<p>    {</p>
+
+<p>      base.VerifyAll();</p>
+
+<p>      requestContextMock.VerifyAll();</p>
+
+<p>      responseContextMock.VerifyAll();</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>As you can see in that code, I basically created a mock for the
+IWebOperationContext that also returns mock objects for the inner
+properties like the IncomingRequest or OutgoingResponse. All the
+expectations like default collections or contexts were set in the
+constructor. We will use this mock later in the unit tests for the REST
+service.</p>
+
+<p>Our REST service implementation is quite simple, it only looks for a
+customer with an specific identifier.</p>
+
+<p>public Customer FindCustomer(string id)</p>
+
+<p>{</p>
+
+<p>   if (context.IncomingRequest.ContentType != &ldquo;application/xml&rdquo;)</p>
+
+<p>   {</p>
+
+<p>      context.OutgoingResponse.StatusCode =
+System.Net.HttpStatusCode.BadRequest;</p>
+
+<p>      context.OutgoingResponse.SuppressEntityBody = true;</p>
+
+<p>      return null;</p>
+
+<p>   }</p>
+
+<p> </p>
+
+<p>   if (id == &ldquo;1&rdquo;)</p>
+
+<p>      return new Customer { FirstName = &ldquo;John&rdquo;, LastName = &ldquo;Doe&rdquo;,
+Address = &ldquo;Address&rdquo; };</p>
+
+<p> </p>
+
+<p>   context.OutgoingResponse.StatusCode =
+System.Net.HttpStatusCode.NotFound;</p>
+
+<p>   context.OutgoingResponse.SuppressEntityBody = true;</p>
+
+<p> </p>
+
+<p>   return null;</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>The service is expecting a &ldquo;ContentType&rdquo; http header equal to
+&ldquo;application/xml&rdquo;, and returning a &ldquo;Not Found&rdquo; status code if the
+customer does not exists.</p>
+
+<p>We can now write some unit tests to verify that our service is working
+as we initially expected. The first one will verify that a valid
+&ldquo;Customer&rdquo; instance is returned by the service is the &ldquo;ContentType&rdquo;
+header is set correctly, and the right customer id is passed as argument
+to the FindCustomer operation.</p>
+
+<p>[Test]</p>
+
+<p>public void ShouldReturnCustomer()</p>
+
+<p>{</p>
+
+<p>  MockWebContext mock = new MockWebContext();</p>
+
+<p>  mock.IncomingRequest.ExpectGet(incomingRequest =>
+incomingRequest.ContentType).Returns(&ldquo;application/xml&rdquo;);</p>
+
+<p> </p>
+
+<p>  CustomerService service = new CustomerService(mock.Object);</p>
+
+<p>  Customer customer = service.FindCustomer(&ldquo;1&rdquo;);</p>
+
+<p> </p>
+
+<p>  Assert.IsNotNull(customer);</p>
+
+<p>}</p>
+
+<p>The most important parts of the test above are:</p>
+
+<p>​1. If the service ask for the content type, it should get
+&ldquo;application/xml&rdquo;.</p>
+
+<p>mock.IncomingRequest.ExpectGet(incomingRequest =>
+incomingRequest.ContentType).Returns(&ldquo;application/xml&rdquo;);</p>
+
+<p>​2. The mock object is passed as argument to the service implementation.</p>
+
+<p>CustomerService service = new CustomerService(mock.Object);</p>
+
+<p> </p>
+
+<p>We can create a second test to verify that the status code is set to
+&ldquo;NotFound&rdquo; when an invalid customer id is passed as argument to the
+FindCustomer operation.</p>
+
+<p>[Test]</p>
+
+<p>public void ShouldSetStatusCodeIfCustomerNotFound()</p>
+
+<p>{</p>
+
+<p>   MockWebContext mock = new MockWebContext();</p>
+
+<p>   mock.IncomingRequest.ExpectGet(incomingRequest =>
+incomingRequest.ContentType).Returns(&ldquo;application/xml&rdquo;);</p>
+
+<p>   mock.OutgoingResponse.ExpectSet(outgoingResponse =>
+outgoingResponse.StatusCode).Callback(sc =>
+Assert.AreEqual(HttpStatusCode.NotFound, sc));</p>
+
+<p> </p>
+
+<p>   CustomerService service = new CustomerService(mock.Object);</p>
+
+<p>   Customer customer = service.FindCustomer(&ldquo;5&rdquo;);</p>
+
+<p>}</p>
+
+<p>\
+We are setting an expectation that the StatusCode should be &ldquo;NotFound&rdquo;
+when the customer id is not equal to &ldquo;1&rdquo;. (This is done in Moq by means
+of a Callback).</p>
+
+<p>mock.OutgoingResponse.ExpectSet(outgoingResponse =>
+outgoingResponse.StatusCode).Callback(sc =>
+Assert.AreEqual(HttpStatusCode.NotFound, sc));</p>
+
+<p>Moq really simplifies everything, including the testing of services that
+depends on the WCF operation context :).</p>
+
+<p>Another approach to test WCF services, as
+<a href="http://blogs.msdn.com/ploeh">Ploeh</a> mentioned in this
+<a href="http://blogs.msdn.com/ploeh/archive/2006/12/04/IntegrationTestingWcfServices.aspx">post</a>,
+is what he call integration testing. If you do integration testing, you
+are basically executing the service as a black box (the unit test in
+this case plays the role of the client application) using all the
+channel infrastructure provided by WCF. As you can notice, this approach
+will require a lot of plumbing code and configuration to host the
+service and set up the channels elements (Bindings and Behaviors).</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/04/22/overview-of-feedsync-support-in-the-microsoft-sync-framework/">Overview of FeedSync Support in the Microsoft Sync Framework</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-04-22T00:00:00-03:00" pubdate data-updated="true">Apr 22<span>nd</span>, 2008</time>
+        
+         | <a href="/blog/2008/04/22/overview-of-feedsync-support-in-the-microsoft-sync-framework/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h3></h3>
+
+<h3>What is FeedSync ?</h3>
+
+<p>If you have not heard about &ldquo;FeedSync&rdquo; yet, it is the official name of
+an open and interoperable standard for representing synchronization
+metadata in a XML format. This specification was formerly called by
+Microsoft as &ldquo;SSE&rdquo; (Simple Sharing Extensions), and its name was changed
+to &ldquo;FeedSync&rdquo; prior to the first release version.</p>
+
+<p>The fact that the &ldquo;FeedSync&rdquo; model is completely based on XML and it is
+quite simple to represent, makes this specification a good candidate to
+guarantee interoperability with other platforms.</p>
+
+<p>The complete specification is based on two fundamental aspects,</p>
+
+<p>​1. A way to represent the &ldquo;FeedSync&rdquo; model as XML extensions that can
+be easily attached to any existing document. The most common use
+nowadays is to include them as part of a syndication feed like RSS or
+ATOM to keep synchronization metadata about each available item. Many
+people have started proving parsers for this specification as part of
+their Syndication libraries, some examples are <a href="http://www.codeplex.com/sse">Simple Sharing
+Extensions For .NET</a>, <a href="https://rome.dev.java.net/">Rome for
+Java</a>, or <a href="http://www.codeplex.com/Argotic">Argotic
+(.NET)</a></p>
+
+<p>Let&rsquo;s take a quick look at the metadata attached to some items in a RSS
+feed.</p>
+
+<p>&lt;feed xmlns:sx=&lsquo;<a href="http://feedsync.org/2007/feedsync">http://feedsync.org/2007/feedsync</a>&rsquo;></p>
+
+<p>  &lt;title>Hello World&lt;/title></p>
+
+<p>  &lt;link><a href="http://weblogs.asp.net/cibrax&lt;/link>&#8220;>http://weblogs.asp.net/cibrax&lt;/link></a></p>
+
+<p>  &lt;description>this is my feed&lt;/description></p>
+
+<p>  &lt;sx:sharing since=&lsquo;11-05-2007T19:33:27Z&rsquo;
+until=&lsquo;14-05-2007T19:33:27Z&rsquo;></p>
+
+<p>    &lt;sx:related link=&lsquo;<a href="http://kzu/full">http://kzu/full</a>&rsquo; type=&lsquo;complete&rsquo; /></p>
+
+<p>  &lt;/sx:sharing></p>
+
+<p>  &lt;item></p>
+
+<p>   &lt;title>Foo Title&lt;/title></p>
+
+<p>   &lt;description>Foo Description&lt;/description></p>
+
+<p>   &lt;Foo Title=&lsquo;Foo&rsquo; /></p>
+
+<p>   &lt;sx:sync id=&lsquo;d92d64f5-c006-4086-a35a-c5195448d3ad&rsquo; updates=&lsquo;2&rsquo;
+deleted=&lsquo;false&rsquo; noconflicts=&lsquo;false&rsquo;></p>
+
+<p>     &lt;sx:history sequence=&lsquo;2&rsquo; when=&lsquo;18-05-2007T19:33:27Z&rsquo; by=&lsquo;Cibrax&rsquo;
+/></p>
+
+<p>     &lt;sx:history sequence=&lsquo;1&rsquo; when=&lsquo;14-05-2007T19:33:27Z&rsquo; by=&lsquo;JohnFoo&rsquo;
+/></p>
+
+<p>    &lt;/sx:sync>  &lt;/item></p>
+
+<p> </p>
+
+<p>&lt;/feed></p>
+
+<p>First of all, it adds optional metadata at feed level through the
+&ldquo;sharing&rdquo; element to include aggregated information about related feeds
+or sources. (The since and until attributes in that element represents
+the lower and upper bounds of the items contained within the feed).</p>
+
+<p>Secondly, it includes synchronization metadata at item level with the
+&ldquo;sync&rdquo; element. This element contains the following information:</p>
+
+<p>​a. An identifier to represent the item (Id attribute), this identifier
+must be unique across all the synchronization peers.</p>
+
+<p>​b. An history of updates that includes the person that made a change to
+the item, and the date/time of that change. As you can see, this
+information is quite simple, it does not say anything about what were
+the changes made to the item (We will see later that this information is
+actually not important for the merging algorithm).</p>
+
+<p>​c. Flags to indicate if the item was deleted or contains conflicts.
+(The same item version or sequence number was modified in one or more
+replicas at the same time).</p>
+
+<p>The rest of the information not mentioned here is part of the RSS
+specification itself and it does not have anything to do with
+&ldquo;FeedSync&rdquo;.</p>
+
+<p>​2. An algorithm that use the synchronization metadata to merge the
+items across several peers. For instance, to perform a bidirectional
+synchronization of local information between two peers. The algorithm
+also uses the metadata to detect conflicts at the moment of doing the
+merge operation.</p>
+
+<p>For example, if we have the following information in two different
+replicas</p>
+
+<p>+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+| REPLICA A                            | REPLICA B                            |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+|   ItemA-Sequence1                    | ItemC-Sequence1                      |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+|   ItemB-Sequence1                    |                                      |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+</p>
+
+<p>After the first synchronization, the resulting information will be:</p>
+
+<p>+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+| REPLICA A                            | REPLICA B                            |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+|   ItemA-Sequence1                    | ItemC-Sequence1                      |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+|   ItemB-Sequence1                    |  ItemA-Sequence1                     |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+|   ItemC-Sequence1                    |  ItemB-Sequence1                     |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+</p>
+
+<p>Now, Let&rsquo;s say the replica B changes the item A and B( The sequence or
+version is incremented)</p>
+
+<p>+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+| REPLICA A                            | REPLICA B                            |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+|   ItemA-Sequence1                    | ItemC-Sequence1                      |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+|   ItemB-Sequence1                    |  ItemA-Sequence2                     |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+|   ItemC-Sequence1                    |  ItemB-Sequence2                     |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+</p>
+
+<p>If they synchronize again, the resulting information will be:</p>
+
+<p>+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+| REPLICA A                            | REPLICA B                            |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+|   ItemA-Sequence2                    | ItemC-Sequence1                      |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+|   ItemB-Sequence2                    | ItemA-Sequence2                      |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+|   ItemC-Sequence1                    | ItemB-Sequence2                      |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+</p>
+
+<p>Now, if both replicas change the same item before synchronizing, for
+instance ItemC. At the moment of synchronizing the information, they
+will have the same sequence for ItemC, and therefore a conflict will
+exist. (The algorithm to detect conflicts is more complex than this, I
+am just giving an example)</p>
+
+<p>+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+| REPLICA A                            | REPLICA B                            |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+|   ItemA-Sequence2                    |  ItemC-Sequence2                     |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+|   ItemB-Sequence2                    | ItemA-Sequence2                      |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+|   ItemC-Sequence2                    | ItemB-Sequence2                      |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+</p>
+
+<p>Having these two important aspects, a developer wanting to synchronize
+information with other applications only has to represent that
+information as a FeedSync feed (A normal feed that includes &ldquo;FeedSync&rdquo;
+metadata) and expose it somewhere. Another application can later on
+combine that feed with its own feed using the merging algorithm, which
+will result in a full biredirectional synchronization between those two
+application.</p>
+
+<p>As you can see, both aspects complement each other, an bidirectional
+synchronization can not be done with just one of them.</p>
+
+<h3></h3>
+
+<h3>How to expose your information in a FeedSync feed with the Sync Framework</h3>
+
+<p>​1. The first thing you have to do is to determine which information you
+will want to expose in the final feed. Let&rsquo;s say that you have several
+copies of a database with customer information spread across several
+locations (Different company&rsquo;s branches perhaps), and you want to keep
+all those copies synchronized. You will have to expose that information
+as part of a feed, so people in other locations can synchronize their
+data against that feed (This example assumes that one central feed is
+used, but you can actually have multiple feeds that synchronize each
+other having a kind of tree structure, this is one of the goodness about
+FeedSync, no central replica is required).</p>
+
+<p>If you want to represent the customer&rsquo;s full name, address and phone
+number as an entry in a RSS feed, the entry will look as follow:</p>
+
+<p>&lt;item></p>
+
+<p>  &lt;title>John Doe&lt;/title></p>
+
+<p>  &lt;description>John Doe&rsquo;s Information&lt;/description></p>
+
+<p>  &lt;Customer></p>
+
+<p>    &lt;FullName>John Doe&lt;/FullName></p>
+
+<p>    &lt;Address>Test Adress&lt;/Address></p>
+
+<p>    &lt;PhoneNumber>xxx-xxxx-xxxx&lt;/PhoneNumber>   &lt;/Customer></p>
+
+<p>&lt;/item></p>
+
+<p>This mapping between the real data and a XML payload (The RSS&rsquo;s entry
+data) can be done in the Sync Framework by having a concrete
+implementation of &ldquo;FeedItemConverter&rdquo; class. The implementation of this
+class will know how to map custom data to a XML payload and vice versa.</p>
+
+<p>public abstract class FeedItemConverter</p>
+
+<p>{</p>
+
+<p>  protected FeedItemConverter();</p>
+
+<p>  public abstract string ConvertItemDataToXmlText(object itemData);
+//Method to convert the actual item data into XML</p>
+
+<p>  public abstract object ConvertXmlToItemData(string itemXml); //Method
+to convert the XML data into the item data</p>
+
+<p>}</p>
+
+<p>I personally do not like much the signature of those methods, an string
+could be anything (itemXml), not just XML and that can not be enforced
+by the current API design. I would prefer to have something like this:</p>
+
+<p>public abstract class FeedItemConverter</p>
+
+<p>{</p>
+
+<p>  protected FeedItemConverter();</p>
+
+<p>  public abstract void WriteItemDataToXml(object itemData, XmlWriter
+xmlWriter); //Method to convert the actual item data into XML</p>
+
+<p>  public abstract object ReadItemDataFromXml(XmlReader xmlReader);
+//Method to convert the XML data into the item data</p>
+
+<p>}</p>
+
+<p>In the sample above, you should implement a &ldquo;CustomerFeedItemConverter&rdquo;
+to convert a customer instance into XML the xml representation and vice
+versa.</p>
+
+<p>​2. Secondly, you have to provide a mapping between your internal
+identifiers and the identifiers used in the synchronization metadata.
+From the MSDN documentation &#8221;</p>
+
+<p><em>&ldquo;A FeedIdConverter can convert replica IDs and item IDs from the
+flexible-length format of the provider to strings, and vice versa. Also,
+the ID converter must be able to generate a replica ID for an anonymous
+change. The FeedSync history for a change contains three potential
+attributes: sequence, when, and by. The by attribute represents the
+replica that made the change, but it is not required by the FeedSync
+schema and so might be absent. If a change does not include a by value,
+a replica ID must be generated for the change by combining the sequence
+and when values&rdquo;</em></p>
+
+<p>public abstract class FeedIdConverter</p>
+
+<p>{</p>
+
+<p>  protected FeedIdConverter();</p>
+
+<p>  public abstract SyncIdFormatGroup IdFormats { get; }</p>
+
+<p>  public abstract string ConvertItemIdToString(SyncId itemId);</p>
+
+<p>  public abstract string ConvertReplicaIdToString(SyncId replicaId);</p>
+
+<p>  public abstract SyncId ConvertStringToItemId(string value);</p>
+
+<p>  public abstract SyncId ConvertStringToReplicaId(string value);</p>
+
+<p>  public abstract SyncId GenerateAnonymousReplicaId(string when, uint
+sequence);</p>
+
+<p>}</p>
+
+<p>Since the implementation of this provider will be the same most of the
+times, I think it would be a good idea to provide a default
+implementation of this provider as part of the Sync framework (It could
+provide extensibility points through virtual methods).</p>
+
+<p>​3. Once you have the item and id converters, they should be enough to
+start consuming or publishing FeedSync feeds with your custom
+information. The framework comes with two classes for that purpose,
+FeedConsumer and FeedProducer.</p>
+
+<p>public class FeedProducer</p>
+
+<p>{</p>
+
+<p>  public FeedProducer(KnowledgeSyncProvider storeProvider,
+FeedIdConverter idConverter, FeedItemConverter itemConverter);</p>
+
+<p>public FeedIdConverter IdConverter { get; set; }</p>
+
+<p>  public EndpointState IncrementalFeedBaseline { get; set; }</p>
+
+<p>  public FeedItemConverter ItemConverter { get; set; }</p>
+
+<p>  public KnowledgeSyncProvider StoreProvider { get; set; }</p>
+
+<p>  public void ProduceFeed(Stream feedStream);</p>
+
+<p>}</p>
+
+<p>public class FeedConsumer</p>
+
+<p>{</p>
+
+<p>  public FeedConsumer(KnowledgeSyncProvider storeProvider,
+FeedIdConverter idConverter, FeedItemConverter itemConverter);</p>
+
+<p>  public FeedItemConverter FeedItemConverter { get; set; }</p>
+
+<p>  public FeedIdConverter IdConverter { get; set; }</p>
+
+<p>  public KnowledgeSyncProvider StoreProvider { get; set; }</p>
+
+<p>  public EndpointState ConsumeFeed(Stream feedStream);</p>
+
+<p>}</p>
+
+<p>As you can see, those classes basically receive in the constructor the
+converters along with a sync repository (KnowledgeSyncProvider), the one
+that knows specific details about the underline data source. (for this
+example, it should know about the customers data in the database). All
+the magic is done by the methods ProduceFeed and ConsumeFeed, which
+reads/saves a feed from/to an existing stream. Again, I have three ideas
+to improve these classes,</p>
+
+<p>​a. They are tied to Rss/Atom, it should be extensible enough to support
+any document payload.</p>
+
+<p>​b. The underline stream must contain an existing Rss/Atom feed in order
+to save/read items on it. This is how these classes determine the format
+of the items. It would be great to have a way to specify a formatter for
+the items at the moment to save/read them. A approach very similar to
+the one taken by the Syndication API in WCF.</p>
+
+<p>​c. I would like to have a better integration with the WCF syndication
+API. I mean, a direct way to expose a REST endpoint for a feedsync feed,
+the consumer/producer classes could accept a SyndicationFeedFormatter as
+input to generate/consume the feed.</p>
+
+<p>Once the data have been read from the underline stream into a sync
+repository, it can be used with the
+&ldquo;<a href="http://msdn2.microsoft.com/en-us/library/microsoft.synchronization.syncorchestrator(SQL.100">SyncOrchestrator</a>.aspx)&rdquo;
+(Part of the Sync Framework) to initiate a new synchronization session.</p>
+
+<h3>Complete Example &ldquo;Browser Favorites&rdquo;</h3>
+
+<p>A complete example that illustrates all the steps to implement a custom
+sync provider and expose its data as a FeedSync feed can be found here,
+<a href="http://blogs.msdn.com/sync/archive/2008/04/08/synchronization-of-browser-favorites-using-feedsync-and-the-microsoft-sync-framework.aspx">http://blogs.msdn.com/sync/archive/2008/04/08/synchronization-of-browser-favorites-using-feedsync-and-the-microsoft-sync-framework.aspx</a></p>
+
+<p>It basically shows how to synchronize the browser favorites information
+using FeedSync as the underline synchronization protocol.</p>
+
+<h3>Do you want to synchronize FeedSync data with clients behind a firewall and NAT ?</h3>
+
+<p>Now, that is possible thanks to WCF and the Relay service provided in
+<a href="http://labs.biztalk.net/">Biztalk services</a>. Imagine a WCF service that
+exposes feedsync items through the Relay service, if we use a WCF duplex
+contract for that service, it will be able to start a bidirectional
+synchronization with any client behind NAT and Firewalls. I will try to
+show this functionality any time soon.</p>
+
+<p>In the meantime, If you want to know more about WCF duplex callbacks
+through NAT and Firewalls, I recommend <a href="http://blogs.thinktecture.com/cweyer/archive/2007/04/27/414819.aspx">this
+post</a>
+written by <a href="http://blogs.thinktecture.com/cweyer">Christian Weyer</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/04/21/my-first-mvp-summit/">My First MVP Summit</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-04-21T00:00:00-03:00" pubdate data-updated="true">Apr 21<span>st</span>, 2008</time>
+        
+         | <a href="/blog/2008/04/21/my-first-mvp-summit/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As a MVP rookie, the only thing I can say is that the event met all the
+expectations I had before traveling to Seattle, the wait was worth it. I
+could attend a lot of interesting sessions about WCF, WWF, and OSLO
+among others, which gave me a complete picture about where Microsoft is
+headed in the future with respect to Service oriented applications.</p>
+
+<p>Another interesting aspect of the summit was the opportunity to meet
+other MVPs in person, very smart people and community leaders like Scott
+Hanselman, Roy Osherove (IXMLSerializable), Sam Gentile, Jesus Rodriguez
+or Roman Kiss (The brain behind many of the cool WSE, WWF and WCF cool
+samples that you can find around) to name a few.  </p>
+
+<p>I look forward to attending the summit again next year :).</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/04/21/federation-over-tcp-with-wcf/">Federation Over TCP With WCF</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-04-21T00:00:00-03:00" pubdate data-updated="true">Apr 21<span>st</span>, 2008</time>
+        
+         | <a href="/blog/2008/04/21/federation-over-tcp-with-wcf/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>One of the discussions that we had during the last summit with the rest
+of &ldquo;Connected Systems&rdquo; MVPs was the possibility of supporting a
+Federation Scenario over TCP in WCF. For many of us that scenario was
+possible in theory, but unfortunately no documentation or samples
+existed to support it. In fact, WCF only comes with pre-built binding
+for federation scenarios, the &ldquo;WsFederationHttpBinding&rdquo; binding, which
+is completely tied to Http.</p>
+
+<p>For that reason, I decided to give it a shot and try to manipulate some
+custom bindings to use tcp instead of the common used http transport.
+One curios thing about TCP is that it requires security sessions
+(SecureConversation with requireSecurityContextCancellation equals to
+&ldquo;True&rdquo;) in order to work fine. If you do not configure the binding with
+those security settings, WCF will throw a nice error message saying that
+the order of the binding elements is not correct. At the beginning I did
+not configure it in that way, and it took me sometime to figure out what
+the problem was, I would save some time with a better error
+description. </p>
+
+<p>The resulting bindings for client, STS and the sample service were the
+following (In this sample, the client is authenticating against the
+service with a client certificate).</p>
+
+<p>​1. Client</p>
+
+<p>&lt;bindings></p>
+
+<p>  &lt;customBinding></p>
+
+<p>    &lt;binding name=&ldquo;STSBinding&rdquo;></p>
+
+<p>      &lt;security authenticationMode=&ldquo;SecureConversation&rdquo;
+requireSecurityContextCancellation=&ldquo;true&rdquo;></p>
+
+<p>        &lt;secureConversationBootstrap
+authenticationMode=&ldquo;MutualCertificate&rdquo;/></p>
+
+<p>      &lt;/security></p>
+
+<p>      &lt;binaryMessageEncoding/></p>
+
+<p>      &lt;tcpTransport /></p>
+
+<p>    &lt;/binding></p>
+
+<p>    &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>       &lt;security authenticationMode=&ldquo;SecureConversation&rdquo;></p>
+
+<p>         &lt;secureConversationBootstrap
+authenticationMode=&ldquo;IssuedToken&rdquo;></p>
+
+<p>           &lt;issuedTokenParameters
+tokenType=<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>></p>
+
+<p>             &lt;issuer address=&ldquo;net.tcp://localhost:8000/sts&rdquo;
+bindingConfiguration=&ldquo;STSBinding&rdquo; binding=&ldquo;customBinding&rdquo;></p>
+
+<p>               &lt;identity></p>
+
+<p>                 &lt;dns value=&ldquo;STSAuthority&rdquo;/> &lt;!&mdash;Sample Cert for the
+STS &mdash;></p>
+
+<p>               &lt;/identity></p>
+
+<p>             &lt;/issuer></p>
+
+<p>           &lt;/issuedTokenParameters></p>
+
+<p>        &lt;/secureConversationBootstrap></p>
+
+<p>      &lt;/security></p>
+
+<p>      &lt;binaryMessageEncoding/></p>
+
+<p>      &lt;tcpTransport /></p>
+
+<p>    &lt;/binding></p>
+
+<p>  &lt;/customBinding></p>
+
+<p>&lt;/bindings></p>
+
+<p>​2. STS</p>
+
+<p>&lt;bindings></p>
+
+<p>  &lt;customBinding></p>
+
+<p>    &lt;binding name=&ldquo;MutualCertificateBinding&rdquo;></p>
+
+<p>      &lt;security authenticationMode=&ldquo;SecureConversation&rdquo;
+requireSecurityContextCancellation=&ldquo;true&rdquo;></p>
+
+<p>        &lt;secureConversationBootstrap
+authenticationMode=&ldquo;MutualCertificate&rdquo;/></p>
+
+<p>      &lt;/security></p>
+
+<p>      &lt;binaryMessageEncoding/></p>
+
+<p>      &lt;tcpTransport /></p>
+
+<p>    &lt;/binding>    &lt;/customBinding></p>
+
+<p>&lt;/bindings></p>
+
+<p>​3. Sample Service</p>
+
+<p>&lt;bindings></p>
+
+<p>  &lt;customBinding></p>
+
+<p>    &lt;binding name=&ldquo;SampleService&rdquo;></p>
+
+<p>      &lt;security authenticationMode=&ldquo;SecureConversation&rdquo;
+requireSecurityContextCancellation=&ldquo;true&rdquo;></p>
+
+<p>        &lt;secureConversationBootstrap authenticationMode=&ldquo;IssuedToken&rdquo;></p>
+
+<p>           &lt;issuedTokenParameters
+tokenType=<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>></p>
+
+<p>        &lt;/issuedTokenParameters></p>
+
+<p>       &lt;/secureConversationBootstrap></p>
+
+<p>     &lt;/security></p>
+
+<p>     &lt;binaryMessageEncoding/></p>
+
+<p>    &lt;tcpTransport /></p>
+
+<p>   &lt;/binding></p>
+
+<p>  &lt;/customBinding></p>
+
+<p>&lt;/bindings></p>
+
+<p>It is not required that the STS and service use both TCP transport for
+communicating with the client, which is a cool thing because now we can
+combine different transports in a whole federation scenario. For
+instance, we can have a Http communication between the client and the
+STS, and a TCP communication with between the client and the final
+service.</p>
+
+<p>The complete sample is available to download from
+<a href="/images/legacy/FederationOverTcp.zip">here</a>.</p>
+
+<p> </p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/04/09/windows-live-contacts/">Windows Live Contacts API</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-04-09T00:00:00-03:00" pubdate data-updated="true">Apr 9<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/04/09/windows-live-contacts/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>With the boom in social networking, many web sites have started offering
+new tools for building or expanding your initial network of contacts.</p>
+
+<p>For instance, sites like Facebook or Linkedin provide a tool to get your
+Windows Live contacts and use them to more easily find or invite those
+people into your social networks.</p>
+
+<p>Although the idea is very good, the current implementation contains some
+serious security issues from my point of view.  The user has to enter in
+some way his Windows LiveID credentials into those sites (using a custom
+http form), so they can log into Windows Live and get the user&rsquo;s
+contacts.</p>
+
+<p>There is not any particular difference between this approach and a
+phising web site created by a malicious user only with the intention of
+getting your personal information.</p>
+
+<p>Not all people (including me) trust these sites enough to provide them
+with valuable Windows LiveID credentials. These sites are very
+well-known, but we are not certainly sure which will be the final user
+of our credentials. (or even, if they are keeping them somewhere).</p>
+
+<p>This security issue could be basically solved if Windows Live provided
+two fundamental things:</p>
+
+<p>1.  Http REST Services to get the user contacts or other personal
+information.</p>
+
+<p>​2. An authentication mechanism for those services based on security
+tokens. Something similar to what <a href="http://oauth.net/">OAuth</a> provides,
+so the user will never have to enter his credentials in a site different
+from Microsoft again. Another advantage of this protocol is that the
+user will finally decide whether he authorize third party sites to get
+his personal information or not. If you are curious about how OAuth
+works behind scene,  an excellent &ldquo;Begginer&rsquo;s guide&rdquo; is available
+<a href="http://www.hueniverse.com/hueniverse/2007/10/beginners-gui-1.html">here</a>.</p>
+
+<p>Fortunately, the Windows Live team has made an excellent progress in
+these two aspects. One one hand, they have developed an &ldquo;<a href="http://msdn2.microsoft.com/en-us/library/cc287637.aspx">Windows Live
+ID Delegated Authentication
+SDK</a>&rdquo; to
+integrate Application providers through a protocol pretty similar to
+OAuth (I haven&rsquo;t had enough time yet to take a more detailed look at
+this SDK)</p>
+
+<p>From the MSDN site,</p>
+
+<p>&ldquo;<em>Delegated Authentication is based on a block of information, called a
+consent token, that is provided to your Web site by the Windows Live ID
+service for a given resource provider (such as contacts and photos). To
+obtain a consent token for use at a particular resource provider, you
+must first request it from the user by means of the Windows Live ID
+consent service. Your application must then manage the authentication
+data that is returned. For detailed information about how to request and
+manage consent, see the</em><a href="http://msdn.microsoft.com/en-us/library/cc287637.aspx"><em>Windows Live Delegated Authentication
+SDK</em></a>.&rdquo;</p>
+
+<p>On other hand, as part of &ldquo;<a href="http://msdn2.microsoft.com/en-us/library/cc305075.aspx">Windows Live User Data
+APIs</a>&rdquo;, they
+have started providing REST services to allow Windows Live users to
+safely and securely share their information stored in Windows Live
+services. One of this services is what they have called &ldquo;<a href="http://msdn2.microsoft.com/en-us/library/bb463989.aspx">Windows Live
+Contacts API</a>&rdquo;,
+a REST service that enables developers to programmatically submit
+queries to, and retrieve results from, the Windows Live Contacts Address
+Book database service.</p>
+
+<p>Hopefully, it will be a matter of time until <a href="http://dev.live.com/blogs/devlive/archive/2008/03/25/237.aspx">Facebook or Linkedin start
+integrating</a>
+services like these into their sites for the benefit of all :).</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/04/07/mvp-again/">MVP Again 2008!!!</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-04-07T00:00:00-03:00" pubdate data-updated="true">Apr 7<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/04/07/mvp-again/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I am so excited, this is third time I received the Microsoft MVP award.
+Thanks to all people involved in the evaluation process and my MVP lead
+<a href="http://blogs.msdn.com/mvplead">Fernando Garcia Loera</a>.</p>
+
+<p>I am looking forward to continue that collaborating throughout this
+year.</p>
+
+<p>Thanks again Microsoft!!!</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/19/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/blog/page/17/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

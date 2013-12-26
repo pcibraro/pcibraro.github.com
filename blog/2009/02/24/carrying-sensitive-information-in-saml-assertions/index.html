@@ -1,0 +1,368 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Carrying sensitive information in SAML assertions - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="When SAML is used in conjunction with WS-Security, only an small piece
+of the token is encrypted, the proof key for the relying party. The rest
+of &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2009/02/24/carrying-sensitive-information-in-saml-assertions">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Carrying Sensitive Information in SAML Assertions</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-02-24T00:00:00-03:00" pubdate data-updated="true">Feb 24<span>th</span>, 2009</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>When SAML is used in conjunction with WS-Security, only an small piece
+of the token is encrypted, the proof key for the relying party. The rest
+of the token goes in plain text, that also includes the user&rsquo;s claims.</p>
+
+<p>&lt;saml:Assertion> </p>
+
+<p>  &lt;saml:Conditions NotBefore=&ldquo;2009-02-24T19:48:20.500Z&rdquo;
+NotOnOrAfter=&ldquo;2009-02-24T19:53:20.500Z&rdquo;>&lt;/saml:Conditions></p>
+
+<p>  &lt;saml:AttributeStatement></p>
+
+<p>  &lt;saml:Subject></p>
+
+<p>    &lt;saml:NameIdentifier>&lt;/saml:NameIdentifier></p>
+
+<p>    &lt;saml:SubjectConfirmation></p>
+
+<p>     
+&lt;saml:ConfirmationMethod>urn:oasis:names:tc:SAML:1.0:cm:holder-of-key&lt;/saml:ConfirmationMethod></p>
+
+<p>        &lt;KeyInfo
+xmlns=&ldquo;<a href="http://www.w3.org/2000/09/xmldsig#">http://www.w3.org/2000/09/xmldsig#</a>&rdquo;>&hellip;&lt;/KeyInfo></p>
+
+<p>   &lt;/saml:SubjectConfirmation></p>
+
+<p>  &lt;/saml:Subject></p>
+
+<p>  &lt;saml:Attribute AttributeName=&ldquo;displayName&rdquo;
+AttributeNamespace=&ldquo;<a href="http://schemas.microsoft.com/xsi/2005/05/role">http://schemas.microsoft.com/xsi/2005/05/role</a>&rdquo;></p>
+
+<p><strong>      &lt;</strong><strong>saml:AttributeValue>John Foo&lt;/saml:AttributeValue</strong><strong>>
+&lt;&mdash;Attribute value&mdash;></strong></p>
+
+<p>  &lt;/saml:Attribute></p>
+
+<p>  &lt;/saml:AttributeStatement></p>
+
+<p>  &lt;Signature
+xmlns=&ldquo;<a href="http://www.w3.org/2000/09/xmldsig#">http://www.w3.org/2000/09/xmldsig#</a>&rdquo;>&hellip;&lt;/Signature></p>
+
+<p>&lt;/saml:Assertion></p>
+
+<p>Knowing this, you should never include sensitive information as claims
+in a SAML token. This is also related to the <a href="http://www.identityblog.com/stories/2004/12/09/thelaws.html">identity law #2, &ldquo;Minimal
+Disclosure for a Constrained
+Use&rdquo;</a>. The
+Identity provider should only disclose the least amount of identifiying
+information for executing the operation on the relying party.</p>
+
+<p>Some examples are,</p>
+
+<ul>
+<li><em>A winery only needs to know whether the customer is in a legal age
+for buying alcohol according to the<strong>law, a claim like &ldquo;over21&rdquo;
+should be enough for that purpose, there is not need to know the
+customer birth</strong>date at all.</em></li>
+<li><em>An online store that sells products does not necessary need to know
+the number of every credit card owned by a customer, a friendly name
+representing the card and optionally the available balance could be
+enough for completing a purchase.</em></li>
+</ul>
+
+
+<p>SAML 2.0 introduces the concept of &ldquo;encrypted attribute&rdquo;, which clearly
+states its purpose, encrypt individual assertions in a SAML token. In
+this way, a token can now carry the encrypted proof key and optionally
+one or more encrypted assertions with sensitive information.</p>
+
+<p>You can take a look at <a href="https://spaces.internet2.edu/display/SHIB/SAMLDiffs">this
+page</a> for more
+information about the differences between SAML 1.1 and 2.0.</p>
+
+<p>Geneva Framework Beta 1 already implements a subset of SAML 2.0,
+however, it looks like this feature has been left out in the current
+release. Not sure either whether this feature will be included as part
+of the final release (Last quarter of 2009). I created <a href="http://social.msdn.microsoft.com/Forums/en-US/Geneva/thread/a63e31cb-a109-4e99-8538-2eb084ed3827">a
+post</a>
+in the forums some time ago, I haven&rsquo;t received any feedback yet.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-02-24T00:00:00-03:00" pubdate data-updated="true">Feb 24<span>th</span>, 2009</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2009/02/24/carrying-sensitive-information-in-saml-assertions/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2009/02/24/carrying-sensitive-information-in-saml-assertions/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2009/02/18/contract-projections-in-wcf-declarative-services/" title="Previous Post: Contract Projections in WCF declarative services">&laquo; Contract Projections in WCF declarative services</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2009/03/06/brokered-authentication-for-rest-active-clients-with-saml/" title="Next Post: Brokered authentication for REST active clients with SAML">Brokered authentication for REST active clients with SAML &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2009/02/24/carrying-sensitive-information-in-saml-assertions/';
+        var disqus_url = 'http://cibrax.me/blog/2009/02/24/carrying-sensitive-information-in-saml-assertions/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,414 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Single Sign-On scenarios with Federation - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="Before reading this post, if you know the basic concepts and ideas
+behind the implementation of an STS with WCF, go ahead and jump to the
+next &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2008/02/11/single-sign-on-scenarios-with-federation">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Single Sign-On Scenarios With Federation</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-02-11T00:00:00-03:00" pubdate data-updated="true">Feb 11<span>th</span>, 2008</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Before reading this post, if you know the basic concepts and ideas
+behind the implementation of an STS with WCF, go ahead and jump to the
+next paragraph. Otherwise, I recommend you to read the following post
+<a href="http://weblogs.asp.net/cibrax/archive/2006/03/14/440222.aspx">Implementing a Secure Token Service with
+WCF</a>
+first.</p>
+
+<h3></h3>
+
+<h3>Informal definition of Federation</h3>
+
+<p><img src="/images/legacy/SimpleFederation.jpg" alt="" /></p>
+
+<p>The image above illustrates a very simple view of a federation scenario.
+In the first block, we have a realm or security domain. A realm is a
+trust boundary that that can expand across several networks and it is
+basically composed by client applications, an STS and a collection of
+services (they essentially provide the business value to the client
+applications). A group of connected realms  conform a federation
+scenario (The trust boundary is around the STSs, each STS trust each
+other).</p>
+
+<p>You can read this article for a more formal definition of Federation,
+<a href="http://msdn2.microsoft.com/en-us/library/bb498017.aspx">http://msdn2.microsoft.com/en-us/library/bb498017.aspx</a></p>
+
+<h3>Key Interchange Process</h3>
+
+<p><strong>1. The client sends the RST message to the STS</strong></p>
+
+<p>As part of the initial negotiation of the token with the STS through the
+RST/RRST (Request Security Token / Response Request Security Token)
+messages, the client application also negotiates with the STS a
+cryptographic key that will be used later to secure the communication
+with the final service.</p>
+
+<p>This key can be symmetric or asymmetric, and the client application will
+decide which kind of type it wants in the initial RST message.</p>
+
+<p>This can be done in WCF by configuration:</p>
+
+<p>&lt;wsFederationHttpBinding></p>
+
+<p>  &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>  &lt;security mode=&ldquo;Message&rdquo;></p>
+
+<p>    &lt;message
+issuedTokenType=&ldquo;<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>&rdquo;
+<strong>issuedKeyType=&ldquo;SymmetricKey&rdquo;</strong>></p>
+
+<p>If the STS only supports one type of key (Symmetric or Asymmetric), that
+is another story, the client should know that beforehand. The STS can
+assume a default key type and always return that type or in the worst
+case, return an exception message.</p>
+
+<p>After generating the right key, the STS wraps it in an encrypted key
+token
+(<a href="http://www.ws-i.org/Profiles/BasicSecurityProfile-1.1.html#EncryptedKeyToken">http://www.ws-i.org/Profiles/BasicSecurityProfile-1.1.html#EncryptedKeyToken</a>)
+using the public X509 key of the destination service (This is determined
+by the AppliesTo element in the RST message), and adds the encrypted
+token in the issued SAML token (This token is signed by the private X509
+private key of the STS).</p>
+
+<p>The plain key is also added in the RRST message so the client
+application can get it from there (This assumes that the communication
+with the STS is also secure).</p>
+
+<p><strong>2. The client receives the RRST message and creates the request
+message for the final service</strong></p>
+
+<p>The client application receives the RRST message, and afterwards, it
+extracts the SAML token and the generated key. Finally, it adds the SAML
+token to the request message for the final service and secures the
+channel (Encrypts the request) using the plain key received from the
+STS.</p>
+
+<p><strong>3. The service receives the request message from the client</strong></p>
+
+<p>The service on the other side, receives the encrypted message and the
+SAML token. After that, it unwraps the encrypted key token included in
+the SAML token with its X509 private key. This key is used later to
+decrypts the request message sent by the client application.</p>
+
+<h3>Share a SAML token between several services</h3>
+
+<p>Ok, everything looks ok so far, the problems start here :).  If you go
+back to the step 1, the STS will wrap the key into the SAML token using
+a public key of a X509 certificate. Does this means that a SAML token
+will only be useful for the service that possess the corresponding
+private key ?. In other words, is the SAML token only valid for one
+service ?. Ok, the answer will depend on a specific factor, is the
+private X509 key shared among all the services ?. If the answer is YES,
+the SAML token will be reusable for any of those services.</p>
+
+<p>Now, is that a correct approach for implementing Single Sign-On ?. From
+my point of view, it is not, it just a security hole in the system. If
+one SAML token gets compromised by an attacker, this person will also
+get access to any service that share the same key. On other hand, if we
+have one key per service, if the SAML token gets compromised, only the
+service associated with that token is compromised. Clear enough, isn&rsquo;t
+it ? Single Sign-On here does not mean &ldquo;Get a token once, use it
+everywhere &hellip;&rdquo;. It means, &ldquo;use always the same set of credentials
+against the STS to get the correponding token&rdquo;.</p>
+
+<h3>Single Sign-On in Federation</h3>
+
+<p>In this section I will try to describe with my words what &ldquo;Single
+Sign-On&rdquo; means in a federation scenario. If we have a client application
+that wants to consume a service in another security realm, do we need to
+have another set of credentials to log into that realm and consume the
+service ?. The answer is &ldquo;NO&rdquo;, if a trust relationship exists between
+the Realms where the client application and the services are located, an
+automatic negotiation of credentials can happen on behalf of the client
+application between the STSs, and therefore the Single-Sign On is
+archived.</p>
+
+<p>If the STS in the second realm trusts the first realm, it can accepts
+SAML tokens from the first STS (Since the SAML token is signed, it can
+verify the origin with a X509 public key) and transform them to tokens
+valid for the second realm. This is how federation works behind stage,
+the trust relationship is delegated to the STSs.</p>
+
+<p>Of course, I do not have the last word and any feedback is always
+welcome :).</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-02-11T00:00:00-03:00" pubdate data-updated="true">Feb 11<span>th</span>, 2008</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/wcf/'>WCF</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2008/02/11/single-sign-on-scenarios-with-federation/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2008/02/11/single-sign-on-scenarios-with-federation/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2008/02/08/wcf-syndication-extensions/" title="Previous Post: WCF - Syndication Extensions">&laquo; WCF - Syndication Extensions</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2008/03/26/authenticating-users-with-supporting-tokens-in-wcf-binding-extension/" title="Next Post: Authenticating users with Supporting Tokens in WCF - Binding Extension">Authenticating users with Supporting Tokens in WCF - Binding Extension &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2008/02/11/single-sign-on-scenarios-with-federation/';
+        var disqus_url = 'http://cibrax.me/blog/2008/02/11/single-sign-on-scenarios-with-federation/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

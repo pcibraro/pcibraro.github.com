@@ -1,0 +1,1179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: ASP.NET | Pablo Cibraro (Cibrax)]]></title>
+  <link href="http://cibrax.me/blog/categories/asp-dot-net/atom.xml" rel="self"/>
+  <link href="http://cibrax.me/"/>
+  <updated>2013-12-26T15:03:47-03:00</updated>
+  <id>http://cibrax.me/</id>
+  <author>
+    <name><![CDATA[Cibrax]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Developing RESTful services with JSON and POX support in the ASP.NET MVC]]></title>
+    <link href="http://cibrax.me/blog/2009/04/17/developing-restful-services-with-json-and-pox-support-in-the-asp-net-mvc/"/>
+    <updated>2009-04-17T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2009/04/17/developing-restful-services-with-json-and-pox-support-in-the-asp-net-mvc</id>
+    <content type="html"><![CDATA[<p>Many of the features available out of the box today in the ASP.NET MVC
+framework are only intended to develop web applications using REST
+principles. There is not support for accepting incoming messages encoded
+as JSON or plain old XML (POX), or even support for returning POX from a
+controller action. Only form-urlencoded data is accepted by default for
+incoming messages, and JSON/HTML (with support of the view engines) for
+outgoing messages in controller actions.</p>
+
+<p>However, thanks to the different extensibility points that the MVC
+provides for hooking up custom code, supporting different scenarios for
+RESTful services tend to be something really easy to implement.</p>
+
+<p>In this framework, we basically have two extensibility points that
+deserve some attention, Action Filters and Action Results.</p>
+
+<p>Action filters intercept messages before they are dispatched to the
+controller action (or operation), and just after the operation returns a
+result. They are basically equivalent to the Dispatch Message
+Interceptors in WCF, or the new Message Interceptors in the WCF REST
+Starter kit (although they work more at a deeper level in the WCF
+processing pipeline).</p>
+
+<p>Action results know how to serialize and write an object (the controller
+action result) into the response stream. Since they also have access to
+the Response object, additional work can be done there to manipulate
+some response settings or add output headers.</p>
+
+<p>The framework also support Model Binders, which basically knows how to
+create an object representing the model expected by the controller
+action from some scalar values. Those scalar values are parsed from the
+incoming message (encoded as form-urlencoded), and then passed to the
+binder. However, they do not seem to add any value for implementing
+RESTful services with support for JSON or XML.</p>
+
+<p>Omar Al Zabir has already written <a href="http://weblogs.asp.net/omarzabir/archive/2008/10/03/create-rest-api-using-asp-net-mvc-that-speaks-both-json-and-plain-xml.aspx">an nice
+post</a>
+on how to implement RESTful services with the ASP.NET MVC that speak
+JSON and XML using action filters and action results.</p>
+
+<p>ATOM and other syndication formats can also be handled as XML. For this,
+the Web Programming Model in WCF comes with a couple of classes,
+Rss20FeedFormatter and Atom10FeedFormator, which are Data Contracts and
+also IXmlSerializable classes. Therefore, if your operation returns an
+instance of any of these classes, the filters created by Omar would
+address this scenario as well. Regarding Conditional get support, you
+will have to implement it in the action itself or a custom filter. (You
+will have to do the same thing if you decide to go with the WCF Web
+Programming Model).</p>
+
+<p>Caching is another feature that you might want to use at the moment of
+developing RESTful services. Fortunately, the MVC also comes with an
+special action filter “OutputCache” that was built on top the ASP.NET
+cache, so it provides the same caching capabilities that you may use for
+normal ASP.NET pages.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Running a partial SSL website with ASP.NET MVC]]></title>
+    <link href="http://cibrax.me/blog/2009/01/19/running-a-partial-ssl-website-in-asp-net-mvc/"/>
+    <updated>2009-01-19T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2009/01/19/running-a-partial-ssl-website-in-asp-net-mvc</id>
+    <content type="html"><![CDATA[<p><a href="http://www.pluralsight.com/community/blogs/keith/archive/2009/01/17/sslhelper-get-help-running-a-partial-ssl-website-in-asp-net.aspx">Keith
+Brown</a>
+has just released a helper class (Based on an <a href="http://www.leastprivilege.com/CommentView.aspx?guid=50a39e64-caab-4fbd-b8e1-2be06b2e6081">original
+implementation</a>
+made by Dominick Baier) with very useful methods for mixing Http and
+Https in a regular asp.net application. Before jumping in this post,
+make sure to read his post (And Dominick&rsquo;s) to understand all the
+problems you may have to deal with when implementing a partial SSL
+website.</p>
+
+<p>Running a partial SSL website in ASP.NET MVC is not much different,
+however, in MVC, we can leverage the existing and powerful routing
+mechanism to implement similar features.</p>
+
+<p><strong>Switching to SSL through an ASP.NET Module</strong></p>
+
+<p>This module  basically inspects the URL and does a redirect based on
+some configuration where you specify routes that should be SSL
+protected.</p>
+
+<p>public void ProcessRequest(HttpContext context)</p>
+
+<p>{</p>
+
+<p>    if(Authentication.IsSslRequired() &amp;&amp;
+context.Request.HttpMethod.Equals(&ldquo;get&rdquo;,
+StringComparison.OrdinalIgnoreCase))</p>
+
+<p>    {</p>
+
+<p>        var data = RouteTable.Routes.GetRouteData(new
+HttpContextWrapper(context));</p>
+
+<p>        if (data != null)</p>
+
+<p>        {</p>
+
+<p>            if (!context.Request.IsSecureConnection)</p>
+
+<p>            {</p>
+
+<p>                if(data.DataTokens[&ldquo;isSecure&rdquo;] != null &amp;&amp;
+(bool)data.DataTokens[&ldquo;isSecure&rdquo;])</p>
+
+<p>                {</p>
+
+<p>                    //Do redirect to https</p>
+
+<p>                    var secureUrl =
+context.Request.Url.ToString().ToSslUrl();</p>
+
+<p>                    context.Response.Redirect(secureUrl, true);</p>
+
+<p>                }</p>
+
+<p>            }</p>
+
+<p>            else</p>
+
+<p>            {</p>
+
+<p>                if (data.DataTokens[&ldquo;isSecure&rdquo;] == null ||
+!((bool)data.DataTokens[&ldquo;isSecure&rdquo;]))</p>
+
+<p>                {</p>
+
+<p>                    //Do redirect to http</p>
+
+<p>                    var unsecureUrl =
+context.Request.Url.ToString().ToUnsecureUrl();</p>
+
+<p>                    context.Response.Redirect(unsecureUrl, true);</p>
+
+<p>                }</p>
+
+<p>            }</p>
+
+<p>        }</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>As you can see in the code above, the module checks whether the page
+should be ssl protected using a custom data token (IsSecure) that was
+previously configured for the route, and afterwards, it redirects the
+request according to that setting. For instance, if the route requires
+to be the secure (IsSecure = true), and the request was actually made
+through http, the module will redirect the request to https.</p>
+
+<p>The absolute URLs are built using some extensions methods (ToSslUrl and
+ToUnsecureUrl) that I will show later in this post.</p>
+
+<p>Authentication.IsSslRequired is just an configuration setting that we
+can use to skip all these checks during development.</p>
+
+<p>public class Authentication</p>
+
+<p>{</p>
+
+<p>    public static bool IsSslRequired()</p>
+
+<p>    {</p>
+
+<p>        var setting = ConfigurationManager.AppSettings[&ldquo;RequireSSL&rdquo;];</p>
+
+<p>        if (setting != null)</p>
+
+<p>        {</p>
+
+<p>            return bool.Parse(setting);</p>
+
+<p>        }</p>
+
+<p> </p>
+
+<p>        return false;</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>&lt;appSettings></p>
+
+<p>  &lt;add key=&ldquo;RequireSSL&rdquo; value=&ldquo;True&rdquo;/></p>
+
+<p>&lt;/appSettings></p>
+
+<p>The code for setting the custom data token in the MVC route looks as
+follow,</p>
+
+<p>routes.MapRoute(</p>
+
+<p>    &ldquo;MyAccount/PasswordChange&rdquo;,</p>
+
+<p>    &ldquo;MyAccount/PasswordChange&rdquo;,</p>
+
+<p>    new { controller = &ldquo;Accounts&rdquo;, action = &ldquo;PasswordChange&rdquo; }</p>
+
+<p>).DataTokens = new RouteValueDictionary(new { isSecure = true });</p>
+
+<p>**** </p>
+
+<p><strong>Extension methods for generating absolute URLs</strong></p>
+
+<p>As I showed before in the ASP.NET Module, two extensions methods were
+used to generate absolute URLs. I just based their implementation on
+some code originally written by Troy Goode in this
+<a href="http://www.squaredroot.com/post/2008/06/MVC-and-SSL.aspx">post</a>. \</p>
+
+<p>/// &lt;summary></p>
+
+<p>/// Provides helper extensions for turning strings into fully-qualified
+and SSL-enabled Urls.</p>
+
+<p>/// &lt;/summary></p>
+
+<p>public static class UrlStringExtensions</p>
+
+<p>{</p>
+
+<p>    /// &lt;summary></p>
+
+<p>    /// Takes a relative or absolute url and returns the fully-qualified
+url path.</p>
+
+<p>    /// &lt;/summary></p>
+
+<p>    /// &lt;param name=&ldquo;text&rdquo;>The url to make fully-qualified. Ex:
+Home/About&lt;/param></p>
+
+<p>    /// &lt;returns>The absolute url plus protocol, server, &amp; port. Ex:
+<a href="http://localhost:1234/Home/About&lt;/returns>">http://localhost:1234/Home/About&lt;/returns></a></p>
+
+<p>    public static string ToFullyQualifiedUrl( this string text )</p>
+
+<p>    {</p>
+
+<p>        var oldUrl = text;</p>
+
+<p>        var oldUrlArray = ( oldUrl.Contains( &ldquo;?&rdquo; ) ? oldUrl.Split( &lsquo;?&rsquo; )
+: new[]{ oldUrl, &ldquo;&rdquo; } );</p>
+
+<p> </p>
+
+<p>        var requestUri = HttpContext.Current.Request.Url;</p>
+
+<p>        var localPathAndQuery = requestUri.LocalPath + requestUri.Query;</p>
+
+<p>        var urlBase = requestUri.AbsoluteUri.Substring( 0,
+requestUri.AbsoluteUri.Length &ndash; localPathAndQuery.Length );</p>
+
+<p> </p>
+
+<p>        var newUrl = VirtualPathUtility.ToAbsolute( oldUrlArray[0] );</p>
+
+<p>        if( !string.IsNullOrEmpty( oldUrlArray[1] ) )</p>
+
+<p>            newUrl += &ldquo;?&rdquo; + oldUrlArray[1];</p>
+
+<p> </p>
+
+<p>        return urlBase + newUrl;</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    /// &lt;summary></p>
+
+<p>    /// Looks for Html links in the passed string and turns each
+relative or absolute url and returns the fully-qualified url path.</p>
+
+<p>    /// &lt;/summary></p>
+
+<p>    /// &lt;param name=&ldquo;text&rdquo;>The url to make fully-qualified. Ex: &lt;a
+href=&ldquo;Home/About&rdquo;>Blah&lt;/a>&lt;/param></p>
+
+<p>    /// &lt;returns>The absolute url plus protocol, server, &amp; port. Ex:
+&lt;a href=&ldquo;<a href="http://localhost:1234/Home/About">http://localhost:1234/Home/About</a>&rdquo;>Blah&lt;/a>&lt;/returns></p>
+
+<p>    public static string ToFullyQualifiedLink( this string text )</p>
+
+<p>    {</p>
+
+<p>        var regex = new Regex(</p>
+
+<p>           
+&ldquo;(?&lt;Before>&lt;a.*href=\&rdquo;)(?!http)(?&lt;Url>.*?)(?&lt;After>\&ldquo;.+>)&rdquo;,</p>
+
+<p>            RegexOptions.Multiline | RegexOptions.IgnoreCase</p>
+
+<p>            );</p>
+
+<p> </p>
+
+<p>        return regex.Replace( text, ( Match m ) =></p>
+
+<p>                                    m.Groups[&ldquo;Before&rdquo;].Value +</p>
+
+<p>                                    ToFullyQualifiedUrl(
+m.Groups[&ldquo;Url&rdquo;].Value ) +</p>
+
+<p>                                    m.Groups[&ldquo;After&rdquo;].Value</p>
+
+<p>            );</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    /// &lt;summary></p>
+
+<p>    /// Takes a relative or absolute url and returns the fully-qualified
+url path using the Https protocol.</p>
+
+<p>    /// &lt;/summary></p>
+
+<p>    /// &lt;param name=&ldquo;text&rdquo;>The url to make fully-qualified. Ex:
+Home/About&lt;/param></p>
+
+<p>    /// &lt;returns>The absolute url plus server, &amp; port using the Https
+protocol. Ex: <a href="https://localhost:1234/Home/About&lt;/returns>">https://localhost:1234/Home/About&lt;/returns></a></p>
+
+<p>    public static string ToSslUrl( this string text )</p>
+
+<p>    {</p>
+
+<p>        if (IsSslRequired())</p>
+
+<p>        {</p>
+
+<p>            string absoluteUrl = null;</p>
+
+<p>            if (text.StartsWith(&ldquo;<a href="http://">http://</a>&rdquo;,
+StringComparison.OrdinalIgnoreCase) || text.StartsWith(&ldquo;<a href="https://">https://</a>&rdquo;,
+StringComparison.OrdinalIgnoreCase))</p>
+
+<p>                absoluteUrl = text;</p>
+
+<p>            else</p>
+
+<p>                absoluteUrl = ToFullyQualifiedUrl(text);</p>
+
+<p> </p>
+
+<p>            return absoluteUrl.Replace(&ldquo;<a href="http:">http:</a>&rdquo;, &ldquo;<a href="https:">https:</a>&rdquo;);</p>
+
+<p>        }</p>
+
+<p>        else</p>
+
+<p>        {</p>
+
+<p>            return text;</p>
+
+<p>        }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    /// &lt;summary></p>
+
+<p>    /// Takes a relative or absolute url and returns the fully-qualified
+url path using the Http protocol.</p>
+
+<p>    /// &lt;/summary></p>
+
+<p>    /// &lt;param name=&ldquo;text&rdquo;>The url to make fully-qualified. Ex:
+Home/About&lt;/param></p>
+
+<p>    /// &lt;returns>The absolute url plus server, &amp; port using the Http
+protocol. Ex: <a href="http://localhost:1234/Home/About&lt;/returns>">http://localhost:1234/Home/About&lt;/returns></a></p>
+
+<p>    public static string ToUnsecureUrl(this string text)</p>
+
+<p>    {</p>
+
+<p>        string absoluteUrl = null;</p>
+
+<p>        if (text.StartsWith(&ldquo;<a href="http://">http://</a>&rdquo;,
+StringComparison.OrdinalIgnoreCase) || text.StartsWith(&ldquo;<a href="https://">https://</a>&rdquo;,
+StringComparison.OrdinalIgnoreCase))</p>
+
+<p>            absoluteUrl = text;</p>
+
+<p>        else</p>
+
+<p>            absoluteUrl = ToFullyQualifiedUrl(text);</p>
+
+<p> </p>
+
+<p>        return absoluteUrl.Replace(&ldquo;<a href="https:">https:</a>&rdquo;, &ldquo;<a href="http:">http:</a>&rdquo;);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    /// &lt;summary></p>
+
+<p>    /// Looks for Html links in the passed string and turns each
+relative or absolute url into a fully-qualified url path using the Https
+protocol.</p>
+
+<p>    /// &lt;/summary></p>
+
+<p>    /// &lt;param name=&ldquo;text&rdquo;>The url to make fully-qualified. Ex: &lt;a
+href=&ldquo;Home/About&rdquo;>Blah&lt;/a>&lt;/param></p>
+
+<p>    /// &lt;returns>The absolute url plus server, &amp; port using the Https
+protocol. Ex: &lt;a
+href=&ldquo;<a href="https://localhost:1234/Home/About">https://localhost:1234/Home/About</a>&rdquo;>Blah&lt;/a>&lt;/returns></p>
+
+<p>    public static string ToSslLink( this string text )</p>
+
+<p>    {</p>
+
+<p>        if (IsSslRequired())</p>
+
+<p>        {</p>
+
+<p>            return ToFullyQualifiedLink(text).Replace(&ldquo;<a href="http:">http:</a>&rdquo;,
+&ldquo;<a href="https:">https:</a>&rdquo;);</p>
+
+<p>        }</p>
+
+<p>        else</p>
+
+<p>        {</p>
+
+<p>            return ToFullyQualifiedLink(text);</p>
+
+<p>        }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    private static bool IsSslRequired()</p>
+
+<p>    {</p>
+
+<p>        return Authentication.IsSslRequired();</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>\
+They can be used from a view as well to generate links with complete
+Urls,</p>
+
+<p>&lt;a href=&lsquo;&lt;% =Url.Action(&ldquo;PasswordChange&rdquo;, &ldquo;Accounts&rdquo;).ToSslUrl()
+%>&rsquo;>Change your password&lt;/a></p>
+
+<p><strong>Gettting an absolute URL within a controller</strong></p>
+
+<p>For some scenarios, we might need to redirect the user from a secure
+route to a regular route or viceversa within a controller. In those
+cases, we should have a way to generate a complete URL from a controller
+method and used it later with a RedirectResult (This is also useful when
+you want to include a link to a web page in an email sent by your
+website).</p>
+
+<p>For instance, it would be very helpful to have something like this,</p>
+
+<p>return new RedirectResult(this.FullActionUrl&lt;MyController>(c =>
+c.SecureMethod(), &ldquo;https&rdquo;));</p>
+
+<p>Where &ldquo;FullActionUrl&rdquo; is an extension method for the Controller class.
+In addition to the controller method we want to use to get the absolute
+route (&ldquo;SecureMethod&rdquo;), we can also specify the scheme to be used with
+that route.</p>
+
+<p>The code for doing that is shown bellow (They are part of the .NETfx
+project,
+<a href="http://code.google.com/p/netfx/">http://code.google.com/p/netfx/</a>)</p>
+
+<p>/// &lt;summary></p>
+
+<p>/// Returns the full URL for performing an invocation to an action based</p>
+
+<p>/// on an expression representing an invocation to a controller method</p>
+
+<p>/// that may include arguments.</p>
+
+<p>/// &lt;/summary></p>
+
+<p>/// &lt;typeparam name=&ldquo;T&rdquo;>Type of the controller to call to. Can be
+omitted as it can be inferred from the action type.&lt;/typeparam></p>
+
+<p>/// &lt;param name=&ldquo;controller&rdquo;>The controller performing the
+call.&lt;/param></p>
+
+<p>/// &lt;param name=&ldquo;action&rdquo;>The action containing the call.&lt;/param></p>
+
+<p>public static string FullActionUrl&lt;T>(this Controller controller,
+Expression&lt;Action&lt;T>> action, string scheme)</p>
+
+<p>    where T : Controller</p>
+
+<p>{</p>
+
+<p>    string host = controller.HttpContext.Request.Url.Authority;</p>
+
+<p>    string virtualPath = ActionUrl(controller, action);</p>
+
+<p> </p>
+
+<p>    return string.Format(&ldquo;{0}://{1}{2}&rdquo;, scheme, host, virtualPath);</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>/// &lt;summary></p>
+
+<p>/// Returns the URL for performing an invokation to an action based</p>
+
+<p>/// on an expression representing an invocation to a controller method</p>
+
+<p>/// that may include arguments.</p>
+
+<p>/// &lt;/summary></p>
+
+<p>/// &lt;typeparam name=&ldquo;T&rdquo;>Type of the controller to call to. Can be
+omitted as it can be inferred from the action type.&lt;/typeparam></p>
+
+<p>/// &lt;param name=&ldquo;controller&rdquo;>The controller performing the
+call.&lt;/param></p>
+
+<p>/// &lt;param name=&ldquo;action&rdquo;>The action containing the call.&lt;/param></p>
+
+<p>public static string ActionUrl&lt;T>(this ControllerBase controller,
+Expression&lt;Action&lt;T>> action)</p>
+
+<p>    where T : Controller</p>
+
+<p>{</p>
+
+<p>    var call = ControllerExpression.GetMethodCall&lt;T>(action);</p>
+
+<p> </p>
+
+<p>    string actionName = call.Method.Name;</p>
+
+<p>    string controllerName =
+ControllerExpression.GetControllerName&lt;T>();</p>
+
+<p> </p>
+
+<p>    var values = LinkBuilder.BuildParameterValuesFromExpression(call);</p>
+
+<p>    values.Add(&ldquo;action&rdquo;, actionName);</p>
+
+<p>    values.Add(&ldquo;controller&rdquo;, controllerName);</p>
+
+<p> </p>
+
+<p>    var vpd =
+RouteTable.Routes.GetVirtualPath(controller.ControllerContext, values);</p>
+
+<p>    string target = null;</p>
+
+<p>    if (vpd != null)</p>
+
+<p>    {</p>
+
+<p>        target = vpd.VirtualPath;</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    return target;</p>
+
+<p>}</p>
+
+<p>The complete code is available to download from
+<a href="/images/legacy/MVC.SSL.zip">here</a>. </p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Implementing an identity provider and relying party with Zermatt and ASP.NET MVC]]></title>
+    <link href="http://cibrax.me/blog/2008/09/01/implementing-an-identity-provider-and-relying-party-with-zermatt-and-asp-net-mvc/"/>
+    <updated>2008-09-01T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2008/09/01/implementing-an-identity-provider-and-relying-party-with-zermatt-and-asp-net-mvc</id>
+    <content type="html"><![CDATA[<p>Zermatt is the framework recently released by Microsoft to develop
+claim-aware applications. You can find some announcements
+<a href="http://blogs.msdn.com/vbertocci/archive/2008/07/09/announcing-the-beta-release-of-zermatt-developer-identity-framework.aspx">here</a>
+and
+<a href="http://www.leastprivilege.com/TryQuotZermattquotAndGiveFeedback.aspx">here</a>.</p>
+
+<p>This framework supports the WS-Federation active and passive profiles.
+This last one was initially designed with an unique purpose in mind,
+allow the integration of &ldquo;dumb clients&rdquo; into the <a href="http://en.wikipedia.org/wiki/Identity_Metasystem">identity
+metasystem</a>. As &ldquo;dumb
+clients&rdquo;, I am talking about clients like web browsers that do not have
+the ability to handle cryptographic material.</p>
+
+<p>All the magic is done through some consecutive Http redirects, and today
+we will see how develop an identity provider and a relying party web
+(with ASP.NET MVC) that are involved in the whole process.</p>
+
+<p>The identity provider is based on the quickstart that is automatically
+generated in Visual Studio when you create a new MVC web application.
+This quickstart uses FormsAuthentication to authenticate the application
+users and also provides an Account controller (that internally uses
+ASP.NET Membership) to manage all those users. In order to integrate
+Zermatt in this application, I added a new controller STSController that
+knows to process messages for getting issue tokens with the user&rsquo;s
+claims.</p>
+
+<p><img src="/images/legacy/Zermatt-MVC.gif" alt="" /></p>
+
+<p>For the relying party, Zermatt provides some web controls to
+authenticate the user against the identity provider using the passive
+profile. Unfortunately, for the simple fact that ASP.NET MVC does not
+support controls with view state, we can not use them here. As
+workaround, I created a couple of extensions methods that generate the
+Urls for sending the corresponding messages to the identity provider
+(Login and Logout).</p>
+
+<p>public static class LoginUrlExtensions</p>
+
+<p>{</p>
+
+<p>   public static string LoginUrl(this UrlHelper helper, string
+actionName, string controllerName, string stsUrl)</p>
+
+<p>   {</p>
+
+<p>       string host =
+helper.ViewContext.HttpContext.Request.Url.Authority;</p>
+
+<p>       string schema =
+helper.ViewContext.HttpContext.Request.Url.Scheme;</p>
+
+<p> </p>
+
+<p>       string realm = string.Format(&ldquo;{0}://{1}&rdquo;, schema, host);</p>
+
+<p>       string reply = helper.Action(actionName,
+controllerName).Substring(1);</p>
+
+<p> </p>
+
+<p>       return
+string.Format(&ldquo;{0}?wa=wsignin1.0&amp;wtrealm={1}&amp;wreply={2}&amp;wctx=rm=0&amp;id=FederatedPassiveSignIn1&amp;wct={3}&rdquo;,</p>
+
+<p>          stsUrl, realm, reply, XmlConvert.ToString(DateTime.Now));</p>
+
+<p>   }</p>
+
+<p> </p>
+
+<p>   public static string LogoutUrl(this UrlHelper helper, string
+actionName, string controllerName, string stsUrl)</p>
+
+<p>   {</p>
+
+<p>       string host =
+helper.ViewContext.HttpContext.Request.Url.Authority;</p>
+
+<p>       string schema =
+helper.ViewContext.HttpContext.Request.Url.Scheme;</p>
+
+<p> </p>
+
+<p>       string realm = string.Format(&ldquo;{0}://{1}&rdquo;, schema, host);</p>
+
+<p>       string reply = string.Format(&ldquo;{0}{1}&rdquo;, realm,
+helper.Action(actionName, controllerName));</p>
+
+<p> </p>
+
+<p>       return string.Format(&ldquo;{0}?wa=wsignout1.0&amp;wreply={1}&rdquo;, stsUrl,
+reply);</p>
+
+<p>   }</p>
+
+<p>}</p>
+
+<p>The &ldquo;actionName&rdquo; and &ldquo;controllerName&rdquo; are just used to generate the
+reply address where the user must be redirect after being authenticated
+in the identity provider. These extension methods can be used in the
+view as follow,</p>
+
+<p>&lt;a href=&ldquo;&lt;%=Url.LoginUrl("Login&rdquo;, &ldquo;Home&rdquo;,
+&ldquo;localhost://STS&rdquo;)%>&ldquo;>Login&lt;/a></p>
+
+<p>We also need a method in the relying party to parse the RRST message and
+generate a cookie with the user credentials and claims.</p>
+
+<p> </p>
+
+<p>public interface IFederatedAuthentication</p>
+
+<p>{</p>
+
+<p>   IClaimsPrincipal Authenticate();</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public class FederatedAuthentication : IFederatedAuthentication</p>
+
+<p>{</p>
+
+<p>     private string logoutUrl;</p>
+
+<p> </p>
+
+<p>     public FederatedAuthentication(string logoutUrl)</p>
+
+<p>     {</p>
+
+<p>         this.logoutUrl = logoutUrl;</p>
+
+<p>     }</p>
+
+<p> </p>
+
+<p>     public IClaimsPrincipal Authenticate()</p>
+
+<p>     {</p>
+
+<p>         string securityTokenXml =
+FederatedAuthenticationModule.Current.GetXmlTokenFromPassiveSignInResponse(System.Web.HttpContext.Current.Request,
+null);</p>
+
+<p> </p>
+
+<p>         FederatedAuthenticationModule current =
+FederatedAuthenticationModule.Current;</p>
+
+<p> </p>
+
+<p>         SecurityToken token = null;</p>
+
+<p>         IClaimsPrincipal authContext =
+current.AuthenticateUser(securityTokenXml, out token);</p>
+
+<p> </p>
+
+<p>         TicketGenerationContext context = new
+TicketGenerationContext(authContext, false, logoutUrl,
+typeof(SignInControl).Name);</p>
+
+<p>         current.IssueTicket(context);</p>
+
+<p> </p>
+
+<p>         return authContext;</p>
+
+<p>     }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>As you can see in the code above, the Zermatt module
+(FederatedAuthenticationModule) that parses the response message is tied
+to the Request object, something that we do not have direct access from
+a MVC controller (Well, it is bad practice if we want to test our code).
+That&rsquo;s the reason I decided to put all that code in a pluggin that can
+be injected later in the controller.</p>
+
+<p>The complete solution is available to download from <a href="/images/legacy/MVC.Zermatt.zip">this
+location</a>. Any feedback
+would be great!!. Enjoy!!.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Dependency injection made easy for the ASP.NET MVC]]></title>
+    <link href="http://cibrax.me/blog/2008/08/21/dependency-injection-made-easy-for-the-asp-net-mvc/"/>
+    <updated>2008-08-21T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2008/08/21/dependency-injection-made-easy-for-the-asp-net-mvc</id>
+    <content type="html"><![CDATA[<p>I decided to write this post to show how cool is Autofac for doing
+dependency injection in the ASP.NET MVC framework. Autofac, for me the
+Moq stepbrother  in the dependency injection arena because of its
+very-easy-to-use fluent interface and nice support of lambda
+expressions, comes with a built-in ASP.NET module to automatically
+intercept the creation of the controllers and pass the required
+dependencies to them, the only thing a programmer has to do is to
+provide instances of those dependencies or expressions to build them.</p>
+
+<p>Well, it is time to see Autofac in action with a practical example. If
+you have the chance to use the MVC preview 4, you may notice that it
+comes with a new controller &ldquo;Account&rdquo; to manage the website membership.
+This controller receives two dependencies in the constructor,</p>
+
+<p>public AccountController(IFormsAuthentication formsAuth,
+MembershipProvider provider)</p>
+
+<p>{</p>
+
+<p>  FormsAuth = formsAuth ?? new FormsAuthenticationWrapper();</p>
+
+<p>  Provider = provider ?? Membership.Provider;</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public IFormsAuthentication FormsAuth</p>
+
+<p>{</p>
+
+<p>  get;</p>
+
+<p>  private set;</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public MembershipProvider Provider</p>
+
+<p>{</p>
+
+<p>  get;</p>
+
+<p>  private set;</p>
+
+<p>}</p>
+
+<p>If those dependencies are not provided, it creates a default
+implementation of &ldquo;FormsAuthenticationWrapper&rdquo; and use the Membership
+singleton instance. Ok, let&rsquo;s make some minor changes to this controller
+so we always assume that those instances must be provided by the caller
+code (It will be actually responsibility of the DI container).</p>
+
+<p>public AccountController(IFormsAuthentication formsAuth,
+MembershipProvider provider)</p>
+
+<p>{</p>
+
+<p>  FormsAuth = formsAuth;</p>
+
+<p>  Provider = provider;</p>
+
+<p>}</p>
+
+<p>We now have to initialize a container to instruct Autofac about how to
+initialize or get instances of those classes. This can be done in the
+global.asax file,</p>
+
+<p>static IContainerProvider containerProvider;</p>
+
+<p> </p>
+
+<p>protected void Application_Start()</p>
+
+<p>{</p>
+
+<p>   RegisterRoutes(RouteTable.Routes);</p>
+
+<p> </p>
+
+<p>   var builder = new ContainerBuilder();</p>
+
+<p> </p>
+
+<p>   // Automatically register all controllers in the current assembly.</p>
+
+<p>   builder.RegisterModule(new
+AutofacControllerModule(Assembly.GetExecutingAssembly()));</p>
+
+<p> </p>
+
+<p>   builder.Register&lt;MembershipProvider>(container =>
+Membership.Provider).ExternallyOwned();</p>
+
+<p>  
+builder.Register&lt;FormsAuthenticationWrapper>().As&lt;IFormsAuthentication>().FactoryScoped();</p>
+
+<p> </p>
+
+<p>   containerProvider = new ContainerProvider(builder.Build());</p>
+
+<p> </p>
+
+<p>   // Hook MVC factory.</p>
+
+<p>   ControllerBuilder.Current.SetControllerFactory(new
+AutofacControllerFactory(containerProvider));</p>
+
+<p>}</p>
+
+<p>There are some lines in the code above that deserve special attention,
+so let&rsquo;s discuss them in details:</p>
+
+<ol>
+<li></li>
+</ol>
+
+
+<p>// Automatically register all controllers in the current assembly.</p>
+
+<p>builder.RegisterModule(new
+AutofacControllerModule(Assembly.GetExecutingAssembly()));</p>
+
+<p>This line basically discovers and registers all the controllers within
+the current assembly (The website itself) into the DI container.</p>
+
+<ol>
+<li></li>
+</ol>
+
+
+<p>builder.Register&lt;MembershipProvider>(container =>
+Membership.Provider).ExternallyOwned();</p>
+
+<p>builder.Register&lt;FormsAuthenticationWrapper>().As&lt;IFormsAuthentication>().FactoryScoped();</p>
+
+<p>The dependencies are registered in the container builder (The one that
+later knows how to create instances of the dependencies). The Register
+method optionally receives an lambda expression that will be used later
+to create or get the dependency instance, it could be considered a sort
+of lazy class construction. The container can also be used in the
+expressions to resolve other dependencies, for example,</p>
+
+<p>builder.Register&lt;MessagingService>(c => new
+MessagingService(c.Resolve&lt;IMessageRepository>).As&lt;IMessagingService>();</p>
+
+<p>Another important aspect in the initialization is the scope, which
+basically controls the dependency lifetime. In the code above I used two
+scopes, ExternallyOwned (The instance is managed by the application) and
+FactoryScoped (A new instance is created for every dependency
+resolution, very useful for instances that must be used and disposed
+just after, like the DataContext in Linq to SQL). Other possible scopes
+could be ContainerScoped (An instance per container) or Singleton (An
+instance shared between all containers).</p>
+
+<ol>
+<li></li>
+</ol>
+
+
+<p>containerProvider = new ContainerProvider(builder.Build());</p>
+
+<p> </p>
+
+<p>// Hook MVC factory.</p>
+
+<p>ControllerBuilder.Current.SetControllerFactory(new
+AutofacControllerFactory(containerProvider));</p>
+
+<p>The container provider is created, and the controller factory
+implementation provided by Autofac is set for the current application.</p>
+
+<p>As you can see, most of the plumbing code is already provided by
+Autofac, just a couple of lines were needed to start using DI in the MVC
+framework.</p>
+
+<p>The code sample is available to <a href="/images/legacy/MvcDI.zip">download
+here</a></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Combining JQuery Validation with ASP.NET MVC]]></title>
+    <link href="http://cibrax.me/blog/2008/08/01/combining-jquery-validation-with-asp-net-mvc/"/>
+    <updated>2008-08-01T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2008/08/01/combining-jquery-validation-with-asp-net-mvc</id>
+    <content type="html"><![CDATA[<p>One of the most nicest things about JQuery &ndash; in addition to the powerful
+mechanism it provides to manipulate the HTML DOM &ndash; is the great number
+of very useful plugins available out there.</p>
+
+<p><a href="http://bassistance.de/jquery-plugins/jquery-plugin-validation/">JQuery
+Validation</a>
+is one of my favorites, and today we will see how this plugin can be
+used with the MVC framework to validate all the inputs in a form before
+it is submitted to the controller.</p>
+
+<p>This plugin supports the concept of &ldquo;validation rule&rdquo;, a validation that
+has to be performed to an input field. For instance, &ldquo;The field is
+required&rdquo;, &ldquo;The field should have at least N characters&rdquo;, or &ldquo;This field
+has to be a valid email&rdquo;, many of them are the same you can find in the
+ASP.NET validators. (These validators do not work with the MVC framework
+because they are tied to the ASP.NET Viewstate). Of course, new rules
+can also be created for performing custom validations specific to an
+application, some examples of this are also available in the <a href="http://bassistance.de/jquery-plugins/jquery-plugin-validation/">plugin&rsquo;s
+website</a>.</p>
+
+<p>A rule can be applied to an input field in two ways:</p>
+
+<p>​1. Declarative, the rule is specified in the input field by means of
+the class attribute:</p>
+
+<p>&lt;input name=&ldquo;email&rdquo; id=&ldquo;email&rdquo; maxlength=&ldquo;60&rdquo; class=&ldquo;required email&rdquo;
+type=&ldquo;text&rdquo;/></p>
+
+<p>As you can see, two rules were specified in the class attribute,
+&ldquo;Required&rdquo; and &ldquo;Email&rdquo;, which means that two validations have to be
+performed for this field. Many rules can be applied to the same field,
+they only have to be separated by an space.</p>
+
+<p>​2. Imperative in code, the rule is specified in an script:</p>
+
+<p>&lt;script type=&ldquo;text/javascript&rdquo;></p>
+
+<p>\$(document).ready(function(){</p>
+
+<p>  \$(&ldquo;#form-sign-up&rdquo;).validate( {</p>
+
+<p>    rules: {</p>
+
+<p>      email: {</p>
+
+<p>        required: true,</p>
+
+<p>        email: true</p>
+
+<p>    },</p>
+
+<p>    messages: {</p>
+
+<p>      email: {</p>
+
+<p>        required: &ldquo;Please provide an email&rdquo;,</p>
+
+<p>        email: &ldquo;Please provide a valid email&rdquo;</p>
+
+<p>     } });</p>
+
+<p>});</p>
+
+<p>&lt;/script></p>
+
+<p>The validation was attached to the input field &ldquo;email&rdquo; in the form
+&ldquo;form-sign-up&rdquo;. The message displayed when a validation fails for an
+specific field can also be customized using the &ldquo;messages&rdquo; section in
+the script. (This is optional, the plugin already comes with a set of
+pre-defined error messages)</p>
+
+<p>And finally, one of the most interesting validation rules you can find
+there is &ldquo;remote&rdquo;, which performs a remote validation using an Ajax
+endpoint. At this point we can use an MVC controller method to perform
+an specific validation, for instance to see if a login name is still
+available to be used.</p>
+
+<p>&lt;script type=&ldquo;text/javascript&rdquo;></p>
+
+<p>\$(document).ready(function(){</p>
+
+<p>\$(&ldquo;#form-sign-up&rdquo;).validate( {</p>
+
+<p>  rules: {</p>
+
+<p>    login: {</p>
+
+<p>      required: true,</p>
+
+<p>      remote: &lsquo;&lt;%=Url.Action(&ldquo;IsLoginAvailable&rdquo;, &ldquo;Accounts&rdquo;) %>&rsquo;</p>
+
+<p>   }</p>
+
+<p>  },</p>
+
+<p>  messages: {</p>
+
+<p>    login: {</p>
+
+<p>     required: &ldquo;Please provide an alias&rdquo;,</p>
+
+<p>     remote: jQuery.format(&ldquo;{0} is already in use&rdquo;)</p>
+
+<p>   }</p>
+
+<p>  } });</p>
+
+<p>});</p>
+
+<p>&lt;/script></p>
+
+<p>The only requirement for the controller is that it must be return Json
+with the result of the validation. This can be easily done with MVC,</p>
+
+<p>public JsonResult IsLoginAvailable(string login)</p>
+
+<p>{</p>
+
+<p>    //TODO: Do the validation</p>
+
+<p>    JsonResult result = new JsonResult();</p>
+
+<p>    if (login == &ldquo;cibrax&rdquo;)</p>
+
+<p>      result.Data = false;</p>
+
+<p>    else</p>
+
+<p>      result.Data = true;</p>
+
+<p> </p>
+
+<p>    return result;</p>
+
+<p>}</p>
+
+<p>In the example above, if &ldquo;cibrax&rdquo; is entered as login name, the
+validation will fail and the user will see an error message.</p>
+
+<p><img src="/images/legacy/MVC_Validation.jpg" alt="" /></p>
+
+<p>The styles for the error messages can also be customized with the
+following rules,</p>
+
+<p>label.error {</p>
+
+<p>display: block;</p>
+
+<p>color: red;</p>
+
+<p>font-style: italic;</p>
+
+<p>font-weight: normal;</p>
+
+<p>}</p>
+
+<p>input.error {</p>
+
+<p>border: 2px solid red;</p>
+
+<p>}</p>
+
+<p>td.field input.error, td.field select.error, tr.errorRow td.field
+input,tr.errorRow td.field select {</p>
+
+<p>border: 2px solid red;</p>
+
+<p>background-color: #FFFFD5;</p>
+
+<p>margin: 0px;</p>
+
+<p>color: red;</p>
+
+<p>}</p>
+
+<p>As we have discussed here, JQuery validation is a great tool that we all
+should consider at the moment to validate data in the ASP.NET MVC
+framework.</p>
+
+<p>A complete example with different validations can be <a href="/images/legacy/Mvc.Validation.zip">downloaded from
+this location</a>.</p>
+]]></content>
+  </entry>
+  
+</feed>

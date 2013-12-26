@@ -1,0 +1,417 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Implementing synchronous MediaTypeFormatters in ASP.NET Web API - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="One of main characteristics of MediaTypeFormatter’s in ASP.NET Web API
+is that they leverage the Task Parallel Library (TPL) for reading or
+writing &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2012/07/09/implementing-synchronous-mediatypeformatters-in-asp-net-web-api">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Implementing Synchronous MediaTypeFormatters in ASP.NET Web API</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-07-09T00:00:00-03:00" pubdate data-updated="true">Jul 9<span>th</span>, 2012</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>One of main characteristics of MediaTypeFormatter’s in ASP.NET Web API
+is that they leverage the Task Parallel Library (TPL) for reading or
+writing an model into an stream. When you derive your class from the
+base class MediaTypeFormatter, you have to either implement the
+WriteToStreamAsync or ReadFromStreamAsync methods for writing or reading
+a model from a stream respectively.</p>
+
+<p>These two methods return a Task, which internally does all the
+serialization work, as it is illustrated bellow.</p>
+
+<p><del> {.alt}
+public abstract class MediaTypeFormatter
+</del></p>
+
+<pre><code>{
+</code></pre>
+
+<p><del> {.alt}
+  public virtual Task WriteToStreamAsync(Type type, object value,
+</del></p>
+
+<pre><code>     Stream writeStream, HttpContent content, TransportContext transportContext);
+</code></pre>
+
+<p><del> {.alt}
+  public virtual Task<object> ReadFromStreamAsync(Type type, Stream readStream,
+</del></p>
+
+<pre><code>     HttpContent content, IFormatterLogger formatterLogger);
+</code></pre>
+
+<p><del> {.alt}
+}
+</del></p>
+
+<pre><code> 
+</code></pre>
+
+<p>However, most of the times, serialization is a safe operation that can
+be done synchronously. In fact, many of the serializer classes you will
+find in the .NET framework only provide sync methods. So the question
+is, how you can transform that synchronous work into a Task ?.</p>
+
+<p>Creating a new task using the method Task.Factory.StartNew for doing all
+the serialization work would be probably the typical answer. That would
+work, as a new task is going to be scheduled. However, that might
+involve some unnecessary context switches, which are out of our control
+and might be affect performance on server code specially.  </p>
+
+<p>If you take a look at the source code of the MediaTypeFormatters shipped
+as part of the framework, you will notice that they actually using
+another pattern, which uses a TaskCompletionSource class.</p>
+
+<p><del> {.alt}
+public Task WriteToStreamAsync(Type type, object value, Stream writeStream,
+</del></p>
+
+<pre><code>HttpContent content, TransportContext transportContext)
+</code></pre>
+
+<p><del> {.alt}
+{
+</del></p>
+
+<pre><code> 
+</code></pre>
+
+<p><del> {.alt}
+  var tsc = new TaskCompletionSource<AsyncVoid>();
+</del></p>
+
+<pre><code>  tsc.SetResult(default(AsyncVoid));
+</code></pre>
+
+<p><del> {.alt}
+ 
+</del></p>
+
+<pre><code>  //Do all the serialization work here synchronously
+</code></pre>
+
+<p><del> {.alt}
+ 
+</del></p>
+
+<pre><code>  return tsc.Task;
+</code></pre>
+
+<p><del> {.alt}
+}
+</del></p>
+
+<pre><code> 
+</code></pre>
+
+<p><del> {.alt}
+/// <summary>
+</del></p>
+
+<pre><code>/// Used as the T in a "conversion" of a Task into a Task{T}
+</code></pre>
+
+<p><del> {.alt}
+/// </summary>
+</del></p>
+
+<pre><code>private struct AsyncVoid
+</code></pre>
+
+<p><del> {.alt}
+{
+</del></p>
+
+<pre><code>}
+</code></pre>
+
+<p>They are basically doing all the serialization work synchronously and
+using a TaskCompletionSource for returning a task already done.</p>
+
+<p>To conclude this post, this is another approach you might want to
+consider when using serializers that are not compatible with an async
+model.</p>
+
+<p><strong>Update:</strong> Henrik Nielsen from the ASP.NET team pointed out the
+existence of a built-in media type formatter for writing sync
+formatters. BufferedMediaTypeFormatter
+<a href="http://t.co/FxOfeI5x">http://t.co/FxOfeI5x</a></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-07-09T00:00:00-03:00" pubdate data-updated="true">Jul 9<span>th</span>, 2012</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2012/07/09/implementing-synchronous-mediatypeformatters-in-asp-net-web-api/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2012/07/09/implementing-synchronous-mediatypeformatters-in-asp-net-web-api/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2012/06/06/html-5-para-dispositivos-mobiles-proyecto-liike/" title="Previous Post: HTML 5 para dispositivos mobiles – Proyecto Liike">&laquo; HTML 5 para dispositivos mobiles – Proyecto Liike</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2012/08/10/binding-form-data-in-asp-net-web-api/" title="Next Post: Binding form data in ASP.NET Web API">Binding form data in ASP.NET Web API &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2012/07/09/implementing-synchronous-mediatypeformatters-in-asp-net-web-api/';
+        var disqus_url = 'http://cibrax.me/blog/2012/07/09/implementing-synchronous-mediatypeformatters-in-asp-net-web-api/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

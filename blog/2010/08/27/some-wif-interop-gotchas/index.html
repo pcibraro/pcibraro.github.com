@@ -1,0 +1,384 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Some WIF interop gotchas - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="WIF is an excellent framework that allows you to develop an STS in just
+a few minutes if you know exactly what you are doing of course :). In my
+role &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2010/08/27/some-wif-interop-gotchas">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Some WIF Interop Gotchas</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-08-27T00:00:00-03:00" pubdate data-updated="true">Aug 27<span>th</span>, 2010</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>WIF is an excellent framework that allows you to develop an STS in just
+a few minutes if you know exactly what you are doing of course :). In my
+role as consultant and architect in Tellago, I went through several
+projects in which some level of customization was required at wire level
+to accomplish some interoperability between a STS built with WIF and
+existing federation solutions like ADFS 1.x and OpenSSO.</p>
+
+<p>The idea of this post is to show some of extensibility points that you
+will find in WIF to customize the WS-Trust messages, and issued tokens.</p>
+
+<p><strong>1. Making WIF to speak WS-Trust Feb 2005</strong></p>
+
+<p>WIF uses by default WS-Trust 1.3, which means that all the generated
+WS-Trust messages will use that spec unless you specify a different one.
+ADFS 1.x and OpenSSO both uses WS-Trust Feb 2005
+(<a href="http://schemas.xmlsoap.org/ws/2005/02/trust">http://schemas.xmlsoap.org/ws/2005/02/trust</a>)
+for the passive profile to support single sign on over the web.
+Therefore, if you want to generate WS-Trust messages that follow that
+spec version in your WIF passive STS, you need to modify a little bit
+the code you use for processing the RST messages.</p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+class FederatedPassiveSecurityTokenServiceOperations{    public static void ProcessRequest(HttpRequest request, IPrincipal principal,         SecurityTokenService sts, HttpResponse response,         WSFederationSerializer federationSerializer);    public static SignInResponseMessage ProcessSignInRequest(SignInRequestMessage requestMessage,         IPrincipal principal, SecurityTokenService sts,         WSFederationSerializer federationSerializer);}
+</del></p>
+
+<p>\</p>
+
+<p>The methods ProcessRequest and ProcessSignRequest in the
+FederatedPassiveSecurityTokenServiceOperations class both support an
+additional overload for passing the WS-Trust version
+(WSFederationSerializer instance).</p>
+
+<p>You can force another WS-Trust version by passing the right serializer
+instance. For example, the following code uses the WS-Trust Feb 2005
+specification.</p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+SignInResponseMessage responseMessage = FederatedPassiveSecurityTokenServiceOperations.ProcessSignInRequest(    requestMessage, User, sts,         new WSFederationSerializer(new WSTrustFeb2005RequestSerializer(),             new WSTrustFeb2005ResponseSerializer()));
+</del></p>
+
+<p>\</p>
+
+<p><strong>2. Changing the SAML token’s signature algorithms</strong></p>
+
+<p>WIF uses by default a combination of RSA and SHA 256 for generating the
+SAML signature. You can notice this in the generated SAML token,</p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+&lt;saml:Attribute AttributeName=&ldquo;name&rdquo; AttributeNamespace=&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/05/identity/claims">http://schemas.xmlsoap.org/ws/2005/05/identity/claims</a>&rdquo;>    &lt;saml:AttributeValue>MyName&lt;/saml:AttributeValue>  &lt;/saml:Attribute>&lt;/saml:AttributeStatement>&lt;ds:Signature xmlns:ds=&ldquo;<a href="http://www.w3.org/2000/09/xmldsig#">http://www.w3.org/2000/09/xmldsig#</a>&rdquo;>  &lt;ds:SignedInfo>    &lt;ds:CanonicalizationMethod Algorithm=&ldquo;<a href="http://www.w3.org/2001/10/xml-exc-c14n#">http://www.w3.org/2001/10/xml-exc-c14n#</a>&rdquo; />    &lt;ds:SignatureMethod Algorithm=&ldquo;<a href="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256">http://www.w3.org/2001/04/xmldsig-more#rsa-sha256</a>&rdquo; />    &lt;ds:Reference URI=&ldquo;#_cecf3c23-824e-4064-846c-b90c03d29700&rdquo;>      &lt;ds:Transforms>        &lt;ds:Transform Algorithm=&ldquo;<a href="http://www.w3.org/2000/09/xmldsig#enveloped-signature">http://www.w3.org/2000/09/xmldsig#enveloped-signature</a>&rdquo; />        &lt;ds:Transform Algorithm=&ldquo;<a href="http://www.w3.org/2001/10/xml-exc-c14n#">http://www.w3.org/2001/10/xml-exc-c14n#</a>&rdquo; />      &lt;/ds:Transforms>      &lt;ds:DigestMethod Algorithm=&ldquo;<a href="http://www.w3.org/2001/04/xmlenc#sha256">http://www.w3.org/2001/04/xmlenc#sha256</a>&rdquo; />      &lt;ds:DigestValue>1flG08Axm71C0isY2wLR0C9jqgfIebNoG2nlIO+jO+s=&lt;/ds:DigestValue>    &lt;/ds:Reference> &lt;/ds:SignedInfo>
+</del></p>
+
+<p>\
+ADFS 1.x and OpenSSO use a combination of RSA and SHA, so that’s also
+something else you need to customize. The “X509SigningCredentials”
+instance that you pass in the constructor of the Secure token service
+configuration also contains an overload to change the signature
+algorithm. The following code creates a new instance of
+“X509SigningCredentials” that uses SHA rather than SHA 256.</p>
+
+<p> </p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+new X509SigningCredentials(    CertificateUtil.GetCertificate(StoreName.TrustedPeople,         StoreLocation.LocalMachine,         &ldquo;CN=Test&rdquo;),     &ldquo;<a href="http://www.w3.org/2000/09/xmldsig#rsa-sha1">http://www.w3.org/2000/09/xmldsig#rsa-sha1</a>&rdquo;,     &ldquo;<a href="http://www.w3.org/2000/09/xmldsig#sha1">http://www.w3.org/2000/09/xmldsig#sha1</a>&rdquo;))
+</del></p>
+
+<p>\</p>
+
+<p><strong>3. Adding an authentication statement to the issued SAML token</strong></p>
+
+<p> </p>
+
+<p>This part is very tricky, as WIF does not add by default an
+authentication statement in the SAML token unless you use an specific
+claim type (NameIdentifier) with some custom properties.</p>
+
+<p> </p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+Claim nameIdentifier = new Claim(System.IdentityModel.Claims.ClaimTypes.NameIdentifier,     &ldquo;<a href="&#109;&#x61;&#x69;&#108;&#116;&#x6f;&#58;&#102;&#x6f;&#111;&#64;&#x74;&#101;&#115;&#116;&#46;&#x63;&#111;&#x6d;">&#102;&#x6f;&#111;&#x40;&#x74;&#101;&#115;&#x74;&#x2e;&#x63;&#111;&#109;</a>&rdquo;);nameIdentifier.Properties[&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/05/identity/claimproperties/format">http://schemas.xmlsoap.org/ws/2005/05/identity/claimproperties/format</a>&rdquo;]     = &ldquo;<a href="http://schemas.xmlsoap.org/claims/UPN">http://schemas.xmlsoap.org/claims/UPN</a>&rdquo;;outputIdentity.Claims.Add(nameIdentifier);outputIdentity.Claims.Add(new Claim(ClaimTypes.AuthenticationMethod, &ldquo;<a href="http://microsoft/geneva">http://microsoft/geneva</a>&rdquo;));outputIdentity.Claims.Add(new Claim(ClaimTypes.AuthenticationInstant, XmlConvert.ToString(DateTime.Now, XmlDateTimeSerializationMode.Utc)));
+</del></p>
+
+<p>\</p>
+
+<p>The code above will generate an authentication statement like this in
+the SAML token, which is something equivalent to what ADFS 1.x or
+OpenSSO would generate.</p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+&lt;saml:AttributeStatement>  &lt;saml:Subject>    &lt;saml:NameIdentifier Format=&ldquo;<a href="http://schemas.xmlsoap.org/claims/UPN">http://schemas.xmlsoap.org/claims/UPN</a>&rdquo;>        <a href="&#x6d;&#97;&#105;&#108;&#x74;&#x6f;&#58;&#x66;&#111;&#x6f;&#64;&#116;&#101;&#x73;&#x74;&#x2e;&#x63;&#x6f;&#109;">&#x66;&#x6f;&#x6f;&#64;&#116;&#x65;&#x73;&#x74;&#46;&#x63;&#x6f;&#x6d;</a>    &lt;/saml:NameIdentifier>    &lt;saml:SubjectConfirmation>      &lt;saml:ConfirmationMethod>            urn:oasis:names:tc:SAML:1.0:cm:bearer        &lt;/saml:ConfirmationMethod>    &lt;/saml:SubjectConfirmation>  &lt;/saml:Subject>    &lt;/saml:AttributeStatement>
+</del></p>
+
+<p>\</p>
+
+<p> </p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-08-27T00:00:00-03:00" pubdate data-updated="true">Aug 27<span>th</span>, 2010</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2010/08/27/some-wif-interop-gotchas/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2010/08/27/some-wif-interop-gotchas/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2010/08/27/centralizing-federated-services-configuration-with-so-aware/" title="Previous Post: Centralizing Federated Services configuration with SO-Aware">&laquo; Centralizing Federated Services configuration with SO-Aware</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2010/09/01/managing-the-so-aware-repository-with-powershell/" title="Next Post: Managing the SO-Aware Repository with PowerShell">Managing the SO-Aware Repository with PowerShell &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2010/08/27/some-wif-interop-gotchas/';
+        var disqus_url = 'http://cibrax.me/blog/2010/08/27/some-wif-interop-gotchas/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,517 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Loading the WCF configuration from different files on the client side - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="A common problem in WCF that many people face is the impossibility of
+loading the client configuration from different configuration files.
+This is a &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2007/10/19/loading-the-wcf-configuration-from-different-files-on-the-client-side">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Loading the WCF Configuration From Different Files on the Client Side</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-10-19T00:00:00-03:00" pubdate data-updated="true">Oct 19<span>th</span>, 2007</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>A common problem in WCF that many people face is the impossibility of
+loading the client configuration from different configuration files.
+This is a common scenario  when the developer wants to
+deploy some binaries with along with an independent configuration file
+(Which may be in a resource file also) to avoid modifying the main
+configuration file. A weeks ago, I described a easy workaround to use
+the external configuration files through the use of the configSource
+attribute (A mechanism provided by .NET). However, that approach
+requires several configuration files to configure an entire WCF channel,
+at least three files (client section, bindings and behaviors).</p>
+
+<p>Another approach, which is less common and I will describe in this post,
+requires some custom code to extend the ChannelFactory&lt;T> class.</p>
+
+<p>The ChannelFactory&lt;T> provides a virtual method &ldquo;CreateDescription&rdquo;
+that can be overridden to create a ServiceEndpoint.</p>
+
+<p> </p>
+
+<p>//</p>
+
+<p>// Summary:</p>
+
+<p>//    Creates a description of the service endpoint.</p>
+
+<p>//</p>
+
+<p>// Returns:</p>
+
+<p>//    The System.ServiceModel.Description.ServiceEndpoint of the
+service.</p>
+
+<p>//</p>
+
+<p>// Exceptions:</p>
+
+<p>//   System.InvalidOperatorException:</p>
+
+<p>//    The callback contract is null but the service endpoint requires
+one that</p>
+
+<p>//    is non-null.</p>
+
+<p>protected override ServiceEndpoint CreateDescription();</p>
+
+<p>The default implementation of this method basically tries to load
+the endpoint configuration from the default configuration file (The file
+configured for the default AppDomain). So, the workaround here is to
+override that method and load the configuration from another file. It
+seems to be pretty easy to do at first glance, but as you will see next,
+it requires a lot of plumbing code to make it work.</p>
+
+<p>The first step is to derive our custom channel class from the
+ChannelFactory&lt;T> class and add an argument in the constructor to
+specify a different configuration file.</p>
+
+<p>/// &lt;summary></p>
+
+<p>/// Custom client channel. Allows to specify a different configuration
+file</p>
+
+<p>/// &lt;/summary></p>
+
+<p>/// &lt;typeparam name=&ldquo;T&rdquo;>&lt;/typeparam></p>
+
+<p>public class CustomClientChannel&lt;T> : ChannelFactory&lt;T></p>
+
+<p>{</p>
+
+<p>  string configurationPath;</p>
+
+<p> </p>
+
+<p>  /// &lt;summary></p>
+
+<p>  /// Constructor</p>
+
+<p>  /// &lt;/summary></p>
+
+<p>  /// &lt;param name=&ldquo;configurationPath&rdquo;>&lt;/param></p>
+
+<p>  public CustomClientChannel(string configurationPath) : base(typeof(T))</p>
+
+<p>  {</p>
+
+<p>    this.configurationPath = configurationPath;</p>
+
+<p>    base.InitializeEndpoint((string)null, null);</p>
+
+<p>  }</p>
+
+<p>As you can see, a call to the method InitialiazeEndpoint of the base
+class is required. That method will automatically call to our
+CreateDescription method to configure the service endpoint.</p>
+
+<p>/// &lt;summary></p>
+
+<p>/// Loads the serviceEndpoint description from the specified
+configuration file</p>
+
+<p>/// &lt;/summary></p>
+
+<p>/// &lt;returns>&lt;/returns></p>
+
+<p>protected override ServiceEndpoint CreateDescription()</p>
+
+<p>{</p>
+
+<p>   ServiceEndpoint serviceEndpoint = base.CreateDescription();</p>
+
+<p> </p>
+
+<p>   ExeConfigurationFileMap map = new ExeConfigurationFileMap();</p>
+
+<p>   map.ExeConfigFilename = this.configurationPath;</p>
+
+<p> </p>
+
+<p>   Configuration config =
+ConfigurationManager.OpenMappedExeConfiguration(map,
+ConfigurationUserLevel.None);</p>
+
+<p>   ServiceModelSectionGroup group =
+ServiceModelSectionGroup.GetSectionGroup(config);</p>
+
+<p> </p>
+
+<p>   ChannelEndpointElement selectedEndpoint = null;</p>
+
+<p> </p>
+
+<p>   foreach (ChannelEndpointElement endpoint in group.Client.Endpoints)</p>
+
+<p>   {</p>
+
+<p>      if (endpoint.Contract ==
+serviceEndpoint.Contract.ConfigurationName)</p>
+
+<p>      {</p>
+
+<p>        selectedEndpoint = endpoint;</p>
+
+<p>        break;</p>
+
+<p>      }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    if (selectedEndpoint != null)</p>
+
+<p>    {</p>
+
+<p>      if (serviceEndpoint.Binding == null)</p>
+
+<p>      {</p>
+
+<p>        serviceEndpoint.Binding =
+CreateBinding(selectedEndpoint.Binding, group);</p>
+
+<p>      }</p>
+
+<p> </p>
+
+<p>      if (serviceEndpoint.Address == null)</p>
+
+<p>      {</p>
+
+<p>        serviceEndpoint.Address = new
+EndpointAddress(selectedEndpoint.Address,
+GetIdentity(selectedEndpoint.Identity),
+selectedEndpoint.Headers.Headers);</p>
+
+<p>      }</p>
+
+<p> </p>
+
+<p>      if (serviceEndpoint.Behaviors.Count == 0 &amp;&amp;
+selectedEndpoint.BehaviorConfiguration != null)</p>
+
+<p>      {</p>
+
+<p>        AddBehaviors(selectedEndpoint.BehaviorConfiguration,
+serviceEndpoint, group);</p>
+
+<p>      }</p>
+
+<p> </p>
+
+<p>      serviceEndpoint.Name = selectedEndpoint.Contract;</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    return serviceEndpoint;</p>
+
+<p> </p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>CreateDescription is the core method where we create the service
+endpoint using the configuration file specified in the constructor
+method.</p>
+
+<p>And the last step, is to use our custom channel in the client
+application instead of the base channel provided by WCF.</p>
+
+<p>CustomClientChannel&lt;ICalculator> channel = new
+CustomClientChannel&lt;ICalculator>(&ldquo;OtherConfig.config&rdquo;);</p>
+
+<p>ICalculator client = channel.CreateChannel();</p>
+
+<p>The code below uses the ICalculator contract  that comes with the WCF
+sdk samples.</p>
+
+<p>You can download the <a href="/images/legacy/CustomChannel.zip">complete sample
+here</a></p>
+
+<p> </p>
+
+<p> </p>
+
+<p> </p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-10-19T00:00:00-03:00" pubdate data-updated="true">Oct 19<span>th</span>, 2007</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/wcf/'>WCF</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2007/10/19/loading-the-wcf-configuration-from-different-files-on-the-client-side/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2007/10/19/loading-the-wcf-configuration-from-different-files-on-the-client-side/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2007/10/17/clarius-is-hiring/" title="Previous Post: Clarius is Hiring!!!">&laquo; Clarius is Hiring!!!</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2007/11/22/microsoft-synchronization-framework-and-sse/" title="Next Post: Microsoft Synchronization Framework and SSE">Microsoft Synchronization Framework and SSE &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2007/10/19/loading-the-wcf-configuration-from-different-files-on-the-client-side/';
+        var disqus_url = 'http://cibrax.me/blog/2007/10/19/loading-the-wcf-configuration-from-different-files-on-the-client-side/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

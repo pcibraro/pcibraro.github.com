@@ -1,0 +1,680 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Recommendations to design message contracts - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="These are some useful practices to design message contracts. They are
+based on my experience as developer on different software projects. Do not &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2006/11/29/recommendations-to-design-message-contracts">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Recommendations to Design Message Contracts</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-11-29T00:00:00-03:00" pubdate data-updated="true">Nov 29<span>th</span>, 2006</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>These are some useful practices to design message contracts. They are
+based on my experience as developer on different software projects.</p>
+
+<ol>
+<li>Do not include business behavior on the messages</li>
+<li>Do not use datasets as messages</li>
+<li>Be aware of any extensibility point</li>
+</ol>
+
+
+<h6>Do not include business behavior on the messages</h6>
+
+<p>Always use simple DTO (Data Transfer Object) classes to transfer data
+between the web service and the client.</p>
+
+<p>Here, a DTO is a object that represents the data in a simple format
+whose only purpose is to transfer the data. There is no business logic
+and no database logic in these objects, just data.</p>
+
+<p>These will also map more closely to XML, and so will be likely to be
+compatible between the client and the service.</p>
+
+<p>This allows you to use whatever business-layer or data layer you like
+inside of the service, yet to only present the data itself to the
+clients.</p>
+
+<p>A DTO could contain some serialization logic when the mapping between
+the object state and XML is as not simple as it should be. This logic is
+usually implemented through the IXMLSerializable Interface, which
+provides the methods to serialize and deserialize an object to XML.</p>
+
+<p>I am not saying that a DTO must not contain any method, it actually can
+have some helper methods, but those methods are not going to be used by
+the client application. This is because the client will only receive a
+XML copy of the DTO object, it is not going to receive an instance of
+the DTO implementation class. (For instance, a .NET class).</p>
+
+<p>For example, we can have a method to sum up the total amount of an
+purchase order, this method basically enumerates each item in the order
+and adds the item amount to the total amount.  As I said before, this
+method will only be available on the service side.</p>
+
+<p> </p>
+
+<p>    1 [XmlRoot(&ldquo;Order&rdquo;)]</p>
+
+<p>    2 public class Order</p>
+
+<p>    3 {</p>
+
+<p>    4    private OrderItem[] _items;</p>
+
+<p>    5 </p>
+
+<p>    6    public Order()</p>
+
+<p>    7    {</p>
+
+<p>    8    }</p>
+
+<p>    9 </p>
+
+<p>   10    [XmlArray(&ldquo;Items&rdquo;)]</p>
+
+<p>   11    [XmlArrayItem(&ldquo;Item&rdquo;)]</p>
+
+<p>   12    public OrderItem[] Items</p>
+
+<p>   13    {</p>
+
+<p>   14      get { return _items; }</p>
+
+<p>   15      set { _items = value; }</p>
+
+<p>   16    }</p>
+
+<p>   17 </p>
+
+<p>   18    public decimal GetOrderTotal()</p>
+
+<p>   19    {</p>
+
+<p>   20      decimal total = 0;</p>
+
+<p>   21      foreach (OrderItem item in _items)</p>
+
+<p>   22      {</p>
+
+<p>   23        total += item.Amount;</p>
+
+<p>   24      }</p>
+
+<p>   25 </p>
+
+<p>   26      return total;</p>
+
+<p>   27    }</p>
+
+<p>   28 }</p>
+
+<p>   29 </p>
+
+<p>   30 public class OrderItem</p>
+
+<p>   31 {</p>
+
+<p>   32   private int _id;</p>
+
+<p>   33   private decimal _amount;</p>
+
+<p>   34 </p>
+
+<p>   35   public OrderItem()</p>
+
+<p>   36   {</p>
+
+<p>   37   }</p>
+
+<p>   38 </p>
+
+<p>   39   [XmlAttribute(&ldquo;Id&rdquo;)]</p>
+
+<p>   40   public int Id</p>
+
+<p>   41   {</p>
+
+<p>   42     get { return _id; }</p>
+
+<p>   43     set { _id = value; }</p>
+
+<p>   44   }</p>
+
+<p>   45 </p>
+
+<p>   46   [XmlAttribute(&ldquo;Amount&rdquo;)]</p>
+
+<p>   47   public decimal Amount</p>
+
+<p>   48   {</p>
+
+<p>   49     set { _amount = value; }</p>
+
+<p>   50     get { return _amount; }</p>
+
+<p>   51   }</p>
+
+<p>   52 }</p>
+
+<p>I know, you can modify the auto-generated proxy class on the client
+side( Usually, this class is auto generated by a tool using the
+service&rsquo;s WSDL. .NET and Java provide similar tools to perform this
+task ) to use the DTO implementation class instead of the auto-generated
+messages, but that goes against the interoperability principle of a web
+service. What happens if you need to support a new client platform in
+the future, for instance a PHP or action script client, are you going to
+implement the DTO in those platforms as well ?. Or if you simply change
+something in the message contract, you will have to deploy this
+change on every client application again.</p>
+
+<p>You can have similar problems when you try to expose a business entity
+like an NHibernate entity as a message for a web service. As I described
+before, the client will only receive an entire XML copy of the object
+graph, it is not going to receive an instance of business entity itself
+(And all its methods)</p>
+
+<p>This can be much worse if the design of business entity involves a
+relationship with many tables, since you can practically send a copy of
+entire database to the client application. This kind of class also
+presents serialization problems, they usually expose properties with
+types that can not be easily translated to XML.</p>
+
+<p>In this case, you will need an additional layer to transform or map the
+business objects to DTOs. This could easily be done on the service
+interface layer. The DTOs should not necessarily have the same
+properties or granularity level of the business object. For instance,
+a business entity with the following structure,</p>
+
+<p>    1 public class OrderStatus</p>
+
+<p>    2 {</p>
+
+<p>    3     private string _id;</p>
+
+<p>    4     private string _description;</p>
+
+<p>    5 </p>
+
+<p>    6     public OrderStatus()</p>
+
+<p>    7     {</p>
+
+<p>    8     }</p>
+
+<p>    9 </p>
+
+<p>   10     public string Id</p>
+
+<p>   11     {</p>
+
+<p>   12         get { return _id; }</p>
+
+<p>   13         set { _id = value; }</p>
+
+<p>   14     }</p>
+
+<p>   15 </p>
+
+<p>   16     public string Description</p>
+
+<p>   17     {</p>
+
+<p>   18         get { return _description; }</p>
+
+<p>   19         set { _description = value; }</p>
+
+<p>   20     }</p>
+
+<p>   21 }</p>
+
+<p>   22 </p>
+
+<p>   23 public class Order</p>
+
+<p>   24 {</p>
+
+<p>   25     private List&lt;OrderItem> _items = new List&lt;OrderItem>();</p>
+
+<p>   26     private OrderStatus _status;</p>
+
+<p>   27 </p>
+
+<p>   28     public Order(OrderStatus status)</p>
+
+<p>   29     {</p>
+
+<p>   30         _status = status;</p>
+
+<p>   31     }</p>
+
+<p>   32 </p>
+
+<p>   33     public OrderStatus Status</p>
+
+<p>   34     {</p>
+
+<p>   35         get { return _status; }</p>
+
+<p>   36     }</p>
+
+<p>   37 </p>
+
+<p>   38     public IList&lt;OrderItem> Items</p>
+
+<p>   39     {</p>
+
+<p>   40         get { _items; }</p>
+
+<p>   41     }</p>
+
+<p>   42 }</p>
+
+<p>could be represented in a different way</p>
+
+<p>    1 [XmlRoot(&ldquo;Order&rdquo;)]</p>
+
+<p>    2 public class Order</p>
+
+<p>    3 {</p>
+
+<p>    4     private string _statusId;</p>
+
+<p>    5     private string _statusDescription;</p>
+
+<p>    6     private OrderItem[] _items;</p>
+
+<p>    7 </p>
+
+<p>    8     public Order()</p>
+
+<p>    9     {</p>
+
+<p>   10     }</p>
+
+<p>   11 </p>
+
+<p>   12     [XmlArray(&ldquo;Items&rdquo;)]</p>
+
+<p>   13     [XmlArrayItem(&ldquo;Item&rdquo;)]</p>
+
+<p>   14     public OrderItem[] Items</p>
+
+<p>   15     {</p>
+
+<p>   16         get { return _items; }</p>
+
+<p>   17         set { _items = value; }</p>
+
+<p>   18     }</p>
+
+<p>   19 </p>
+
+<p>   20     [XmlElement(&ldquo;StatusId&rdquo;)]</p>
+
+<p>   21     public string StatusId</p>
+
+<p>   22     {</p>
+
+<p>   23         get { return _statusId; }</p>
+
+<p>   24         set { _statusId = value; }</p>
+
+<p>   25     }</p>
+
+<p>   26 </p>
+
+<p>   27     [XmlElement(&ldquo;StatusDescription&rdquo;)]</p>
+
+<p>   28     public string StatusDescription</p>
+
+<p>   29     {</p>
+
+<p>   30         get { return _statusDescription; }</p>
+
+<p>   31         set { _statusDescription = value; }</p>
+
+<p>   32     }</p>
+
+<p>   33 }</p>
+
+<h4></h4>
+
+<p>Do not use Datasets</p>
+
+<p>Datasets provide a bunch of cool features for data management, such as
+data ordering or data filtering. They are also great to transport data
+between internal application layers.</p>
+
+<p>However, they are an evil when we talk about interoperability with other
+platforms. The XML structure of a dataset is quite complex and really
+hard to represent in other platforms different from .NET. (Without
+mentioning the size of the payload generated after their serialization)</p>
+
+<p>If your service is going to be consumed by different kind of client
+platforms, or that is something certainly unknown, use a DTO instead.</p>
+
+<p>Be aware of any extensibility point</p>
+
+<p>You can not predict offhand any change on the service requirements, but
+you can minimize the risks adding extensibility points to the messages.</p>
+
+<p>For instance, using open XSD schemas or supporting a &ldquo;any
+element/attribute&rdquo; collection.</p>
+
+<p>WCF also supports this concept through the interface
+IExtensibleDataObject.</p>
+
+<p>    1 [DataContract]</p>
+
+<p>    2 public class MyDataContract : IExtensibleDataObject</p>
+
+<p>    3 {</p>
+
+<p>    4     private ExtensionDataObject extensionData;</p>
+
+<p>    5 </p>
+
+<p>    6     public ExtensionDataObject ExtensionData</p>
+
+<p>    7     {</p>
+
+<p>    8         get</p>
+
+<p>    9         {</p>
+
+<p>   10             return this.extensionData;</p>
+
+<p>   11         }</p>
+
+<p>   12 </p>
+
+<p>   13         set</p>
+
+<p>   14         {</p>
+
+<p>   15             this.extensionData = value;</p>
+
+<p>   16         }</p>
+
+<p>   17     }</p>
+
+<p>   18 }</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-11-29T00:00:00-03:00" pubdate data-updated="true">Nov 29<span>th</span>, 2006</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/asp-dot-net/'>ASP.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2006/11/29/recommendations-to-design-message-contracts/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2006/11/29/recommendations-to-design-message-contracts/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2006/11/17/x509-certificates-for-wse-and-wcf-part-2/" title="Previous Post: X509 Certificates for WSE and WCF - Part 2">&laquo; X509 Certificates for WSE and WCF - Part 2</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2006/12/11/service-interface-framework-sif/" title="Next Post: Service Invocation Framework">Service Invocation Framework &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2006/11/29/recommendations-to-design-message-contracts/';
+        var disqus_url = 'http://cibrax.me/blog/2006/11/29/recommendations-to-design-message-contracts/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

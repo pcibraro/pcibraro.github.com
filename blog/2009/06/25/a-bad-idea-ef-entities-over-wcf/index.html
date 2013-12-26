@@ -1,0 +1,374 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>A Bad Idea, EF Entities over WCF - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="Do you want to see something very ugly ?. Try to send a complete EF
+entity directly as a data contract over the wire with WCF, &lt;Order
+xmlns:i=& &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2009/06/25/a-bad-idea-ef-entities-over-wcf">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">A Bad Idea, EF Entities Over WCF</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-06-25T00:00:00-03:00" pubdate data-updated="true">Jun 25<span>th</span>, 2009</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Do you want to see something very ugly ?. Try to send a complete EF
+entity directly as a data contract over the wire with WCF,</p>
+
+<p>&lt;Order
+xmlns:i=&ldquo;<a href="http://www.w3.org/2001/XMLSchema-instance">http://www.w3.org/2001/XMLSchema-instance</a>&rdquo;
+z:Id=&ldquo;i1&rdquo;
+xmlns:z=&ldquo;<a href="http://schemas.microsoft.com/2003/10/Serialization/">http://schemas.microsoft.com/2003/10/Serialization/</a>&rdquo;
+xmlns=&ldquo;<a href="http://schemas.datacontract.org/2004/07/ClassLibrary2">http://schemas.datacontract.org/2004/07/ClassLibrary2</a>&rdquo;>
+\
+  &lt;EntityKey
+xmlns:d2p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data">http://schemas.datacontract.org/2004/07/System.Data</a>&rdquo;
+i:nil=&ldquo;true&rdquo;
+xmlns=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses">http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses</a>&rdquo;
+/> \
+  &lt;Description>My new order&lt;/Description> \
+  &lt;OrderId>1&lt;/OrderId> \
+  &lt;OrderItem> \
+    &lt;OrderItem z:Id=&ldquo;i2&rdquo;> \
+      &lt;EntityKey
+xmlns:d4p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data">http://schemas.datacontract.org/2004/07/System.Data</a>&rdquo;
+i:nil=&ldquo;true&rdquo;
+xmlns=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses">http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses</a>&rdquo;
+/> \
+      &lt;Currency>USD&lt;/Currency> \
+      &lt;Description>item 1&lt;/Description> \
+      &lt;ItemId>1&lt;/ItemId> \
+      &lt;Order z:Ref=&ldquo;i1&rdquo; /> \
+      &lt;OrderReference
+xmlns:d4p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses">http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses</a>&rdquo;>
+\
+        &lt;d4p1:EntityKey
+xmlns:d5p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data">http://schemas.datacontract.org/2004/07/System.Data</a>&rdquo;
+i:nil=&ldquo;true&rdquo; /> \
+      &lt;/OrderReference> \
+      &lt;UnitPrice>10&lt;/UnitPrice> \
+    &lt;/OrderItem> \
+    &lt;OrderItem z:Id=&ldquo;i3&rdquo;> \
+      &lt;EntityKey
+xmlns:d4p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data">http://schemas.datacontract.org/2004/07/System.Data</a>&rdquo;
+i:nil=&ldquo;true&rdquo;
+xmlns=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses">http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses</a>&rdquo;
+/> \
+      &lt;Currency>USD&lt;/Currency> \
+      &lt;Description>item 2&lt;/Description> \
+      &lt;ItemId>2&lt;/ItemId> \
+      &lt;Order z:Ref=&ldquo;i1&rdquo; /> \
+      &lt;OrderReference
+xmlns:d4p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses">http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses</a>&rdquo;>
+\
+        &lt;d4p1:EntityKey
+xmlns:d5p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data">http://schemas.datacontract.org/2004/07/System.Data</a>&rdquo;
+i:nil=&ldquo;true&rdquo; /> \
+      &lt;/OrderReference> \
+      &lt;UnitPrice>145&lt;/UnitPrice> \
+    &lt;/OrderItem> \
+  &lt;/OrderItem> \
+&lt;/Order></p>
+
+<p>That is the result of serializing a complete object graph. I do not know
+what the folks in Microsoft were thinking when they decided to enable a
+feature like this. They made a good work teaching us about how evil
+Datasets were for interoperability with other platforms, and now they
+came up with a solution like this, no way.</p>
+
+<p>I always like the idea of making boundaries explicit, that is the
+approach the WCF team took with the first version of the framework
+(Every data contract should be decorated with DataContract and
+DataMember attributes).  If you break that rule, you will end up with
+things like this.</p>
+
+<p>I know this a solution for people that want to develop things quickly
+with no need to create DTOs, and do all the mapping stuff, but there are
+good tools and frameworks like
+<a href="http://www.codeplex.com/AutoMapper">AutoMapper</a> to help with that. Or
+you can use ADO.NET Data Services today, which is also prepared to
+handle this kind of scenarios, all the transformations between layers
+are made by the framework itself, and still you get a very nice RESTful
+api. We still need some more features in ADO.NET DS to have a more
+complete framework, there is not good support today for injecting
+business logic, <a href="http://weblogs.asp.net/cibrax/archive/2009/06/08/injecting-custom-logic-in-ado-net-data-services.aspx">it can be
+done</a>
+but it is complicated, it looks like the <a href="http://johnpapa.net/silverlight/ado-net-data-services-v1-5-is-on-its-way/">next
+version</a>
+will address that aspect better.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-06-25T00:00:00-03:00" pubdate data-updated="true">Jun 25<span>th</span>, 2009</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2009/06/25/a-bad-idea-ef-entities-over-wcf/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2009/06/25/a-bad-idea-ef-entities-over-wcf/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2009/06/12/tellago-esta-contratando/" title="Previous Post: Tellago esta contratando!!">&laquo; Tellago esta contratando!!</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2009/06/26/disposing-a-wcf-proxy/" title="Next Post: Disposing a WCF Proxy">Disposing a WCF Proxy &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2009/06/25/a-bad-idea-ef-entities-over-wcf/';
+        var disqus_url = 'http://cibrax.me/blog/2009/06/25/a-bad-idea-ef-entities-over-wcf/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

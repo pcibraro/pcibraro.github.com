@@ -1,0 +1,1553 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="Disclaimer: This post only contains personal opinions about this
+subject In the way I see it, REST mainly comes in for two scenarios, when you
+need &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/page/9">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/10/08/asp-net-mvc-wcf-rest-and-data-services-when-to-use-what-for-restful-services/">ASP.NET MVC, WCF REST and Data Services – When to Use What for RESTful Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-10-08T00:00:00-03:00" pubdate data-updated="true">Oct 8<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/10/08/asp-net-mvc-wcf-rest-and-data-services-when-to-use-what-for-restful-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><em>Disclaimer: This post only contains personal opinions about this
+subject</em></p>
+
+<p>In the way I see it, REST mainly comes in for two scenarios, when you
+need to expose some AJAX endpoints for your web application or when you
+need to expose an API to external applications through well defined
+services.  </p>
+
+<p>For AJAX endpoints, the scenario is clear, you want to expose some data
+for being consumed by different web pages with client scripts. At this
+point, what you expose is either HTML, text, plain XML, or JSON, which
+is the most common, compact and efficient format for dealing with data
+in javascript. Different client libraries like JQuery or MooTools
+already come with built-in support for JSON. This data is not intended
+for being consumed by other clients rather than the pages running in the
+same web domain. In fact, some companies add custom logic in these
+endpoints for responding only to requests originated in the same domain.</p>
+
+<p>For RESTful services, the scenario is completely different, you want to
+expose data or business logic to many different client applications
+through a well know API. Good examples of REST services are twitter, the
+Windows Azure storage services or the Amazon S3 services to name a few.</p>
+
+<p>Smart client applications implemented with Silverlight, Flex or Adobe
+Air also represent client applications that can be included in this
+category with some restrictions, as they can not make cross domain call
+to http services by default unless you override the cross-domain
+policies.   </p>
+
+<p>A common misconception is to think that REST services only mean CRUD for
+data, which is one of the most common scenarios, but business workflows
+can also be exposed through this kind of service as it is shown in this
+article <a href="http://www.infoq.com/articles/webber-rest-workflow">“How to get a cup of
+coffe”</a></p>
+
+<p>When it comes to the .NET world, you have three options for implementing
+REST services (I am not considering third party framework or OS projects
+in this post),</p>
+
+<ol>
+<li>ASP.NET MVC</li>
+<li>WCF REST</li>
+<li>WCF Data Services (OData)</li>
+</ol>
+
+
+<h2>ASP.NET MVC</h2>
+
+<p>This framework represents the implementation of the popular
+model-view-controller (MVC) pattern for building web applications in the
+.NET space. The reason for moving traditional web application
+development toward this pattern is to produce more testable components
+by having a clean separation of concerns. The three components in this
+architecture are the model, which only represents data that is shared
+between the view and the controller, the view, which knows how to render
+output results for different web agents (i.e. a web browser), and
+finally the controller, which coordinates the execution of an use case
+and the place where all the main logic associated to the application
+lives on. Testing ASP.NET Forms applications was pretty hard, as the
+implementation of a page usually mixed business logic with rendering
+details, the view and the controller were tied together, and therefore
+you did not have a way to focus testing efforts on the business logic
+only. You could prepare your asp.net forms application to use MVC or MVP
+(Model-View-Presenter) patterns to have all that logic separated, but
+the framework itself did not enforce that.</p>
+
+<p>On the other hand, in ASP.NET MVC, the framework itself drives the
+design of the web application to follow an MVC pattern. Although it is
+not common, developers can still make terrible mistakes by putting
+business logic in the views, but in general, the main logic for the
+application will be in the controllers, and those are the ones you will
+want to test.</p>
+
+<p>In addition, controllers are TDD friendly, and the ASP.NET MVC team has
+made a great work by making sure that all the ASP.NET intrinsic objects
+like the Http Context, Sessions, Request or Response can be mocked in an
+unit test.</p>
+
+<p>While this framework represents a great addition for building web
+applications on top of ASP.NET, the API or some components in the
+framework (like view engines) not necessarily make a lot of sense when
+building stand alone services. I am not saying that you could not build
+REST services with ASP.NET MVC, but you will have to leverage some of
+the framework extensibility points to support some of the scenarios you
+might want to use with this kind of services.</p>
+
+<p>Content negotiation is a good example of an scenario not supported by
+default in the framework, but something you can implement on your own
+using some of the available extensions. For example, if you do not want
+to tie your controller method implementation to an specific content
+type, you should return an specific ActionResult implementation that
+would know how to handle and serialize the response in all the supported
+content types. Same thing for request messages, you might need to
+implement model binders for mapping different content types to the
+objects actually expected by the controller.</p>
+
+<p>The public API for the controller also exposes methods that are more
+oriented to build web applications rather than services. For instance,
+you have methods for rendering javascript content, or for storing
+temporary data for the views.</p>
+
+<p>If you are already developing a website with ASP.NET MVC, and you need
+to expose some AJAX endpoints (which actually represents UI driven
+services) for being consumed in the views, probably the best thing you
+can do is to implement them with MVC too as operations in the
+controller. It does not make sense at this point to bring WCF to
+implement those, as it would only complicate the overall architecture of
+the application. WCF would only make sense if you need to implement some
+business driven services that need to be consumed by your MVC
+application and some other possible clients applications as well.</p>
+
+<p>This framework also introduced a new routing mechanism for mapping URLs
+to controller actions in ASP.NET, making possible to have friendly and
+nice URLS for exposing the different resources in the API.</p>
+
+<p>As this framework is layered on top of ASP.NET, one thing you might find
+complicated to implement is security. Security in ASP.NET is commonly
+tied to a web application, so it is hard to support schemes where you
+need different authentication mechanisms for your services. For example,
+if you have basic authentication enabled for the web application hosting
+the services, it would be complicated to support other authentication
+mechanism like OAuth. You can  develop custom modules for handling these
+scenarios, but that is something else you need to implement.   </p>
+
+<h2>WCF REST</h2>
+
+<p>The WCF Web Http programming model was first introduced as part of the
+.NET framework 3.5 SP1 for building non-SOAP http services that might
+follow or not the different REST architectural constraint. This new
+model brought to the scene some new capabilities for WCF by adding new
+attributes in the service model ([WebGet] and [WebInvoke]) for routing
+messages to service operations through URIs and Http methods, behaviors
+for doing same basic content negotiation and exception handling, a new
+WebOperationContext static object for getting access and controlling
+different http header and messages, and finally a new binding
+WebHttpBinding for handling some underline details related to the http
+protocol.</p>
+
+<p>The WCF team later released an REST starter kit in codeplex with new
+features on top of this web programming model to help developers to
+produce more RESTful services. This starter kit also included a
+combination of examples and Visual Studio templates for showing how some
+of the REST constraints could be implemented in WCF, and also a couple
+of interesting features to support help pages, output caching,
+intercepting request messages and a very useful Http client library for
+consuming existing services (HttpClient)</p>
+
+<p>Many of those features were finally included in the latest WCF release,
+4.0, and also the ability of routing messages to the services with
+friendly URLs using the same ASP.NET routing mechanism that ASP.NET MVC
+uses.</p>
+
+<p>As services are first citizens in WCF, you have exclusive control over
+security, message size quotas and throttling for every individual
+services and not for all services running in a host as it would happen
+with ASP.NET.  In addition, WCF provides its own hosting infrastructure,
+which is not dependant of ASP.NET so it is possible to self hosting
+services in any regular .NET application like a windows service for
+example.</p>
+
+<p>In the case of hosting services in ASP.NET with IIS, previous versions
+of WCF (3.0 and 3.5) relied on a file with “svc” extension to activate
+the service host when a new message arrived. WCF 4.0 now supports
+file-less activation for services hosted in ASP.NET, which relies on a
+configuration setting, and also a mechanism based on Http routing
+equivalent to what ASP.NET MVC provides, making possible to support
+friendly URLs. However, there is an slight difference in the way this
+last one works compared to ASP.NET MVC. In ASP.NET MVC, a route
+specifies the controller and also the operation or method that should
+handle a message. In WCF, the route is associated to a factory that
+knows how to create new instances of the service host associated to the
+service, and URI templates attached to [WebGet] and [WebInkoke]
+attributes in the operations take care of the final routing. This
+approach works much better in the way I see it, as you can create an URI
+schema more oriented to resources, and route messages based on Http
+Verbs as well without needing to redefine additional routes. </p>
+
+<p>The support for doing TDD at this point is somehow limited fore the fact
+that services rely on the static context class for getting and setting
+http headers, making very difficult to initialize that one in a test or
+mock it for setting some expectations.</p>
+
+<p>The content negotiation story was improved in WCF 4.0, but it still
+needs some twists to make it complete as you might need to extend the
+default WebContentTypeMapper class for supporting custom media types
+other than the standard “application/xml” for xml and “application/json”
+for JSON.</p>
+
+<p>The WCF team is seriously considering to improve these last two aspects
+and adding some other capabilities to the stack for a next version.</p>
+
+<h2>WCF Data Services</h2>
+
+<p>WCF Data Services, formerly called ADO.NET Data Services, was introduced
+in the .NET stack as way of making any IQueryable data source public to
+the world through a REST API. Although a WCF Data Service sits on top of
+the WCF Web programming model, and therefore is a regular WCF service, I
+wanted to make a distinction here for the fact that this kind of service
+exposes metadata for the consumers, and also adds some restrictions for
+the URIs and the types that can be exposed in the service. All these
+features and restrictions have been documented and published as a
+separate specification known as OData. </p>
+
+<p>The framework includes a set of providers or extensibility points that
+you can customize to make your model writable, extend the available
+metadata, intercepting messages or supporting different paging and
+querying schemas. </p>
+
+<p>A WCF Data Service basically uses URI segments as mechanism for
+expressing queries that can be translated to an underline linq provider,
+making possible to execute the queries on the data source itself, and
+not something that happens in memory. The result of executing those
+queries is what finally got returned as response from the service.
+Therefore, WCF Data services use URI segments to express many of
+supported linq operators, and the entities that need to be retrieved.
+This capability of course is what limit the URI space that you can use
+on your service, as any URI that does not follow the OData standard will
+result in an error.</p>
+
+<p>Content negotiation is also limited to two media types, JSON and Xml
+Atom, and the content payload itself is restricted to specific types
+that you can find as part of the OData specification.</p>
+
+<p>Besides of those two limitations, WCF Data Service is still extremely
+useful for exposing a complete data set with query capabilities through
+a REST interface with just a few lines of code. JSON and Atom are two
+very accepted formats nowadays, making this technology very appealing
+for exposing data that can easily be consumed by any existing client
+platform, and even web browsers.</p>
+
+<p>Also, for Web applications with ajax and smart client applications, you
+do not need to reinvent the wheel and create a complete set of services
+for just exposing data with a CRUD interface. You get your existing data
+model, configure some views or filters for the data you want to expose
+in the model in the data service itself, and that is all.          </p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/09/28/the-swift-knife-for-managing-x509-certificates-in-windows/">The Swiss Knife for Managing X509 Certificates in Windows</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-09-28T00:00:00-03:00" pubdate data-updated="true">Sep 28<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/09/28/the-swift-knife-for-managing-x509-certificates-in-windows/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><a href="http://www.iamraf.net">Raffaele Rialdi</a>, a security MVP from Italy, has
+just released a very cool
+<a href="http://www.iamraf.net/Tools/DeployManager-first-release-certificates-management">tool</a>
+to manage X509 certificates in windows. X509 certificates has always
+represent a pain for most developers, as they are hard to deploy or
+configure correctly with the right permissions. A tool like this is
+absolutely need when working with frameworks like WCF or WIF that makes
+an extensive use of certificates.</p>
+
+<p>These are some of the features that you can find in this initial
+version,</p>
+
+<ol>
+<li>Ability to create self-signed certificates from the UI by specifying
+all the different settings that you need (certificate name,
+expiration dates, password, certificate store).</li>
+<li>Ability to browse the different certificate stores and do things
+like checking the certificate details, the chain trust for an
+specific certificate, or change its ACL permissions.</li>
+</ol>
+
+
+<p>You will able to find more details about the tool
+<a href="http://www.iamraf.net/Tools/DeployManager-first-release-certificates-management">here</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/09/17/exposing-additional-service-metadata-with-ws-discovery-in-wcf-4-0/">Exposing Additional Service Metadata With WS-Discovery in WCF 4.0</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-09-17T00:00:00-03:00" pubdate data-updated="true">Sep 17<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/09/17/exposing-additional-service-metadata-with-ws-discovery-in-wcf-4-0/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>WS-Discovery is not only a mechanism for discovering service endpoint
+addresses at runtime, but also a way to query for specific service
+information and metadata. If you look at it from another standpoint,
+WS-Discovery provides access to a decentralized short-lived service
+catalog that is available as long as the services are running. It is
+decentralized because every service expose their own metadata, unless
+you use a WS-Discovery managed proxy, which act as an intermediary and
+central location for service discovery. It is short-lived because it is
+only available when the service is running, and it is not something that
+clients could use at any time.</p>
+
+<p>With all this, I am not saying that WS-Discovery is a good replacement
+for a service repository, which actually provides opposite capabilities,
+a centralized storage for service metadata at design time that supports
+full rich querying.</p>
+
+<p>However, they both complement very well each, the service can configure
+itself from the service repository, and expose metadata and runtime
+information to clients through WS-Discovery.</p>
+
+<p>There are two types of metadata attributes or extensions that you can
+configure in the “endpoint” discovery behavior,</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+<endpointDiscovery enabled="true">
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>&lt;scopes&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>  &lt;add scope="urn:CRM"/&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>&lt;/scopes&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>&lt;extensions&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>  &lt;Owner&gt;Pablo Cibraro&lt;/Owner&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>  &lt;Metadata&gt;http://locahost:8080/?wsdl&lt;/Metadata&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>&lt;/extensions&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+</endpointDiscovery>
+</del></p>
+
+<p>Scopes, which represents “URI”s and can be used by clients to filter the
+discovery results when sending the discovery probes. For example, in the
+configuration above, a client could only be interested in a service that
+provides a “urn:CRM” scope, so this service will match that probe.</p>
+
+<p>On the client side, the WCF client can specify the “scopes” as part of
+the “FindCriteria” argument passed to the DiscoveryClient,</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+var discovery = new DiscoveryClient(new UdpDiscoveryEndpoint());
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+var criteria = new FindCriteria(typeof(IHelloWorld));
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+criteria.Scopes.Add(new Uri(&ldquo;urn:CRM&rdquo;));
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+var discoveryResponse = discovery.Find(criteria);
+</del></p>
+
+<p>Then, you have “extensions”, which are xml elements that provide
+additional information about the service. In the given example, the
+extensions are used to provide information about the service owner (the
+developer), and the service metadata endpoint, but you could extend this
+to any service metadata or documentation.  </p>
+
+<p>The service metadata endpoint (or MEX endpoint in WCF) is useful here as
+part of the extensions because WS-Discovery only returns the &ldquo;service”
+endpoint address as part of the response for the probe messages.</p>
+
+<p>The extensions are available on the client side as part of the discovery
+response message in the found endpoints.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+var discovery = new DiscoveryClient(new UdpDiscoveryEndpoint());
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+var criteria = new FindCriteria(typeof(IHelloWorld));
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+var discoveryResponse = discovery.Find(criteria);
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+var address = discoveryResponse.Endpoints.First().Address;
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+Console.WriteLine(discoveryResponse.Endpoints.First().Extensions);
+</del></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/09/15/swutil-a-new-tool-for-generating-service-proxies-from-the-so-aware-repository/">SWUtil - a New Tool for Generating Service Proxies From the SO-Aware Repository.</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-09-15T00:00:00-03:00" pubdate data-updated="true">Sep 15<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/09/15/swutil-a-new-tool-for-generating-service-proxies-from-the-so-aware-repository/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As we announced last week, we are shipping a new Visual Studio plugin
+for generating service proxies as part of the SO-Aware SDK. The
+functionality is equivalent to what you find today in the “Add Service
+Reference” command, but the results are much better as you get a proxy
+that does not require any WCF configuration, and also knows how to
+resolve bindings and behaviors from the repository.</p>
+
+<p>However, that plugin is only available for Visual Studio 2010, meaning
+that you need an alternative solution for generating the same equivalent
+proxy if you are using older versions of Visual Studio or you are not
+even using this development environment. Here is where “swutil.exe”
+comes to fill that gap.</p>
+
+<p>This tool is equivalent to “svcutil.exe”, the one that comes with the
+.NET framework for generating WCF service proxies, but the result is a
+much more intelligent proxy that does not require any previous knowledge
+of WCF configuration.</p>
+
+<p>The following arguments are supported by this new tool,</p>
+
+<p>swutil.exe -help</p>
+
+<p>Parameters:</p>
+
+<p>-help           Prints the help screen. \
+-uri             Service Repository Uri \
+-version       Service Version Name \
+-category    Configuration Category \
+-out            Output file \
+-language    Language: cs or vb \
+-serializer    xml or datacontract</p>
+
+<p>The generated proxy derives from a specific SO-Aware base class
+“ConfigurableClientBase&lt;T>”, and not the traditional one
+“ClientBase&lt;T>” that you find in the WCF.</p>
+
+<p>This specific base class gives you access to some methods like
+“SetClientBehavior” or “SetDefaultBinding” that become handy for
+automatically resolving bindings and behavior configuration from the
+repository.</p>
+
+<p>Those methods receive an string with the “binding” or “behavior” name,
+and automatically inject the equivalent WCF object into the WCF channel
+after having resolved that name in the repository.</p>
+
+<p>The following lines illustrate how you would use this new proxy to
+consume a service.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+EchoClaimsClient proxy = new EchoClaimsClient(ServiceUri, &ldquo;EchoClaims(1.0)&rdquo;, null, &ldquo;CustomBinding_IEchoClaims&rdquo;);
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+proxy.SetClientBehavior(&ldquo;echoClaimsEndpointBehavior&rdquo;);
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+proxy.SetDefaultBinding(&ldquo;echoClaims_MutualCertificate&rdquo;);
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+var response = proxy.Echo();
+</del></p>
+
+<p>That’s all, no configuration is required on the client side for
+consuming the service. All the magic happens in that proxy class :)</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/09/06/why-asmx-web-services-are-not-an-excuse-anymore-with-wcf-4-0/">Why ASMX Web Services Are Not an Excuse Anymore With WCF 4.0</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-09-06T00:00:00-03:00" pubdate data-updated="true">Sep 6<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/09/06/why-asmx-web-services-are-not-an-excuse-anymore-with-wcf-4-0/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>ASXM web services has been the favorite choice for many developers for
+building soap web services in .NET during a long time because of its
+simplicity. With ASMX web services, you get a web service up and running
+in a matter of seconds, as it does not require any configuration. The
+only thing you need to do is to build the service implementation and the
+message contracts (xml serialization classes), and that’s all. However,
+when you build a system as a black box with most of the configuration
+hardcoded, and only a few extensibility points in mind, you will
+probably end up with something that is very easy to deploy and get
+running, but it can not be customized at all. That’s what an ASMX web
+service is after all, you don’t have a way easily change the protocol
+versions, encoders, security or even extend with custom functionality
+(SOAP extensions are the only entry point for extensibility, which work
+as message inspectors in WCF).</p>
+
+<p>On the other hand, you have WCF, which is extensible beast for building
+services among other things. The number of extensibility points that you
+will find in WCF is extremely high, but the downside is that
+configuration also becomes extremely complex and a nightmare for most
+developers that only want to get their services up and running.</p>
+
+<p>Fortunately, the WCF team has considerably improved the configuration
+experience in WCF 4.0, making possible to run a service with almost no
+configuration. The approach that they have taken for this version is to
+make everything work with no configuration, and give the chance to
+override what you actually need for a given scenario.</p>
+
+<p>For instance, a WCF service that uses http as transport behaves a ASMX
+web service by default (it uses basicHttpBinding with SOAP 1.2,
+transport security, text encoding and Basic profile 1.1) unless you
+change that. So, how can you create a new WCF service as you did before
+with ASMX ?. That’s simple and you need to follow these steps,</p>
+
+<p>​1. Create a new WCF service in Visual Studio</p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/visualstudio_newservice_47C62622.png"><img src="http://weblogs.asp.net/blogs/cibrax/visualstudio_newservice_thumb_38629E46.png" title="visualstudio_newservice" alt="visualstudio_newservice" /></a></p>
+
+<p>​2. Modify the service and data contract to expose the operations you
+actually need in the service.</p>
+
+<p> </p>
+
+<p><del> {#codeSnippet style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+// NOTE: You can use the &ldquo;Rename&rdquo; command on the &ldquo;Refactor&rdquo; menu to change the interface name &ldquo;IService1&rdquo; in both code and config file together.[ServiceContract]public interface IService1{    [OperationContract]    string GetData(int value);    [OperationContract]    CompositeType GetDataUsingDataContract(CompositeType composite);    // TODO: Add your service operations here}// Use a data contract as illustrated in the sample below to add composite types to service operations.[DataContract]public class CompositeType{    bool boolValue = true;    string stringValue = &ldquo;Hello &rdquo;;    [DataMember]    public bool BoolValue    {        get { return boolValue; }        set { boolValue = value; }    }    [DataMember]    public string StringValue    {        get { return stringValue; }        set { stringValue = value; }    }}
+</del></p>
+
+<p>\</p>
+
+<p>​3. Optionally, enable the service metadata page for the service, so any
+client application can use this to generate the proxies.</p>
+
+<p><del> {#codeSnippet style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+&lt;system.serviceModel>    <behaviors>        <serviceBehaviors>            <behavior>                <serviceMetadata httpGetEnabled="true"/>            </behavior>        </serviceBehaviors>    </behaviors>&lt;/system.serviceModel>
+</del></p>
+
+<p>\</p>
+
+<p> </p>
+
+<p>​4. Optionally, enable the ASP.NET Compatibility mode to use the ASP.NET
+security context (Otherwise, the service will use the default security
+settings for the basicHttpBinding). That will require two additional
+steps, adding the “serviceHostingEnvironment” element in the existing
+service model configuration.</p>
+
+<p><del> {#codeSnippet style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+&lt;system.serviceModel>    <serviceHostingEnvironment aspNetCompatibilityEnabled="true"/>
+</del></p>
+
+<p>\</p>
+
+<p> </p>
+
+<p>And adding an attribute in the service,</p>
+
+<p><del> {#codeSnippet style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+[AspNetCompatibilityRequirements(RequirementsMode=AspNetCompatibilityRequirementsMode.Allowed)]public class Service1 : IService1
+</del></p>
+
+<p>\</p>
+
+<p>That’s all you need to implement a new WCF service that will behave as a
+traditional ASMX webservice. As you can see, no service or binding
+configurations were required for the service. In addition, the behavior
+element does not have any name, so it applies to all the services
+running in the same host.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/09/01/managing-the-so-aware-repository-with-powershell/">Managing the SO-Aware Repository With PowerShell</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-09-01T00:00:00-03:00" pubdate data-updated="true">Sep 1<span>st</span>, 2010</time>
+        
+         | <a href="/blog/2010/09/01/managing-the-so-aware-repository-with-powershell/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As Jesus mentioned in this
+<a href="http://www.tellagostudios.com/tellago-studios-launching">post</a>,
+SO-Aware provides three interfaces for managing the service repository.
+An OData API in case you want to integrate third applications with the
+repository. OData is a pure http API that can be easily consumed in any
+platform using a simple http client library. The management portal,
+which is an ASP.NET MVC user interface layered on top of the OData API
+and probably the one most people will use. And finally, a PowerShell
+provider that also mounts on top of the OData API to allow
+administrators to automate management tasks over the repository with
+scripting. </p>
+
+<p>The SO-Aware PowerShell provider, in that sense offers around 40
+commands that enables simple management scenarios like registering
+bindings or services or more complex scenarios that involves testing
+services or sending alerts when a service is not properly working.  </p>
+
+<p>This provider can be registered as an snapin in an existing script using
+the following command,</p>
+
+<p><del> {#codeSnippet style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+$snapin = get-pssnapin  | select-string &ldquo;SOAwareSnapIn&#8221;if ($snapin -eq $null){    Add-PSSnapin &#8220;SOAwareSnapIn&rdquo;}
+</del></p>
+
+<p>\</p>
+
+<p>Once you have registered the snapin, you can start using most of the
+commands for managing the repository.</p>
+
+<p>The first and more important command is “Set-SWEndpoint”, which allows
+you to connect to an existing SO-Aware instance. This command receives
+the OData service location as first argument, and it looks as follow,</p>
+
+<p><del> {#codeSnippet style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+Set-SWEndpoint -uri <a href="http://localhost/SOAware/ServiceRepository.svc">http://localhost/SOAware/ServiceRepository.svc</a>
+</del></p>
+
+<p>\</p>
+
+<p> </p>
+
+<p>As next step, you can start managing or querying data from the
+repository using the rest of the commands. For instance, the following
+example registers a new binding in the repository only if it was not
+created already</p>
+
+<p><del> {#codeSnippet style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+function RegisterBinding([string]$name,[string]$type,[string]$xml){    $binding = GetBinding($name);    if(!$binding)    {       Add-SWBinding -Name $name -BindingType $type -Configuration $xml    }}function GetBinding([string]$name){    $bindings = Get-SWBindings    foreach($binding in $bindings)    {        if($binding.Name -eq $name)        {            return $binding        }    }}RegisterBinding &ldquo;stsBinding&rdquo; &ldquo;ws2007HttpBinding&rdquo; &ldquo;<binding>        <security mode='Message'>            <message clientCredentialType='UserName' establishSecurityContext='false' negotiateServiceCredential='false'/>        </security> </binding>&rdquo;;
+</del></p>
+
+<p>\</p>
+
+<p>As you can see, this provider brings a powerful toy that administrators
+in any organization can use to manage services or governance aspects by
+leveraging their scripting knowledge.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/08/27/some-wif-interop-gotchas/">Some WIF Interop Gotchas</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-08-27T00:00:00-03:00" pubdate data-updated="true">Aug 27<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/08/27/some-wif-interop-gotchas/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>WIF is an excellent framework that allows you to develop an STS in just
+a few minutes if you know exactly what you are doing of course :). In my
+role as consultant and architect in Tellago, I went through several
+projects in which some level of customization was required at wire level
+to accomplish some interoperability between a STS built with WIF and
+existing federation solutions like ADFS 1.x and OpenSSO.</p>
+
+<p>The idea of this post is to show some of extensibility points that you
+will find in WIF to customize the WS-Trust messages, and issued tokens.</p>
+
+<p><strong>1. Making WIF to speak WS-Trust Feb 2005</strong></p>
+
+<p>WIF uses by default WS-Trust 1.3, which means that all the generated
+WS-Trust messages will use that spec unless you specify a different one.
+ADFS 1.x and OpenSSO both uses WS-Trust Feb 2005
+(<a href="http://schemas.xmlsoap.org/ws/2005/02/trust">http://schemas.xmlsoap.org/ws/2005/02/trust</a>)
+for the passive profile to support single sign on over the web.
+Therefore, if you want to generate WS-Trust messages that follow that
+spec version in your WIF passive STS, you need to modify a little bit
+the code you use for processing the RST messages.</p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+class FederatedPassiveSecurityTokenServiceOperations{    public static void ProcessRequest(HttpRequest request, IPrincipal principal,         SecurityTokenService sts, HttpResponse response,         WSFederationSerializer federationSerializer);    public static SignInResponseMessage ProcessSignInRequest(SignInRequestMessage requestMessage,         IPrincipal principal, SecurityTokenService sts,         WSFederationSerializer federationSerializer);}
+</del></p>
+
+<p>\</p>
+
+<p>The methods ProcessRequest and ProcessSignRequest in the
+FederatedPassiveSecurityTokenServiceOperations class both support an
+additional overload for passing the WS-Trust version
+(WSFederationSerializer instance).</p>
+
+<p>You can force another WS-Trust version by passing the right serializer
+instance. For example, the following code uses the WS-Trust Feb 2005
+specification.</p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+SignInResponseMessage responseMessage = FederatedPassiveSecurityTokenServiceOperations.ProcessSignInRequest(    requestMessage, User, sts,         new WSFederationSerializer(new WSTrustFeb2005RequestSerializer(),             new WSTrustFeb2005ResponseSerializer()));
+</del></p>
+
+<p>\</p>
+
+<p><strong>2. Changing the SAML token’s signature algorithms</strong></p>
+
+<p>WIF uses by default a combination of RSA and SHA 256 for generating the
+SAML signature. You can notice this in the generated SAML token,</p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+&lt;saml:Attribute AttributeName=&ldquo;name&rdquo; AttributeNamespace=&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/05/identity/claims">http://schemas.xmlsoap.org/ws/2005/05/identity/claims</a>&rdquo;>    &lt;saml:AttributeValue>MyName&lt;/saml:AttributeValue>  &lt;/saml:Attribute>&lt;/saml:AttributeStatement>&lt;ds:Signature xmlns:ds=&ldquo;<a href="http://www.w3.org/2000/09/xmldsig#">http://www.w3.org/2000/09/xmldsig#</a>&rdquo;>  &lt;ds:SignedInfo>    &lt;ds:CanonicalizationMethod Algorithm=&ldquo;<a href="http://www.w3.org/2001/10/xml-exc-c14n#">http://www.w3.org/2001/10/xml-exc-c14n#</a>&rdquo; />    &lt;ds:SignatureMethod Algorithm=&ldquo;<a href="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256">http://www.w3.org/2001/04/xmldsig-more#rsa-sha256</a>&rdquo; />    &lt;ds:Reference URI=&ldquo;#_cecf3c23-824e-4064-846c-b90c03d29700&rdquo;>      &lt;ds:Transforms>        &lt;ds:Transform Algorithm=&ldquo;<a href="http://www.w3.org/2000/09/xmldsig#enveloped-signature">http://www.w3.org/2000/09/xmldsig#enveloped-signature</a>&rdquo; />        &lt;ds:Transform Algorithm=&ldquo;<a href="http://www.w3.org/2001/10/xml-exc-c14n#">http://www.w3.org/2001/10/xml-exc-c14n#</a>&rdquo; />      &lt;/ds:Transforms>      &lt;ds:DigestMethod Algorithm=&ldquo;<a href="http://www.w3.org/2001/04/xmlenc#sha256">http://www.w3.org/2001/04/xmlenc#sha256</a>&rdquo; />      &lt;ds:DigestValue>1flG08Axm71C0isY2wLR0C9jqgfIebNoG2nlIO+jO+s=&lt;/ds:DigestValue>    &lt;/ds:Reference> &lt;/ds:SignedInfo>
+</del></p>
+
+<p>\
+ADFS 1.x and OpenSSO use a combination of RSA and SHA, so that’s also
+something else you need to customize. The “X509SigningCredentials”
+instance that you pass in the constructor of the Secure token service
+configuration also contains an overload to change the signature
+algorithm. The following code creates a new instance of
+“X509SigningCredentials” that uses SHA rather than SHA 256.</p>
+
+<p> </p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+new X509SigningCredentials(    CertificateUtil.GetCertificate(StoreName.TrustedPeople,         StoreLocation.LocalMachine,         &ldquo;CN=Test&rdquo;),     &ldquo;<a href="http://www.w3.org/2000/09/xmldsig#rsa-sha1">http://www.w3.org/2000/09/xmldsig#rsa-sha1</a>&rdquo;,     &ldquo;<a href="http://www.w3.org/2000/09/xmldsig#sha1">http://www.w3.org/2000/09/xmldsig#sha1</a>&rdquo;))
+</del></p>
+
+<p>\</p>
+
+<p><strong>3. Adding an authentication statement to the issued SAML token</strong></p>
+
+<p> </p>
+
+<p>This part is very tricky, as WIF does not add by default an
+authentication statement in the SAML token unless you use an specific
+claim type (NameIdentifier) with some custom properties.</p>
+
+<p> </p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+Claim nameIdentifier = new Claim(System.IdentityModel.Claims.ClaimTypes.NameIdentifier,     &ldquo;<a href="&#109;&#x61;&#x69;&#108;&#116;&#x6f;&#58;&#102;&#x6f;&#111;&#64;&#x74;&#101;&#115;&#116;&#46;&#x63;&#111;&#x6d;">&#102;&#x6f;&#111;&#x40;&#x74;&#101;&#115;&#x74;&#x2e;&#x63;&#111;&#109;</a>&rdquo;);nameIdentifier.Properties[&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/05/identity/claimproperties/format">http://schemas.xmlsoap.org/ws/2005/05/identity/claimproperties/format</a>&rdquo;]     = &ldquo;<a href="http://schemas.xmlsoap.org/claims/UPN">http://schemas.xmlsoap.org/claims/UPN</a>&rdquo;;outputIdentity.Claims.Add(nameIdentifier);outputIdentity.Claims.Add(new Claim(ClaimTypes.AuthenticationMethod, &ldquo;<a href="http://microsoft/geneva">http://microsoft/geneva</a>&rdquo;));outputIdentity.Claims.Add(new Claim(ClaimTypes.AuthenticationInstant, XmlConvert.ToString(DateTime.Now, XmlDateTimeSerializationMode.Utc)));
+</del></p>
+
+<p>\</p>
+
+<p>The code above will generate an authentication statement like this in
+the SAML token, which is something equivalent to what ADFS 1.x or
+OpenSSO would generate.</p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+&lt;saml:AttributeStatement>  &lt;saml:Subject>    &lt;saml:NameIdentifier Format=&ldquo;<a href="http://schemas.xmlsoap.org/claims/UPN">http://schemas.xmlsoap.org/claims/UPN</a>&rdquo;>        <a href="&#x6d;&#97;&#105;&#108;&#x74;&#x6f;&#58;&#x66;&#111;&#x6f;&#64;&#116;&#101;&#x73;&#x74;&#x2e;&#x63;&#x6f;&#109;">&#x66;&#x6f;&#x6f;&#64;&#116;&#x65;&#x73;&#x74;&#46;&#x63;&#x6f;&#x6d;</a>    &lt;/saml:NameIdentifier>    &lt;saml:SubjectConfirmation>      &lt;saml:ConfirmationMethod>            urn:oasis:names:tc:SAML:1.0:cm:bearer        &lt;/saml:ConfirmationMethod>    &lt;/saml:SubjectConfirmation>  &lt;/saml:Subject>    &lt;/saml:AttributeStatement>
+</del></p>
+
+<p>\</p>
+
+<p> </p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/08/27/centralizing-federated-services-configuration-with-so-aware/">Centralizing Federated Services Configuration With SO-Aware</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-08-27T00:00:00-03:00" pubdate data-updated="true">Aug 27<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/08/27/centralizing-federated-services-configuration-with-so-aware/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Configuring a WCF service to use federated authentication in an
+organization is not something trivial as it requires some good knowledge
+of the available security settings, and more precisely, how to talk to
+the existing security token services with the right WCF bindings.</p>
+
+<p>This is something that usually only a few people in the organization
+knows how to do it right, so having a way to centralize all this
+configuration in a central location and have the rest of the developers
+to use becomes really important.    </p>
+
+<p>SO-Aware plays an important role in that sense, allowing the security
+experts to configure and store the bindings and behaviors that the
+organization will use to secure the services in the service repository.</p>
+
+<p>Developers can later reference, reuse and configure their services and
+client applications with those bindings from the repository using a
+simple OData API, or the WCF specific classes that SO-Aware also
+provides for configuring services and proxies.</p>
+
+<p>A WCF binding for configuring a service with federated authentication
+usually looks as follow,</p>
+
+<p><del> {#codeSnippet style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+<customBinding><binding name="echoClaimsBinding">  <security authenticationMode="IssuedToken"            messageSecurityVersion="WSSecurity11WSTrust13WSSecureConversation13WSSecurityPolicy12BasicSecurityProfile10"            requireSecurityContextCancellation="false">    <issuedTokenParameters tokenType="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV2.0">      <claimTypeRequirements>        <add claimType="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name" isOptional="false"/>        <add claimType="http://SOAwareSamples/2008/05/AgeClaim" isOptional="false"/>              </claimTypeRequirements>      <issuer address="http://localhost:6000/SOAwareSTS"                                               bindingConfiguration="stsBinding"                binding="ws2007HttpBinding">        <identity>          <dns value="WCFSTS"/>        </identity>      </issuer>      <issuerMetadata address="http://localhost:6000/mex"></issuerMetadata>    </issuedTokenParameters>  </security>  <httpTransport/></binding></customBinding>
+</del></p>
+
+<p>\</p>
+
+<p>You basically have there, the information required by WCF to connect to
+the STS (or token issuer), and the claims that the service is expecting.
+This binding is also referencing another existing binding “stsBinding”,
+that the client will use to connect and secure the communication with
+the STS. if you want to store the same thing in SO-Aware, you will need
+a way to configure a binding in a way that can reference existing
+bindings. That can be done using the “Parent” property as you can see in
+the image below,  </p>
+
+<p><a href="http://www.tellagostudios.com/blogEntries/federation/parentBinding.png"><img src="http://weblogs.asp.net/blogs/cibrax/parentBinding1_566F70B3.png" title="parentBinding[1]" alt="parentBinding[1]" /></a></p>
+
+<p>Once you have the binding stored and correctly configured in the the
+repository, it’s a matter of using the SO-Aware service host for
+configuring existing services with that binding.</p>
+
+<p><del> {#codeSnippet style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+[ServiceContract()]public interface IEchoClaims{    [OperationContract]    List<string> Echo();}public class EchoClaims : IEchoClaims{    public List<string> Echo()    {        List<string> claims = new List<string>();        IClaimsPrincipal principal = Thread.CurrentPrincipal as IClaimsPrincipal;                foreach (IClaimsIdentity identity in principal.Identities)        {            foreach (Claim claim in identity.Claims)            {                claims.Add(string.Format(&ldquo;{0} &ndash; {1}&rdquo;,                    claim.ClaimType, claim.Value));            }        }        return claims;    }}
+</del></p>
+
+<p>\</p>
+
+<p><del> {#codeSnippet style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+<serviceRepository url="http://localhost/SoAware/ServiceRepository.svc">     <services>       <service name="ref:EchoClaims(1.0)@dev" type="SOAware.Samples.EchoClaims, Service"/>     </services> </serviceRepository>
+</del></p>
+
+<p>\
+As you can see, the configuration is very straightforward. The developer
+configuring the service does not need to know anything about how to
+configure the WCF bindings or federated security. He only needs to
+reference an existing service configuration in the repository. This
+assumes the service was already configured in the Portal or using the
+OData API.</p>
+
+<p> </p>
+
+<p><a href="http://www.tellagostudios.com/blogEntries/federation/ServiceConfig.png"><img src="http://weblogs.asp.net/blogs/cibrax/ServiceConfig1_0D694EED.png" title="ServiceConfig[1]" alt="ServiceConfig[1]" /></a></p>
+
+<p> </p>
+
+<p>The same thing happens on the client side, no configuration is needed at
+all. The developer can use the “ConfigurableProxyFactory” and the
+“ConfigurationResolver” classes that SO-Aware provides to automatically
+discover and resolve all the service configuration (service address,
+bindings and behaviors). In fact, the developer does not know anything
+about where the STS is, which binding uses, or which certificates are
+used to secure the communication. All that is stored in the repository,
+and automatically resolved by the SO-Aware configuration classes.</p>
+
+<p> </p>
+
+<p><del> {#codeSnippet style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+static void ExecuteServiceWithMetadataResolution(){    ConfigurableProxyFactory<IEchoClaims> factory = new ConfigurableProxyFactory<IEchoClaims>(        ServiceUri,        &ldquo;EchoClaims(1.0)&rdquo;,        &ldquo;dev&rdquo;);    var endpointBehaviors = resolver.ResolveEndpointBehavior(&ldquo;echoClaimsEndpointBehavior&rdquo;);    foreach (var endpointBehavior in endpointBehaviors.Behaviors)    {        if (factory.Endpoint.Behaviors.Contains(endpointBehavior.GetType()))        {            factory.Endpoint.Behaviors.Remove(endpointBehavior.GetType());        }        factory.Endpoint.Behaviors.Add(endpointBehavior);    }    factory.Credentials.UserName.UserName = &ldquo;joe&rdquo;;    factory.Credentials.UserName.Password = &ldquo;bar&rdquo;;    IEchoClaims client = factory.CreateProxy();    try    {        string[] claims = client.Echo();        foreach (string claim in claims)        {            Console.WriteLine(claim);        }    }    catch (TimeoutException exception)    {        Console.WriteLine(&ldquo;Got {0}&rdquo;, exception.ToString());        ((IContextChannel)client).Abort();    }    catch (CommunicationException exception)    {        Console.WriteLine(&ldquo;Got {0}&rdquo;, exception.ToString());        IContextChannel channel = (IContextChannel)client;        ((IContextChannel)client).Abort();    }    finally    {        ((IContextChannel)client).Close();    }}
+</del></p>
+
+<p>\</p>
+
+<p>In addition, as the Secure Token Service could also be implemented with
+WCF and WIF, you can also resolve the configuration for that service
+from the repository by reusing the “stsBinding” in the given example
+(WSTrustServiceContract is one of the service contracts that WIF
+provides for implementing a STS).</p>
+
+<p> </p>
+
+<p><del> {#codeSnippet style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+<serviceRepository url="http://localhost/SoAware/ServiceRepository.svc">    <services>      <service name="ref:STS(1.0)@dev"         type="Microsoft.IdentityModel.Protocols.WSTrust.WSTrustServiceContract,         Microsoft.IdentityModel, Version=3.5.0.0, Culture=neutral,         PublicKeyToken=31bf3856ad364e35"/>    </services></serviceRepository>
+</del></p>
+
+<p>\</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/08/13/nhibernating-a-wcf-data-service/">NHibernating a WCF Data Service</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-08-13T00:00:00-03:00" pubdate data-updated="true">Aug 13<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/08/13/nhibernating-a-wcf-data-service/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>WCF Data Services ships with two built-in query providers, a query
+provider for Entity Framework that uses the CSL model to infer all the
+service metadata for the exposed entities and their associations, and
+another provider, a Reflection Provider that uses .NET reflection over
+the exposed object model to infer the same metadata.</p>
+
+<p>The Entity Framework provider is usually the one that most people use
+for its simplicity. The simplicity of this provider resides on the fact
+that you actually don’t need to do much for getting a data service up
+and running. You only need to define a entity framework model and expose
+it in the data service using the DataService&lt;T> class.</p>
+
+<p>The Reflection Provider on the other hand requires some more work, as
+you also need to implement the IUpdatable provider if you want to make
+your model read-write (otherwise, it’s read-only by default).</p>
+
+<p>While the Entity framework provider is simple to use, the resources you
+want to expose in the data service gets tied to all the limitations you
+find in an Entity Framework model (for instance, you might entities or
+properties you don’t really want to persist in a database). This
+provider also implements IUpdatable and that implementation can not be
+customized, extended or replaced for providing some additional business
+logic functionality in the data service. And although you can use
+interceptors, I find that technique very limited as they represents
+aspects that are applied to a single entity. There is no way to inject
+cross-cutting aspects that affect all the entities (Entity based
+Authorization for instance). You can use the Data Service Pipeline for
+injecting that logic, but you don’t have entities at that point, only
+the messages on the wire (atom feeds or json messages). A technique I
+used in the past was to extend the EF entities with partial classes to
+add some additional business logic to the entities, and attach the data
+service to the Saving event in the Entity framework to run some logic
+before the entities were created, updated or deleted. However, I still
+don’t like this technique much because you end up with a model totally
+limited to what you can define in EF.</p>
+
+<p>The advantage of using the reflection provider is that you can expose a
+much rich object model in your data service, even if you need to write
+some more code. In addition, as you are also writing an IUpdatable
+implementation, you can inject all the business logic or cross-cutting
+concerns that are common for all the entities in that class. However,
+the problem with the reflection provider is to make the service
+implementation efficient enough to resolve the queries in the data
+source and not the memory. It does not make sense at all to use a rich
+object model on top of entity framework for instance, if you still need
+to load all the object in memory to use linq to objects to perform the
+queries (unless the number of entities you manage is really small). So,
+the only possible solution to implement a service that manages a large
+number of entities and expose a rich object model at the same time is to
+use an ORM other than EF, like Linq to SQL or NHibernate.</p>
+
+<p>NHibernate in that sense is a much mature framework, you are not tied to
+a single db implementation (sql server), and the number of features that
+this framework can offer is obviously higher, making NHibernate a good
+technology for implementing data services. In addition, NHibernate 3.0
+already ships with a Linq provider out of the box that works really well
+(Entity Framework Code Only looks promising too but it is a CTP at this
+point).</p>
+
+<p>In order to use NHibernate in a data service, you need to provide an
+IUpdatable implementation for making it read/write (support for POST PUT
+and DELETE). Otherwise it will behave as read only by default (only GETs
+supported).</p>
+
+<p>This is how the IUpdatable implementation looks like,</p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+public abstract class NHibernateDataContext : IUpdatable{    protected ISession Session;    private List<object> entityToUpdate = new List<object>();    private List<object> entityToRemove = new List<object>();    public NHibernateDataContext(ISession session)    {        this.Session = session;    }    /// <summary>    /// Creates the resource of the given type and belonging to the given container    /// </summary>    /// <param name="containerName">container name to which the resource needs to be added</param>    /// <param name="fullTypeName">full type name i.e. Namespace qualified type name of the resource</param>    /// <returns>object representing a resource of given type and belonging to the given container</returns>    object IUpdatable.CreateResource(string containerName, string fullTypeName)    {        Type t = Type.GetType(fullTypeName, true);        object resource = Activator.CreateInstance(t);                entityToUpdate.Add(resource);                return resource;    }    /// <summary>    /// Gets the resource of the given type that the query points to    /// </summary>    /// <param name="query">query pointing to a particular resource</param>    /// <param name="fullTypeName">full type name i.e. Namespace qualified type name of the resource</param>    /// <returns>object representing a resource of given type and as referenced by the query</returns>    object IUpdatable.GetResource(IQueryable query, string fullTypeName)    {        object resource = null;        foreach (object item in query)        {            if (resource != null)            {                throw new DataServiceException(&ldquo;The query must return a single resource&rdquo;);            }            resource = item;        }        if (resource == null)            throw new DataServiceException(404, &ldquo;Resource not found&rdquo;);        // fullTypeName can be null for deletes        if (fullTypeName != null &amp;&amp; resource.GetType().FullName != fullTypeName)            throw new Exception(&ldquo;Unexpected type for resource&rdquo;);        return resource;    }    /// <summary>    /// Resets the value of the given resource to its default value    /// </summary>    /// <param name="resource">resource whose value needs to be reset</param>    /// <returns>same resource with its value reset</returns>    object IUpdatable.ResetResource(object resource)    {        return resource;    }    /// <summary>    /// Sets the value of the given property on the target object    /// </summary>    /// <param name="targetResource">target object which defines the property</param>    /// <param name="propertyName">name of the property whose value needs to be updated</param>    /// <param name="propertyValue">value of the property</param>    void IUpdatable.SetValue(object targetResource, string propertyName, object propertyValue)    {        var propertyInfo = targetResource.GetType().GetProperty(propertyName);        propertyInfo.SetValue(targetResource, propertyValue, null);        if (!entityToUpdate.Contains(targetResource))            entityToUpdate.Add(targetResource);    }    /// <summary>    /// Gets the value of the given property on the target object    /// </summary>    /// <param name="targetResource">target object which defines the property</param>    /// <param name="propertyName">name of the property whose value needs to be updated</param>    /// <returns>the value of the property for the given target resource</returns>    object IUpdatable.GetValue(object targetResource, string propertyName)    {        var propertyInfo = targetResource.GetType().GetProperty(propertyName);        return propertyInfo.GetValue(targetResource, null);    }    /// <summary>    /// Sets the value of the given reference property on the target object    /// </summary>    /// <param name="targetResource">target object which defines the property</param>    /// <param name="propertyName">name of the property whose value needs to be updated</param>    /// <param name="propertyValue">value of the property</param>    void IUpdatable.SetReference(object targetResource, string propertyName, object propertyValue)    {        ((IUpdatable)this).SetValue(targetResource, propertyName, propertyValue);    }    /// <summary>    /// Adds the given value to the collection    /// </summary>    /// <param name="targetResource">target object which defines the property</param>    /// <param name="propertyName">name of the property whose value needs to be updated</param>    /// <param name="resourceToBeAdded">value of the property which needs to be added</param>    void IUpdatable.AddReferenceToCollection(object targetResource, string propertyName, object resourceToBeAdded)    {        PropertyInfo pi = targetResource.GetType().GetProperty(propertyName);        if (pi == null)            throw new Exception(&ldquo;Can&rsquo;t find property&rdquo;);        IList collection = (IList)pi.GetValue(targetResource, null);        collection.Add(resourceToBeAdded);        if (!entityToUpdate.Contains(targetResource))            entityToUpdate.Add(targetResource);    }    /// <summary>    /// Removes the given value from the collection    /// </summary>    /// <param name="targetResource">target object which defines the property</param>    /// <param name="propertyName">name of the property whose value needs to be updated</param>    /// <param name="resourceToBeRemoved">value of the property which needs to be removed</param>    void IUpdatable.RemoveReferenceFromCollection(object targetResource, string propertyName, object resourceToBeRemoved)    {        PropertyInfo pi = targetResource.GetType().GetProperty(propertyName);        if (pi == null)            throw new Exception(&ldquo;Can&rsquo;t find property&rdquo;);        IList collection = (IList)pi.GetValue(targetResource, null);        collection.Remove(resourceToBeRemoved);        if (!entityToUpdate.Contains(targetResource))            entityToUpdate.Add(targetResource);    }    /// <summary>    /// Delete the given resource    /// </summary>    /// <param name="targetResource">resource that needs to be deleted</param>    void IUpdatable.DeleteResource(object targetResource)    {        entityToRemove.Add(targetResource);    }    /// <summary>    /// Saves all the pending changes made till now    /// </summary>    void IUpdatable.SaveChanges()    {        using (var transaction = Session.BeginTransaction())        {            Session.FlushMode = FlushMode.Commit;            foreach (var entity in entityToUpdate)            {                Session.SaveOrUpdate(entity);            }            foreach (var entity in entityToRemove)            {                Session.Delete(entity);            }            transaction.Commit();        }            }    /// <summary>    /// Returns the actual instance of the resource represented by the given resource object    /// </summary>    /// <param name="resource">object representing the resource whose instance needs to be fetched</param>    /// <returns>The actual instance of the resource represented by the given resource object</returns>    object IUpdatable.ResolveResource(object resource)    {        return resource;    }    /// <summary>    /// Revert all the pending changes.    /// </summary>    void IUpdatable.ClearChanges()    {    }}
+</del></p>
+
+<p>\
+This implementation receives an instance of a NHibernate session, and
+implements all the required methods for creating, updating and deleting
+existing entities. As you can see, this is an abstract class that you
+can reuse for any NHibernate Data service. The concrete implementation
+is the one that you will need to expose in the data service, and it is
+tied to your entities. For instance,</p>
+
+<p> </p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+public class MyNHibernateDataContext : NHibernateDataContext{    public MyNHibernateDataContext(ISession session)        : base(session)    {    }    public IQueryable<Customer> Customers    {        get        {            return new NhQueryable<Customer>(Session);                    }    }    public IQueryable<Person> People    {        get        {            return new NhQueryable<Person>(Session);        }    }}
+</del></p>
+
+<p>\</p>
+
+<p>Finally, the data service exposes the concrete implementation of the
+data context, and provides some code to initialize the NHibernate
+session.</p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+[ServiceBehavior(IncludeExceptionDetailInFaults=true)]public class MyDataService : DataService<MyNHibernateDataContext>, IDisposable{    public static void InitializeService(DataServiceConfiguration config)    {        config.SetEntitySetAccessRule(&ldquo;*&rdquo;, EntitySetRights.All);        config.DataServiceBehavior.AcceptCountRequests = true;        config.DataServiceBehavior.AcceptProjectionRequests = true;        config.DataServiceBehavior.MaxProtocolVersion = DataServiceProtocolVersion.V2;        config.UseVerboseErrors = true;    }    ISession session;    protected override MyNHibernateDataContext CreateDataSource()    {        var factory = CreateSessionFactory();        this.session = factory.OpenSession();        this.session.FlushMode = FlushMode.Auto;        return new MyNHibernateDataContext(this.session);    }    private static ISessionFactory CreateSessionFactory()    {        return Fluently.Configure()            .Database(MsSqlConfiguration.MsSql2008            .ConnectionString(&ldquo;Data source=.\SQLExpress;Initial Catalog=Samples;Trusted_Connection=yes&rdquo;)            .Cache(c => c                .UseQueryCache()                .ProviderClass<HashtableCacheProvider>())            .ShowSql())            .Mappings(m => m.FluentMappings.AddFromAssemblyOf<Program>())            .BuildSessionFactory();    }
+</del></p>
+
+<p>\</p>
+
+<p>This example uses Fluent NHibernate for mapping the entities to the
+database structure. All the code for initializing the NHibernate session
+is in the CreateDataSource method that the DataService calls for serving
+any Http Request.  </p>
+
+<p> </p>
+
+<p>The mapping for the entity “Customer” looks using Fluent NHibernate
+looks as follow,</p>
+
+<p> </p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+[DataServiceKey(&ldquo;Id&rdquo;)]public class Customer {    public virtual Guid Id { get; private set; }    public virtual string FullName { get; set; }    public virtual string Country { get; set; }    public virtual IList<Person> People { get; set; }    public virtual void AddPerson(Person p)    {        p.Customer = this;        this.People.Add(p);    }}
+</del></p>
+
+<p>\</p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+public class CustomerMap : ClassMap<Customer>{    public CustomerMap()    {        Id(x => x.Id).GeneratedBy.GuidComb()           .UnsavedValue(&ldquo;00000000-0000-0000-0000-000000000000&rdquo;);          Map(x => x.FullName);        Map(x => x.Country);        HasMany(x => x.People)            .KeyColumn(&ldquo;CustomerId&rdquo;)            .Inverse()            .Cascade.All();    }}
+</del></p>
+
+<p>\</p>
+
+<p>The DataServiceKey in the entity is something required by the reflection
+provider for resolving queries by key (The dataservice will throw
+exceptions if you don’t provide that attribute for your entities).</p>
+
+<p> </p>
+
+<p>UPDATE!!: One colleague asked me an interesting question after I
+submitted this post. How do you deal with lazy properties or collections
+on the client side ?. This is not a problem at all with WCF Data
+services, as the default behavior is to retrieve the entities that you
+only asked for. That means that the associations (the lazy properties
+and collections) are not retrieved unless you ask for them explicitly
+with an expand (You are always in control of what you actually want to
+get). The code on the client side that uses an expand is showed here,</p>
+
+<p> </p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+var context = new MyNHibernateDataContext(new Uri(&ldquo;<a href="http://localhost:8080">http://localhost:8080</a>&rdquo;));var customer = context.Customers  .Expand(&ldquo;People&rdquo;)  .First();
+</del></p>
+
+<p>\</p>
+
+<p>Of course, this technique might not be optimal if you perform several
+expands as you will be reproducing the common N+1 problem. I think the
+only solution in that case is to implement a custom query provider that
+knows how to submit a single query for returning all the associations at
+once rather than performing different queries for each association.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/08/11/our-wcf-service-repository-so-aware-on-channel-9/">Our WCF Service Repository (SO-Aware) on Channel 9</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-08-11T00:00:00-03:00" pubdate data-updated="true">Aug 11<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/08/11/our-wcf-service-repository-so-aware-on-channel-9/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>My colleagues <a href="http://weblogs.asp.net/gsusx">Jesus Rodriguez</a> and
+<a href="http://dwightgoins.blogspot.com/">Dwight Goins</a> were talking about many
+of challenges you might find for managing WCF services in the
+enterprise, and how
+<a href="http://www.tellagostudios.com/products/so-aware%E2%84%A2">SO-Aware</a> can
+help you out in all those aspects. Check it out
+<a href="http://channel9.msdn.com/shows/Endpoint/endpointtv-Meet-SO-Aware-Part-1/">here</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/10/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/blog/page/8/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

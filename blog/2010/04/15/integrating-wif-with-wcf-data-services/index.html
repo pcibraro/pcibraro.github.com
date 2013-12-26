@@ -1,0 +1,504 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Integrating WIF with WCF Data Services - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="A time ago I
+discussed how a
+custom REST Starter kit interceptor could be used to parse a SAML token
+in the Http Authorization header and wrap that &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2010/04/15/integrating-wif-with-wcf-data-services">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Integrating WIF With WCF Data Services</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-04-15T00:00:00-03:00" pubdate data-updated="true">Apr 15<span>th</span>, 2010</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>A time ago I
+<a href="http://weblogs.asp.net/cibrax/archive/2009/03.aspx">discussed</a> how a
+custom REST Starter kit interceptor could be used to parse a SAML token
+in the Http Authorization header and wrap that into a ClaimsPrincipal
+that the WCF services could use. The thing is that code was initially
+created for Geneva framework, so it got deprecated quickly. I recently
+needed that piece of code for one of projects where I am currently
+working on so I decided to update it for WIF. As this interceptor can be
+injected in any host for WCF REST services, also represents an excellent
+solution for integrating claim-based security into WCF Data Services
+(previously known as ADO.NET Data Services).</p>
+
+<p>The interceptor basically expects a SAML token in the Authorization
+header. If a token is found, it is parsed and a new ClaimsPrincipal is
+initialized and injected in the WCF authorization context.</p>
+
+<p>public class SamlAuthenticationInterceptor : RequestInterceptor \
+{ \
+  SecurityTokenHandlerCollection handlers;</p>
+
+<p>  public SamlAuthenticationInterceptor() \
+    : base(false) \
+  { \
+    this.handlers =
+FederatedAuthentication.ServiceConfiguration.SecurityTokenHandlers; \
+  }</p>
+
+<p>  public override void ProcessRequest(ref RequestContext requestContext)
+\
+  { \
+    SecurityToken token =
+ExtractCredentials(requestContext.RequestMessage);</p>
+
+<p>    if (token != null) \
+    { \
+      ClaimsIdentityCollection claims = handlers.ValidateToken(token);</p>
+
+<p>      var principal = new ClaimsPrincipal(claims); \
+      InitializeSecurityContext(requestContext.RequestMessage,
+principal); \
+    } \
+    else \
+    { \
+      DenyAccess(ref requestContext); \
+    } \
+  }</p>
+
+<p>  private void DenyAccess(ref RequestContext requestContext) \
+  { \
+    Message reply = Message.CreateMessage(MessageVersion.None, null); \
+    HttpResponseMessageProperty responseProperty = new
+HttpResponseMessageProperty() { StatusCode = HttpStatusCode.Unauthorized
+};</p>
+
+<p>    responseProperty.Headers.Add(&ldquo;WWW-Authenticate&rdquo;, \
+          String.Format(&ldquo;Basic realm=\&rdquo;{0}\&ldquo;&rdquo;, &ldquo;&rdquo;));</p>
+
+<p>    reply.Properties[HttpResponseMessageProperty.Name] =
+responseProperty; \
+    requestContext.Reply(reply);</p>
+
+<p>    requestContext = null; \
+  }</p>
+
+<p>  private SecurityToken ExtractCredentials(Message requestMessage) \
+  { \
+    HttpRequestMessageProperty request = (HttpRequestMessageProperty) 
+requestMessage.Properties[HttpRequestMessageProperty.Name];</p>
+
+<p>    string authHeader = request.Headers[&ldquo;Authorization&rdquo;];</p>
+
+<p>    if (authHeader != null &amp;&amp; authHeader.Contains(&ldquo;&lt;saml&rdquo;)) \
+    { \
+      XmlTextReader xmlReader = new XmlTextReader(new
+StringReader(authHeader));</p>
+
+<p>      var col =
+SecurityTokenHandlerCollection.CreateDefaultSecurityTokenHandlerCollection();
+\
+      SecurityToken token = col.ReadToken(xmlReader); \
+                                 \
+      return token; \
+    }</p>
+
+<p>    return null; \
+  }</p>
+
+<p>  private void InitializeSecurityContext(Message request, IPrincipal
+principal) \
+  { \
+    List&lt;IAuthorizationPolicy> policies = new
+List&lt;IAuthorizationPolicy>(); \
+    policies.Add(new PrincipalAuthorizationPolicy(principal)); \
+    ServiceSecurityContext securityContext = new
+ServiceSecurityContext(policies.AsReadOnly());</p>
+
+<p>    if (request.Properties.Security != null) \
+    { \
+      request.Properties.Security.ServiceSecurityContext =
+securityContext; \
+    } \
+    else \
+    { \
+      request.Properties.Security = new SecurityMessageProperty() {
+ServiceSecurityContext = securityContext }; \
+     } \
+   }</p>
+
+<p>   class PrincipalAuthorizationPolicy : IAuthorizationPolicy \
+   { \
+     string id = Guid.NewGuid().ToString(); \
+     IPrincipal user;</p>
+
+<p>     public PrincipalAuthorizationPolicy(IPrincipal user) \
+     { \
+       this.user = user; \
+     }</p>
+
+<p>     public ClaimSet Issuer \
+     { \
+       get { return ClaimSet.System; } \
+     }</p>
+
+<p>     public string Id \
+     { \
+       get { return this.id; } \
+     }</p>
+
+<p>     public bool Evaluate(EvaluationContext evaluationContext, ref
+object state) \
+     { \
+       evaluationContext.AddClaimSet(this, new
+DefaultClaimSet(System.IdentityModel.Claims.Claim.CreateNameClaim(user.Identity.Name)));
+\
+       evaluationContext.Properties[&ldquo;Identities&rdquo;] = new
+List&lt;IIdentity>(new IIdentity[] { user.Identity }); \
+       evaluationContext.Properties[&ldquo;Principal&rdquo;] = user; \
+       return true; \
+     } \
+   } \</p>
+
+<p>A WCF Data Service, as any other WCF Service, contains a service host
+where this interceptor can be injected. The following code illustrates
+how that can be done in the “svc” file.</p>
+
+<p>&lt;%@ ServiceHost Language=&ldquo;C#&rdquo; Debug=&ldquo;true&rdquo;
+Service=&ldquo;ContactsDataService&rdquo; \
+                Factory=&ldquo;AppServiceHostFactory&rdquo; %></p>
+
+<p>using System; \
+ using System.ServiceModel; \
+ using System.ServiceModel.Activation; \
+ using Microsoft.ServiceModel.Web;</p>
+
+<p>class AppServiceHostFactory : ServiceHostFactory \
+ { \
+   protected override ServiceHost CreateServiceHost(Type serviceType,
+Uri[] baseAddresses) \
+  { \
+    WebServiceHost2 result = new WebServiceHost2(serviceType, true,
+baseAddresses);</p>
+
+<p>    result.Interceptors.Add(new SamlAuthenticationInterceptor()); \
+            \
+    return result; \
+  } \
+}</p>
+
+<p>WCF Data Services includes an specific WCF host of out the box
+(DataServiceHost). However, the service is not affected at all if you
+replace it with a custom one as I am doing in the code above
+(WebServiceHost2 is part of the REST Starter kit).</p>
+
+<p>Finally, the client application needs to pass the SAML token somehow to
+the data service. In case you are using any Http client library for
+consuming the data service, that’s easy to do, you only need to include
+the SAML token as part of the “Authorization” header. If you are using
+the auto-generated data service proxy, a little piece of code is needed
+to inject a SAML token into the DataServiceContext instance. That class
+provides an event “SendingRequest” that any client application can
+leverage to include custom code that modified the Http request before it
+is sent to the service. So, you can easily create an extension method
+for the DataServiceContext that negotiates the SAML token with an
+existing STS, and adds that token as part of the “Authorization” header.</p>
+
+<p>public static class DataServiceContextExtensions \
+ {     </p>
+
+<p>  public static void ConfigureFederatedCredentials(this
+DataServiceContext context, string baseStsAddress, string realm) \
+  { \
+    string address = string.Format(STSAddressFormat, baseStsAddress,
+realm); \
+             \
+    string token = NegotiateSecurityToken(address); \
+    context.SendingRequest += (source, args) => \
+    { \
+      args.RequestHeaders.Add(&ldquo;Authorization&rdquo;, token); \
+    }; \
+  }</p>
+
+<p>private string NegotiateSecurityToken(string address) \
+ { \
+ }</p>
+
+<p>}</p>
+
+<p>I left the NegociateSecurityToken method empty for this extension as it
+depends pretty much on how you are negotiating tokens from an existing
+STS. In case you want to end-to-end REST solution that involves an Http
+endpoint for the STS, you should definitely take a look at the
+<a href="http://startersts.codeplex.com/">Thinktecture starter STS project</a> in
+codeplex.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-04-15T00:00:00-03:00" pubdate data-updated="true">Apr 15<span>th</span>, 2010</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2010/04/15/integrating-wif-with-wcf-data-services/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2010/04/15/integrating-wif-with-wcf-data-services/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2010/04/06/actas-and-onbehalfof-support-in-wif/" title="Previous Post: ActAs and OnBehalfOf support in WIF">&laquo; ActAs and OnBehalfOf support in WIF</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2010/05/11/getting-wcf-bindings-and-behaviors-from-any-config-source/" title="Next Post: Getting WCF Bindings and Behaviors from any config source">Getting WCF Bindings and Behaviors from any config source &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2010/04/15/integrating-wif-with-wcf-data-services/';
+        var disqus_url = 'http://cibrax.me/blog/2010/04/15/integrating-wif-with-wcf-data-services/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

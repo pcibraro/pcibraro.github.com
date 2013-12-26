@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: MVP | Pablo Cibraro (Cibrax)]]></title>
+  <link href="http://cibrax.me/blog/categories/mvp/atom.xml" rel="self"/>
+  <link href="http://cibrax.me/"/>
+  <updated>2013-12-26T15:03:47-03:00</updated>
+  <id>http://cibrax.me/</id>
+  <author>
+    <name><![CDATA[Cibrax]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[MVP again 2009!!]]></title>
+    <link href="http://cibrax.me/blog/2009/04/01/mvp-again-2009/"/>
+    <updated>2009-04-01T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2009/04/01/mvp-again-2009</id>
+    <content type="html"><![CDATA[<p>I just got great news!  MVP in Connected Systems for another year.</p>
+
+<p>I want to thank Ed Hickey, my MVP lead <a href="http://blogs.msdn.com/mvplead">Fernando Garcia
+Loera</a>, and the rest of people involved
+in the evaluation process for once again considering my efforts in the
+community worthy of recognition.</p>
+
+<p>Thanks again Microsoft!!!</p>
+]]></content>
+  </entry>
+  
+</feed>

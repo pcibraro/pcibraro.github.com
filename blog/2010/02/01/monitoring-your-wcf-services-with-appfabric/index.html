@@ -1,0 +1,393 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Monitoring your WCF services with AppFabric - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="Windows AppFabric (Previously known as Dublin) introduces a new built-in
+mechanism for monitoring the execution of the WCF services, all the
+events &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2010/02/01/monitoring-your-wcf-services-with-appfabric">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Monitoring Your WCF Services With AppFabric</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-02-01T00:00:00-03:00" pubdate data-updated="true">Feb 1<span>st</span>, 2010</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Windows AppFabric (Previously known as Dublin) introduces a new built-in
+mechanism for monitoring the execution of the WCF services, all the
+events generated during the execution or the interaction with other
+services. While the message trace capabilities in WCF already provided
+some detail about the execution and the exchanged messages, it was a
+feature more suitable for troubleshooting and error diagnosis.   The
+performance counters did not help in this area either, as they provided
+live service usage statistics, which sometimes resulted very useful to
+determine possible bottlenecks.</p>
+
+<p>When this monitoring mechanism is enabled for IIS Hosted services, the
+AppFabric extension will capture different events during the execution
+of the services. The level of detail or number of events that you want
+to capture is something that can be adjusted through configuration.</p>
+
+<p>In order to configure monitoring for an existing WCF service, you need
+to add the following section to the web.config file,</p>
+
+<p>&lt;microsoft.applicationServer> \
+    &lt;monitoring> \
+      \
+      &lt;default enabled=&ldquo;true&rdquo;
+connectionStringName=&ldquo;DefaultApplicationServerExtensions&rdquo;
+monitoringLevel=&ldquo;Troubleshooting&rdquo; /> \
+    &lt;/monitoring> \
+&lt;/microsoft.applicationServer></p>
+
+<p>The connectionStringName attribute should contain a reference to an
+existing connection string in the ConnectionString section, and that’s
+the database used by AppFabric to store the monitoring events.</p>
+
+<p>The monitoringLevel attribute specifies the number of events you want to
+capture in a service execution. The possible values for this setting
+are,</p>
+
+<ul>
+<li>Off (monitoringLevel=&ldquo;Off”): No data is collected. It would be
+equivalent to have monitoring disabled.</li>
+<li>Errors only (monitoringLevel=&ldquo;ErrorsOnly”):  Only errors and
+warnings events are collected. This is very useful when you don’t
+want to incur into performance issues for collecting application
+events but you still want to know about any error may happen during
+the execution.</li>
+<li>Health Monitoring (monitoringLevel=HealthMonitoring): This is the
+default level and collects enough application events to show
+different metrics in the AppFabric dashboard.</li>
+<li>End To End Monitoring (monitoringLevel=&ldquo;EndToEndMonitoring”). It
+collects all the events from the Health Monitoring level, plus
+additional events to reconstruct the message flow. For example,
+Service A called Service B. You will get also events representing
+info about the Service B call if monitoring is enabled on Service A.</li>
+<li>Troubleshooting (monitoringLevel=&ldquo;Troubleshooting&rdquo;). This is the
+most verbose of all, so it is appropriate for troubleshooting an
+unhealthy application.</li>
+</ul>
+
+
+<p>All this monitoring infrastructure is layered on top of “Event Tracing
+for Windows (ETW)”, which provides a very efficient and optimized
+mechanism for capturing application events without affecting the
+application performance at all. In addition, this infrastructure is
+complemented with a windows service for collecting the events (A ETW
+listener basically), and providers for dumping all the information to
+different storages. This last part is totally extensible, and you can
+configure your own implementation by implementing the interface
+Microsoft.ApplicationServer.Monitoring.EventCollector.IBulkCopy in the
+Monitoring.ApplicationServer.Monitoring assembly. This interface looks
+quite simple to implement, and AppFabric ships with a default
+implementation for SQL Server.</p>
+
+<p>public interface IBulkCopy \
+{ \
+        int BatchSize { get; set; } \
+        DbConnection Connection { get; set; } \
+        string DestinationTableName { get; set; }</p>
+
+<p>        void WriteToServer(DataTable dataTable); \
+}</p>
+
+<p>The windows service for collecting the ETW events can be found under the
+folder,
+C:\Windows\System32\ApplicationServerExtensions\Microsoft.ApplicationServer.ServiceHost.exe,
+and it must be started in order to capture and dump the events in the
+configured IBulkCopy provider.</p>
+
+<p>In addition, if you want to correlate all the service calls within a
+single execution (For example, Service A calling Service B, and B
+calling C) under a unique global identifier, so you can group all the
+events under that identifier, there is a new &lt;endToEndTracing> element
+under the &lt;system.ServiceModel/diagnostics> section that you can use.</p>
+
+<p>&lt;system.ServiceModel> \
+  &lt;diagnostics etwProviderId=&ldquo;7d98f890-ff8d-4311-be4f-e679103ba7cf&rdquo;> \
+    &lt;endToEndTracing propagateActivity=&ldquo;true&rdquo; messageFlowTracing=&ldquo;true&rdquo;
+/> \
+  &lt;/diagnostics> \
+&lt;/system.ServiceModel></p>
+
+<p>For example, the following image shows two events that are correlated
+under the same E2EActivityId, which represents a service “HelloWorld”
+calling an operation in another “EchoService” service.</p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/EndToEndTracing_51E2E059.jpg"><img src="http://weblogs.asp.net/blogs/cibrax/EndToEndTracing_thumb_2D8DD60A.jpg" title="EndToEndTracing" alt="EndToEndTracing" /></a></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-02-01T00:00:00-03:00" pubdate data-updated="true">Feb 1<span>st</span>, 2010</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2010/02/01/monitoring-your-wcf-services-with-appfabric/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2010/02/01/monitoring-your-wcf-services-with-appfabric/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2010/01/04/actas-in-ws-trust-1-4/" title="Previous Post: ActAs in WS-Trust 1.4">&laquo; ActAs in WS-Trust 1.4</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2010/02/17/the-system-cannot-find-the-file-specified-error-in-the-wif-fam-module/" title="Next Post: “The system cannot find the file specified” error in the WIF FAM module">“The system cannot find the file specified” error in the WIF FAM module &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2010/02/01/monitoring-your-wcf-services-with-appfabric/';
+        var disqus_url = 'http://cibrax.me/blog/2010/02/01/monitoring-your-wcf-services-with-appfabric/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

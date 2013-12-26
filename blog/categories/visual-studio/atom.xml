@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Visual-Studio | Pablo Cibraro (Cibrax)]]></title>
+  <link href="http://cibrax.me/blog/categories/visual-studio/atom.xml" rel="self"/>
+  <link href="http://cibrax.me/"/>
+  <updated>2013-12-26T15:03:47-03:00</updated>
+  <id>http://cibrax.me/</id>
+  <author>
+    <name><![CDATA[Cibrax]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Sticky notes plugin for Visual studio 2008]]></title>
+    <link href="http://cibrax.me/blog/2008/12/23/sticky-notes-pluggin-for-visual-studio-2008/"/>
+    <updated>2008-12-23T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2008/12/23/sticky-notes-pluggin-for-visual-studio-2008</id>
+    <content type="html"><![CDATA[<p>My good friend <a href="http://www.clariusconsulting.net/blogs/pga/">Pablo
+Galiano</a> has released a
+pretty cool plug-in for Visual Studio 2008, <a href="http://stickynotes4code.com/">Sticky
+Notes</a>. In a few words, this extension
+allows you to attach <a href="http://stickynotes4code.com/Screenshots.aspx">sticky notes to your
+code</a>, which can be
+personal notes (Only visible to you) or team notes (visible to the
+entire team).</p>
+
+<p>Give it a try!!.</p>
+]]></content>
+  </entry>
+  
+</feed>

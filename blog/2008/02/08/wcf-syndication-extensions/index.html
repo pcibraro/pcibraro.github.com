@@ -1,0 +1,490 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>WCF - Syndication Extensions - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="Syndication support was one of the nice features introduced in the
+latest WCF drop (3.5).  At first glance, I can say the APIs are great,
+allowing &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2008/02/08/wcf-syndication-extensions">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">WCF - Syndication Extensions</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-02-08T00:00:00-03:00" pubdate data-updated="true">Feb 8<span>th</span>, 2008</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Syndication support was one of the nice features introduced in the
+latest WCF drop (3.5).  At first glance, I can say the APIs are great,
+allowing you to write a syndication feed in matter of minutes without
+worrying much of some underline implementation details pertinent to RSS
+or ATOM.</p>
+
+<p>Another aspect that makes these APIs very powerful is the extensibility
+support through what the WCF team called &ldquo;Syndication Extensions&rdquo;. As
+its name clearly states, a syndication extension is a mechanism to
+extend a normal RSS or ATOM feed with custom elements or attributes,
+which is a good thing to implement many of the specifications available
+nowadays, for instance, FeedSync or GeoRss to name a few.</p>
+
+<p>WCF particularly supports two kinds of extensions, loose-typed and typed
+extensions.</p>
+
+<p>In the first one, the extensions are accessed in a loosely-typed way
+through the AttributeExtensions (for xml attribute extensions) and
+ElementExtensions (for xml element extensions) properties in the
+syndication item. The only requirement for this type of extension is
+that the referenced type should be a valid data contract or xml
+serializable type.</p>
+
+<p>On the other hand, a typed extension  requires a bit more of code since
+the SyndicationItem class must be extended to parse the corresponding
+attribute or element extensions. A good thing about this type of
+extension is that the developer gets access to a Syndication Item
+instance with typed support for each one of the extensions, for
+instance, the developer can have a typed class FeedSyncItem, which
+essentially represents a SyndicationItem with FeedSync metadata to
+support synchronization through RSS or ATOM.</p>
+
+<p>The base class SyndicationItem for representing  simple items (which
+internally can be ATOM or RSS) contains four methods that can be
+overridden by the developer to support the corresponding extensions,</p>
+
+<p>TryParseElement and WriteElementExtension to read and write element
+extensions.</p>
+
+<p>TryParseAttribute and WriteAttributeExtension to read and write
+attribute extensions.</p>
+
+<p>Let&rsquo;s discuss both approaches with a simple implementation of FeedSync,
+(By the way, FeedSync is the final name for what was formerly called
+SSE, I already discussed SSE in previous posts).  The latest FeedSync
+specification is available at this URL,
+<a href="http://dev.live.com/feedsync/spec/">http://dev.live.com/feedsync/spec/</a></p>
+
+<p>A simple XML serializable class representing the FeedSync metadata
+should looks like this:</p>
+
+<p>[XmlRoot(ElementName = &ldquo;sync&rdquo;, Namespace =
+&ldquo;<a href="http://feedsync.org/2007/feedsync">http://feedsync.org/2007/feedsync</a>&rdquo;, IsNullable = false)]</p>
+
+<p>public class Sync</p>
+
+<p>{</p>
+
+<p>  [XmlElement(&ldquo;history&rdquo;)]</p>
+
+<p>  public List&lt;History> history { get; set; }</p>
+
+<p>  [XmlAttribute(AttributeName = &ldquo;id&rdquo;)]</p>
+
+<p>  public string Id { get; set; }</p>
+
+<p>  [XmlAttribute(AttributeName = &ldquo;updates&rdquo;)]</p>
+
+<p>  public int Updates { get; set; }</p>
+
+<p>  [XmlAttribute(AttributeName = &ldquo;deleted&rdquo;)]</p>
+
+<p>  public bool Deleted { get; set; }</p>
+
+<p>  [XmlAttribute(AttributeName = &ldquo;noconflicts&rdquo;)]</p>
+
+<p>  public bool NoConflicts { get; set; }</p>
+
+<p>}</p>
+
+<p>In the loose-typed approach, our FeedSync element can be accessed
+through the following code:</p>
+
+<p>// .. Read feed</p>
+
+<p>XmlSerializer serializer = new XmlSerializer(typeof(Sync));</p>
+
+<p>foreach (SyndicationItem item in feed.Items)</p>
+
+<p>{</p>
+
+<p>  foreach (SyndicationElementExtension extension in
+item.ElementExtensions)</p>
+
+<p>  {</p>
+
+<p>    if (extension.OuterName == &ldquo;sync&rdquo; &amp;&amp; extension.OuterNamespace == 
+&ldquo;<a href="http://feedsync.org/2007/feedsync">http://feedsync.org/2007/feedsync</a>&rdquo;)</p>
+
+<p>    {</p>
+
+<p>      Sync sync = extension.GetObject&lt;Sync>(serializer);</p>
+
+<p>    }</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p>Quite simple, we have to look up the right extension with some help of
+the OuterName and OuterNamespace properties, and then, deserialize the
+extension using the right formatter (For the example above, a
+XmlSerializer).</p>
+
+<p>The second approach requires more code on our side, two new classes have
+to be created, one for the feedsync items and another one for the feed.</p>
+
+<p>public class FeedSyncSyndicationItem : SyndicationItem</p>
+
+<p>{</p>
+
+<p>  public FeedSyncSyndicationItem()</p>
+
+<p>  : base()</p>
+
+<p>  {</p>
+
+<p>  }</p>
+
+<p>  private Sync sync;</p>
+
+<p>  public Sync Sync</p>
+
+<p>  {</p>
+
+<p>    get { return sync; }</p>
+
+<p>  }</p>
+
+<p>  protected override bool TryParseElement(System.Xml.XmlReader reader,
+string version)</p>
+
+<p>  {</p>
+
+<p>    if (reader.LocalName == &ldquo;sync&rdquo; &amp;&amp; reader.NamespaceURI ==
+&ldquo;<a href="http://feedsync.org/2007/feedsync">http://feedsync.org/2007/feedsync</a>&rdquo;)</p>
+
+<p>    {</p>
+
+<p>      XmlSerializer serializer = new XmlSerializer(typeof(Sync));</p>
+
+<p>      this.sync = (Sync)serializer.Deserialize(reader);</p>
+
+<p>      return true;</p>
+
+<p>    }</p>
+
+<p>    return base.TryParseElement(reader, version);</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p>In this case, I only implemented the TryParseElement since the FeedSync
+metadata is just an element (Other extension may be attributes)</p>
+
+<p>The feed implementation is only needed to specify the concrete class for
+the items,</p>
+
+<p>public class FeedSyncSyndicationFeed : SyndicationFeed</p>
+
+<p>{</p>
+
+<p>  public FeedSyncSyndicationFeed()</p>
+
+<p>  : base()</p>
+
+<p>  {</p>
+
+<p>  }</p>
+
+<p>  protected override SyndicationItem CreateItem()</p>
+
+<p>  {</p>
+
+<p>  return new FeedSyncSyndicationItem();</p>
+
+<p>}</p>
+
+<p>}</p>
+
+<p>Finally, we can create an instance of our typed feed (or item) using the
+static method .Load&lt;> available in the SyndicationItem and
+SyndicationFeed classes.</p>
+
+<p>FeedSyncSyndicationFeed feed =
+SyndicationFeed.Load&lt;FeedSyncSyndicationFeed>(reader);</p>
+
+<p>The reader in the example above points to an xml stream containing a
+valid feed with FeedSync metadata.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-02-08T00:00:00-03:00" pubdate data-updated="true">Feb 8<span>th</span>, 2008</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/wcf/'>WCF</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2008/02/08/wcf-syndication-extensions/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2008/02/08/wcf-syndication-extensions/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2008/01/22/authenticating-users-with-supporting-tokens-in-wcf/" title="Previous Post: Authenticating users with Supporting Tokens in WCF">&laquo; Authenticating users with Supporting Tokens in WCF</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2008/02/11/single-sign-on-scenarios-with-federation/" title="Next Post: Single Sign-On scenarios with Federation">Single Sign-On scenarios with Federation &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2008/02/08/wcf-syndication-extensions/';
+        var disqus_url = 'http://cibrax.me/blog/2008/02/08/wcf-syndication-extensions/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

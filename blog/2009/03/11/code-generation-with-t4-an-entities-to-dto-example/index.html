@@ -1,0 +1,571 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Code generation with T4, Entities to DTOs example - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="T4 is a powerful template engine for code generation shipped out of the
+box within Visual Studio.  It is an evolution of T3, which was initially &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2009/03/11/code-generation-with-t4-an-entities-to-dto-example">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Code Generation With T4, Entities to DTOs Example</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-03-11T00:00:00-03:00" pubdate data-updated="true">Mar 11<span>th</span>, 2009</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>T4 is a powerful template engine for code generation shipped out of the
+box within Visual Studio.  It is an evolution of T3, which was initially
+introduced a couple of years ago as part of  the DSL toolkits and the
+software factories.</p>
+
+<p>Today, it is getting more attention from other product teams as well,
+for instance, the ASP.NET MVC and Entity Framework teams have recently
+announced that they will ship T4 templates as part of their products.
+That will provide a way to customize the code they are generating from
+custom tools or visual studio item templates.</p>
+
+<p>A cool thing is that you do not need any custom tool box to automate the
+code generation. You can simply add a T4 template to any Visual Studio
+project, rename it to use the extension &ldquo;tt&rdquo;, and visual studio will do
+the rest.</p>
+
+<p>One of the major pains, however, is the authoring experience for
+creating or modifying existing T4 templates in Visual Studio, there is
+not built-in support for doing that.  The company where I am currently
+working on, <a href="http://www.clariusconsulting.net/">Clarius Consulting</a>, has
+made the best designer ever for authoring T4 templates within Visual
+Studio, <a href="http://www.visualt4.com/">the T4 editor</a>. Some of the features
+included with this designer are syntax coloring, intellisense or code
+preview to name a few.</p>
+
+<p>This last weekend, while I was delayed a complete day in DC for
+mechanical problems  in one of the airplanes, I decided it was a good
+moment to start playing with this technology and make something
+productive with my time. The result was a T4 template for auto
+generating a DTO (Data transfer objects) layer based on WCF data
+contracts from an existing entity model. Using DTOs is a common practice
+for transferring the state of different entities across service
+boundaries, they are frequently found in system designs that follow the
+DDD principles.</p>
+
+<p>Although the resulting code is practically useless, it can be easily
+customized for supporting different scenarios. (Or at least, it will
+help to give you an idea about how this thing can be done)</p>
+
+<p>The structure of a T4 template is quite simple (And somehow similar to
+an ASP.NET page without any control), &ldquo;&lt;# #>&rdquo; for wrapping multiple
+lines of code or &ldquo;&lt;#= #>&rdquo; for inline code, the rest of the template
+is treated as text.</p>
+
+<p>For this example I used a model with a few entities (an <a href="http://en.wikipedia.org/wiki/Anemic_Domain_Model">anemic domain
+model</a> I would say),</p>
+
+<p>public class Employee</p>
+
+<p>{</p>
+
+<p>    public string Name</p>
+
+<p>    {</p>
+
+<p>        get;</p>
+
+<p>        set;</p>
+
+<p>    }</p>
+
+<p>    public Employee Boss</p>
+
+<p>    {</p>
+
+<p>        get;</p>
+
+<p>        set;</p>
+
+<p>    }</p>
+
+<p>    public Company Company</p>
+
+<p>    {</p>
+
+<p>        get;</p>
+
+<p>        set;</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>public class Company</p>
+
+<p>{</p>
+
+<p>    public string CompanyName</p>
+
+<p>    {</p>
+
+<p>        get;</p>
+
+<p>        set;</p>
+
+<p>    }</p>
+
+<p>    public List&lt;Employee> Employees</p>
+
+<p>    {</p>
+
+<p>        get;</p>
+
+<p>        set;</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>The template filters the types that have to be included in the code
+generating process with a Linq expression, all the entities in the
+&ldquo;EntitiesToDTO.Entities&rdquo; namespace in this case.</p>
+
+<p>&lt;#</p>
+
+<p>var entitiesNamespace = &ldquo;EntitiesToDTO.Entities&rdquo;;</p>
+
+<p>//Use another expression here to filter the entities</p>
+
+<p>var typesToRegister = from t in
+LoadProjectAssembly(entitiesAssembly).GetExportedTypes()</p>
+
+<p>                      where t.Namespace == entitiesNamespace &amp;&amp;
+t.IsClass &amp;&amp; !t.IsAbstract</p>
+
+<p>                      select t;</p>
+
+<p>#></p>
+
+<p>The resulting code is also quite straightforward, it includes a partial
+class that can be extended to support additional mappings.</p>
+
+<p>[DataContract(Name=&ldquo;employee&rdquo;, Namespace=&ldquo;urn:EntitiesToDTO/Entities&rdquo;)]</p>
+
+<p>public partial class EmployeeDTO   </p>
+
+<p>{</p>
+
+<p>    [DataMember(Name=&ldquo;name&rdquo;)]</p>
+
+<p>    public System.String Name</p>
+
+<p>    {</p>
+
+<p>        get; set;</p>
+
+<p>    }</p>
+
+<p>    [DataMember(Name=&ldquo;boss&rdquo;)]</p>
+
+<p>    public EmployeeDTO Boss</p>
+
+<p>    {</p>
+
+<p>        get; set;</p>
+
+<p>    }</p>
+
+<p>    [DataMember(Name=&ldquo;company&rdquo;)]</p>
+
+<p>    public CompanyDTO Company</p>
+
+<p>    {</p>
+
+<p>        get; set;</p>
+
+<p>    }</p>
+
+<p>    public Employee MapTo(EmployeeDTO dto)</p>
+
+<p>    {</p>
+
+<p>        return GetMapper().MapTo(dto);</p>
+
+<p>    }</p>
+
+<p>    public static EmployeeDTO MapFrom(Employee entity)</p>
+
+<p>    {</p>
+
+<p>        return GetMapper().MapTo(entity);</p>
+
+<p>    }</p>
+
+<p>    public static EmployeeMapper GetMapper()</p>
+
+<p>    {</p>
+
+<p>        return new EmployeeMapper();  </p>
+
+<p>    }</p>
+
+<p>    public partial class EmployeeMapper</p>
+
+<p>    {</p>
+
+<p>        public EmployeeDTO MapTo(EntitiesToDTO.Entities.Employee entity)</p>
+
+<p>        {</p>
+
+<p>            var dto = new EmployeeDTO</p>
+
+<p>            {  </p>
+
+<p>                Name = entity.Name,</p>
+
+<p>                Boss = EmployeeDTO.GetMapper().MapTo(entity.Boss),</p>
+
+<p>                Company = CompanyDTO.GetMapper().MapTo(entity.Company),</p>
+
+<p>            };</p>
+
+<p>            DoMapping(dto, entity);</p>
+
+<p>            return dto;</p>
+
+<p>        }</p>
+
+<p>        public EntitiesToDTO.Entities.Employee MapTo(EmployeeDTO dto)</p>
+
+<p>        {</p>
+
+<p>            var entity = new EntitiesToDTO.Entities.Employee</p>
+
+<p>            {  </p>
+
+<p>                Name = dto.Name,</p>
+
+<p>                Boss = EmployeeDTO.GetMapper().MapTo(dto.Boss),</p>
+
+<p>                Company = CompanyDTO.GetMapper().MapTo(dto.Company),</p>
+
+<p>            };</p>
+
+<p>            DoMapping(entity, dto);</p>
+
+<p>            return entity;</p>
+
+<p>        }</p>
+
+<p>        partial void DoMapping(EntitiesToDTO.Entities.Employee
+fromEntity, EmployeeDTO toDto);</p>
+
+<p>        partial void DoMapping(EmployeeDTO fromDto,
+EntitiesToDTO.Entities.Employee toEntity);</p>
+
+<p>    }</p>
+
+<p>} </p>
+
+<p>The mapper (EmployeeMapper) is an additional class to handle the
+mappings between entities and DTOs, a mapping class per DTO is
+generated. As you can see in the code below, either the EmployeeDTO or
+the EmployeeMapper can be extended with a partial class to perform
+additional mappings. For example,</p>
+
+<p>public partial class EmployeeDTO</p>
+
+<p>{</p>
+
+<p>    [DataMember(Name = &ldquo;fullName&rdquo;)]</p>
+
+<p>    public string FullName { get; set; }</p>
+
+<p>    public partial class EmployeeMapper</p>
+
+<p>    {</p>
+
+<p>        partial void DoMapping(Employee fromEntity, EmployeeDTO toDto)</p>
+
+<p>        {</p>
+
+<p>            toDto.FullName = fromEntity.Name + &ldquo; Foo&rdquo;;</p>
+
+<p>        }</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>The sample is available to download from
+<a href="/images/legacy/EntitiesToDTO.zip">here</a>.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-03-11T00:00:00-03:00" pubdate data-updated="true">Mar 11<span>th</span>, 2009</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2009/03/11/code-generation-with-t4-an-entities-to-dto-example/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2009/03/11/code-generation-with-t4-an-entities-to-dto-example/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2009/03/08/wcfmock-a-mocking-framework-for-wcf-services/" title="Previous Post: WCFMock, a mocking framework for WCF services">&laquo; WCFMock, a mocking framework for WCF services</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2009/03/13/httpclient-in-the-wcf-rest-starter-kit-preview-2/" title="Next Post: HttpClient in the WCF REST Starter Kit Preview 2">HttpClient in the WCF REST Starter Kit Preview 2 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2009/03/11/code-generation-with-t4-an-entities-to-dto-example/';
+        var disqus_url = 'http://cibrax.me/blog/2009/03/11/code-generation-with-t4-an-entities-to-dto-example/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

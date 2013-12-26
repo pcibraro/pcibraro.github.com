@@ -1,0 +1,878 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Implementing a Secure token service with WCF - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="I decided to write this post in order to show some necessary steps to
+build a Secure Token Service (STS) with the latest WCF CTP. There is a lot of &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2006/03/14/implementing-a-secure-token-service-with-wcf">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Implementing a Secure Token Service With WCF</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-03-14T00:00:00-03:00" pubdate data-updated="true">Mar 14<span>th</span>, 2006</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>I decided to write this post in order to show some necessary steps to
+build a Secure Token Service (STS) with the latest WCF CTP.</p>
+
+<p>There is a lot of messages in the newsgroups from people with problems
+to implement a solution like this, so they may find this article useful.</p>
+
+<p>The image below illustrates a generic architecture for an application
+that uses a brokered authentication with a STS.</p>
+
+<p> </p>
+
+<p> </p>
+
+<p> </p>
+
+<p> <img src="/images/legacy/ArchitectureWCFSTS.gif" alt="" /></p>
+
+<p> </p>
+
+<p>The client application is using a customBinding to secure the
+communication with the STS and a wsFederationHttpBinding to do that with
+the target service. In this case, the wsFederationHttpBinding includes
+the token obtained from the STS in the request message for the service.</p>
+
+<p>As you can see in the image, the following steps are performed in order
+to execute the final service:</p>
+
+<p> </p>
+
+<p>​1. The client application sends a RequestSecurityTokenMessage (RST) to
+the STS according to WS-Trust specification.</p>
+
+<p>​2. The STS receives a RST message, extract some information from it and
+creates a token. After that, it sends back a
+RequestSecurityTokenResponseMessage (RSTR) with the new token.</p>
+
+<p>​3. The client application sends a request message to the service and
+includes the token obtained from the STS.</p>
+
+<p>​4. The service executes the service and returns the response to the
+client application. The token is used to build the security claims for
+the authenticated user before calling the service method.</p>
+
+<p> </p>
+
+<p> </p>
+
+<p><strong>WCF configuration for the client application</strong></p>
+
+<p> </p>
+
+<p> </p>
+
+<p>&lt;system.serviceModel ></p>
+
+<p>        &lt;client></p>
+
+<p>            &lt;!&mdash; Endpoint configuration &mdash;></p>
+
+<p>            &lt;endpoint name=&ldquo;clientendpoint&rdquo;
+address=&ldquo;<a href="http://localhost/WCFSampleService/service.svc">http://localhost/WCFSampleService/service.svc</a>&rdquo;</p>
+
+<p>                binding=&ldquo;wsFederationHttpBinding&rdquo;</p>
+
+<p>                contract=&ldquo;IHelloWorld&rdquo;</p>
+
+<p>                behaviorConfiguration=&ldquo;ServiceBehavior&rdquo;</p>
+
+<p>                bindingConfiguration=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>                &lt;identity></p>
+
+<p>                    &lt;dns value=&ldquo;WCFQuickstartServer&rdquo;/></p>
+
+<p>                &lt;/identity></p>
+
+<p>            &lt;/endpoint></p>
+
+<p>        &lt;/client></p>
+
+<p> </p>
+
+<p>        &lt;bindings></p>
+
+<p> </p>
+
+<p>            &lt;!&mdash; Binding used to secure the communication with the STS
+&mdash;></p>
+
+<p>            &lt;customBinding></p>
+
+<p>                &lt;binding name=&ldquo;UsernameBinding&rdquo;></p>
+
+<p>                    &lt;security
+authenticationMode=&ldquo;UserNameForCertificate&rdquo;</p>
+
+<p>                            requireSecurityContextCancellation =&ldquo;false&rdquo;</p>
+
+<p>                            requireSignatureConfirmation=&ldquo;false&rdquo;</p>
+
+<p>                            messageProtectionOrder
+=&ldquo;SignBeforeEncryptAndEncryptSignature&rdquo;</p>
+
+<p>                            requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>                    &lt;/security></p>
+
+<p>                    &lt;httpTransport/></p>
+
+<p>                &lt;/binding></p>
+
+<p>            &lt;/customBinding></p>
+
+<p> </p>
+
+<p>            &lt;!&mdash; Binding used to secure the communication with the
+service &mdash;></p>
+
+<p>            &lt;wsFederationHttpBinding></p>
+
+<p>                &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>                    &lt;security mode=&ldquo;Message&rdquo;></p>
+
+<p>                        &lt;message
+issuedTokenType=&ldquo;<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>&rdquo;
+negotiateServiceCredential=&ldquo;false&rdquo;></p>
+
+<p>                            &lt;!&mdash; Uncomment this section to ask for
+specific claims to the STS</p>
+
+<p>                            &lt;claims></p>
+
+<p>                                &lt;add claimType 
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress">http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress</a>&rdquo;/></p>
+
+<p>                                &lt;add claimType 
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName">http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName</a>&rdquo;/></p>
+
+<p>                                &lt;add claimType 
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname">http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname</a>&rdquo;/></p>
+
+<p>                            &lt;/claims></p>
+
+<p>                            &mdash;></p>
+
+<p> </p>
+
+<p>                            &lt;!&mdash; Information related to the Secure
+token service &mdash;></p>
+
+<p>                            &lt;issuer
+address=&ldquo;<a href="http://localhost/WCFSecurityTokenService/service.svc">http://localhost/WCFSecurityTokenService/service.svc</a>&rdquo;
+bindingConfiguration=&ldquo;UsernameBinding&rdquo;</p>
+
+<p>                                binding=&ldquo;customBinding&rdquo;></p>
+
+<p>                                &lt;identity></p>
+
+<p>                                    &lt;dns value=&ldquo;WCFQuickstartServer&rdquo;/></p>
+
+<p>                                &lt;/identity></p>
+
+<p>                            &lt;/issuer></p>
+
+<p>                        &lt;/message></p>
+
+<p>                    &lt;/security></p>
+
+<p>                &lt;/binding></p>
+
+<p>            &lt;/wsFederationHttpBinding></p>
+
+<p>        &lt;/bindings></p>
+
+<p>        &lt;behaviors></p>
+
+<p>            &lt;!&mdash; Credentials configuration &mdash;></p>
+
+<p>            &lt;behavior name=&ldquo;ServiceBehavior&rdquo;></p>
+
+<p>                &lt;clientCredentials></p>
+
+<p>                    &lt;serviceCertificate></p>
+
+<p>                        &lt;defaultCertificate
+findValue=&ldquo;CN=WCFQuickstartServer&rdquo; storeLocation=&ldquo;LocalMachine&rdquo;
+storeName=&ldquo;My&rdquo; x509FindType=&ldquo;FindBySubjectDistinguishedName&rdquo;/></p>
+
+<p>                        &lt;authentication revocationMode=&ldquo;NoCheck&rdquo;
+certificateValidationMode=&ldquo;None&rdquo;>&lt;/authentication></p>
+
+<p>                    &lt;/serviceCertificate></p>
+
+<p>                &lt;/clientCredentials></p>
+
+<p>            &lt;/behavior></p>
+
+<p>        &lt;/behaviors></p>
+
+<p> &lt;/system.serviceModel></p>
+
+<p> </p>
+
+<p> </p>
+
+<hr />
+
+<p>Some notes about the configuration above:</p>
+
+<p> </p>
+
+<p>​1. The communication between the client and the STS is secured by a
+UsernameForCertificate binding. That is, the STS expects a UsernameToken
+as client token (Token used to authenticate the client)  and a
+X509Certificate as service token (Token used to encrypt and sign the
+message).</p>
+
+<p>​2. The &ldquo;issueTokenType&rdquo; attribute in the &ldquo;message&rdquo; element specifies
+the token type expected by the Service. The client application will
+include that value in the RST message and therefore the STS will know
+what kind of token it must create. If the STS does not support that kind
+of token, then it will return a fault message. For this sample, the
+client application is asking for a SAML token.</p>
+
+<p>​3. The &ldquo;negotiateServiceCredential&rdquo; attribute in the &ldquo;message&rdquo;
+element specifies if the client must interchange additional messages
+with the STS in order to negotiate the service certificate. I will give
+more information about this flag later in the next paragraphs.</p>
+
+<p>​4. The &ldquo;address&rdquo; attribute in the &ldquo;issuer&rdquo; element specifies the
+address of the STS. WCF also includes a default implementation of a
+InfoCard STS. In order to use that STS, you must configure the address
+<a href="http://schemas.microsoft.com/ws/2005/05/identity/issuer/self">http://schemas.microsoft.com/ws/2005/05/identity/issuer/self</a>.</p>
+
+<p>​5. The claims element is only valid for SAML tokens. It specifies what
+claims are expected in the token.</p>
+
+<p> </p>
+
+<p> </p>
+
+<p><strong>WCF configuration for the STS</strong></p>
+
+<p> </p>
+
+<p> </p>
+
+<p>&lt;system.serviceModel></p>
+
+<p>        &lt;services></p>
+
+<p>            &lt;service behaviorConfiguration=&ldquo;ServiceBehavior&rdquo;
+name=&ldquo;MySecureTokenService&rdquo;></p>
+
+<p>                &lt;endpoint binding=&ldquo;customBinding&rdquo; address=&ldquo;&rdquo;
+bindingConfiguration=&ldquo;ServiceBinding&rdquo;
+contract=&ldquo;IMySecureTokenService&rdquo;>&lt;/endpoint></p>
+
+<p>            &lt;/service></p>
+
+<p>        &lt;/services></p>
+
+<p>        &lt;bindings></p>
+
+<p>            &lt;customBinding></p>
+
+<p>                &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>                    &lt;security
+authenticationMode=&ldquo;UserNameForCertificate&rdquo;</p>
+
+<p>                            requireSecurityContextCancellation =&ldquo;false&rdquo;</p>
+
+<p>                            requireSignatureConfirmation=&ldquo;false&rdquo;</p>
+
+<p>                            messageProtectionOrder
+=&ldquo;SignBeforeEncryptAndEncryptSignature&rdquo;</p>
+
+<p>                            requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>                    &lt;/security></p>
+
+<p>                    &lt;httpTransport/></p>
+
+<p>                &lt;/binding></p>
+
+<p>            &lt;/customBinding></p>
+
+<p>        &lt;/bindings></p>
+
+<p>        &lt;behaviors></p>
+
+<p>            &lt;behavior name=&ldquo;ServiceBehavior&rdquo;
+returnUnknownExceptionsAsFaults=&ldquo;false&rdquo;></p>
+
+<p>                &lt;serviceCredentials></p>
+
+<p>                    &lt;serviceCertificate
+findValue=&ldquo;CN=WCFQuickstartServer&rdquo; storeLocation=&ldquo;LocalMachine&rdquo;
+storeName=&ldquo;My&rdquo; x509FindType=&ldquo;FindBySubjectDistinguishedName&rdquo;/></p>
+
+<p>                    &lt;/serviceCredentials></p>
+
+<p>            &lt;/behavior></p>
+
+<p>        &lt;/behaviors></p>
+
+<p> &lt;/system.serviceModel></p>
+
+<p> </p>
+
+<p> </p>
+
+<p>In this case, the STS implementation is in the class
+&ldquo;MySecureTokenService&rdquo; and it exposes the contract
+&ldquo;IMySecureTokenService&rdquo;.</p>
+
+<p>The binding configuration is similar to the configuration in the client.</p>
+
+<p> </p>
+
+<p> </p>
+
+<p><strong>WCF configuration for the Service</strong></p>
+
+<p> </p>
+
+<p> </p>
+
+<hr />
+
+<p>&lt;system.serviceModel></p>
+
+<p>        &lt;services></p>
+
+<p>            &lt;service</p>
+
+<p>                behaviorConfiguration=&ldquo;ServiceBehavior&rdquo;</p>
+
+<p>                name=&ldquo;SampleService.HelloWorldService&rdquo;></p>
+
+<p>                &lt;endpoint binding=&ldquo;wsFederationHttpBinding&rdquo;</p>
+
+<p>                    address=&ldquo;&rdquo;</p>
+
+<p>                    bindingConfiguration=&ldquo;ServiceBinding&rdquo;</p>
+
+<p>                    contract=&ldquo;SampleService.IHelloWorld&rdquo;/></p>
+
+<p>            &lt;/service></p>
+
+<p>        &lt;/services></p>
+
+<p>        &lt;bindings></p>
+
+<p>            &lt;wsFederationHttpBinding></p>
+
+<p>                &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>                    &lt;security mode=&ldquo;Message&rdquo;></p>
+
+<p>                        &lt;message
+issuedTokenType=&ldquo;<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>&rdquo;
+negotiateServiceCredential=&ldquo;false&rdquo;></p>
+
+<p>                            &lt;!&mdash;&lt;claims></p>
+
+<p>                                &lt;add
+claimType=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress">http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress</a>&rdquo;/></p>
+
+<p>                                &lt;add
+claimType=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName">http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName</a>&rdquo;/></p>
+
+<p>                                &lt;add
+claimType=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname">http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname</a>&rdquo;/></p>
+
+<p>                            &lt;/claims>&mdash;></p>
+
+<p>                            &lt;issuer
+address=&ldquo;<a href="http://localhost/SamlSecurityTokenService/SamlTokenIssuer.ashx">http://localhost/SamlSecurityTokenService/SamlTokenIssuer.ashx</a>&rdquo;
+bindingConfiguration=&ldquo;UsernameBinding&rdquo; binding=&ldquo;customBinding&rdquo;></p>
+
+<p>                                &lt;identity></p>
+
+<p>                                    &lt;dns value=&ldquo;WCFQuickstartServer&rdquo;/></p>
+
+<p>                                &lt;/identity></p>
+
+<p>                            &lt;/issuer></p>
+
+<p>                        &lt;/message></p>
+
+<p>                    &lt;/security></p>
+
+<p>                &lt;/binding></p>
+
+<p>            &lt;/wsFederationHttpBinding></p>
+
+<p>        &lt;/bindings></p>
+
+<p>        &lt;behaviors></p>
+
+<p>            &lt;behavior name=&ldquo;ServiceBehavior&rdquo;
+returnUnknownExceptionsAsFaults=&ldquo;false&rdquo;></p>
+
+<p>                &lt;serviceCredentials></p>
+
+<p>                    &lt;serviceCertificate
+findValue=&ldquo;CN=WCFQuickstartServer&rdquo; storeLocation=&ldquo;LocalMachine&rdquo;
+storeName=&ldquo;My&rdquo; x509FindType=&ldquo;FindBySubjectDistinguishedName&rdquo;/></p>
+
+<p>                &lt;/serviceCredentials></p>
+
+<p> </p>
+
+<p>            &lt;/behavior></p>
+
+<p>        &lt;/behaviors></p>
+
+<p> &lt;/system.serviceModel></p>
+
+<p> </p>
+
+<p> </p>
+
+<p>Again, the configuration of the wsFederationHttpBinding is identical to
+the configuration in the client application.</p>
+
+<p> </p>
+
+<p> </p>
+
+<p><strong>STS implementation</strong></p>
+
+<p> </p>
+
+<p> </p>
+
+<hr />
+
+<p>The contract for the STS is quite simple and looks as follows:</p>
+
+<p> </p>
+
+<p> </p>
+
+<p>[ServiceContract]</p>
+
+<p>public interface IMySecurityTokenService</p>
+
+<p>{</p>
+
+<p>    [OperationContract(Action =
+&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue">http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue</a>&rdquo;,</p>
+
+<p>                      ReplyAction =
+&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/02/trust/RSTR/Issue">http://schemas.xmlsoap.org/ws/2005/02/trust/RSTR/Issue</a>&rdquo;)]</p>
+
+<p>        Message IssueToken(Message rstMessage);</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p> </p>
+
+<p>It exposes one method &ldquo;IssueToken&rdquo; for the action
+&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue">http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue</a>&#8220; that is part of
+the WS-Trust specification.</p>
+
+<p> </p>
+
+<p> </p>
+
+<p>public class MySecureTokenService : IMySecurityTokenService</p>
+
+<p>{</p>
+
+<p>        public MySecureTokenService()</p>
+
+<p>        {</p>
+
+<p>        }</p>
+
+<p> </p>
+
+<p>        public Message IssueToken(Message rstMessage)</p>
+
+<p>        {</p>
+
+<p>            RequestSecurityToken rst =
+RequestSecurityToken.CreateFrom(rstMessage.GetReaderAtBodyContents());</p>
+
+<p> </p>
+
+<p>            SecurityToken issuedToken = null;</p>
+
+<p> </p>
+
+<p>            //Code to create the token goes here &hellip;&hellip;</p>
+
+<p> </p>
+
+<p>            // setup RSTR</p>
+
+<p>            RequestSecurityTokenResponse rstr = new
+RequestSecurityTokenResponse();</p>
+
+<p> </p>
+
+<p>            //attach security token to RSTR</p>
+
+<p>            rstr.RequestedSecurityToken = issuedToken;</p>
+
+<p>            rstr.TokenType = rst.TokenType;</p>
+
+<p> </p>
+
+<p>            // send RSTR</p>
+
+<p>            rstr.MakeReadOnly();</p>
+
+<p>            Message rstrMessage =
+Message.CreateMessage(rstMessage.Version,
+&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/02/trust/RSTR/Issue">http://schemas.xmlsoap.org/ws/2005/02/trust/RSTR/Issue</a>&rdquo;, rstr);</p>
+
+<p>            rstrMessage.Headers.RelatesTo =
+rstMessage.Headers.MessageId;</p>
+
+<p> </p>
+
+<p>            return rstrMessage;</p>
+
+<p>        }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p> </p>
+
+<p>The STS implementation receives a generic message containing the RST and
+creates a token using that information.\
+At the end, it returns a message containing the RSTR with the issued
+token. For this sample, I have omitted the code to build the token since
+you can create any token there (UsernameToken, SamlSecurityToken,
+etc)  depending on the value of the property &ldquo;rst.TokenType&rdquo;.</p>
+
+<p> </p>
+
+<p> </p>
+
+<p><strong>Avoiding the service credential negotiation</strong></p>
+
+<p> </p>
+
+<hr />
+
+<p>WCF provides a new feature to negotiate the service credentials for a
+service.</p>
+
+<p>When this feature is turned on, the client does not need to manually
+configure or specify the service credentials for the service. As a
+result, the client application interchanges an additional message with
+the service using a a protocol called SP-Nego.</p>
+
+<p>There is not any documentation or information around for that protocol,
+so it could be a problem if want to host your service in different
+platform like WSE. That is not a problem in WCF because the security
+bindings know how to interpret this message and create a response
+according to its content.</p>
+
+<p> </p>
+
+<p>There are two ways to disable this feature in WCF:</p>
+
+<p> </p>
+
+<p>1. Secure the communication with a customBinding since it does
+not provide this feature.</p>
+
+<p>​2. Turn off the attribute &ldquo;negotiateServiceCredential&rdquo; in the &ldquo;message&rdquo;
+element for the bindings wsFederationHttpBinding or wsHttpBinding.</p>
+
+<p> </p>
+
+<p>UPDATE: The STS implementation code is available in this post
+<a href="http://weblogs.asp.net/cibrax/archive/2006/09/08/SAML-_2D00_-STS-implementation-for-WCF.aspx">http://weblogs.asp.net/cibrax/archive/2006/09/08/SAML-_2D00_-STS-implementation-for-WCF.aspx</a></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-03-14T00:00:00-03:00" pubdate data-updated="true">Mar 14<span>th</span>, 2006</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/wcf/'>WCF</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2006/03/14/implementing-a-secure-token-service-with-wcf/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2006/03/14/implementing-a-secure-token-service-with-wcf/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2006/03/07/439763/" title="Previous Post: Intellisense support for WCF configuration files - February CTP">&laquo; Intellisense support for WCF configuration files - February CTP</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2006/03/15/440281/" title="Next Post: Remote pair programming">Remote pair programming &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2006/03/14/implementing-a-secure-token-service-with-wcf/';
+        var disqus_url = 'http://cibrax.me/blog/2006/03/14/implementing-a-secure-token-service-with-wcf/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

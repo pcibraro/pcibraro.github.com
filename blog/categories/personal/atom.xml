@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Personal | Pablo Cibraro (Cibrax)]]></title>
+  <link href="http://cibrax.me/blog/categories/personal/atom.xml" rel="self"/>
+  <link href="http://cibrax.me/"/>
+  <updated>2013-12-26T15:03:47-03:00</updated>
+  <id>http://cibrax.me/</id>
+  <author>
+    <name><![CDATA[Cibrax]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[My first MVP summit]]></title>
+    <link href="http://cibrax.me/blog/2008/04/21/my-first-mvp-summit/"/>
+    <updated>2008-04-21T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2008/04/21/my-first-mvp-summit</id>
+    <content type="html"><![CDATA[<p>As a MVP rookie, the only thing I can say is that the event met all the
+expectations I had before traveling to Seattle, the wait was worth it. I
+could attend a lot of interesting sessions about WCF, WWF, and OSLO
+among others, which gave me a complete picture about where Microsoft is
+headed in the future with respect to Service oriented applications.</p>
+
+<p>Another interesting aspect of the summit was the opportunity to meet
+other MVPs in person, very smart people and community leaders like Scott
+Hanselman, Roy Osherove (IXMLSerializable), Sam Gentile, Jesus Rodriguez
+or Roman Kiss (The brain behind many of the cool WSE, WWF and WCF cool
+samples that you can find around) to name a few.  </p>
+
+<p>I look forward to attending the summit again next year :).</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[MVP Again 2008!!!]]></title>
+    <link href="http://cibrax.me/blog/2008/04/07/mvp-again/"/>
+    <updated>2008-04-07T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2008/04/07/mvp-again</id>
+    <content type="html"><![CDATA[<p>I am so excited, this is third time I received the Microsoft MVP award.
+Thanks to all people involved in the evaluation process and my MVP lead
+<a href="http://blogs.msdn.com/mvplead">Fernando Garcia Loera</a>.</p>
+
+<p>I am looking forward to continue that collaborating throughout this
+year.</p>
+
+<p>Thanks again Microsoft!!!</p>
+]]></content>
+  </entry>
+  
+</feed>

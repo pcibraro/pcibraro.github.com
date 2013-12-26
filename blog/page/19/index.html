@@ -1,0 +1,1858 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="A couple of months ago I described a useful authentication pattern for
+Web applications based on supporting tokens, one of features provided by
+WCF. &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/page/19">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/03/26/authenticating-users-with-supporting-tokens-in-wcf-binding-extension/">Authenticating Users With Supporting Tokens in WCF - Binding Extension</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-03-26T00:00:00-03:00" pubdate data-updated="true">Mar 26<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/03/26/authenticating-users-with-supporting-tokens-in-wcf-binding-extension/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>A couple of months ago I described a useful authentication pattern for
+Web applications based on supporting tokens, one of features provided by
+WCF. After that, Dominick Baier wrote  a nice and intuitive
+<a href="http://www.leastprivilege.com/UserNameSupportingTokenInWCF.aspx">article</a>
+showing this pattern in practice with real code examples, something I
+could not include in my last post for time reasons :(.</p>
+
+<p>A bad thing about supporting tokens is that they can only be configured
+through code, there is no configuration support for this, which it means
+that the security binding element has to be modified at some point to
+include the supporting token requirements on the client and service side
+(e.g, token type, encryption and signature requirements). If IIS is
+being used as service host, this will eventually require a custom
+service factory just to plug in those requirements. </p>
+
+<p>Fortunately, WCF supports configuration extension points to allow
+developers to extend specific points of the configuration schema and
+object model.</p>
+
+<p>The &lt;extensions> section provides a centralized location for the
+registration of custom configuration objects required for creating a
+relatively open extensibility point to the WCF configuration system. 
+Each configuration extensibility point connects to one of three
+collections within this section:  behaviorExtensions,
+bindingElementExtensions, and bindingExtensions.</p>
+
+<p>A really good thing about the configuration extensions is that the
+developer does not have use any custom code like custom proxies or
+service factories to load those security settings (All that work is done
+by the extensions).</p>
+
+<p>During this post I will show how to write a custom binding extension to
+specify supporting token requirements for an endpoint through
+configuration. This sample will be specific to the web application
+scenario described by the pattern.</p>
+
+<p>Let&rsquo;s first discuss the configuration schema we want to have for the
+client and the service side. What we initially need is a custom binding
+to support the mutual X509 authentication scenario,</p>
+
+<p>&lt;customBinding></p>
+
+<p>  &lt;binding name=&ldquo;MutualCertificateBinding&rdquo;></p>
+
+<p>    &lt;security authenticationMode=&ldquo;MutualCertificate&rdquo;/></p>
+
+<p>    &lt;httpTransport/></p>
+
+<p>  &lt;/binding></p>
+
+<p>&lt;/customBinding></p>
+
+<p>Simple enough, this binding should be configured on the client and
+service side. Secondly, we have to specify the X509 certificates that
+will be used as client and service credentials for this binding.</p>
+
+<p>On the client side, those credentials are specified by means of a
+endpoint behavior,</p>
+
+<p>&lt;behavior name=&ldquo;ClientBehavior&rdquo;></p>
+
+<p>  &lt;clientCredentials></p>
+
+<p>    &lt;serviceCertificate></p>
+
+<p>       &lt;defaultCertificate findValue=&ldquo;CN=SampleService&rdquo;
+storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
+x509FindType=&ldquo;FindBySubjectDistinguishedName&rdquo;/></p>
+
+<p>       &lt;authentication revocationMode=&ldquo;NoCheck&rdquo;
+certificateValidationMode=&ldquo;None&rdquo;>&lt;/authentication></p>
+
+<p>    &lt;/serviceCertificate>   &lt;/clientCredentials></p>
+
+<p>&lt;/behavior></p>
+
+<p>The equivalent configuration settings will be set  on the server side,
+the same binding and a service behavior to specify the service
+certificate.</p>
+
+<p>&lt;behavior name=&ldquo;ServiceBehavior&rdquo;></p>
+
+<p>  &lt;serviceCredentials></p>
+
+<p>    &lt;serviceCertificate findValue=&ldquo;CN=SampleService&rdquo;
+storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
+x509FindType=&ldquo;FindBySubjectDistinguishedName&rdquo;/></p>
+
+<p>    &lt;clientCertificate></p>
+
+<p>      &lt;authentication revocationMode=&ldquo;NoCheck&rdquo;/></p>
+
+<p>    &lt;/clientCertificate></p>
+
+<p>  &lt;/serviceCredentials> &lt;/behavior></p>
+
+<p>Once we have these standard configuration, the next step is to add the
+custom extension (On both sides, the client and the service) and
+reference the existing &ldquo;MutualCertificate&rdquo; binding from there (The one
+that we previously defined). The custom extension will basically add the
+supporting token requirements to that binding.</p>
+
+<p>&lt;extensions>     &lt;bindingExtensions>           &lt;add
+name=&ldquo;trustedWeb&rdquo; type=&ldquo;Samples.TrustedWeb, Samples&rdquo;/>    
+&lt;/bindingExtensions></p>
+
+<p>&lt;/extensions></p>
+
+<p>&lt;bindings></p>
+
+<p>    &lt;trustedWeb></p>
+
+<p>     &lt;binding name=&ldquo;MyTrustedWeb&#8221; 
+bindingReference=&#8221;MutualCertificateBinding&rdquo; /></p>
+
+<p>    &lt;/trustedWeb></p>
+
+<p>    &lt;customBinding></p>
+
+<p>      &lt;binding name=&ldquo;MutualCertificateBinding&rdquo;></p>
+
+<p>        &lt;security authenticationMode=&ldquo;MutualCertificate&rdquo;/></p>
+
+<p>        &lt;httpTransport/></p>
+
+<p>      &lt;/binding></p>
+
+<p>    &lt;/customBinding></p>
+
+<p>&lt;/bindings></p>
+
+<p>The client and service will have to use this binding instead of the
+original mutual certificate binding (The one configured in the
+originalBinding attribute).</p>
+
+<p>Client configuration:</p>
+
+<p>&lt;client></p>
+
+<p>  &lt;endpoint address=&ldquo;<a href="http://localhost/SampleService/Service.svc">http://localhost/SampleService/Service.svc</a>&rdquo;</p>
+
+<p>    binding=&ldquo;trustedWeb&rdquo; bindingConfiguration=&ldquo;MyTrustedWeb&rdquo;
+behaviorConfiguration=&ldquo;ClientBehavior&rdquo;</p>
+
+<p>   contract=&ldquo;Client.ISampleService&rdquo;></p>
+
+<p>  &lt;/endpoint></p>
+
+<p>&lt;/client></p>
+
+<p>Service configuration:</p>
+
+<p> &lt;services></p>
+
+<p>   &lt;service name=&ldquo;SampleService&rdquo;
+behaviorConfiguration=&ldquo;ServiceBehavior&rdquo;></p>
+
+<p>     &lt;endpoint binding=&ldquo;trustedWeb&rdquo; address=&ldquo;&rdquo;
+bindingConfiguration=&ldquo;MyTrustedWeb&rdquo; contract=&ldquo;ISampleService&rdquo;></p>
+
+<p>&lt;/endpoint></p>
+
+<p>&lt;/service></p>
+
+<p>&lt;/services></p>
+
+<p>The trustedWeb custom extension performs two things:</p>
+
+<p>​1. Load the binding referenced by the attribute &ldquo;bindingReference&rdquo;</p>
+
+<p>protected override void OnApplyConfiguration(Binding binding)</p>
+
+<p>{</p>
+
+<p>  TrustedWebClientBinding trustedWebClient =
+(TrustedWebClientBinding)binding;</p>
+
+<p>  BindingsSection bindings =
+(BindingsSection)ConfigurationManager.GetSection(&ldquo;system.serviceModel/bindings&rdquo;);</p>
+
+<p>  if (bindings == null)</p>
+
+<p>  {</p>
+
+<p>    throw new ConfigurationErrorsException(&ldquo;Unexisting bindings
+section&rdquo;);</p>
+
+<p>  }</p>
+
+<p> 
+if(!bindings.CustomBinding.Bindings.ContainsKey(this.BindingReference))</p>
+
+<p>    throw new ConfigurationErrorsException(string.Format(&ldquo;Unexisting
+binding configuration {0}&rdquo;, this.BindingReference));</p>
+
+<p>  CustomBindingElement element =
+bindings.CustomBinding.Bindings[this.BindingReference];</p>
+
+<p>  trustedWebClient.Binding = new CustomBinding();</p>
+
+<p>  element.ApplyConfiguration(trustedWebClient.Binding);</p>
+
+<p>}</p>
+
+<p>​2. Creates the binding elements used by the referenced binding and adds
+the Supporting tokens requirements for an username.</p>
+
+<p>public override BindingElementCollection CreateBindingElements()</p>
+
+<p>{</p>
+
+<p>    return AddUserNameSupportingTokenToBinding(Binding);</p>
+
+<p>}</p>
+
+<p>private BindingElementCollection
+AddUserNameSupportingTokenToBinding(Binding binding)</p>
+
+<p>{</p>
+
+<p>  BindingElementCollection elements = binding.CreateBindingElements();</p>
+
+<p>  SecurityBindingElement security =
+elements.Find&lt;SecurityBindingElement>();</p>
+
+<p>  if (security != null)</p>
+
+<p>  {</p>
+
+<p>    UserNameSecurityTokenParameters tokenParameters = new
+UserNameSecurityTokenParameters();</p>
+
+<p>    tokenParameters.InclusionMode =
+SecurityTokenInclusionMode.AlwaysToRecipient;</p>
+
+<p>    tokenParameters.RequireDerivedKeys = false;</p>
+
+<p>   
+security.EndpointSupportingTokenParameters.SignedEncrypted.Add(tokenParameters);</p>
+
+<p>    return elements;</p>
+
+<p>  }</p>
+
+<p>  throw new ArgumentException(&ldquo;Unexisting security binding element&rdquo;);</p>
+
+<p>}</p>
+
+<p>The complete code is available to download from
+<a href="/images/legacy/TrustedWeb.zip">here</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/02/11/single-sign-on-scenarios-with-federation/">Single Sign-On Scenarios With Federation</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-02-11T00:00:00-03:00" pubdate data-updated="true">Feb 11<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/02/11/single-sign-on-scenarios-with-federation/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Before reading this post, if you know the basic concepts and ideas
+behind the implementation of an STS with WCF, go ahead and jump to the
+next paragraph. Otherwise, I recommend you to read the following post
+<a href="http://weblogs.asp.net/cibrax/archive/2006/03/14/440222.aspx">Implementing a Secure Token Service with
+WCF</a>
+first.</p>
+
+<h3></h3>
+
+<h3>Informal definition of Federation</h3>
+
+<p><img src="/images/legacy/SimpleFederation.jpg" alt="" /></p>
+
+<p>The image above illustrates a very simple view of a federation scenario.
+In the first block, we have a realm or security domain. A realm is a
+trust boundary that that can expand across several networks and it is
+basically composed by client applications, an STS and a collection of
+services (they essentially provide the business value to the client
+applications). A group of connected realms  conform a federation
+scenario (The trust boundary is around the STSs, each STS trust each
+other).</p>
+
+<p>You can read this article for a more formal definition of Federation,
+<a href="http://msdn2.microsoft.com/en-us/library/bb498017.aspx">http://msdn2.microsoft.com/en-us/library/bb498017.aspx</a></p>
+
+<h3>Key Interchange Process</h3>
+
+<p><strong>1. The client sends the RST message to the STS</strong></p>
+
+<p>As part of the initial negotiation of the token with the STS through the
+RST/RRST (Request Security Token / Response Request Security Token)
+messages, the client application also negotiates with the STS a
+cryptographic key that will be used later to secure the communication
+with the final service.</p>
+
+<p>This key can be symmetric or asymmetric, and the client application will
+decide which kind of type it wants in the initial RST message.</p>
+
+<p>This can be done in WCF by configuration:</p>
+
+<p>&lt;wsFederationHttpBinding></p>
+
+<p>  &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>  &lt;security mode=&ldquo;Message&rdquo;></p>
+
+<p>    &lt;message
+issuedTokenType=&ldquo;<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>&rdquo;
+<strong>issuedKeyType=&ldquo;SymmetricKey&rdquo;</strong>></p>
+
+<p>If the STS only supports one type of key (Symmetric or Asymmetric), that
+is another story, the client should know that beforehand. The STS can
+assume a default key type and always return that type or in the worst
+case, return an exception message.</p>
+
+<p>After generating the right key, the STS wraps it in an encrypted key
+token
+(<a href="http://www.ws-i.org/Profiles/BasicSecurityProfile-1.1.html#EncryptedKeyToken">http://www.ws-i.org/Profiles/BasicSecurityProfile-1.1.html#EncryptedKeyToken</a>)
+using the public X509 key of the destination service (This is determined
+by the AppliesTo element in the RST message), and adds the encrypted
+token in the issued SAML token (This token is signed by the private X509
+private key of the STS).</p>
+
+<p>The plain key is also added in the RRST message so the client
+application can get it from there (This assumes that the communication
+with the STS is also secure).</p>
+
+<p><strong>2. The client receives the RRST message and creates the request
+message for the final service</strong></p>
+
+<p>The client application receives the RRST message, and afterwards, it
+extracts the SAML token and the generated key. Finally, it adds the SAML
+token to the request message for the final service and secures the
+channel (Encrypts the request) using the plain key received from the
+STS.</p>
+
+<p><strong>3. The service receives the request message from the client</strong></p>
+
+<p>The service on the other side, receives the encrypted message and the
+SAML token. After that, it unwraps the encrypted key token included in
+the SAML token with its X509 private key. This key is used later to
+decrypts the request message sent by the client application.</p>
+
+<h3>Share a SAML token between several services</h3>
+
+<p>Ok, everything looks ok so far, the problems start here :).  If you go
+back to the step 1, the STS will wrap the key into the SAML token using
+a public key of a X509 certificate. Does this means that a SAML token
+will only be useful for the service that possess the corresponding
+private key ?. In other words, is the SAML token only valid for one
+service ?. Ok, the answer will depend on a specific factor, is the
+private X509 key shared among all the services ?. If the answer is YES,
+the SAML token will be reusable for any of those services.</p>
+
+<p>Now, is that a correct approach for implementing Single Sign-On ?. From
+my point of view, it is not, it just a security hole in the system. If
+one SAML token gets compromised by an attacker, this person will also
+get access to any service that share the same key. On other hand, if we
+have one key per service, if the SAML token gets compromised, only the
+service associated with that token is compromised. Clear enough, isn&rsquo;t
+it ? Single Sign-On here does not mean &ldquo;Get a token once, use it
+everywhere &hellip;&rdquo;. It means, &ldquo;use always the same set of credentials
+against the STS to get the correponding token&rdquo;.</p>
+
+<h3>Single Sign-On in Federation</h3>
+
+<p>In this section I will try to describe with my words what &ldquo;Single
+Sign-On&rdquo; means in a federation scenario. If we have a client application
+that wants to consume a service in another security realm, do we need to
+have another set of credentials to log into that realm and consume the
+service ?. The answer is &ldquo;NO&rdquo;, if a trust relationship exists between
+the Realms where the client application and the services are located, an
+automatic negotiation of credentials can happen on behalf of the client
+application between the STSs, and therefore the Single-Sign On is
+archived.</p>
+
+<p>If the STS in the second realm trusts the first realm, it can accepts
+SAML tokens from the first STS (Since the SAML token is signed, it can
+verify the origin with a X509 public key) and transform them to tokens
+valid for the second realm. This is how federation works behind stage,
+the trust relationship is delegated to the STSs.</p>
+
+<p>Of course, I do not have the last word and any feedback is always
+welcome :).</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/02/08/wcf-syndication-extensions/">WCF - Syndication Extensions</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-02-08T00:00:00-03:00" pubdate data-updated="true">Feb 8<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/02/08/wcf-syndication-extensions/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Syndication support was one of the nice features introduced in the
+latest WCF drop (3.5).  At first glance, I can say the APIs are great,
+allowing you to write a syndication feed in matter of minutes without
+worrying much of some underline implementation details pertinent to RSS
+or ATOM.</p>
+
+<p>Another aspect that makes these APIs very powerful is the extensibility
+support through what the WCF team called &ldquo;Syndication Extensions&rdquo;. As
+its name clearly states, a syndication extension is a mechanism to
+extend a normal RSS or ATOM feed with custom elements or attributes,
+which is a good thing to implement many of the specifications available
+nowadays, for instance, FeedSync or GeoRss to name a few.</p>
+
+<p>WCF particularly supports two kinds of extensions, loose-typed and typed
+extensions.</p>
+
+<p>In the first one, the extensions are accessed in a loosely-typed way
+through the AttributeExtensions (for xml attribute extensions) and
+ElementExtensions (for xml element extensions) properties in the
+syndication item. The only requirement for this type of extension is
+that the referenced type should be a valid data contract or xml
+serializable type.</p>
+
+<p>On the other hand, a typed extension  requires a bit more of code since
+the SyndicationItem class must be extended to parse the corresponding
+attribute or element extensions. A good thing about this type of
+extension is that the developer gets access to a Syndication Item
+instance with typed support for each one of the extensions, for
+instance, the developer can have a typed class FeedSyncItem, which
+essentially represents a SyndicationItem with FeedSync metadata to
+support synchronization through RSS or ATOM.</p>
+
+<p>The base class SyndicationItem for representing  simple items (which
+internally can be ATOM or RSS) contains four methods that can be
+overridden by the developer to support the corresponding extensions,</p>
+
+<p>TryParseElement and WriteElementExtension to read and write element
+extensions.</p>
+
+<p>TryParseAttribute and WriteAttributeExtension to read and write
+attribute extensions.</p>
+
+<p>Let&rsquo;s discuss both approaches with a simple implementation of FeedSync,
+(By the way, FeedSync is the final name for what was formerly called
+SSE, I already discussed SSE in previous posts).  The latest FeedSync
+specification is available at this URL,
+<a href="http://dev.live.com/feedsync/spec/">http://dev.live.com/feedsync/spec/</a></p>
+
+<p>A simple XML serializable class representing the FeedSync metadata
+should looks like this:</p>
+
+<p>[XmlRoot(ElementName = &ldquo;sync&rdquo;, Namespace =
+&ldquo;<a href="http://feedsync.org/2007/feedsync">http://feedsync.org/2007/feedsync</a>&rdquo;, IsNullable = false)]</p>
+
+<p>public class Sync</p>
+
+<p>{</p>
+
+<p>  [XmlElement(&ldquo;history&rdquo;)]</p>
+
+<p>  public List&lt;History> history { get; set; }</p>
+
+<p>  [XmlAttribute(AttributeName = &ldquo;id&rdquo;)]</p>
+
+<p>  public string Id { get; set; }</p>
+
+<p>  [XmlAttribute(AttributeName = &ldquo;updates&rdquo;)]</p>
+
+<p>  public int Updates { get; set; }</p>
+
+<p>  [XmlAttribute(AttributeName = &ldquo;deleted&rdquo;)]</p>
+
+<p>  public bool Deleted { get; set; }</p>
+
+<p>  [XmlAttribute(AttributeName = &ldquo;noconflicts&rdquo;)]</p>
+
+<p>  public bool NoConflicts { get; set; }</p>
+
+<p>}</p>
+
+<p>In the loose-typed approach, our FeedSync element can be accessed
+through the following code:</p>
+
+<p>// .. Read feed</p>
+
+<p>XmlSerializer serializer = new XmlSerializer(typeof(Sync));</p>
+
+<p>foreach (SyndicationItem item in feed.Items)</p>
+
+<p>{</p>
+
+<p>  foreach (SyndicationElementExtension extension in
+item.ElementExtensions)</p>
+
+<p>  {</p>
+
+<p>    if (extension.OuterName == &ldquo;sync&rdquo; &amp;&amp; extension.OuterNamespace == 
+&ldquo;<a href="http://feedsync.org/2007/feedsync">http://feedsync.org/2007/feedsync</a>&rdquo;)</p>
+
+<p>    {</p>
+
+<p>      Sync sync = extension.GetObject&lt;Sync>(serializer);</p>
+
+<p>    }</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p>Quite simple, we have to look up the right extension with some help of
+the OuterName and OuterNamespace properties, and then, deserialize the
+extension using the right formatter (For the example above, a
+XmlSerializer).</p>
+
+<p>The second approach requires more code on our side, two new classes have
+to be created, one for the feedsync items and another one for the feed.</p>
+
+<p>public class FeedSyncSyndicationItem : SyndicationItem</p>
+
+<p>{</p>
+
+<p>  public FeedSyncSyndicationItem()</p>
+
+<p>  : base()</p>
+
+<p>  {</p>
+
+<p>  }</p>
+
+<p>  private Sync sync;</p>
+
+<p>  public Sync Sync</p>
+
+<p>  {</p>
+
+<p>    get { return sync; }</p>
+
+<p>  }</p>
+
+<p>  protected override bool TryParseElement(System.Xml.XmlReader reader,
+string version)</p>
+
+<p>  {</p>
+
+<p>    if (reader.LocalName == &ldquo;sync&rdquo; &amp;&amp; reader.NamespaceURI ==
+&ldquo;<a href="http://feedsync.org/2007/feedsync">http://feedsync.org/2007/feedsync</a>&rdquo;)</p>
+
+<p>    {</p>
+
+<p>      XmlSerializer serializer = new XmlSerializer(typeof(Sync));</p>
+
+<p>      this.sync = (Sync)serializer.Deserialize(reader);</p>
+
+<p>      return true;</p>
+
+<p>    }</p>
+
+<p>    return base.TryParseElement(reader, version);</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p>In this case, I only implemented the TryParseElement since the FeedSync
+metadata is just an element (Other extension may be attributes)</p>
+
+<p>The feed implementation is only needed to specify the concrete class for
+the items,</p>
+
+<p>public class FeedSyncSyndicationFeed : SyndicationFeed</p>
+
+<p>{</p>
+
+<p>  public FeedSyncSyndicationFeed()</p>
+
+<p>  : base()</p>
+
+<p>  {</p>
+
+<p>  }</p>
+
+<p>  protected override SyndicationItem CreateItem()</p>
+
+<p>  {</p>
+
+<p>  return new FeedSyncSyndicationItem();</p>
+
+<p>}</p>
+
+<p>}</p>
+
+<p>Finally, we can create an instance of our typed feed (or item) using the
+static method .Load&lt;> available in the SyndicationItem and
+SyndicationFeed classes.</p>
+
+<p>FeedSyncSyndicationFeed feed =
+SyndicationFeed.Load&lt;FeedSyncSyndicationFeed>(reader);</p>
+
+<p>The reader in the example above points to an xml stream containing a
+valid feed with FeedSync metadata.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/01/22/authenticating-users-with-supporting-tokens-in-wcf/">Authenticating Users With Supporting Tokens in WCF</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-01-22T00:00:00-03:00" pubdate data-updated="true">Jan 22<span>nd</span>, 2008</time>
+        
+         | <a href="/blog/2008/01/22/authenticating-users-with-supporting-tokens-in-wcf/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h3>Context</h3>
+
+<p>A web application used by a great number of users calls a Web service by
+sending messages across a network, sometimes through one or more
+intermediaries. The web service needs to identify the user logged in the
+web application somehow to update data or initiate a business processes.
+Some of the data within the messages is considered to be sensitive in
+nature so it need to be protected.</p>
+
+<p>The ideal scenario here is to use message security with a username token
+to identify the logged user. Identify the user with a X509 certificate
+is not practical due to the high number of users.</p>
+
+<h3>Problem</h3>
+
+<p>How do you authenticate the user without sending the password on every
+web service call ?</p>
+
+<h3>Forces</h3>
+
+<p>Any of the following conditions justifies using the solution described
+in this pattern:</p>
+
+<p><strong>Keeping the username/password in memory on the web application is not
+secure</strong>. An attacker can gain access to that sensitive data whenever it
+leaves a secure area (such as a protected memory space).</p>
+
+<p><strong>Sending a username without password:</strong>An attacker could pose as a
+legitimate sender and send falsified messages, the message recipient can
+not verify that incoming messages originated from a legitimate sender.</p>
+
+<h3>Solution</h3>
+
+<p>Use a combination of a Mutual X509 Binding with a Usernametoken (Without
+password) as supporting token. The mutual X509 binding allows message
+signing and encryption using X.509 certificates. This binding accesses
+the client&rsquo;s private key, which is used to sign the message, and the
+service&rsquo;s public key to encrypts the message. The service decrypts the
+message using its private key and verifies the signature using the
+public key of the client. The public key is in the client&rsquo;s X.509
+certificate, which is included with the message.\
+The service&rsquo;s public key can be obtained out-of-band from a X509
+certificate installed on the client machine or through a negotiation
+with the service.</p>
+
+<p>Each token has a different purpose:</p>
+
+<p>​1. A Client X509 token for the web application, it used for data origin
+authentication, which enables the recipient to verify that messages have
+not been tampered with in transit (data integrity) and that they
+originate from the expected sender (In this case, the trusted web site).</p>
+
+<p>​2. Service X509 token, it is used to encrypt and protect sensitive data
+that is contained in a message</p>
+
+<p>​3. Username token, it is used identify the user that originally make
+the service call.</p>
+
+<h3>Implementation</h3>
+
+<p>Fortunately, the WCF SDK comes with examples that demonstrates the
+following:</p>
+
+<ul>
+<li>How to pass additional security tokens to a service through
+Supporting Tokens,
+<a href="http://msdn2.microsoft.com/en-us/library/ms751480.aspx">http://msdn2.microsoft.com/en-us/library/ms751480.aspx</a></li>
+<li>How to implement a custom username password validator. Since the
+username token does not contain a password, the validator should not
+authenticate anything.
+<a href="http://msdn2.microsoft.com/en-us/library/aa354513.aspx">http://msdn2.microsoft.com/en-us/library/aa354513.aspx</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2007/12/24/configuration-merge-for-wcf/">Configuration Merge for WCF</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-12-24T00:00:00-03:00" pubdate data-updated="true">Dec 24<span>th</span>, 2007</time>
+        
+         | <a href="/blog/2007/12/24/configuration-merge-for-wcf/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>One of the blog&rsquo;s readers from Italy, <a href="http://dotnetside.org/blogs/fabio/">Fabio
+Cozzolino</a> has written a interesting
+host for WCF that gets and merges configuration from different
+configuration files. You can download the code from <a href="http://dotnetside.org/blogs/fabio/archive/2007/12/15/Merge-di-file-di-configurazione-in-WCF.aspx">his
+post</a>,
+which is completely in Italian. (Anyway, the code is not, it is
+English).</p>
+
+<p>This could be a good solution to separate the configuration in logical
+partitions or divisions, and then, have a central host that consolidates
+all the configuration (It is a server side solution).  </p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2007/12/13/wcf-dependency-injection-behavior/">WCF Dependency Injection Behavior</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-12-13T00:00:00-03:00" pubdate data-updated="true">Dec 13<span>th</span>, 2007</time>
+        
+         | <a href="/blog/2007/12/13/wcf-dependency-injection-behavior/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Many times the services are just part of a service layer interface or
+facade that only delegate calls to other components in lower layers,
+such as entity translators, business logic components, data access
+components or service agents that work as proxy with other systems. To
+clarify more this point, this is how the Patterns &amp; Practices team
+envisioned  a general multi-layer architecture for .NET applications,
+<a href="http://blogs.msdn.com/donsmith/archive/2006/07/21/673481.aspx">http://blogs.msdn.com/donsmith/archive/2006/07/21/673481.aspx</a></p>
+
+<p>When this happens, the ideal scenario to test the service code is to
+replace the dependencies on lower layers by mocks or stubs objects and
+focus our unit tests in the service code only. Fortunately, the
+Dependency Injection pattern comes to help us here. Oran Dennison
+already discussed a similar approach in this excellent post,
+<a href="http://orand.blogspot.com/2006/10/wcf-service-dependency-injection.html">http://orand.blogspot.com/2006/10/wcf-service-dependency-injection.html</a>.</p>
+
+<p>During the course of this post I will take a different path using the
+&ldquo;Dependency Injection Container&rdquo; sample that comes with <a href="http://www.codeplex.com/ObjectBuilder">Object
+Builder</a> . This sample also
+includes good documentation about the supported features.</p>
+
+<p>So, suppose we have a service implementation with the following
+dependencies:</p>
+
+<p>[ServiceContract(Namespace =
+<a href="http://microsoft.servicemodel.samples/">http://Microsoft.ServiceModel.Samples</a>)]</p>
+
+<p>public interface ICustomer</p>
+
+<p>{</p>
+
+<p>   [OperationContract]</p>
+
+<p>   string GetFullName(string customerId);</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public class CustomerService : ICustomer</p>
+
+<p>{</p>
+
+<p>  ICustomerBusinessComponent businessComponent;</p>
+
+<p> </p>
+
+<p>  public CustomerService(ICustomerBusinessComponent businessComponent)</p>
+
+<p>  {</p>
+
+<p>    this.businessComponent = businessComponent;</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  public string GetFullName(string customerId)</p>
+
+<p>  {</p>
+
+<p>    return businessComponent.GetFullName(customerId);</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public interface ICustomerDataAccess</p>
+
+<p>{</p>
+
+<p>  string GetFullName(string customerId);</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public class CustomerDataAccess : ICustomerDataAccess</p>
+
+<p>{</p>
+
+<p>  public CustomerDataAccess()</p>
+
+<p>  {</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  public string GetFullName(string customerId)</p>
+
+<p>  {</p>
+
+<p>    return &ldquo;FOO&rdquo;;</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p>As you can see in the code above, our service has a direct dependency
+with a business component, and at the same time, our business component
+has a dependency with another component in the data access layer. What
+we want to do here is to inject both dependencies at runtime using the
+Dependency injection pattern.</p>
+
+<p>The equivalent code with the Dependency Container looks could be,</p>
+
+<p>DependencyContainer container = new DependencyContainer();</p>
+
+<p> </p>
+
+<p>container.RegisterTypeMapping&lt;ICustomerBusinessComponent,
+CustomerBusinessComponent>();</p>
+
+<p>container.RegisterTypeMapping&lt;ICustomerDataAccess,
+CustomerDataAccess>();</p>
+
+<p> </p>
+
+<p>CustomerService service = container.Get&lt;CustomerService>();</p>
+
+<p>Quite easy, the only requirement is the mapping, otherwise the container
+will not know how to create instances of the interfaces. Now, let&rsquo;s move
+forward to try configuring this in WCF using a behavior as extensibility
+point. WCF supports an extension called IInstanceProvider that controls
+the lifecycle of a WCF service instance. We will use one this provider
+to hook up our custom code and inject the dependencies at runtime.</p>
+
+<p>public class DIInstanceProvider : IInstanceProvider</p>
+
+<p>{</p>
+
+<p>  private Type serviceType;</p>
+
+<p>  List&lt;TypeMapping> typeMappings;</p>
+
+<p> </p>
+
+<p>  public DIInstanceProvider(Type serviceType, List&lt;TypeMapping>
+typeMappings)</p>
+
+<p>  {</p>
+
+<p>    this.serviceType = serviceType;</p>
+
+<p>    this.typeMappings = typeMappings;</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  public object GetInstance(InstanceContext instanceContext)</p>
+
+<p>  {</p>
+
+<p>    return GetInstance(instanceContext, null);</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  public object GetInstance(InstanceContext instanceContext, Message
+message)</p>
+
+<p>  {</p>
+
+<p>    DependencyContainer container = new DependencyContainer();</p>
+
+<p> </p>
+
+<p>    foreach (TypeMapping typeMapping in this.typeMappings)</p>
+
+<p>    {</p>
+
+<p>      container.RegisterTypeMapping(typeMapping.TypeRequested,
+typeMapping.TypeToBuild);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    return container.Get(this.serviceType);</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  public void ReleaseInstance(InstanceContext instanceContext, object
+instance)</p>
+
+<p>  {</p>
+
+<p> </p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>The typeMapping that you can see there in the code are extensions that
+we are going to set up through configuration. This class basically
+represents a mapping between a requested type (Which usually is an
+interface) and the type to build by the object builder (Which usually is
+the concrete implementation).</p>
+
+<p>public class TypeMapping</p>
+
+<p>{</p>
+
+<p>  private Type typeRequested;</p>
+
+<p>  private Type typeToBuild;</p>
+
+<p> </p>
+
+<p>  public TypeMapping(Type typeRequested, Type typeToBuild)</p>
+
+<p>  {</p>
+
+<p>    this.typeRequested = typeRequested;</p>
+
+<p>    this.typeToBuild = typeToBuild;</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  public Type TypeRequested</p>
+
+<p>  {</p>
+
+<p>    get { return typeRequested; }</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  public Type TypeToBuild</p>
+
+<p>  {</p>
+
+<p>    get { return typeToBuild; }</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p>Once we have the behavior implementation, the final step is to configure
+it in our application. This can be done as follows,</p>
+
+<p>&lt;behaviors></p>
+
+<p>      &lt;serviceBehaviors></p>
+
+<p>        &lt;behavior name=&ldquo;Behaviors1&rdquo;></p>
+
+<p>          &lt;dependencyInjection></p>
+
+<p>            &lt;typeMappings></p>
+
+<p>              &lt;add name=&ldquo;DataAccess&rdquo;
+typeRequested=&ldquo;SampleService.ICustomerDataAccess, SampleService&rdquo;
+typeToBuild=&ldquo;SampleService.CustomerDataAccess, SampleService&rdquo;/></p>
+
+<p>              &lt;add name=&ldquo;BusinessComponent&rdquo;
+typeRequested=&ldquo;SampleService.ICustomerBusinessComponent, SampleService&rdquo;
+typeToBuild=&ldquo;SampleService.CustomerBusinessComponent, SampleService&rdquo;/></p>
+
+<p>            &lt;/typeMappings></p>
+
+<p>          &lt;/dependencyInjection></p>
+
+<p>        &lt;/behavior></p>
+
+<p>      &lt;/serviceBehaviors>   </p>
+
+<p>&lt;/behaviors></p>
+
+<p>The configuration looks simple, I just mapped two interfaces to the real
+implementations (Which could be replaced during testing through mocks or
+stub objects). No additional code needed for the WCF service :&ndash;)</p>
+
+<p>As a final comment, the dependency container also supports method
+injection (This is to inject the dependencies that are arguments of a
+method) and setter injections (This is to inject dependencies through
+property setters).</p>
+
+<p>Download the complete sample from this
+<a href="/images/legacy/WCFDependencyInjection.zip">location</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2007/11/30/simple-sharing-extensions-for-net/">Simple Sharing Extensions for .NET</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-11-30T00:00:00-03:00" pubdate data-updated="true">Nov 30<span>th</span>, 2007</time>
+        
+         | <a href="/blog/2007/11/30/simple-sharing-extensions-for-net/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As I mentioned in a previous post, I have been very busy lately working
+with <a href="http://weblogs.asp.net/cazzu">Daniel</a>,
+<a href="http://weblogs.asp.net/marianor/">Mariano</a> and other guys here in
+Clarius on an open-source implementation of <a href="http://www.codeplex.com/sse">Simple Sharing Extensions
+for .NET</a>. The architecture of the project
+is still evolving, many changes have been introduced since the the first
+release, and it will continue this way as long as we find things to
+improve or new features are added. For this reason is that your feedback
+is quite important for us at this point.</p>
+
+<p> </p>
+
+<p><img src="/images/legacy/SSE_Framework.jpg" alt="" /></p>
+
+<p> </p>
+
+<p>As the diagram above shows, we basically have three main parts or
+components that conforms to our architecture:</p>
+
+<p>​1. SSE Model Classes: They represent the classes needed to parse and
+maintain the SSE metadata. In this group, you can find classes such as
+Sync to represent the synchronization history, XmlItem that contains the
+item xml payload or Item, which is a combination of a payload with sync
+metadata.</p>
+
+<p>​2. Sync Engine: It represents the synchronization engine that process
+and applies the SSE rules to the items at runtime. It basically receives
+items from two different sources or repositories and makes a complete
+merge, determining new item additions, deletions, modifications or
+conflicts, when an item was modified in both sources according to the
+SSE rules.</p>
+
+<p>​3. Repositories: This is the part of the architecture that can be
+extended, and where the developers can have an opportunity to get their
+hands dirty. In a few words, a repository represents a source of Items
+that contains an xml payload and sync metadata. It is responsible to
+provide and maintain that information in a underline storage, which can
+be memory, files, databases, or any other kind of storage. Here, you can
+also find an specific kind of repository, a CompoundRepository, which
+implements the Repository API and delegates the work to two new classes,
+XmlRepository and SyncRepository. The first one is only responsible for
+maintaining application specific data or payloads, and the second one
+for the sync metadata, the CompoundRepository then, knows how to
+correlate both parts (the payload and the sync info) through the SSE
+identifier that they have in common.</p>
+
+<p>So, depending on the sync scenario, you can just implement a part of a
+repository (Deriving from XmlRepository or SyncRepository) or a complete
+repository (Deriving from Repository).</p>
+
+<p>For the moment, there is only a SyncRepository that keeps the sync
+metadata in a database (Access, SQL Server or SQL CE), but more
+repositories will be available soon.</p>
+
+<p>Just to have an idea of how a synchronization scenario looks like, we
+could have for example two repositories, one that knows to how to read
+and maintain information about outlook contacts and another repository 
+that knows how to publish and retrieve items from the Microsoft Live
+Personal SSE service
+(<a href="http://sse.mslivelabs.com/">http://sse.mslivelabs.com/</a>). This will
+allow us a bidirectional synchronization of outlook contacts using
+perhaps the SSE service only as a relay agent.</p>
+
+<p><img src="/images/legacy/SSE_Scenario.jpg" alt="" /></p>
+
+<p>If you are interested in implementing any kind of synchronization
+scenario, go ahead and take a look at this project :&ndash;).</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2007/11/22/saml-sts-implementation-for-wse-3-0-reposted/">SAML STS Implementation for WSE 3.0 (Reposted)</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-11-22T00:00:00-03:00" pubdate data-updated="true">Nov 22<span>nd</span>, 2007</time>
+        
+         | <a href="/blog/2007/11/22/saml-sts-implementation-for-wse-3-0-reposted/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Since the Gotdot.net site disappeared along with the code of this
+implementation, my friend <a href="http://blogs.msdn.com/thehoggblog/">Jason
+Hogg</a> has kindly published the code
+on <a href="http://blogs.msdn.com/thehoggblog/archive/2007/11/20/saml-sts-for-wse-3-0-reposted.aspx">his
+blog</a>.</p>
+
+<p>Thanks Jason!!!</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2007/11/22/microsoft-synchronization-framework-and-sse/">Microsoft Synchronization Framework and SSE</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-11-22T00:00:00-03:00" pubdate data-updated="true">Nov 22<span>nd</span>, 2007</time>
+        
+         | <a href="/blog/2007/11/22/microsoft-synchronization-framework-and-sse/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Microsoft has released the first CTP of the synchronization framework,
+it is available to download
+<a href="http://www.microsoft.com/downloads/details.aspx?FamilyId=35E8F16E-AAA4-4919-8B3C-1CE4EA1F6552">here</a>.</p>
+
+<p>The idea of this framework is to provide a platform or foundation to
+synchronize data across multiple data stores through an extensible
+architecture based on providers.</p>
+
+<p>This drop comes with three providers out of the box,</p>
+
+<p>​1. Sync provider for ADO.NET, which is the provider for synchronization
+across databases  using ADO.NET.</p>
+
+<p>​2. Sync provider for File System, which can be used to synchronize two
+file system locations.</p>
+
+<p>​3. Sync provider for SSE (Simple Sharing Extensions) for
+synchronization data against SSE feeds. If you are not familiar with
+SSE, it is a lightweight protocol initially defined by <a href="http://rayozzie.spaces.live.com/blog/cns!FB3017FBB9B2E142!285.entry">Ray
+Ozzie</a>
+that mounts on top of RSS or ATOM to allow for two-way synchronization
+among peers. If you are interested in knowing more about this
+technology, <a href="http://www.clariusconsulting.net/blogs/kzu/archive/2007/06/26/28072.aspx">Daniel wrote an excellent
+post</a>
+in his blog a couple of weeks ago. As Daniel mentioned in his post, we
+have been participating of an open-source implementation of SSE,
+<a href="http://www.codeplex.com/sse/Release/ProjectReleases.aspx?ReleaseId=5301">SimpleSharing-NET</a>
+that is available to download in CodePlex.</p>
+
+<p>I will be discussing more about the SimpleSharing-NET architecture in
+future posts.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2007/10/19/loading-the-wcf-configuration-from-different-files-on-the-client-side/">Loading the WCF Configuration From Different Files on the Client Side</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-10-19T00:00:00-03:00" pubdate data-updated="true">Oct 19<span>th</span>, 2007</time>
+        
+         | <a href="/blog/2007/10/19/loading-the-wcf-configuration-from-different-files-on-the-client-side/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>A common problem in WCF that many people face is the impossibility of
+loading the client configuration from different configuration files.
+This is a common scenario  when the developer wants to
+deploy some binaries with along with an independent configuration file
+(Which may be in a resource file also) to avoid modifying the main
+configuration file. A weeks ago, I described a easy workaround to use
+the external configuration files through the use of the configSource
+attribute (A mechanism provided by .NET). However, that approach
+requires several configuration files to configure an entire WCF channel,
+at least three files (client section, bindings and behaviors).</p>
+
+<p>Another approach, which is less common and I will describe in this post,
+requires some custom code to extend the ChannelFactory&lt;T> class.</p>
+
+<p>The ChannelFactory&lt;T> provides a virtual method &ldquo;CreateDescription&rdquo;
+that can be overridden to create a ServiceEndpoint.</p>
+
+<p> </p>
+
+<p>//</p>
+
+<p>// Summary:</p>
+
+<p>//    Creates a description of the service endpoint.</p>
+
+<p>//</p>
+
+<p>// Returns:</p>
+
+<p>//    The System.ServiceModel.Description.ServiceEndpoint of the
+service.</p>
+
+<p>//</p>
+
+<p>// Exceptions:</p>
+
+<p>//   System.InvalidOperatorException:</p>
+
+<p>//    The callback contract is null but the service endpoint requires
+one that</p>
+
+<p>//    is non-null.</p>
+
+<p>protected override ServiceEndpoint CreateDescription();</p>
+
+<p>The default implementation of this method basically tries to load
+the endpoint configuration from the default configuration file (The file
+configured for the default AppDomain). So, the workaround here is to
+override that method and load the configuration from another file. It
+seems to be pretty easy to do at first glance, but as you will see next,
+it requires a lot of plumbing code to make it work.</p>
+
+<p>The first step is to derive our custom channel class from the
+ChannelFactory&lt;T> class and add an argument in the constructor to
+specify a different configuration file.</p>
+
+<p>/// &lt;summary></p>
+
+<p>/// Custom client channel. Allows to specify a different configuration
+file</p>
+
+<p>/// &lt;/summary></p>
+
+<p>/// &lt;typeparam name=&ldquo;T&rdquo;>&lt;/typeparam></p>
+
+<p>public class CustomClientChannel&lt;T> : ChannelFactory&lt;T></p>
+
+<p>{</p>
+
+<p>  string configurationPath;</p>
+
+<p> </p>
+
+<p>  /// &lt;summary></p>
+
+<p>  /// Constructor</p>
+
+<p>  /// &lt;/summary></p>
+
+<p>  /// &lt;param name=&ldquo;configurationPath&rdquo;>&lt;/param></p>
+
+<p>  public CustomClientChannel(string configurationPath) : base(typeof(T))</p>
+
+<p>  {</p>
+
+<p>    this.configurationPath = configurationPath;</p>
+
+<p>    base.InitializeEndpoint((string)null, null);</p>
+
+<p>  }</p>
+
+<p>As you can see, a call to the method InitialiazeEndpoint of the base
+class is required. That method will automatically call to our
+CreateDescription method to configure the service endpoint.</p>
+
+<p>/// &lt;summary></p>
+
+<p>/// Loads the serviceEndpoint description from the specified
+configuration file</p>
+
+<p>/// &lt;/summary></p>
+
+<p>/// &lt;returns>&lt;/returns></p>
+
+<p>protected override ServiceEndpoint CreateDescription()</p>
+
+<p>{</p>
+
+<p>   ServiceEndpoint serviceEndpoint = base.CreateDescription();</p>
+
+<p> </p>
+
+<p>   ExeConfigurationFileMap map = new ExeConfigurationFileMap();</p>
+
+<p>   map.ExeConfigFilename = this.configurationPath;</p>
+
+<p> </p>
+
+<p>   Configuration config =
+ConfigurationManager.OpenMappedExeConfiguration(map,
+ConfigurationUserLevel.None);</p>
+
+<p>   ServiceModelSectionGroup group =
+ServiceModelSectionGroup.GetSectionGroup(config);</p>
+
+<p> </p>
+
+<p>   ChannelEndpointElement selectedEndpoint = null;</p>
+
+<p> </p>
+
+<p>   foreach (ChannelEndpointElement endpoint in group.Client.Endpoints)</p>
+
+<p>   {</p>
+
+<p>      if (endpoint.Contract ==
+serviceEndpoint.Contract.ConfigurationName)</p>
+
+<p>      {</p>
+
+<p>        selectedEndpoint = endpoint;</p>
+
+<p>        break;</p>
+
+<p>      }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    if (selectedEndpoint != null)</p>
+
+<p>    {</p>
+
+<p>      if (serviceEndpoint.Binding == null)</p>
+
+<p>      {</p>
+
+<p>        serviceEndpoint.Binding =
+CreateBinding(selectedEndpoint.Binding, group);</p>
+
+<p>      }</p>
+
+<p> </p>
+
+<p>      if (serviceEndpoint.Address == null)</p>
+
+<p>      {</p>
+
+<p>        serviceEndpoint.Address = new
+EndpointAddress(selectedEndpoint.Address,
+GetIdentity(selectedEndpoint.Identity),
+selectedEndpoint.Headers.Headers);</p>
+
+<p>      }</p>
+
+<p> </p>
+
+<p>      if (serviceEndpoint.Behaviors.Count == 0 &amp;&amp;
+selectedEndpoint.BehaviorConfiguration != null)</p>
+
+<p>      {</p>
+
+<p>        AddBehaviors(selectedEndpoint.BehaviorConfiguration,
+serviceEndpoint, group);</p>
+
+<p>      }</p>
+
+<p> </p>
+
+<p>      serviceEndpoint.Name = selectedEndpoint.Contract;</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    return serviceEndpoint;</p>
+
+<p> </p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>CreateDescription is the core method where we create the service
+endpoint using the configuration file specified in the constructor
+method.</p>
+
+<p>And the last step, is to use our custom channel in the client
+application instead of the base channel provided by WCF.</p>
+
+<p>CustomClientChannel&lt;ICalculator> channel = new
+CustomClientChannel&lt;ICalculator>(&ldquo;OtherConfig.config&rdquo;);</p>
+
+<p>ICalculator client = channel.CreateChannel();</p>
+
+<p>The code below uses the ICalculator contract  that comes with the WCF
+sdk samples.</p>
+
+<p>You can download the <a href="/images/legacy/CustomChannel.zip">complete sample
+here</a></p>
+
+<p> </p>
+
+<p> </p>
+
+<p> </p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/20/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/blog/page/18/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

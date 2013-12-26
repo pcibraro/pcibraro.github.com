@@ -1,0 +1,507 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Service interface factory - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="Last week I received some feedback from the web services guru Christian
+Weyer (By the way, a cool guy
+too) about my post &ldquo;Proxy
+Factory&rdquo &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2006/03/31/441591">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Service Interface Factory</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-03-31T00:00:00-03:00" pubdate data-updated="true">Mar 31<span>st</span>, 2006</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Last week I received some feedback from the web services guru <a href="http://blogs.thinktecture.com/cweyer">Christian
+Weyer</a> (By the way, a cool guy
+too) about my post <a href="/cibrax/archive/2006/02/06/437501.aspx" title="'">&ldquo;Proxy
+Factory&rdquo;</a>, so I decided to
+develop a complete and usable sample to show that concept.</p>
+
+<p>In that post, I described a way to separate the service interface from
+the service implementation doing something similar to what WCF does when
+it creates a channel for a specific interface.</p>
+
+<p>During this post, I will give a brief description about the main parts
+of this sample.</p>
+
+<p>First of all, I defined a service interface or contract for my service.
+I did not use my imagination at all and I decided to call this interface
+&ldquo;IHelloWorld&rdquo;.</p>
+
+<p>public interface IHelloWorld</p>
+
+<p>{</p>
+
+<p>  string HelloWorld(string message);</p>
+
+<p>}</p>
+
+<p>The client application uses that interface and the service factory to
+create a proxy for the service implementation without care about any
+details of this last one.</p>
+
+<p>class Program</p>
+
+<p>{</p>
+
+<p>  static void Main(string[] args)</p>
+
+<p>  {</p>
+
+<p>     //Default implementation</p>
+
+<p>     ServiceFactory&lt;IHelloWorld> factory = new
+ServiceFactory&lt;IHelloWorld>();</p>
+
+<p>     IHelloWorld service = factory.Create();</p>
+
+<p>     Console.WriteLine(service.HelloWorld(&ldquo;John Doe&rdquo;));</p>
+
+<p> </p>
+
+<p>     //Remote implementation</p>
+
+<p>     factory = new
+ServiceFactory&lt;IHelloWorld>(&ldquo;RemoteImplementation&rdquo;);</p>
+
+<p>     service = factory.Create();</p>
+
+<p>     Console.WriteLine(service.HelloWorld(&ldquo;John Doe&rdquo;));</p>
+
+<p>   }</p>
+
+<p>}</p>
+
+<p>The proxy for the service implementation perform the following steps</p>
+
+<ol>
+<li>Looks for the correct service implementation using the provided
+interface</li>
+<li>Creates an instance of the service implementation</li>
+<li>Invokes the right method on the service implementation</li>
+</ol>
+
+
+<p>For this sample, the proxy is quite simple and invokes the real service
+in the current machine, but more complex tasks could be performed, such
+as message interception or remote invocation. (WCF performs both things,
+it uses message interception to create a soap message and remote
+invocation to execute the service implementation in other machine).</p>
+
+<p>public class ServiceProxy : System.Runtime.Remoting.Proxies.RealProxy</p>
+
+<p>{</p>
+
+<p>  private Type type;</p>
+
+<p>  private string configurationName;</p>
+
+<p> </p>
+
+<p>  public ServiceProxy(string configurationName, Type type) : base(type)</p>
+
+<p>  {</p>
+
+<p>    this.type = type;</p>
+
+<p>    this.configurationName = configurationName;</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  public override System.Runtime.Remoting.Messaging.IMessage
+Invoke(System.Runtime.Remoting.Messaging.IMessage imsg)</p>
+
+<p>  {</p>
+
+<p>    Type implementationType = null;</p>
+
+<p>    string type = this.type.FullName;</p>
+
+<p>    foreach (ServiceInterfaceDefinition definition in
+ServiceInterfaceConfiguration.Current.Interfaces)</p>
+
+<p>    {</p>
+
+<p>      if ((this.configurationName == null || this.configurationName ==
+definition.Name) &amp;&amp; type == definition.Type)</p>
+
+<p>      {</p>
+
+<p>        implementationType = definition.ImplementationType;</p>
+
+<p>        break;</p>
+
+<p>      }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    if(implementationType == null)</p>
+
+<p>      throw new Exception(&ldquo;The implementation type can not be null&rdquo;);</p>
+
+<p> </p>
+
+<p>    object implementation =
+Activator.CreateInstance(implementationType);</p>
+
+<p>    ReturnMessage retmsg = null;</p>
+
+<p>    if (imsg is IMethodCallMessage)</p>
+
+<p>    {</p>
+
+<p>      IMethodCallMessage call = imsg as IMethodCallMessage;</p>
+
+<p>      object returnValue =
+implementationType.InvokeMember(call.MethodName,
+System.Reflection.BindingFlags.InvokeMethod,</p>
+
+<p>              null, implementation, call.Args);</p>
+
+<p>      retmsg = new ReturnMessage(returnValue, null, 0, null, call);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    return retmsg;</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p>The configuration for the client application contains two service
+implementations in this case, &ldquo;LocalImplementation&rdquo; for a component in
+the same application and &ldquo;RemoteImplementation&rdquo; for a web service proxy.</p>
+
+<p>&lt;serviceInterfaces></p>
+
+<p>  &lt;interfaces></p>
+
+<p>    &lt;add name=&ldquo;LocalImplementation&rdquo;</p>
+
+<p>        implementationType=&ldquo;ServiceInterfaces.Client.LocalHelloWorld,
+ServiceInterfaces.Client&rdquo;</p>
+
+<p>        type=&ldquo;ServiceInterfaces.IHelloWorld&rdquo;></p>
+
+<p>    &lt;/add></p>
+
+<p>    &lt;add name=&ldquo;RemoteImplementation&rdquo;</p>
+
+<p>         implementationType=&ldquo;ServiceInterfaces.Client.RemoteHelloWorld,
+ServiceInterfaces.Client&rdquo;</p>
+
+<p>         type=&ldquo;ServiceInterfaces.IHelloWorld&rdquo;></p>
+
+<p>    &lt;/add></p>
+
+<p>  &lt;/interfaces></p>
+
+<p>&lt;/serviceInterfaces></p>
+
+<p>The code below shows the service implementation configured as
+&ldquo;LocalImplementation&rdquo;.</p>
+
+<p>class LocalHelloWorld : IHelloWorld</p>
+
+<p>{</p>
+
+<p>  #region IHelloWorld Members</p>
+
+<p>  public string HelloWorld(string message)</p>
+
+<p>  {</p>
+
+<p>    return String.Format(&ldquo;Local Hello World : {0}&rdquo;, message);</p>
+
+<p>  }</p>
+
+<p>  #endregion</p>
+
+<p>}</p>
+
+<p>Download the complete sample from
+<a href="/images/legacy/ServiceFactory.zip" title="here ">here</a></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-03-31T00:00:00-03:00" pubdate data-updated="true">Mar 31<span>st</span>, 2006</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/my-work/'>My-work</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2006/03/31/441591/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2006/03/31/441591/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2006/03/29/WS_2D00_Compression-for-WCF/" title="Previous Post: WS-Compression for WCF">&laquo; WS-Compression for WCF</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2006/04/04/441887/" title="Next Post: MVP - Connected System Developer">MVP - Connected System Developer &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2006/03/31/441591/';
+        var disqus_url = 'http://cibrax.me/blog/2006/03/31/441591/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

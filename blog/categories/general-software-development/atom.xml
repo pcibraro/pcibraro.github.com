@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: General-Software-Development | Pablo Cibraro (Cibrax)]]></title>
+  <link href="http://cibrax.me/blog/categories/general-software-development/atom.xml" rel="self"/>
+  <link href="http://cibrax.me/"/>
+  <updated>2013-12-26T15:03:47-03:00</updated>
+  <id>http://cibrax.me/</id>
+  <author>
+    <name><![CDATA[Cibrax]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Clarius is Hiring!!!]]></title>
+    <link href="http://cibrax.me/blog/2007/10/17/clarius-is-hiring/"/>
+    <updated>2007-10-17T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2007/10/17/clarius-is-hiring</id>
+    <content type="html"><![CDATA[<p>Want to work at a growing, high energy services-software company?
+Clarius Consulting is looking for the candidates to help us fill the
+following positions:</p>
+
+<p>At Clarius we do all kind of interesting and exciting work. We help
+customers get up to speed with .Net by providing superb training,
+mentoring and consulting. We also write a lot of code. We present @
+several conferences (locally and worldwide) and we write articles and
+books.</p>
+
+<p><strong>Senior Software Developers.</strong></p>
+
+<p>The position is based in Buenos Aires, Argentina (Local candidates
+only). Selected candidates should possess experience in many of the
+following disciplines:</p>
+
+<p>ASP.NET, ADO.NET \
+Winforms .NET development (C#, preferably; MDI-based applications) and
+Webforms \
+XML-related standards \
+SQL Server 2000-2005 \
+Explicit/Implicit stored procedures. \
+Web Services / .NET remoting / WCF\
+COM+ / .NET interoperability \
+Migration from COM+ to .NET</p>
+
+<p>If you are interested, drop me a line with your resume (pci at
+clariusconsulting DOT net)</p>
+
+<p>Thanks!!!.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Microsoft SharedView Beta]]></title>
+    <link href="http://cibrax.me/blog/2007/07/23/microsoft-sharedview-beta/"/>
+    <updated>2007-07-23T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2007/07/23/microsoft-sharedview-beta</id>
+    <content type="html"><![CDATA[<p>If you haven&rsquo;t taken a look yet, Microsoft SharedView is a fast and easy
+way to share documents and screen views with small groups of friends or
+coworkers; anytime, anywhere, and what is most important, it is
+completely free. This version is available up to 15 people in different
+locations.</p>
+
+<p>Although it is still in beta version, I have been using this product for
+a while to show the progress of my work to other off-site teams, and it
+works pretty well with a standard internet connection.</p>
+
+<p>If you want to try it, it is
+available <a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=ddbf048d-db67-4c56-9335-6964e15975d2&amp;DisplayLang=en">here</a>.</p>
+]]></content>
+  </entry>
+  
+</feed>

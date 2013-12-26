@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: My-work | Pablo Cibraro (Cibrax)]]></title>
+  <link href="http://cibrax.me/blog/categories/my-work/atom.xml" rel="self"/>
+  <link href="http://cibrax.me/"/>
+  <updated>2013-12-26T15:03:47-03:00</updated>
+  <id>http://cibrax.me/</id>
+  <author>
+    <name><![CDATA[Cibrax]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Clarius Consulting ]]></title>
+    <link href="http://cibrax.me/blog/2007/05/26/clarius-consulting/"/>
+    <updated>2007-05-26T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2007/05/26/clarius-consulting</id>
+    <content type="html"><![CDATA[<p>On June 4th, I will officially become an associate of <a href="http://www.clariusconsulting.net/">Clarius
+Consulting</a>. I&rsquo;ll be joining a great
+team of "all-stars" developers such as <a href="http://weblogs.asp.net/cazzu">Daniel
+Cazzulino</a>, <a href="http://weblogs.asp.net/vga">Victor Garcia
+Aprea</a>, Juan Carlos Elichirigoity and
+Fernando Simonazzi, which is pretty amazing to me. Thanks guys for give
+me this opportunity!!.</p>
+
+<p>I&rsquo;m leaving Lagash after almost five years of service. As developer and
+first employee of the company, I made a lot of interesting stuff
+there, most of them for the Patterns &amp; Practices team. I&rsquo;d like to
+thank Lagash and wish them the best in the future!</p>
+
+<p> </p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[MVP award in &quot;Connected Systems&quot;]]></title>
+    <link href="http://cibrax.me/blog/2007/04/02/mvp-award-in-quot-connected-systems-quot/"/>
+    <updated>2007-04-02T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2007/04/02/mvp-award-in-quot-connected-systems-quot</id>
+    <content type="html"><![CDATA[<p>Today I received an email re-awarding my "Connected Systems" MVP status
+for another year. Thanks Again Microsoft !! for this award.</p>
+
+<p>I have been quite busy this last month, working on an interesting
+project for one of the 500 fortune companies and my first incursion in
+the mobile arena.\
+For those who do not know, I have returned to Argentina and I am working
+again for my previous company <a href="http://www.lagash.com">Lagash</a>.</p>
+
+<p>I promise I will start blogging soon so stay tuned.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[New work - New Life]]></title>
+    <link href="http://cibrax.me/blog/2006/05/14/446352/"/>
+    <updated>2006-05-14T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2006/05/14/446352</id>
+    <content type="html"><![CDATA[<p>A month ago, a person from the Inter-American development bank offered
+me a job as .NET consultant in that bank.</p>
+
+<p>After thinking a while, I decided to accept his offer and travel to
+Washington DC to starting work there in a project to develop some web
+applications and provide consulting in .NET development.</p>
+
+<p>This decision was really hard for me since it implied two important
+things, working abroad in a completely different country and leaving a
+wonderful company, Lagash.</p>
+
+<p>The years I worked in Lagash were awesome, I had to chance to work with
+the Microsoft P&amp;P team in different projects like application blocks,
+application frameworks and quickstarts, which gave me a deep knowledge
+and experience with the .NET platform and I very grateful to the</p>
+
+<p>Lagash guys.</p>
+
+<p>I think it is the best company in Argentina to work in software
+development with Microsoft technologies and you always will find good
+challenges there.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[MVP - Connected System Developer]]></title>
+    <link href="http://cibrax.me/blog/2006/04/04/441887/"/>
+    <updated>2006-04-04T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2006/04/04/441887</id>
+    <content type="html"><![CDATA[<p>I just received the confirmation email from the MVP Lead Ben Miller.
+Thank you Microsoft :&ndash;). \
+I also would like to give special thanks to <a href="http://www.thedatafarm.com/blog">Julie
+Lerman</a> and <a href="http://blogs.msdn.com/TheHoggBlog">Jason
+Hogg</a>, who have helped me a lot to
+obtain this award.\</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Service interface factory]]></title>
+    <link href="http://cibrax.me/blog/2006/03/31/441591/"/>
+    <updated>2006-03-31T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2006/03/31/441591</id>
+    <content type="html"><![CDATA[<p>Last week I received some feedback from the web services guru <a href="http://blogs.thinktecture.com/cweyer">Christian
+Weyer</a> (By the way, a cool guy
+too) about my post <a href="/cibrax/archive/2006/02/06/437501.aspx" title="'">&ldquo;Proxy
+Factory&rdquo;</a>, so I decided to
+develop a complete and usable sample to show that concept.</p>
+
+<p>In that post, I described a way to separate the service interface from
+the service implementation doing something similar to what WCF does when
+it creates a channel for a specific interface.</p>
+
+<p>During this post, I will give a brief description about the main parts
+of this sample.</p>
+
+<p>First of all, I defined a service interface or contract for my service.
+I did not use my imagination at all and I decided to call this interface
+&ldquo;IHelloWorld&rdquo;.</p>
+
+<p>public interface IHelloWorld</p>
+
+<p>{</p>
+
+<p>  string HelloWorld(string message);</p>
+
+<p>}</p>
+
+<p>The client application uses that interface and the service factory to
+create a proxy for the service implementation without care about any
+details of this last one.</p>
+
+<p>class Program</p>
+
+<p>{</p>
+
+<p>  static void Main(string[] args)</p>
+
+<p>  {</p>
+
+<p>     //Default implementation</p>
+
+<p>     ServiceFactory&lt;IHelloWorld> factory = new
+ServiceFactory&lt;IHelloWorld>();</p>
+
+<p>     IHelloWorld service = factory.Create();</p>
+
+<p>     Console.WriteLine(service.HelloWorld(&ldquo;John Doe&rdquo;));</p>
+
+<p> </p>
+
+<p>     //Remote implementation</p>
+
+<p>     factory = new
+ServiceFactory&lt;IHelloWorld>(&ldquo;RemoteImplementation&rdquo;);</p>
+
+<p>     service = factory.Create();</p>
+
+<p>     Console.WriteLine(service.HelloWorld(&ldquo;John Doe&rdquo;));</p>
+
+<p>   }</p>
+
+<p>}</p>
+
+<p>The proxy for the service implementation perform the following steps</p>
+
+<ol>
+<li>Looks for the correct service implementation using the provided
+interface</li>
+<li>Creates an instance of the service implementation</li>
+<li>Invokes the right method on the service implementation</li>
+</ol>
+
+
+<p>For this sample, the proxy is quite simple and invokes the real service
+in the current machine, but more complex tasks could be performed, such
+as message interception or remote invocation. (WCF performs both things,
+it uses message interception to create a soap message and remote
+invocation to execute the service implementation in other machine).</p>
+
+<p>public class ServiceProxy : System.Runtime.Remoting.Proxies.RealProxy</p>
+
+<p>{</p>
+
+<p>  private Type type;</p>
+
+<p>  private string configurationName;</p>
+
+<p> </p>
+
+<p>  public ServiceProxy(string configurationName, Type type) : base(type)</p>
+
+<p>  {</p>
+
+<p>    this.type = type;</p>
+
+<p>    this.configurationName = configurationName;</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  public override System.Runtime.Remoting.Messaging.IMessage
+Invoke(System.Runtime.Remoting.Messaging.IMessage imsg)</p>
+
+<p>  {</p>
+
+<p>    Type implementationType = null;</p>
+
+<p>    string type = this.type.FullName;</p>
+
+<p>    foreach (ServiceInterfaceDefinition definition in
+ServiceInterfaceConfiguration.Current.Interfaces)</p>
+
+<p>    {</p>
+
+<p>      if ((this.configurationName == null || this.configurationName ==
+definition.Name) &amp;&amp; type == definition.Type)</p>
+
+<p>      {</p>
+
+<p>        implementationType = definition.ImplementationType;</p>
+
+<p>        break;</p>
+
+<p>      }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    if(implementationType == null)</p>
+
+<p>      throw new Exception(&ldquo;The implementation type can not be null&rdquo;);</p>
+
+<p> </p>
+
+<p>    object implementation =
+Activator.CreateInstance(implementationType);</p>
+
+<p>    ReturnMessage retmsg = null;</p>
+
+<p>    if (imsg is IMethodCallMessage)</p>
+
+<p>    {</p>
+
+<p>      IMethodCallMessage call = imsg as IMethodCallMessage;</p>
+
+<p>      object returnValue =
+implementationType.InvokeMember(call.MethodName,
+System.Reflection.BindingFlags.InvokeMethod,</p>
+
+<p>              null, implementation, call.Args);</p>
+
+<p>      retmsg = new ReturnMessage(returnValue, null, 0, null, call);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    return retmsg;</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p>The configuration for the client application contains two service
+implementations in this case, &ldquo;LocalImplementation&rdquo; for a component in
+the same application and &ldquo;RemoteImplementation&rdquo; for a web service proxy.</p>
+
+<p>&lt;serviceInterfaces></p>
+
+<p>  &lt;interfaces></p>
+
+<p>    &lt;add name=&ldquo;LocalImplementation&rdquo;</p>
+
+<p>        implementationType=&ldquo;ServiceInterfaces.Client.LocalHelloWorld,
+ServiceInterfaces.Client&rdquo;</p>
+
+<p>        type=&ldquo;ServiceInterfaces.IHelloWorld&rdquo;></p>
+
+<p>    &lt;/add></p>
+
+<p>    &lt;add name=&ldquo;RemoteImplementation&rdquo;</p>
+
+<p>         implementationType=&ldquo;ServiceInterfaces.Client.RemoteHelloWorld,
+ServiceInterfaces.Client&rdquo;</p>
+
+<p>         type=&ldquo;ServiceInterfaces.IHelloWorld&rdquo;></p>
+
+<p>    &lt;/add></p>
+
+<p>  &lt;/interfaces></p>
+
+<p>&lt;/serviceInterfaces></p>
+
+<p>The code below shows the service implementation configured as
+&ldquo;LocalImplementation&rdquo;.</p>
+
+<p>class LocalHelloWorld : IHelloWorld</p>
+
+<p>{</p>
+
+<p>  #region IHelloWorld Members</p>
+
+<p>  public string HelloWorld(string message)</p>
+
+<p>  {</p>
+
+<p>    return String.Format(&ldquo;Local Hello World : {0}&rdquo;, message);</p>
+
+<p>  }</p>
+
+<p>  #endregion</p>
+
+<p>}</p>
+
+<p>Download the complete sample from
+<a href="/images/legacy/ServiceFactory.zip" title="here ">here</a></p>
+]]></content>
+  </entry>
+  
+</feed>

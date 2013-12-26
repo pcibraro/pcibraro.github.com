@@ -1,0 +1,467 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>OpenRasta, an open source alternative for developing Restful services - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="OpenRasta
+(OR) is the name of a new open source framework for developing Restful
+applications (Web applications or services) created by Sebastien &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2009/04/22/openrasta-an-open-source-alternative-for-developing-restful-services">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">OpenRasta, an Open Source Alternative for Developing Restful Services</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-04-22T00:00:00-03:00" pubdate data-updated="true">Apr 22<span>nd</span>, 2009</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p><a href="http://serialseb.blogspot.com/2008/12/openrasta-is-available.html">OpenRasta</a>
+(OR) is the name of a new open source framework for developing Restful
+applications (Web applications or services) created by <a href="http://serialseb.blogspot.com/">Sebastien
+Lambla</a>. As the ASP.NET MVC, this
+framework is also an implementation of the MVC pattern, which focus
+mainly on a good separation of concerns, and provide different
+extensibility points where the developer can plugging custom code at the
+moment of developing applications.</p>
+
+<p>The framework is now on Beta 2 stage, Sebastien and other guys are
+currently working on improving the hosting infrastructure and public
+API. They are, of course, very open at this point to receive feedback or
+suggestions for new features, or improvements to existing ones. If you
+have some interest in participating of this project, you can start
+joining the <a href="http://groups.google.com/group/openrasta/">mailing list</a>.</p>
+
+<p>In order to understand how OR works under the hood, I will start by
+describing some basic concepts that a developer should know to implement
+an application from scratch with this framework.</p>
+
+<p><strong>Handlers</strong></p>
+
+<p>A “handler” is one of the main building blocks in OR. It represents the
+implementation of the service itself, and it is generally mapped to
+single resource through an URI. Therefore, any access to an URI will get
+resolved by OR to an specific handler.</p>
+
+<p>From an implementation point of view, a handler is simple class that
+expose methods for handling different http verbs. By convention, a
+method should be called as the Http verb that supports, for example, Get
+or Post. However, nothing prevent you from giving more friendly names to
+the methods (or handler operations), there is an special custom
+attribute “HttpOperationAttribute” that you can use to associate the
+method with an http verb.</p>
+
+<p>public class CustomerHandler</p>
+
+<p>{</p>
+
+<p>    public Customer Get(int customerId)</p>
+
+<p>    {</p>
+
+<p>        return new Customer { FirstName = &ldquo;foo&rdquo;, LastName = &ldquo;bar&rdquo; };</p>
+
+<p>    }</p>
+
+<p>    public OperationResult Put(int id, Customer customer)</p>
+
+<p>    {</p>
+
+<p>        return new OperationResult.Modified { ResponseResource =
+customer };</p>
+
+<p>    }</p>
+
+<p>    [HttpOperation(HttpMethod.POST)]</p>
+
+<p>    public OperationResult MyFriendlyMethod(int id, Customer customer)</p>
+
+<p>    {</p>
+
+<p>        return new OperationResult.Modified { ResponseResource =
+customer };</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>If you want to have a better control of the Http status code, as it is
+shown in the code above, you can also return an instance of
+OperationResult.</p>
+
+<p><strong>Codecs</strong></p>
+
+<p>As you can see, the handlers have not been wired to any content type at
+this point. Serializing/Deserializing a resource instance into an
+specific representation is responsibility of the codecs. Some codecs are
+provided out of the box in OR, for example, Json, Xml, Html or
+Form-Url-Encoded data.</p>
+
+<p>A codec generally implement two interfaces, IMediaTypeReader (for
+deserializing content) and IMediaTypeWriter(for serializing). The
+following code shows the implementation of the Json codec,</p>
+
+<p>[MediaType(&ldquo;application/json;q=0.5&rdquo;, &ldquo;json&rdquo;)]</p>
+
+<p>public class JsonDataContractCodec : IMediaTypeReader, IMediaTypeWriter</p>
+
+<p>{</p>
+
+<p>    public object Configuration { get; set; }</p>
+
+<p>    public object ReadFrom(IHttpEntity request, System.Type
+destinationType, string paramName)</p>
+
+<p>    {</p>
+
+<p>        DataContractJsonSerializer serializer = new
+DataContractJsonSerializer(destinationType);</p>
+
+<p>        return serializer.ReadObject(request.Stream);</p>
+
+<p>    }</p>
+
+<p>    public void WriteTo(object entity, IHttpEntity response, string[]
+paramneters)</p>
+
+<p>    {</p>
+
+<p>        if (entity == null)</p>
+
+<p>            return;</p>
+
+<p>        DataContractJsonSerializer serializer = new
+DataContractJsonSerializer(entity.GetType());</p>
+
+<p>        serializer.WriteObject(response.Stream, entity);</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p><strong>Putting Handlers and Codecs together</strong></p>
+
+<p>By means of a fluent configuration, we can later wire up an URI with the
+corresponding handler and one or more codecs according to the
+content-types that the service should support.</p>
+
+<p>ConfigureServer(() => ResourceSpace.Has.ResourcesOfType&lt;Customer>()</p>
+
+<p>                          .AtUri(&ldquo;/customer/{id}&rdquo;)</p>
+
+<p>                          .HandledBy&lt;CustomerHandler>()</p>
+
+<p>                         
+.AndTranscodedBy&lt;OpenRasta.Codecs.JsonDataContractCodec>()</p>
+
+<p>                         
+.AndBy&lt;OpenRasta.Codecs.XmlSerializerCodec>());</p>
+
+<p>This is one of the big differences with the ASP.NET MVC or the Web
+Programming Model in WCF.</p>
+
+<p>In the MVC, the supported content types are inherently tied to the
+ActionResult returned by the controller action. Therefore, the action
+implementation must be modified in order to support new content types. 
+Or a more specialized implementation of an ActionResult is required,
+which has to be smart enough to accommodate these changes.</p>
+
+<p>Same thing happens with WCF, you have to either decorate the service
+operation with the supported content-type (Only Json or Pox supported
+today) or return a Message/Stream instance from the operation and write
+the resource representation yourself in the operation implementation. As
+I said, only Json/Pox are supported today, and adding new content types
+is something complicated to do. You basically need to write a custom
+IDispatchMessageFormatter extension, and a custom WebServiceHost to
+replace the formatter provided out of the box. (This is the approach
+taken in the WCF REST Starter kit for supporting form-url-encoded data).</p>
+
+<p><strong>Pipeline Contributors</strong></p>
+
+<p>Let’s go back to OpenRasta for a moment, “Handlers” and “Codecs” are not
+the only supported extensibility points in this framework. All the
+processing of incoming/outgoing messages is performed in a pipeline that
+contains contributors or filters. A pipeline contributor perform simple
+tasks such as initializing the security context, routing the messages or
+processing exceptions to name a few. You can write your own
+contributors, or customize the pipeline to support different
+configurations or scenarios</p>
+
+<p><strong>More information about OpenRasta</strong> </p>
+
+<p>You can find more information about this framework in the <a href="http://serialseb.blogspot.com/">Sebastien’s
+blog</a>. The current project status is
+also available
+<a href="http://serialseb.blogspot.com/2008/10/openrasta-status-update.html">here</a>.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-04-22T00:00:00-03:00" pubdate data-updated="true">Apr 22<span>nd</span>, 2009</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2009/04/22/openrasta-an-open-source-alternative-for-developing-restful-services/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2009/04/22/openrasta-an-open-source-alternative-for-developing-restful-services/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2009/04/17/webcast-para-el-programa-microsoft-student-partner-building-web-services/" title="Previous Post: Webcast para el programa Microsoft Student Partner “Building Web Services”">&laquo; Webcast para el programa Microsoft Student Partner “Building Web Services”</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2009/05/14/i-am-joining-tellago/" title="Next Post: I am joining Tellago">I am joining Tellago &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2009/04/22/openrasta-an-open-source-alternative-for-developing-restful-services/';
+        var disqus_url = 'http://cibrax.me/blog/2009/04/22/openrasta-an-open-source-alternative-for-developing-restful-services/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

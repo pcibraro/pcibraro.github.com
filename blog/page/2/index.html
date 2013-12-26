@@ -1,0 +1,2054 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="One of the features supported by Hawk, an HTTP authentication protocol
+based on HMAC, is to provide read-only access to a Web API for a short
+period &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/page/2">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2013/03/08/giving-temporary-access-to-your-asp-net-web-api-with-hawk/">Giving Temporary Access to Your ASP.NET Web API With Hawk</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-08T00:00:00-03:00" pubdate data-updated="true">Mar 8<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/03/08/giving-temporary-access-to-your-asp-net-web-api-with-hawk/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>One of the features supported by Hawk, an HTTP authentication protocol
+based on HMAC, is to provide read-only access to a Web API for a short
+period time.  That’s performed through a token called “bewit” that a Web
+API can provide to a client. That token is only valid for Http GET calls
+and it can be used for a limited period of time.</p>
+
+<p>I already implemented this feature in my <a href="https://github.com/pcibraro/hawknet">Hawk port for
+.NET</a>. A bewit token can be
+generated as it is shown below,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="kt">var</span> <span class="n">credential</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HawkCredential</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>     <span class="n">Id</span> <span class="p">=</span> <span class="s">&quot;dh37fgj492je&quot;</span><span class="p">,</span>
+</span><span class='line'>     <span class="n">Key</span> <span class="p">=</span> <span class="s">&quot;werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn&quot;</span><span class="p">,</span>
+</span><span class='line'>     <span class="n">Algorithm</span> <span class="p">=</span> <span class="s">&quot;hmacsha256&quot;</span><span class="p">,</span>
+</span><span class='line'>     <span class="n">User</span> <span class="p">=</span> <span class="s">&quot;steve&quot;</span>
+</span><span class='line'> <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">var</span> <span class="n">bewit</span> <span class="p">=</span> <span class="n">Hawk</span><span class="p">.</span><span class="n">GetBewit</span><span class="p">(</span><span class="s">&quot;localhost&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="k">new</span> <span class="nf">Uri</span><span class="p">(</span><span class="s">&quot;http://localhost:8091/Api/HelloWorld&quot;</span><span class="p">),</span>
+</span><span class='line'>  <span class="n">credential</span><span class="p">,</span>
+</span><span class='line'>  <span class="m">60000</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The GetBewit method expects the following arguments,</p>
+
+<ul>
+<li>The host name</li>
+<li>The complete request URI</li>
+<li>The Hawk credentials with information about the key and algorithm to
+use</li>
+<li>A time-to-live setting in seconds for the token</li>
+</ul>
+
+
+<p>That token is an string representation that you can add as a additional
+query string in the Web API call.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">new</span> <span class="nf">HttpRequestMessage</span><span class="p">(</span><span class="n">HttpMethod</span><span class="p">.</span><span class="n">Get</span><span class="p">,</span>
+</span><span class='line'>  <span class="s">&quot;http://localhost:8091/Api/HelloWorld?bewit=&quot;</span> <span class="p">+</span> <span class="n">bewit</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In that way, you can share a link to your Web API with a limited access
+for a period of time to someone without having to share any security
+credentials.</p>
+
+<p>On the service side is as simple as configuring the HawkMessageHandler
+as part of the Web API configuration,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="kt">var</span> <span class="n">handler</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HawkMessageHandler</span><span class="p">((</span><span class="n">id</span><span class="p">)</span> <span class="p">=&gt;</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>     <span class="k">return</span> <span class="k">new</span> <span class="n">HawkCredential</span>
+</span><span class='line'>     <span class="p">{</span>
+</span><span class='line'>           <span class="n">Id</span> <span class="p">=</span> <span class="n">id</span><span class="p">,</span>
+</span><span class='line'>           <span class="n">Key</span> <span class="p">=</span> <span class="s">&quot;werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn&quot;</span><span class="p">,</span>
+</span><span class='line'>           <span class="n">Algorithm</span> <span class="p">=</span> <span class="s">&quot;hmacsha256&quot;</span><span class="p">,</span>
+</span><span class='line'>           <span class="n">User</span> <span class="p">=</span> <span class="s">&quot;steve&quot;</span>
+</span><span class='line'>       <span class="p">};</span>
+</span><span class='line'> <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">config</span><span class="p">.</span><span class="n">MessageHandlers</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">handler</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The handler will automatically detect a bewit token in the query string,
+and it will performed all the required validations.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2013/03/01/asp-net-web-api-logging-and-troubleshooting/">ASP.NET Web API Logging and Troubleshooting</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-01T00:00:00-03:00" pubdate data-updated="true">Mar 1<span>st</span>, 2013</time>
+        
+         | <a href="/blog/2013/03/01/asp-net-web-api-logging-and-troubleshooting/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>ASP.NET ships with two built-in mechanisms for doing logging and
+troubleshooting.  Chasing errors without knowing these two mechanisms
+might be a daunting task, specially if they happen in the runtime
+pipeline much before a message gets to a handler or a controller.</p>
+
+<p>The first mechanism is the error policy. You can configure the error
+policy preferences as part of the configuration object
+(HttpConfiguration) in the IncludeErrorDetailPolicy property. This is
+just an enum that instructs Web API about how to deal with exceptions.</p>
+
+<p>The possible values for this enum are,</p>
+
+<ul>
+<li>Default: It’s uses the customErrors configuration settings if you
+are using ASP.NET as host or LocalOnly for self-host.</li>
+<li>LocalOnly: Only includes error details for local requests</li>
+<li>Always: Always includes error details</li>
+<li>Never: Never includes error details</li>
+</ul>
+
+
+<p>When an exception happens, Web API will check the value on this setting
+for including details about the exception in the response message or
+not. For example, if Always is enabled, Web API will serialize the
+exception details as part of the message that you get as response.</p>
+
+<p>The second mechanism is Tracing. Tracing is a service that you can
+inject as part of the configuration object as well. The default
+implementation does do anything.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">static</span> <span class="k">void</span> <span class="nf">Register</span><span class="p">(</span><span class="n">HttpConfiguration</span> <span class="n">config</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">config</span><span class="p">.</span><span class="n">Services</span><span class="p">.</span><span class="n">Replace</span><span class="p">(</span><span class="k">typeof</span><span class="p">(</span><span class="n">ITraceWriter</span><span class="p">),</span> <span class="k">new</span> <span class="n">MyTracer</span><span class="p">());</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>MyTracer is a custom implementation of the ITraceWriter service, which
+Web API uses for tracing purposes. This is a general tracing mechanism,
+so Web API will call it for logging everything and not just errors.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">MyTracer</span> <span class="p">:</span> <span class="n">ITraceWriter</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">Trace</span><span class="p">(</span><span class="n">HttpRequestMessage</span> <span class="n">request</span><span class="p">,</span> <span class="kt">string</span> <span class="n">category</span><span class="p">,</span> <span class="n">TraceLevel</span> <span class="n">level</span><span class="p">,</span>
+</span><span class='line'>        <span class="n">Action</span><span class="p">&lt;</span><span class="n">TraceRecord</span><span class="p">&gt;</span> <span class="n">traceAction</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">TraceRecord</span> <span class="n">rec</span> <span class="p">=</span> <span class="k">new</span> <span class="n">TraceRecord</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">category</span><span class="p">,</span> <span class="n">level</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">traceAction</span><span class="p">(</span><span class="n">rec</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">WriteTrace</span><span class="p">(</span><span class="n">rec</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">protected</span> <span class="k">void</span> <span class="nf">WriteTrace</span><span class="p">(</span><span class="n">TraceRecord</span> <span class="n">rec</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">message</span> <span class="p">=</span> <span class="kt">string</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span><span class="s">&quot;{0};{1};{2}&quot;</span><span class="p">,</span>
+</span><span class='line'>            <span class="n">rec</span><span class="p">.</span><span class="n">Operator</span><span class="p">,</span> <span class="n">rec</span><span class="p">.</span><span class="n">Operation</span><span class="p">,</span> <span class="n">rec</span><span class="p">.</span><span class="n">Message</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">System</span><span class="p">.</span><span class="n">Diagnostics</span><span class="p">.</span><span class="n">Trace</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">rec</span><span class="p">.</span><span class="n">Category</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If any of these two work for you, you can still use an Error Filter. 
+Tugberk has written a blog post about how to integrate ELMAH with an
+Error Filter in Web API
+<a href="http://www.tugberkugurlu.com/archive/asp-net-web-api-and-elmah-integration">here</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2013/02/25/message-handlers-per-route-in-asp-net-web-api/">Message Handlers Per Route in ASP.NET Web API</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-02-25T00:00:00-03:00" pubdate data-updated="true">Feb 25<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/02/25/message-handlers-per-route-in-asp-net-web-api/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Message Handlers are one of the core components for message processing
+in Web API. They use an asynchronous model for processing messages, so
+they receive a request message and returns a Task with the corresponding
+response.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">protected</span> <span class="k">internal</span> <span class="k">abstract</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;</span> <span class="n">SendAsync</span><span class="p">(</span><span class="n">HttpRequestMessage</span> <span class="n">request</span><span class="p">,</span>
+</span><span class='line'> <span class="n">CancellationToken</span> <span class="n">cancellationToken</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In most cases, a message handler does something and delegates some other
+work to the rest of the handlers configured in the pipeline. For
+example, a handler for security checks the Auth Http header, and
+delegates the call the handlers configured out of the box by Web API,
+which eventually will call a controller method. The framework also
+provides a base class to make delegation implicit, DelegatingHandler,
+which receives the next handler to call as part of the constructor.</p>
+
+<p>The following example shows a message handler implementation for basic
+authentication,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">BasicAuthHandler</span> <span class="p">:</span> <span class="n">DelegatingHandler</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>   <span class="n">Func</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">,</span> <span class="n">IPrincipal</span><span class="p">&gt;</span> <span class="n">auth</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="k">public</span> <span class="nf">BasicAuthHandler</span><span class="p">(</span><span class="n">HttpMessageHandler</span> <span class="n">innerHandler</span><span class="p">,</span> <span class="n">Func</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">,</span> <span class="n">IPrincipal</span><span class="p">&gt;</span> <span class="n">auth</span><span class="p">)</span>
+</span><span class='line'>       <span class="p">:</span> <span class="k">base</span><span class="p">(</span><span class="n">innerHandler</span><span class="p">)</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'>       <span class="k">this</span><span class="p">.</span><span class="n">auth</span> <span class="p">=</span> <span class="n">auth</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">protected</span> <span class="k">override</span> <span class="n">System</span><span class="p">.</span><span class="n">Threading</span><span class="p">.</span><span class="n">Tasks</span><span class="p">.</span><span class="n">Task</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;</span> <span class="n">SendAsync</span><span class="p">(</span><span class="n">HttpRequestMessage</span> <span class="n">request</span><span class="p">,</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="n">System</span><span class="p">.</span><span class="n">Threading</span><span class="p">.</span><span class="n">CancellationToken</span> <span class="n">cancellationToken</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>         <span class="k">if</span> <span class="p">(</span><span class="n">request</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">Authorization</span> <span class="p">!=</span> <span class="k">null</span> <span class="p">&amp;&amp;</span>
+</span><span class='line'>             <span class="p">!</span><span class="kt">string</span><span class="p">.</span><span class="n">Equals</span><span class="p">(</span><span class="n">request</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">Authorization</span><span class="p">.</span><span class="n">Scheme</span><span class="p">,</span> <span class="s">&quot;basic&quot;</span><span class="p">,</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="n">StringComparison</span><span class="p">.</span><span class="n">InvariantCultureIgnoreCase</span><span class="p">))</span>
+</span><span class='line'>         <span class="p">{</span>
+</span><span class='line'>              <span class="k">return</span> <span class="k">base</span><span class="p">.</span><span class="n">SendAsync</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">cancellationToken</span><span class="p">);</span>
+</span><span class='line'>          <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="k">if</span> <span class="p">(</span><span class="n">request</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">Authorization</span> <span class="p">==</span> <span class="k">null</span> <span class="p">||</span>
+</span><span class='line'>              <span class="kt">string</span><span class="p">.</span><span class="n">IsNullOrWhiteSpace</span><span class="p">(</span><span class="n">request</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">Authorization</span><span class="p">.</span><span class="n">Scheme</span><span class="p">))</span>
+</span><span class='line'>          <span class="p">{</span>
+</span><span class='line'>              <span class="k">return</span> <span class="nf">ChallengeResponse</span><span class="p">(</span><span class="n">request</span><span class="p">);</span>
+</span><span class='line'>           <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="kt">var</span> <span class="n">authToken</span> <span class="p">=</span> <span class="n">request</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">Authorization</span><span class="p">.</span><span class="n">Parameter</span><span class="p">;</span>
+</span><span class='line'>          <span class="kt">var</span> <span class="n">decodedToken</span> <span class="p">=</span> <span class="n">Encoding</span><span class="p">.</span><span class="n">UTF8</span><span class="p">.</span><span class="n">GetString</span><span class="p">(</span><span class="n">Convert</span><span class="p">.</span><span class="n">FromBase64String</span><span class="p">(</span><span class="n">authToken</span><span class="p">));</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="kt">var</span> <span class="n">username</span> <span class="p">=</span> <span class="n">decodedToken</span><span class="p">.</span><span class="n">Substring</span><span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="n">decodedToken</span><span class="p">.</span><span class="n">IndexOf</span><span class="p">(</span><span class="s">&quot;:&quot;</span><span class="p">));</span>
+</span><span class='line'>          <span class="kt">var</span> <span class="n">password</span> <span class="p">=</span> <span class="n">decodedToken</span><span class="p">.</span><span class="n">Substring</span><span class="p">(</span><span class="n">decodedToken</span><span class="p">.</span><span class="n">IndexOf</span><span class="p">(</span><span class="s">&quot;:&quot;</span><span class="p">)</span> <span class="p">+</span> <span class="m">1</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="kt">var</span> <span class="n">principal</span> <span class="p">=</span> <span class="k">this</span><span class="p">.</span><span class="n">auth</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="k">if</span> <span class="p">(</span><span class="n">principal</span> <span class="p">==</span> <span class="k">null</span><span class="p">)</span>
+</span><span class='line'>          <span class="p">{</span>
+</span><span class='line'>              <span class="k">return</span> <span class="nf">ToResponse</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">HttpStatusCode</span><span class="p">.</span><span class="n">Unauthorized</span><span class="p">,</span> <span class="s">&quot;Invalid credentials&quot;</span><span class="p">);</span>
+</span><span class='line'>           <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="n">Thread</span><span class="p">.</span><span class="n">CurrentPrincipal</span> <span class="p">=</span> <span class="n">principal</span><span class="p">;</span>
+</span><span class='line'>          <span class="k">if</span> <span class="p">(</span><span class="n">HttpContext</span><span class="p">.</span><span class="n">Current</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span>
+</span><span class='line'>             <span class="n">HttpContext</span><span class="p">.</span><span class="n">Current</span><span class="p">.</span><span class="n">User</span> <span class="p">=</span> <span class="n">principal</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="k">return</span> <span class="k">base</span><span class="p">.</span><span class="n">SendAsync</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">cancellationToken</span><span class="p">);</span>
+</span><span class='line'>   <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="k">private</span> <span class="k">static</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;</span> <span class="n">ChallengeResponse</span><span class="p">(</span><span class="n">HttpRequestMessage</span> <span class="n">request</span><span class="p">)</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'>       <span class="kt">var</span> <span class="n">tsc</span> <span class="p">=</span> <span class="k">new</span> <span class="n">TaskCompletionSource</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;();</span>
+</span><span class='line'>
+</span><span class='line'>       <span class="kt">var</span> <span class="n">response</span> <span class="p">=</span> <span class="n">request</span><span class="p">.</span><span class="n">CreateResponse</span><span class="p">(</span><span class="n">HttpStatusCode</span><span class="p">.</span><span class="n">Unauthorized</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">response</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">WwwAuthenticate</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="k">new</span> <span class="n">AuthenticationHeaderValue</span><span class="p">(</span><span class="s">&quot;basic&quot;</span><span class="p">,</span> <span class="s">&quot;realm=localhost&quot;</span><span class="p">));</span>
+</span><span class='line'>
+</span><span class='line'>       <span class="n">tsc</span><span class="p">.</span><span class="n">SetResult</span><span class="p">(</span><span class="n">response</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>       <span class="k">return</span> <span class="n">tsc</span><span class="p">.</span><span class="n">Task</span><span class="p">;</span>
+</span><span class='line'>     <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>     <span class="k">private</span> <span class="k">static</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;</span> <span class="n">ToResponse</span><span class="p">(</span><span class="n">HttpRequestMessage</span> <span class="n">request</span><span class="p">,</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="n">HttpStatusCode</span> <span class="n">code</span><span class="p">,</span> <span class="kt">string</span> <span class="n">message</span><span class="p">)</span>
+</span><span class='line'>     <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">tsc</span> <span class="p">=</span> <span class="k">new</span> <span class="n">TaskCompletionSource</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;();</span>
+</span><span class='line'>
+</span><span class='line'>         <span class="kt">var</span> <span class="n">response</span> <span class="p">=</span> <span class="n">request</span><span class="p">.</span><span class="n">CreateResponse</span><span class="p">(</span><span class="n">code</span><span class="p">);</span>
+</span><span class='line'>         <span class="n">response</span><span class="p">.</span><span class="n">ReasonPhrase</span> <span class="p">=</span> <span class="n">message</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>         <span class="n">tsc</span><span class="p">.</span><span class="n">SetResult</span><span class="p">(</span><span class="n">response</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>         <span class="k">return</span> <span class="n">tsc</span><span class="p">.</span><span class="n">Task</span><span class="p">;</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>A good thing about Message Handler is that you can configure them
+globally or per route. In this case, if you want to enable basic
+authentication for some routes only, it’s a matter of configuring this
+handler in the routes you want to have protected.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="n">config</span><span class="p">.</span><span class="n">Routes</span><span class="p">.</span><span class="n">MapHttpRoute</span><span class="p">(</span>
+</span><span class='line'>   <span class="s">&quot;BasicAuth&quot;</span><span class="p">,</span>
+</span><span class='line'>   <span class="s">&quot;MyController&quot;</span><span class="p">,</span>
+</span><span class='line'>   <span class="k">new</span> <span class="p">{</span> <span class="n">controller</span> <span class="p">=</span> <span class="s">&quot;MyController&quot;</span> <span class="p">},</span>
+</span><span class='line'>   <span class="k">null</span><span class="p">,</span>
+</span><span class='line'>   <span class="k">new</span> <span class="nf">BasicAuthHandler</span><span class="p">(</span><span class="k">new</span> <span class="n">HttpControllerDispatcher</span><span class="p">(</span><span class="n">config</span><span class="p">),</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="p">=&gt;</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="k">new</span> <span class="nf">GenericPrincipal</span><span class="p">(</span><span class="k">new</span> <span class="n">GenericIdentity</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="k">new</span> <span class="kt">string</span><span class="p">[]</span> <span class="p">{}));</span>
+</span><span class='line'>   <span class="p">}));</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>As you can see, the Inner Handler is a built-in handler provided by Web
+API, HttpControllerDispatcher, which does all the magic for processing
+the request and pass it over to the controller action. You can also
+inject any other dependency as part of the constructor. One thing to
+consider is that message handlers are singleton if you configure them
+this way, so make sure to inject the dependencies in the right way for
+avoiding memory leaks (If you have to use a repository for example, you
+might want to inject a factory or pass a delegate for resolving the
+dependencies from a DI container).</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2013/02/12/multitenant-domain-routing-with-aws-route-53/">Multitenant Domain Routing With AWS Route 53</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-02-12T00:00:00-03:00" pubdate data-updated="true">Feb 12<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/02/12/multitenant-domain-routing-with-aws-route-53/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>A common requirement in SaaS applications is the ability to route
+requests to different tenants based on a URL routing strategy.</p>
+
+<p>In most cases, a domain prefix is good enough to identify tenants (e.g.
+mytenant.xxxxx.com). That approach typically relies on CName records for
+mapping the prefixes or tenants and the domain name to an URL where the
+application is actually hosted. Many cloud providers support the idea of
+mapping custom domains to their web hosted services, so this approach
+with CName works just fine.</p>
+
+<p>An evident problem is that you would require a different CName record
+per prefix or tenant. If you have to create those records manually, this
+approach simply does not scale as the number of tenants increase.</p>
+
+<p>An alternative is to use a wildcard CName, and route all the requests
+that match that wildcard to the hosted application in the cloud. For
+example, *.xxxxxx.com to your web application url.</p>
+
+<p>Many DNS servers don’t support wildcards in CName such as the ones
+offered by free for GoDaddy or NameCheap. However, AWS Route 53 supports
+wildcards and also an API to manage almost everything in the DNS tables.</p>
+
+<p>Configuring AWS Route 53 is relatively easy. Assuming that you already
+have a AWS account, you need to create first a hosted zone, which
+represents the association of a domain name with a set of name servers
+provided by Route 53. Once you specified the domain name (e.g
+cibrax.me), and the hosted zone is created. Route53 will show you a list
+of name servers you need to use. If you already own a domain in other
+place like GoDaddy or NameCheap, you need to go there and update the
+list of name servers associated to that domain.</p>
+
+<p>Afterwards, you need to create a resource record set, which is basically
+the CName record containing the wildcard or prefix you want to use.
+Here, you can specify the CNAme record and the mapped URL. For example,
+*.cibrax.me goes to <a href="http://www.xxxxxxxx.com">www.xxxxxxxx.com</a>.</p>
+
+<p>That’s all from the point of view of DNS configuration. The rest is part
+of the implementation of your web application.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/12/06/using-mac-authentication-for-simple-web-api-s-consumption/">Using MAC Authentication for Simple Web API’s Consumption</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-12-06T00:00:00-03:00" pubdate data-updated="true">Dec 6<span>th</span>, 2012</time>
+        
+         | <a href="/blog/2012/12/06/using-mac-authentication-for-simple-web-api-s-consumption/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>For simple scenarios of Web API consumption where identity delegation is
+not required, traditional http authentication schemas such as basic,
+certificates or digest are the most used nowadays. All these schemas
+rely on sending the caller credentials or some representation of it in
+every request message as part of the Authorization header, so they are
+prone to suffer phishing attacks if they are not correctly secured at
+transport level with https.</p>
+
+<p>In addition, most client applications typically authenticate two
+different things, the caller application and the user consuming the API
+on behalf of that application. For most cases, the schema is simplified
+by using a single set of username and password for authenticating both,
+making necessary to store those credentials temporally somewhere in
+memory.</p>
+
+<p>The true is that you can use two different identities, one for the user
+running the application, which you might authenticate just once during
+the first call when the application is initialized, and another identity
+for the application itself that you use on every call.</p>
+
+<p>Some cloud vendors like Windows Azure or Amazon Web Services have
+adopted an schema to authenticate the caller application based on a
+Message Authentication Code (MAC) generated with a symmetric algorithm
+using a key known by the two parties, the caller and the Web API.</p>
+
+<p>The caller must include a MAC as part of the Authorization header
+created from different pieces of information in the request message such
+as the address, the host, and some other headers. The Web API can
+authenticate the caller by using the key associated to it and validating
+the attached MAC in the request message. In that way, no credentials are
+sent as part of the request message, so there is no way an attacker to
+intercept the message and get access to those credentials.</p>
+
+<p>Anyways, this schema also suffers from some deficiencies that can
+generate attacks. For example, brute force can be still used to infer
+the key used for generating the MAC, and impersonate the original
+caller. This can be mitigated by renewing keys in a relative short
+period of time. This schema as any other can be complemented with
+transport security.</p>
+
+<p>Eran Rammer, one of the brains behind OAuth, has recently published an
+specification of a protocol based on MAC for Http authentication called
+Hawk. The initial version of the spec is available
+<a href="https://github.com/hueniverse">here</a>. A curious fact is that the
+specification per se does not exist, and the specification itself is the
+code that Eran initially wrote using node.js.</p>
+
+<p>In that implementation, you can associate a key to an user, so once the
+MAC has been verified on the Web API, the user can be inferred from that
+key. Also a timestamp is used to avoid replay attacks.</p>
+
+<p>As a pet project, I decided to port that code to .NET using ASP.NET Web
+API, which is available also in github under
+<a href="https://github.com/pcibraro/hawknet">https://github.com/pcibraro/hawknet</a></p>
+
+<p>Enjoy!.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/12/06/multitenancy-in-sql-azure/">Multitenancy in SQL Azure</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-12-06T00:00:00-03:00" pubdate data-updated="true">Dec 6<span>th</span>, 2012</time>
+        
+         | <a href="/blog/2012/12/06/multitenancy-in-sql-azure/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>If you are building a SaaS application in Windows Azure that relies on
+SQL Azure, it’s probably that you will need to support multiple tenants
+at database level.</p>
+
+<p>This is short overview of the different approaches you can use for
+support that scenario,</p>
+
+<p><strong>A different database per tenant</strong></p>
+
+<p>A new database is created and assigned when a tenant is provisioned.</p>
+
+<p>Pros</p>
+
+<ul>
+<li>Complete isolation between tenants. All the data for a tenant lives
+in a database only he can access.</li>
+</ul>
+
+
+<p>Cons</p>
+
+<ul>
+<li>It’s not cost effective. SQL Azure databases are not cheap, and the
+minimum size for a database is 1GB.  You might be paying for storage
+that you don’t really use.</li>
+<li>A different connection pool is required per database.</li>
+<li>Updates must be replicated across all the databases</li>
+<li>You need multiple backup strategies across all the databases</li>
+</ul>
+
+
+<p><strong>Multiple schemas in a database shared by all the tenants</strong></p>
+
+<p>A single database is shared among all the tenants, but every tenant is
+assigned to a different schema and database user.</p>
+
+<p>Pros</p>
+
+<ul>
+<li>You only pay for a single database.</li>
+<li>Data is isolated at database level. If the credentials for one
+tenant is compromised, the rest of the data for the other tenants is
+not.</li>
+</ul>
+
+
+<p>Cons</p>
+
+<ul>
+<li>You need to replicate all the database objects in every schema, so
+the number of objects can increase indefinitely.</li>
+<li>Updates must be replicated across all the schemas.</li>
+<li>The connection pool for the database must maintain a different
+connection per tenant (or set of credentials)</li>
+<li>A different user is required per tenant, which is stored at server
+level. You have to backup that user independently.</li>
+</ul>
+
+
+<p><strong>Centralizing the database access with store procedures in a database
+shared by all the tenants</strong></p>
+
+<p>A single database is shared among all the tenants, but nobody can read
+the data directly from the tables. All the data operations are performed
+through store procedures that centralize the access to the tenant data.
+The store procedures contain some logic to map the database user to an
+specific tenant.</p>
+
+<p>Pros</p>
+
+<ul>
+<li>You only pay for a single database.</li>
+<li>You only have a set of objects to maintain and backup.</li>
+</ul>
+
+
+<p>Cons</p>
+
+<ul>
+<li>There is no real isolation. All the data for the different tenants
+is shared in the same tables.</li>
+<li>You can not use traditional ORM like EF code first for consuming the
+data.</li>
+<li>A different user is required per tenant, which is stored at server
+level. You have to backup that user independently.</li>
+</ul>
+
+
+<p><strong>SQL Federations</strong></p>
+
+<p>A single database is shared among all the tenants, but a different
+federation is used per tenant. A federation in few words, it’s a
+mechanism for horizontal scaling in SQL Azure, which basically uses the
+idea of logical partitions to distribute data based on certain criteria.</p>
+
+<p>Pros</p>
+
+<ul>
+<li>You only have a single database with multiple federations.</li>
+<li>You can use filtering in the connections to pick the right
+federation, so any ORM could be used to consume the data.</li>
+</ul>
+
+
+<p>Cons</p>
+
+<ul>
+<li>There is no real isolation at that database level. The isolation is
+enforced programmatically with federations.</li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/11/15/await-whenall-waitall-oh-my/">Await, WhenAll, WaitAll, Oh My!!</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-11-15T00:00:00-03:00" pubdate data-updated="true">Nov 15<span>th</span>, 2012</time>
+        
+         | <a href="/blog/2012/11/15/await-whenall-waitall-oh-my/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>If you are dealing with asynchronous work in .NET, you might know that
+the Task class has become the main driver for wrapping asynchronous
+calls. Although this class was officially introduced in .NET 4.0, the
+programming model for consuming tasks was much more simplified in C#
+5.0 in .NET 4.5 with the addition of the new async/await keywords. In a
+nutshell, you can use these keywords to make asynchronous calls as if
+they were sequential, and avoiding in that way any fork or callback in
+the code. The compiler takes care of the rest.</p>
+
+<p>I was yesterday writing some code for making multiple asynchronous calls
+to backend services in parallel. The code looked as follow,</p>
+
+<pre><code>var allResults = new List&lt;Result&gt;();
+</code></pre>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+foreach(var provider in providers)
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+{
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+  var results = await provider.GetResults();
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+  allResults.AddRange(results);
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+}
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+return allResults;
+</del></p>
+
+<p>You see, I was using the await keyword to make multiple calls in
+parallel. Something I did not consider was the overhead this code
+implied after being compiled. I started an interesting discussion with
+some smart folks in twitter. One of them, <a href="https://twitter.com/tourismgeek">Tugberk
+Ugurlu</a>, had the brilliant idea of
+actually write some code to make a performance comparison with another
+approach using Task.WhenAll.</p>
+
+<p>There are two additional methods you can use to wait for the results of
+multiple calls in parallel, WhenAll and WaitAll.</p>
+
+<p>WhenAll creates a new task and waits for results in that new task, so it
+does not block the calling thread. WaitAll, on the other hand, blocks
+the calling thread. This is the code Tugberk initially wrote, and I
+modified afterwards to also show the results of WaitAll.</p>
+
+<pre><code> class Program
+</code></pre>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    private static Func&lt;Stopwatch, Task&gt;[] funcs = new Func&lt;Stopwatch, Task&gt;[] { 
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        async (watch) =&gt; { watch.Start(); await Task.Delay(1000); 
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>            Console.WriteLine("1000 one has been completed."); },
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        async (watch) =&gt; { await Task.Delay(1500); 
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>            Console.WriteLine("1500 one has been completed."); },
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        async (watch) =&gt; { await Task.Delay(2000); 
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>            Console.WriteLine("2000 one has been completed."); watch.Stop(); 
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>            Console.WriteLine(watch.ElapsedMilliseconds + "ms has been elapsed."); }
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    };
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    static void Main(string[] args)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        Console.WriteLine("Await in loop work starts...");
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        DoWorkAsync().ContinueWith(task =&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>            Console.WriteLine("Parallel work starts...");
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>            DoWorkInParallelAsync().ContinueWith(t =&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>                {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>                    Console.WriteLine("WaitAll work starts...");
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>                    WaitForAll();
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>                });
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        });
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        Console.ReadLine();
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    }
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    static async Task DoWorkAsync()
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        Stopwatch watch = new Stopwatch();
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        foreach (var func in funcs)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>            await func(watch);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        }
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    }
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    static async Task DoWorkInParallelAsync()
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        Stopwatch watch = new Stopwatch();
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        await Task.WhenAll(funcs[0](watch), funcs[1](watch), funcs[2](watch));
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    }
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    static void WaitForAll()
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        Stopwatch watch = new Stopwatch();
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        Task.WaitAll(funcs[0](watch), funcs[1](watch), funcs[2](watch));
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    }
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p>After running this code, the results were very concluding.</p>
+
+<p>Await in loop work starts&hellip; \
+1000 one has been completed. \
+1500 one has been completed. \
+2000 one has been completed. \
+4532ms has been elapsed.</p>
+
+<p>\
+Parallel work starts&hellip; \
+1000 one has been completed. \
+1500 one has been completed. \
+2000 one has been completed. \
+2007ms has been elapsed. \</p>
+
+<p>WaitAll work starts&hellip; \
+1000 one has been completed. \
+1500 one has been completed. \
+2000 one has been completed. \
+2009ms has been elapsed.</p>
+
+<p>The await keyword in a loop does not really make the calls in parallel.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/10/10/unit-testing-asp-net-web-api-controllers-that-rely-on-the-urlhelper/">Unit Testing ASP.NET Web API Controllers That Rely on the UrlHelper</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-10-10T00:00:00-03:00" pubdate data-updated="true">Oct 10<span>th</span>, 2012</time>
+        
+         | <a href="/blog/2012/10/10/unit-testing-asp-net-web-api-controllers-that-rely-on-the-urlhelper/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>UrlHelper is the class you can use in ASP.NET Web API to automatically
+infer links from the routing table without hardcoding anything. For
+example, the following code uses the helper to infer the location url
+for a new resource,</p>
+
+<pre><code>public HttpResponseMessage Post(User model)
+</code></pre>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+{
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+  var response = Request.CreateResponse(HttpStatusCode.Created, user);
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+  var link = Url.Link(&ldquo;DefaultApi&rdquo;, new { id = id, controller = &ldquo;Users&rdquo; });
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+  response.Headers.Location = new Uri(link);
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+  return response;
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+}
+</del></p>
+
+<p>That code uses a previously defined route “DefaultApi”, which you might
+configure in the HttpConfiguration object (This is the route generated
+by default when you create a new Web API project).</p>
+
+<p>The problem with UrlHelper is that it requires from some initialization
+code before you can invoking it from a unit test (for testing the Post
+method in this example). If you don’t initialize the HttpConfiguration
+and Request instances associated to the controller from the unit test,
+it will fail miserably.</p>
+
+<p>After digging into the ASP.NET Web API source code a little bit, I could
+figure out what the requirements for using the UrlHelper are. It relies
+on the routing table configuration, and a few properties you need to add
+to the HttpRequestMessage. The following code illustrates what’s needed,</p>
+
+<pre><code>var controller = new UserController();
+</code></pre>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+controller.Configuration = new HttpConfiguration();
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+var route = controller.Configuration.Routes.MapHttpRoute(
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>     name: "DefaultApi",
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>     routeTemplate: "api/{controller}/{id}",
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>     defaults: new { id = RouteParameter.Optional }
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+);
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+var routeData = new HttpRouteData(route,
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>   new HttpRouteValueDictionary 
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>   { 
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>      { "id", "1" },
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>      { "controller", "Users" } 
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>   }
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+);
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+controller.Request = new HttpRequestMessage(HttpMethod.Post, &ldquo;<a href="http://localhost:9091/">http://localhost:9091/</a>&rdquo;);
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+controller.Request.Properties.Add(HttpPropertyKeys.HttpConfigurationKey, controller.Configuration);
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+controller.Request.Properties.Add(HttpPropertyKeys.HttpRouteDataKey, routeData);
+</del></p>
+
+<pre><code> 
+</code></pre>
+
+<p>The HttpRouteData instance should be initialized with the route values
+you will use in the controller method (“id” and “controller” in this
+example). Once you have correctly setup all those properties, you
+shouldn’t have any problem to use the UrlHelper. There is no need to
+mock anything else.</p>
+
+<p>Enjoy!!.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/09/12/unit-and-integration-testing-with-the-web-api-httpclient/">Doing Unit and Integration Tests With the Web API HttpClient</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-09-12T00:00:00-03:00" pubdate data-updated="true">Sep 12<span>th</span>, 2012</time>
+        
+         | <a href="/blog/2012/09/12/unit-and-integration-testing-with-the-web-api-httpclient/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>One of the nice things about the new HttpClient in System.Net.Http is
+the support for mocking responses or handling requests in a http server
+hosted in-memory. While the first option is useful for scenarios in
+which we want to test our client code in isolation (unit tests for
+example), the second one enables more complete integration testing
+scenarios that could include some more components in the stack such as
+model binders or message handlers for example.  </p>
+
+<p>The HttpClient can receive a HttpMessageHandler as argument in one of
+its constructors.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">HttpClient</span> <span class="p">:</span> <span class="n">HttpMessageInvoker</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>   <span class="k">public</span> <span class="nf">HttpClient</span><span class="p">();</span>
+</span><span class='line'>   <span class="k">public</span> <span class="nf">HttpClient</span><span class="p">(</span><span class="n">HttpMessageHandler</span> <span class="n">handler</span><span class="p">);</span>
+</span><span class='line'>   <span class="k">public</span> <span class="nf">HttpClient</span><span class="p">(</span><span class="n">HttpMessageHandler</span> <span class="n">handler</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">disposeHandler</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>For the first scenario, you can create a new HttpMessageHandler that
+fakes the response, which you can use in your unit test. The only
+requirement is that you somehow inject an HttpClient with this custom
+handler in the client code.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">FakeHttpMessageHandler</span> <span class="p">:</span> <span class="n">HttpMessageHandler</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">HttpResponseMessage</span> <span class="n">response</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">public</span> <span class="nf">FakeHttpMessageHandler</span><span class="p">(</span><span class="n">HttpResponseMessage</span> <span class="n">response</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>       <span class="k">this</span><span class="p">.</span><span class="n">response</span> <span class="p">=</span> <span class="n">response</span><span class="p">;</span>
+</span><span class='line'>   <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="k">protected</span> <span class="k">override</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;</span> <span class="n">SendAsync</span><span class="p">(</span><span class="n">HttpRequestMessage</span> <span class="n">request</span><span class="p">,</span>
+</span><span class='line'><span class="n">System</span><span class="p">.</span><span class="n">Threading</span><span class="p">.</span><span class="n">CancellationToken</span> <span class="n">cancellationToken</span><span class="p">)</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'>      <span class="kt">var</span> <span class="n">tcs</span> <span class="p">=</span> <span class="k">new</span> <span class="n">TaskCompletionSource</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;();</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="n">tcs</span><span class="p">.</span><span class="n">SetResult</span><span class="p">(</span><span class="n">response</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">return</span> <span class="n">tcs</span><span class="p">.</span><span class="n">Task</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In an unit test, you can do something like this.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="kt">var</span> <span class="n">fakeResponse</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpResponse</span><span class="p">();</span>
+</span><span class='line'><span class="kt">var</span> <span class="n">fakeHandler</span> <span class="p">=</span> <span class="k">new</span> <span class="n">FakeHttpMessageHandler</span><span class="p">(</span><span class="n">fakeResponse</span><span class="p">);</span>
+</span><span class='line'><span class="kt">var</span> <span class="n">httpClient</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpClient</span><span class="p">(</span><span class="n">fakeHandler</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">var</span> <span class="n">customerService</span> <span class="p">=</span> <span class="k">new</span> <span class="n">CustomerService</span><span class="p">(</span><span class="n">httpClient</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Do something</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Asserts</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>CustomerService in this case is the class under test, and the one that
+receives an HttpClient initialized with our fake handler.</p>
+
+<p>For the second scenario in integration tests, there is a In-Memory host
+“System.Web.Http.HttpServer” that also derives from HttpMessageHandler
+and you can use with a HttpClient instance in your test. This has been
+discussed already in these two great posts from
+<a href="http://pfelix.wordpress.com/2012/03/05/asp-net-web-api-in-memory-hosting/">Pedro</a>
+and
+<a href="http://www.strathweb.com/2012/06/asp-net-web-api-integration-testing-with-in-memory-hosting/">Filip</a>. </p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/09/10/consuming-the-amazon-s3-service-from-a-win8-metro-application/">Consuming the Amazon S3 Service From a Win8 Metro Application</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-09-10T00:00:00-03:00" pubdate data-updated="true">Sep 10<span>th</span>, 2012</time>
+        
+         | <a href="/blog/2012/09/10/consuming-the-amazon-s3-service-from-a-win8-metro-application/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As many of the existing Http APIs for Cloud Services, AWS also provides
+a set of different platform SDKs for hiding many of complexities present
+in the APIs. While there is a platform SDK for .NET, which is open
+source and available in C#, that SDK does not work in Win8 Metro
+Applications for the changes introduced in WinRT. WinRT offers a
+complete different set of APIs for doing I/O operations such as doing
+http calls or using cryptography for signing or encrypting data, two
+aspects that are absolutely necessary for consuming AWS. All the I/O
+APIs available as part of WinRT are asynchronous, and uses the TPL model
+for .NET applications (HTML and JavaScript Metro applications use a
+model based in promises, which is similar concept). </p>
+
+<p>In the case of S3, the http Authorization header is used for two
+purposes, authenticating clients and make sure the messages were not
+altered while they were in transit. For doing that, it uses a signature
+or hash of the message content and some of the headers using a symmetric
+key (That&rsquo;s just one of the available mechanisms). Windows Azure for
+example also uses the same mechanism in many of its APIs.</p>
+
+<p>There are three challenges that any developer working for first time in
+Metro will have to face to consume S3, the new WinRT APIs, the
+asynchronous nature of them and the complexity introduced for generating
+the Authorization header. Having said that, I decided to write this post
+with some of the gotchas I found myself trying to consume this Amazon
+service.</p>
+
+<p>​1. Generating the signature for the Authorization header</p>
+
+<p>All the cryptography APIs in WinRT are available under
+Windows.Security.Cryptography namespace. Many of operations available in
+these APIs uses the concept of buffers (IBuffer) for representing a
+chunk of binary data. As you will see in the example below, these
+buffers are mainly generated with the use of static methods in a WinRT
+class CryptographicBuffer available as part of the namespace previously
+mentioned.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">private</span> <span class="kt">string</span> <span class="nf">DeriveAuthToken</span><span class="p">(</span><span class="kt">string</span> <span class="n">resource</span><span class="p">,</span> <span class="kt">string</span> <span class="n">httpMethod</span><span class="p">,</span> <span class="kt">string</span> <span class="n">timestamp</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>   <span class="kt">var</span> <span class="n">stringToSign</span> <span class="p">=</span> <span class="kt">string</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span><span class="s">&quot;{0}\n&quot;</span> <span class="p">+</span>
+</span><span class='line'>      <span class="s">&quot;\n&quot;</span> <span class="p">+</span>
+</span><span class='line'>      <span class="s">&quot;\n&quot;</span> <span class="p">+</span>
+</span><span class='line'>      <span class="s">&quot;\n&quot;</span> <span class="p">+</span>
+</span><span class='line'>      <span class="s">&quot;x-amz-date:{1}\n&quot;</span> <span class="p">+</span>
+</span><span class='line'>      <span class="s">&quot;/{2}/&quot;</span><span class="p">,</span> <span class="n">httpMethod</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">resource</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="kt">var</span> <span class="n">algorithm</span> <span class="p">=</span> <span class="n">MacAlgorithmProvider</span><span class="p">.</span><span class="n">OpenAlgorithm</span><span class="p">(</span><span class="s">&quot;HMAC_SHA1&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="kt">var</span> <span class="n">keyMaterial</span> <span class="p">=</span> <span class="n">CryptographicBuffer</span><span class="p">.</span><span class="n">CreateFromByteArray</span><span class="p">(</span><span class="n">Encoding</span><span class="p">.</span><span class="n">UTF8</span><span class="p">.</span><span class="n">GetBytes</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">secret</span><span class="p">));</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="kt">var</span> <span class="n">hmacKey</span> <span class="p">=</span> <span class="n">algorithm</span><span class="p">.</span><span class="n">CreateKey</span><span class="p">(</span><span class="n">keyMaterial</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="kt">var</span> <span class="n">signature</span> <span class="p">=</span> <span class="n">CryptographicEngine</span><span class="p">.</span><span class="n">Sign</span><span class="p">(</span>
+</span><span class='line'>                <span class="n">hmacKey</span><span class="p">,</span>
+</span><span class='line'>                <span class="n">CryptographicBuffer</span><span class="p">.</span><span class="n">CreateFromByteArray</span><span class="p">(</span><span class="n">Encoding</span><span class="p">.</span><span class="n">UTF8</span><span class="p">.</span><span class="n">GetBytes</span><span class="p">(</span><span class="n">stringToSign</span><span class="p">))</span>
+</span><span class='line'>            <span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="k">return</span> <span class="n">CryptographicBuffer</span><span class="p">.</span><span class="n">EncodeToBase64String</span><span class="p">(</span><span class="n">signature</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The algorithm that determines the information or content you need to use
+for generating the signature is very well described as part of the AWS
+documentation. In this case, this method is generating a signature
+required for creating a new bucket. A HmacSha1 hash is computed using a
+secret or symetric key provided by AWS in the management console. \
+ \
+2. Sending an Http Request to the S3 service</p>
+
+<p>WinRT also ships with the System.Net.Http.HttpClient that was first
+introduced some months ago with ASP.NET Web API. This client provides a
+rich interface on top the traditional WebHttpRequest class, and also
+solves some of limitations found in this last one. There are a few
+things that don&rsquo;t work with a raw WebHttpRequest such as setting the
+Host header, which is something absolutely required for consuming S3.
+Also, HttpClient is more friendly for doing unit tests, as it receives a
+HttpMessageHandler as part of the constructor that can fake to emulate a
+real http call. This is how the code for consuming the service with
+HttpClient looks like,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">async</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">S3Response</span><span class="p">&gt;</span> <span class="n">CreateBucket</span><span class="p">(</span><span class="kt">string</span> <span class="n">name</span><span class="p">,</span> <span class="kt">string</span> <span class="n">region</span> <span class="p">=</span> <span class="k">null</span><span class="p">,</span> <span class="k">params</span> <span class="kt">string</span><span class="p">[]</span> <span class="n">acl</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>   <span class="kt">var</span> <span class="n">timestamp</span> <span class="p">=</span> <span class="kt">string</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span><span class="s">&quot;{0:r}&quot;</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">.</span><span class="n">UtcNow</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">var</span> <span class="n">auth</span> <span class="p">=</span> <span class="n">DeriveAuthToken</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s">&quot;PUT&quot;</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">var</span> <span class="n">request</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpRequestMessage</span><span class="p">(</span><span class="n">HttpMethod</span><span class="p">.</span><span class="n">Put</span><span class="p">,</span> <span class="s">&quot;http://s3.amazonaws.com/&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">request</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">Host</span> <span class="p">=</span> <span class="kt">string</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span><span class="s">&quot;{0}.s3.amazonaws.com&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">request</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">TryAddWithoutValidation</span><span class="p">(</span><span class="s">&quot;Authorization&quot;</span><span class="p">,</span> <span class="s">&quot;AWS &quot;</span> <span class="p">+</span> <span class="k">this</span><span class="p">.</span><span class="n">key</span> <span class="p">+</span> <span class="s">&quot;:&quot;</span> <span class="p">+</span> <span class="n">auth</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">request</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="s">&quot;x-amz-date&quot;</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">var</span> <span class="n">client</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpClient</span><span class="p">();</span>
+</span><span class='line'>    <span class="kt">var</span> <span class="n">response</span> <span class="p">=</span> <span class="k">await</span> <span class="n">client</span><span class="p">.</span><span class="n">SendAsync</span><span class="p">(</span><span class="n">request</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="k">new</span> <span class="n">S3Response</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>         <span class="n">Succeed</span> <span class="p">=</span> <span class="n">response</span><span class="p">.</span><span class="n">StatusCode</span> <span class="p">==</span> <span class="n">HttpStatusCode</span><span class="p">.</span><span class="n">OK</span><span class="p">,</span>
+</span><span class='line'>         <span class="n">Message</span> <span class="p">=</span> <span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">Content</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span> <span class="p">?</span>
+</span><span class='line'>            <span class="k">await</span> <span class="n">response</span><span class="p">.</span><span class="n">Content</span><span class="p">.</span><span class="n">ReadAsStringAsync</span><span class="p">()</span> <span class="p">:</span> <span class="k">null</span>
+</span><span class='line'>     <span class="p">};</span>
+</span><span class='line'> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You will notice a few additional things in this code. By default,
+HttpClient validates the values for some well-know headers, and
+Authorization is one of them. It won&rsquo;t allow you to set a value with &ldquo;:&rdquo;
+on it, which is something that S3 expects. However, that&rsquo;s not a problem
+at all, as you can skip the validation by using the
+TryAddWithoutValidation method. \
+Also, the code is heavily relying on the new async and await keywords to
+transform all the asynchronous calls into synchronous ones. In case you
+would want to unit test this code and faking the call to the real S3
+service, you should have to modify it to inject a custom
+HttpMessageHandler into the HttpClient. The following implementation
+illustrates this concept,</p>
+
+<p>In case you would want to unit test this code and faking the call to the
+real S3 service, you should have to modify it to inject a custom
+HttpMessageHandler into the HttpClient. The following implementation
+illustrates this concept,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">FakeHttpMessageHandler</span> <span class="p">:</span> <span class="n">HttpMessageHandler</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">HttpResponseMessage</span> <span class="n">response</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">public</span> <span class="nf">FakeHttpMessageHandler</span><span class="p">(</span><span class="n">HttpResponseMessage</span> <span class="n">response</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>       <span class="k">this</span><span class="p">.</span><span class="n">response</span> <span class="p">=</span> <span class="n">response</span><span class="p">;</span>
+</span><span class='line'>   <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="k">protected</span> <span class="k">override</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;</span> <span class="n">SendAsync</span><span class="p">(</span><span class="n">HttpRequestMessage</span> <span class="n">request</span><span class="p">,</span> <span class="n">System</span><span class="p">.</span><span class="n">Threading</span><span class="p">.</span><span class="n">CancellationToken</span> <span class="n">cancellationToken</span><span class="p">)</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'>      <span class="kt">var</span> <span class="n">tcs</span> <span class="p">=</span> <span class="k">new</span> <span class="n">TaskCompletionSource</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;();</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="n">tcs</span><span class="p">.</span><span class="n">SetResult</span><span class="p">(</span><span class="n">response</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">return</span> <span class="n">tcs</span><span class="p">.</span><span class="n">Task</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You can use this handler for injecting any response while you are unit
+testing the code.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/3/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

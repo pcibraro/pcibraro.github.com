@@ -1,0 +1,2027 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="Continuing my post “Brokered authentication for REST active
+clients”,
+I will show today how the client code can be simplified using the new &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/page/14">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/03/18/negotiating-a-saml-token-for-rest-clients-with-httpclient/">Negotiating SAML Tokens for REST Clients With the HttpClient Class</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-03-18T00:00:00-03:00" pubdate data-updated="true">Mar 18<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/03/18/negotiating-a-saml-token-for-rest-clients-with-httpclient/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Continuing my post <a href="http://weblogs.asp.net/cibrax/archive/2009/03/06/brokered-authentication-for-rest-active-clients-with-saml.aspx">“Brokered authentication for REST active
+clients”</a>,
+I will show today how the client code can be simplified using the new
+HttpClient (WCF REST Starter kit 2) and some custom http processing
+stages attached to its pipeline.</p>
+
+<p>The first thing we have to do is to implement a custom processing stage
+(a class that derives from HttpStage) to centralize all the logic needed
+to negotiate a SAML token from an existing STS.</p>
+
+<p>The pipeline contains basically two kinds of stage, a regular http stage
+that can be injected through the HttpClient.Stages collection, and a
+more specialized implementation HttpWebRequestTransportStage, which runs
+last in the pipeline and has access to all the transport settings. This
+last one can only be replaced with a custom version of the HttpClient
+that overrides the protected method “CreateTransportStage”,</p>
+
+<p>public class HttpClient : IDisposable</p>
+
+<p>{</p>
+
+<p>  protected virtual HttpStage CreateTransportStage();</p>
+
+<p>}</p>
+
+<p>Having said this, two possible options for implementing the token
+negotiation in a pipeline stage could be,</p>
+
+<p>​1. A regular http stage that can be initialized with the STS address
+and the user credentials through the class constructor or a property
+setter.</p>
+
+<p>​2. A custom HttpWebRequestTransportStage and the corresponding
+HttpClient (FederatedHttpClient) implementation to return that stage.</p>
+
+<p>From my point of view, the second approach seems to work better because
+the HttpClient instance does not get tied to the user credentials. This
+is the approach I will use for this example.</p>
+
+<p>public class NegociateTokenStage : HttpWebRequestTransportStage</p>
+
+<p>{</p>
+
+<p>private string stsUri = &ldquo;&rdquo;;</p>
+
+<p>public NegociateTokenStage(string stsUri) : base()</p>
+
+<p>{</p>
+
+<p>    this.stsUri = stsUri;</p>
+
+<p>}</p>
+
+<p>protected override void
+ProcessRequestAndTryGetResponse(HttpRequestMessage request, out
+HttpResponseMessage response, out object state)</p>
+
+<p>{</p>
+
+<p>    string token = GetToken(stsUri, request.Uri.AbsoluteUri,
+this.Settings.Credentials);</p>
+
+<p>    request.Headers.Add(&ldquo;Authorization&rdquo;, token);</p>
+
+<p>    base.ProcessRequestAndTryGetResponse(request, out response, out
+state);</p>
+
+<p>}</p>
+
+<p>The custom transport stage derives from the built-in transport stage
+“HttpWebRequestTransportStage” and adds some custom code in the
+ProcessRequestAndTryGetResponse to negotiate the SAML token from the STS
+before the final service gets called (This is being done in the GetToken
+method). After that, the SAML token get passed to the final service
+through the authorization html header.</p>
+
+<p>The custom implementation of the HttpClient application is quite simple,
+only returns our custom transport stage in the CreateTransportStage
+method,</p>
+
+<p>public class FederatedHttpClient : HttpClient</p>
+
+<p>{</p>
+
+<p>    public string StsUri</p>
+
+<p>    {</p>
+
+<p>        get; set;</p>
+
+<p>    }</p>
+
+<p>    protected override HttpStage CreateTransportStage()</p>
+
+<p>    {</p>
+
+<p>        NegociateTokenStage stage = new
+NegociateTokenStage(this.StsUri);</p>
+
+<p>        stage.Settings = this.TransportSettings;</p>
+
+<p>        return stage;</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>Now, the client application can use our custom version of the HttpClient
+for consuming the final service, only a few lines are required.</p>
+
+<p>FederatedHttpClient client = new FederatedHttpClient { StsUri =
+&ldquo;<a href="http://localhost:7481/STS/Service.svc/Tokens">http://localhost:7481/STS/Service.svc/Tokens</a>&rdquo; };</p>
+
+<p>client.TransportSettings.Credentials = new NetworkCredential(&ldquo;cibrax&rdquo;,
+&ldquo;foo&rdquo;);</p>
+
+<p>string response =
+client.Get(&ldquo;<a href="http://localhost:7397/RestServices/Service.svc/Claims">http://localhost:7397/RestServices/Service.svc/Claims</a>&rdquo;).Content.ReadAsString();</p>
+
+<p>The SAML negotiation is totally transparent to the client application,
+it does not even know that a SAML token exists, sweet :).</p>
+
+<p>The code is available to download at <a href="/images/legacy/FederatedRest2.zip">this
+location</a>.</p>
+
+<p>UPDATE: As John Lambert from the WCF team pointed out, a custom
+transport stage also needs to override the
+BeginProcessRequestAndTryGetResponse and
+EndProcessRequestAndTryGetResponse to support async scenarios. I will
+try to update the example to override these methods any time soon.
+Thanks John for the feedback!!!.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/03/16/poolingagent-and-atompubclient-in-the-wcf-rest-starter-kit-preview-2/">PollingAgent and AtomPubClient in the WCF Rest Starter Kit Preview 2</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-03-16T00:00:00-03:00" pubdate data-updated="true">Mar 16<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/03/16/poolingagent-and-atompubclient-in-the-wcf-rest-starter-kit-preview-2/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>PollingAgent is an utility class for consuming REST services that
+implement conditional gets. An instance of this class will periodically
+invoke the service within a predefined interval of time, and fire an
+event on the client side when a new response is available to consume. It
+is internally layered on top of the HttpClient class, so all the
+pipeline infrastructure provided by this last one is also supported for
+this pooling agent.</p>
+
+<p>As I discussed in the post “<a href="http://weblogs.asp.net/cibrax/archive/2008/10/06/importance-of-conditional-gets-in-rest.aspx">Conditional Get in
+REST</a>”,
+conditional gets provide an effective and standard mechanism for caching
+information on the client side. It is based on the use of the 
+Etag/IfNoneMatch and Last-Modified/IfModifiedSince html headers. This
+mechanism is commonly used by the feed readers to be notified about new
+items in the feeds.</p>
+
+<p>This pooling agent implementation internally keeps track of those
+headers, so it hides many of the conditional gets details from the
+client application.</p>
+
+<p>public class PollingAgent : IDisposable</p>
+
+<p>{</p>
+
+<p>  public PollingAgent();</p>
+
+<p>  public HttpClient HttpClient { get; set; }</p>
+
+<p>  public bool IgnoreExpiresHeader { get; set; }</p>
+
+<p>  public bool IgnoreNonOKStatusCodes { get; set; }</p>
+
+<p>  public bool IgnoreSendErrors { get; set; }</p>
+
+<p>  public TimeSpan PollingInterval { get; set; }</p>
+
+<p>  public event EventHandler&lt;ConditionalGetEventArgs> ResourceChanged;</p>
+
+<p>  public void Dispose();</p>
+
+<p>  public void StartPolling();</p>
+
+<p>  public void StartPolling(Uri uri);</p>
+
+<p>  public void StartPolling(Uri uri, EntityTag etag, DateTime?
+lastModifiedTime);</p>
+
+<p>  public void StopPolling();</p>
+
+<p>}</p>
+
+<p>public class ConditionalGetEventArgs : EventArgs</p>
+
+<p>{</p>
+
+<p>  public ConditionalGetEventArgs();</p>
+
+<p>  public HttpResponseMessage Response { get; set; }</p>
+
+<p>  public Exception SendError { get; set; }</p>
+
+<p>  public bool StopPolling { get; set; }</p>
+
+<p>}</p>
+
+<p>This public API is quite straightforward, a couple of methods to
+start/stop polling the REST service, an event “ResourceChanged” to be
+notified about changes, and some properties to configure the agent.</p>
+
+<p>AtomPubClient is an specialized version of the HttpClient for consuming
+Atom Pub Services. It provides different overloads for creating,
+updating, getting or updating existing syndication entries through Atom
+pub.</p>
+
+<p>As you can see, the WCF Rest team is definitively doing a great job to
+facilitate the adoption of REST services in the platform. </p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/03/13/httpclient-in-the-wcf-rest-starter-kit-preview-2/">HttpClient in the WCF REST Starter Kit Preview 2</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-03-13T00:00:00-03:00" pubdate data-updated="true">Mar 13<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/03/13/httpclient-in-the-wcf-rest-starter-kit-preview-2/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>HttpClient is a new utility class introduced in the WCF REST Startert
+Kit Preview 2 for consuming REST services. This new class is made up of
+three different parts,</p>
+
+<p>​1. A rich object model to manipulate the Http request and response
+objects in a more natural way. This is done through the use of the
+HttpRequestMessage and HttpResponseMessage classes.</p>
+
+<p>​2. Some overloads or extension methods to reduce the number of code
+lines required to consume a service. For example, the HttpClient class
+itself contains method overloads to send messages to a service through
+some of the well-know http verbs, such as Get, Post, Put, Delete, Head
+or Options.  The HttpRequestMessage and HttpResponse classes also
+contain methods for serializing/deserializing the incoming/outgoing
+messages in different formats.</p>
+
+<p>HttpClient client = new HttpClient();           </p>
+
+<p>var echo = client.Get(new
+Uri(&ldquo;<a href="http://localhost:1449/MyRestService/Service.svc/Echo">http://localhost:1449/MyRestService/Service.svc/Echo</a>&rdquo;)).Content.ReadAsString();</p>
+
+<p>The sample code above sends a Http Get message to an “Echo” service and
+gets the response as a simple string.</p>
+
+<p>​3. An extensible execution pipeline made up of customizable steps or
+stages. This pipeline takes the form of a pipeline controller pattern
+where each step executes one after another to return back the execution
+control to the pipeline (It is basically a coordinator). This feature
+gives enough flexibility to perform additional work over the
+request/response messages such as validations or caching to name a few.</p>
+
+<p>Every step in the pipeline is represented by a HttpStage class. This
+class contains two overloads,</p>
+
+<p>public class MyCustomStage : HttpStage</p>
+
+<p>{</p>
+
+<p>    protected internal override void
+ProcessRequestAndTryGetResponse(HttpRequestMessage request, out
+HttpResponseMessage response, out object state)</p>
+
+<p>    {</p>
+
+<p>    }</p>
+
+<p>    protected internal override void ProcessResponse(HttpResponseMessage
+response, object state)</p>
+
+<p>    {</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>The “ProcessRequestAndTryGetResponse” is executed first in the pipeline,
+and it allows doing some processing over the request message. It is also
+possible in this method to return a response message, if that happens,
+all the stages that come after this one are not executed and the
+response is returned to the client application. As result of this, the
+REST service does not get called because the last stage in the pipeline
+is usually the one that sends the request through http to the service.
+This approach is generally useful for performing some caching or mocking
+the responses from unit tests.</p>
+
+<p>The following example interrupts the pipeline execution and returns an
+string (“myfoo”) as response message,</p>
+
+<p>public class MyStage : HttpStage</p>
+
+<p>{</p>
+
+<p>    protected internal override void
+ProcessRequestAndTryGetResponse(HttpRequestMessage request, out
+HttpResponseMessage response, out object state)</p>
+
+<p>    {</p>
+
+<p>        response = new HttpResponseMessage</p>
+
+<p>        {</p>
+
+<p>            Content = HttpContent.Create(&ldquo;myfoo&rdquo;),</p>
+
+<p>            Method = &ldquo;GET&rdquo;,</p>
+
+<p>            StatusCode = System.Net.HttpStatusCode.OK,</p>
+
+<p>            Uri = request.Uri</p>
+
+<p>        };</p>
+
+<p>        state = null;</p>
+
+<p>    }</p>
+
+<p>    protected internal override void ProcessResponse(HttpResponseMessage
+response, object state)</p>
+
+<p>    {</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>The “ProcessResponse” method is executed after a response message is
+found in the pipeline. As it name states, it allows doing some
+additional processing over that response message.</p>
+
+<p>A more specialized version of these stages is also provided by the
+starter kit, HttpProcessingStage</p>
+
+<p>public class MyCustomStage : HttpProcessingStage</p>
+
+<p>{</p>
+
+<p>    public override void ProcessRequest(HttpRequestMessage request)</p>
+
+<p>    {</p>
+
+<p>    }</p>
+
+<p>    public override void ProcessResponse(HttpResponseMessage response)</p>
+
+<p>    {</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>This class derives from the standard “HttpStage” and adds some plumbing
+code to simplify the work of a developer only interested in inspecting
+or modifying the request or response messages. It works like a Message
+Inspector in WCF.</p>
+
+<p>These custom stages can be added to the HttpClient trough the “Stages”
+collection,</p>
+
+<p>client.Stages.Add(new MyStage());</p>
+
+<p>If you want to start playing with this new useful class, go an grab the
+latest preview of the <a href="http://www.codeplex.com/aspnet/Wiki/View.aspx?title=WCF%20REST&amp;referringTitle=Home">Starter kit from
+Codeplex</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/03/11/code-generation-with-t4-an-entities-to-dto-example/">Code Generation With T4, Entities to DTOs Example</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-03-11T00:00:00-03:00" pubdate data-updated="true">Mar 11<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/03/11/code-generation-with-t4-an-entities-to-dto-example/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>T4 is a powerful template engine for code generation shipped out of the
+box within Visual Studio.  It is an evolution of T3, which was initially
+introduced a couple of years ago as part of  the DSL toolkits and the
+software factories.</p>
+
+<p>Today, it is getting more attention from other product teams as well,
+for instance, the ASP.NET MVC and Entity Framework teams have recently
+announced that they will ship T4 templates as part of their products.
+That will provide a way to customize the code they are generating from
+custom tools or visual studio item templates.</p>
+
+<p>A cool thing is that you do not need any custom tool box to automate the
+code generation. You can simply add a T4 template to any Visual Studio
+project, rename it to use the extension &ldquo;tt&rdquo;, and visual studio will do
+the rest.</p>
+
+<p>One of the major pains, however, is the authoring experience for
+creating or modifying existing T4 templates in Visual Studio, there is
+not built-in support for doing that.  The company where I am currently
+working on, <a href="http://www.clariusconsulting.net/">Clarius Consulting</a>, has
+made the best designer ever for authoring T4 templates within Visual
+Studio, <a href="http://www.visualt4.com/">the T4 editor</a>. Some of the features
+included with this designer are syntax coloring, intellisense or code
+preview to name a few.</p>
+
+<p>This last weekend, while I was delayed a complete day in DC for
+mechanical problems  in one of the airplanes, I decided it was a good
+moment to start playing with this technology and make something
+productive with my time. The result was a T4 template for auto
+generating a DTO (Data transfer objects) layer based on WCF data
+contracts from an existing entity model. Using DTOs is a common practice
+for transferring the state of different entities across service
+boundaries, they are frequently found in system designs that follow the
+DDD principles.</p>
+
+<p>Although the resulting code is practically useless, it can be easily
+customized for supporting different scenarios. (Or at least, it will
+help to give you an idea about how this thing can be done)</p>
+
+<p>The structure of a T4 template is quite simple (And somehow similar to
+an ASP.NET page without any control), &ldquo;&lt;# #>&rdquo; for wrapping multiple
+lines of code or &ldquo;&lt;#= #>&rdquo; for inline code, the rest of the template
+is treated as text.</p>
+
+<p>For this example I used a model with a few entities (an <a href="http://en.wikipedia.org/wiki/Anemic_Domain_Model">anemic domain
+model</a> I would say),</p>
+
+<p>public class Employee</p>
+
+<p>{</p>
+
+<p>    public string Name</p>
+
+<p>    {</p>
+
+<p>        get;</p>
+
+<p>        set;</p>
+
+<p>    }</p>
+
+<p>    public Employee Boss</p>
+
+<p>    {</p>
+
+<p>        get;</p>
+
+<p>        set;</p>
+
+<p>    }</p>
+
+<p>    public Company Company</p>
+
+<p>    {</p>
+
+<p>        get;</p>
+
+<p>        set;</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>public class Company</p>
+
+<p>{</p>
+
+<p>    public string CompanyName</p>
+
+<p>    {</p>
+
+<p>        get;</p>
+
+<p>        set;</p>
+
+<p>    }</p>
+
+<p>    public List&lt;Employee> Employees</p>
+
+<p>    {</p>
+
+<p>        get;</p>
+
+<p>        set;</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>The template filters the types that have to be included in the code
+generating process with a Linq expression, all the entities in the
+&ldquo;EntitiesToDTO.Entities&rdquo; namespace in this case.</p>
+
+<p>&lt;#</p>
+
+<p>var entitiesNamespace = &ldquo;EntitiesToDTO.Entities&rdquo;;</p>
+
+<p>//Use another expression here to filter the entities</p>
+
+<p>var typesToRegister = from t in
+LoadProjectAssembly(entitiesAssembly).GetExportedTypes()</p>
+
+<p>                      where t.Namespace == entitiesNamespace &amp;&amp;
+t.IsClass &amp;&amp; !t.IsAbstract</p>
+
+<p>                      select t;</p>
+
+<p>#></p>
+
+<p>The resulting code is also quite straightforward, it includes a partial
+class that can be extended to support additional mappings.</p>
+
+<p>[DataContract(Name=&ldquo;employee&rdquo;, Namespace=&ldquo;urn:EntitiesToDTO/Entities&rdquo;)]</p>
+
+<p>public partial class EmployeeDTO   </p>
+
+<p>{</p>
+
+<p>    [DataMember(Name=&ldquo;name&rdquo;)]</p>
+
+<p>    public System.String Name</p>
+
+<p>    {</p>
+
+<p>        get; set;</p>
+
+<p>    }</p>
+
+<p>    [DataMember(Name=&ldquo;boss&rdquo;)]</p>
+
+<p>    public EmployeeDTO Boss</p>
+
+<p>    {</p>
+
+<p>        get; set;</p>
+
+<p>    }</p>
+
+<p>    [DataMember(Name=&ldquo;company&rdquo;)]</p>
+
+<p>    public CompanyDTO Company</p>
+
+<p>    {</p>
+
+<p>        get; set;</p>
+
+<p>    }</p>
+
+<p>    public Employee MapTo(EmployeeDTO dto)</p>
+
+<p>    {</p>
+
+<p>        return GetMapper().MapTo(dto);</p>
+
+<p>    }</p>
+
+<p>    public static EmployeeDTO MapFrom(Employee entity)</p>
+
+<p>    {</p>
+
+<p>        return GetMapper().MapTo(entity);</p>
+
+<p>    }</p>
+
+<p>    public static EmployeeMapper GetMapper()</p>
+
+<p>    {</p>
+
+<p>        return new EmployeeMapper();  </p>
+
+<p>    }</p>
+
+<p>    public partial class EmployeeMapper</p>
+
+<p>    {</p>
+
+<p>        public EmployeeDTO MapTo(EntitiesToDTO.Entities.Employee entity)</p>
+
+<p>        {</p>
+
+<p>            var dto = new EmployeeDTO</p>
+
+<p>            {  </p>
+
+<p>                Name = entity.Name,</p>
+
+<p>                Boss = EmployeeDTO.GetMapper().MapTo(entity.Boss),</p>
+
+<p>                Company = CompanyDTO.GetMapper().MapTo(entity.Company),</p>
+
+<p>            };</p>
+
+<p>            DoMapping(dto, entity);</p>
+
+<p>            return dto;</p>
+
+<p>        }</p>
+
+<p>        public EntitiesToDTO.Entities.Employee MapTo(EmployeeDTO dto)</p>
+
+<p>        {</p>
+
+<p>            var entity = new EntitiesToDTO.Entities.Employee</p>
+
+<p>            {  </p>
+
+<p>                Name = dto.Name,</p>
+
+<p>                Boss = EmployeeDTO.GetMapper().MapTo(dto.Boss),</p>
+
+<p>                Company = CompanyDTO.GetMapper().MapTo(dto.Company),</p>
+
+<p>            };</p>
+
+<p>            DoMapping(entity, dto);</p>
+
+<p>            return entity;</p>
+
+<p>        }</p>
+
+<p>        partial void DoMapping(EntitiesToDTO.Entities.Employee
+fromEntity, EmployeeDTO toDto);</p>
+
+<p>        partial void DoMapping(EmployeeDTO fromDto,
+EntitiesToDTO.Entities.Employee toEntity);</p>
+
+<p>    }</p>
+
+<p>} </p>
+
+<p>The mapper (EmployeeMapper) is an additional class to handle the
+mappings between entities and DTOs, a mapping class per DTO is
+generated. As you can see in the code below, either the EmployeeDTO or
+the EmployeeMapper can be extended with a partial class to perform
+additional mappings. For example,</p>
+
+<p>public partial class EmployeeDTO</p>
+
+<p>{</p>
+
+<p>    [DataMember(Name = &ldquo;fullName&rdquo;)]</p>
+
+<p>    public string FullName { get; set; }</p>
+
+<p>    public partial class EmployeeMapper</p>
+
+<p>    {</p>
+
+<p>        partial void DoMapping(Employee fromEntity, EmployeeDTO toDto)</p>
+
+<p>        {</p>
+
+<p>            toDto.FullName = fromEntity.Name + &ldquo; Foo&rdquo;;</p>
+
+<p>        }</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>The sample is available to download from
+<a href="/images/legacy/EntitiesToDTO.zip">here</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/03/08/wcfmock-a-mocking-framework-for-wcf-services/">WCFMock, a Mocking Framework for WCF Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-03-08T00:00:00-03:00" pubdate data-updated="true">Mar 8<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/03/08/wcfmock-a-mocking-framework-for-wcf-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>WCFMock, a mocking framework for WCF services. Not a very original name,
+but it was the first one that came out to my mind :). If you have been
+following my blog for a while, you might notice that I discussed
+different approaches in the past to unit test WCF services,
+<a href="http://weblogs.asp.net/cibrax/archive/2008/05/16/unit-tests-for-wcf.aspx">here</a>
+and
+<a href="http://weblogs.asp.net/cibrax/archive/2008/12/11/testing-wcf-rest-services.aspx">here</a>.
+One of the major pains that you will find today for unit testing WCF
+services is the static operation context (OperationContext and
+WebOperationContext). If you service implementation relies on that
+context for doing something, you will have a hard time trying to test
+that functionality.</p>
+
+<p>For instance, it is very common in WCF REST services to use the context
+to set or get http status codes. With the current WCF bits, how can you
+do to unit test those services ?. The answer is WCFMock, a set of useful
+classes that will help you to remove all the explicit dependencies with
+the operation context, and still provide a good way to mock them from
+unit tests.</p>
+
+<p>Let&rsquo;s see how WCFMock works in practice with a very simple example,</p>
+
+<p>​1. You have a WCF REST service that returns a RSS feed with a catalog
+of products</p>
+
+<p>[ServiceContract]</p>
+
+<p>public interface IProductCatalog</p>
+
+<p>{</p>
+
+<p>    [WebGet(UriTemplate = &ldquo;?category={category}&rdquo;)]</p>
+
+<p>    [OperationContract]</p>
+
+<p>    Atom10FeedFormatter GetProducts(string category);</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public Atom10FeedFormatter GetProducts(string category)</p>
+
+<p>{</p>
+
+<p>    var items = new List&lt;SyndicationItem>();</p>
+
+<p>    foreach(var product in repository.GetProducts(category))</p>
+
+<p>    {</p>
+
+<p>        items.Add(new SyndicationItem()</p>
+
+<p>        {</p>
+
+<p>            Id = String.Format(CultureInfo.InvariantCulture,
+&ldquo;<a href="http://products/">http://products/</a>{0}&rdquo;, product.Id),</p>
+
+<p>            Title = new TextSyndicationContent(product.Name),</p>
+
+<p>            LastUpdatedTime = new DateTime(2008, 7, 1, 0, 0, 0,
+DateTimeKind.Utc),</p>
+
+<p>            Authors =</p>
+
+<p>            {</p>
+
+<p>                new SyndicationPerson()</p>
+
+<p>                {</p>
+
+<p>                    Name = &ldquo;cibrax&rdquo;</p>
+
+<p>                }</p>
+
+<p>            },</p>
+
+<p>            Content = new TextSyndicationContent(string.Format(&ldquo;Category
+Id {0} &ndash; Price {1}&rdquo;,</p>
+
+<p>                product.Category, product.UnitPrice))</p>
+
+<p>        });</p>
+
+<p>    }</p>
+
+<p>    var feed = new SyndicationFeed()</p>
+
+<p>    {</p>
+
+<p>        Id = &ldquo;<a href="http://Products">http://Products</a>&rdquo;,</p>
+
+<p>        Title = new TextSyndicationContent(&ldquo;Product catalog&rdquo;),</p>
+
+<p>        Items = items</p>
+
+<p>    };</p>
+
+<p>    WebOperationContext.Current.OutgoingResponse.ContentType =
+&ldquo;application/atom+xml&rdquo;;</p>
+
+<p>    return feed.GetAtom10Formatter();</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p> </p>
+
+<p>This service implementation only relies on the WebOperationContext to
+set up the response content type, that is being done in the following
+line,</p>
+
+<p> </p>
+
+<p>WebOperationContext.Current.OutgoingResponse.ContentType =
+&ldquo;application/atom+xml&rdquo;;</p>
+
+<p> </p>
+
+<p>​2. You have now to find a way to get rid of that dependency so we can
+unit test that method. Here is where WCFMock comes to the rescue. The
+first thing you have to do is to define a new alias on top of your
+class,</p>
+
+<p>using WebOperationContext =
+System.ServiceModel.Web.MockedWebOperationContext;</p>
+
+<p>Optionally, you can wrap that sentence with a conditional compilation
+directive</p>
+
+<p>#if DEBUG</p>
+
+<p>using WebOperationContext =
+System.ServiceModel.Web.MockedWebOperationContext;</p>
+
+<p>#endif</p>
+
+<p>This is useful for instance, if you want to use the mocked version in
+development, and always the WCF version in production. That&rsquo;s all, you
+do not need to touch your existing service implementation at all, once
+you defined that alias, the service is ready to be tested.</p>
+
+<p>​3. For testing the service, I will use Moq, a pretty good mock
+framework created by my friend <a href="http://weblogs.asp.net/cazzu">Cazzu</a>.</p>
+
+<p>[TestClass]</p>
+
+<p>public class UnitTests</p>
+
+<p>{</p>
+
+<p>    [TestMethod]</p>
+
+<p>    public void ShouldGetProductsFeed()</p>
+
+<p>    {</p>
+
+<p>        ProductCatalog catalog = new ProductCatalog(</p>
+
+<p>            new InMemoryProductRepository(</p>
+
+<p>                new List&lt;Product>{</p>
+
+<p>                new Product { Id = &ldquo;1&rdquo;, Category = &ldquo;foo&rdquo;, Name = &ldquo;Foo1&rdquo;,
+UnitPrice = 1 },</p>
+
+<p>                new Product { Id = &ldquo;2&rdquo;, Category = &ldquo;bar&rdquo;, Name = &ldquo;bar2&rdquo;,
+UnitPrice = 2 }</p>
+
+<p>            }));</p>
+
+<p>        Mock&lt;IWebOperationContext> mockContext = new
+Mock&lt;IWebOperationContext> { DefaultValue = DefaultValue.Mock };</p>
+
+<p>        IEnumerable&lt;SyndicationItem> items;</p>
+
+<p>        <strong>using (new MockedWebOperationContext(mockContext.Object))</strong></p>
+
+<p><strong>        {</strong></p>
+
+<p><strong>            var formatter = catalog.GetProducts(&ldquo;foo&rdquo;);</strong></p>
+
+<p><strong>            items = formatter.Feed.Items;</strong></p>
+
+<p><strong>        }</strong></p>
+
+<p>        mockContext.VerifySet(c => c.OutgoingResponse.ContentType,
+&ldquo;application/atom+xml&rdquo;);</p>
+
+<p>        Assert.AreEqual(1, items.Count());</p>
+
+<p>        Assert.IsTrue(items.Any(i => i.Id == &ldquo;<a href="http://products/1">http://products/1</a>&rdquo; &amp;&amp;
+i.Title.Text == &ldquo;Foo1&rdquo;));</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>Two pieces of code deserves some special attention, the code for
+creating the mocked WebOperationContext and the code required for
+verifying the expectations.</p>
+
+<p>using (new MockedWebOperationContext(mockContext.Object))</p>
+
+<p>{</p>
+
+<p>    var formatter = catalog.GetProducts(&ldquo;foo&rdquo;);</p>
+
+<p>    items = formatter.Feed.Items;</p>
+
+<p>}</p>
+
+<p>That will insert the mockContext object in the Thread Local Storage so
+it can be accessed later in the service implementation.  </p>
+
+<p>The test also verifies that the ContentType header was set with the
+correct value in the operation,</p>
+
+<p>mockContext.VerifySet(c => c.OutgoingResponse.ContentType,
+&ldquo;application/atom+xml&rdquo;);</p>
+
+<p>As you can see, all the magic is done by the MockedWebOperationContext
+(There is also a MockedOperationContext to replace the
+OperationContext). The implementation of this class is quite simple,</p>
+
+<p>public class MockedWebOperationContext : IDisposable</p>
+
+<p>{</p>
+
+<p>    [ThreadStatic]</p>
+
+<p>    private static IWebOperationContext currentContext;</p>
+
+<p>    public MockedWebOperationContext(IWebOperationContext context)</p>
+
+<p>    {</p>
+
+<p>        currentContext = context;</p>
+
+<p>    }</p>
+
+<p>    public static IWebOperationContext Current</p>
+
+<p>    {</p>
+
+<p>        get</p>
+
+<p>        {</p>
+
+<p>            if (currentContext == null)</p>
+
+<p>            {</p>
+
+<p>                return new
+WebOperationContextWrapper(WebOperationContext.Current);</p>
+
+<p>            }</p>
+
+<p>            return currentContext;</p>
+
+<p>        }</p>
+
+<p>    }</p>
+
+<p>    public void Dispose()</p>
+
+<p>    {</p>
+
+<p>        currentContext = null;</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>The Current property of this class first tries to get an
+IWebOperationContext from the thread local storage (That could be set by
+the unit tests), and if none is available, it returns a wrapper to the
+original WCF context. As you can see, the overhead introduced by the
+class is minimal, it just a quick search in the TLS.</p>
+
+<p>The project is now available to download from Codeplex at this location,
+<a href="http://wcfmock.codeplex.com/">http://wcfmock.codeplex.com/</a></p>
+
+<p>Enjoy.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/03/06/brokered-authentication-for-rest-active-clients-with-saml/">Brokered Authentication for REST Active Clients With SAML</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-03-06T00:00:00-03:00" pubdate data-updated="true">Mar 6<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/03/06/brokered-authentication-for-rest-active-clients-with-saml/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I have been thinking for a while about what could be a good way to
+support brokered authentication for active REST clients. Something I did
+not want to do was to force the use of WS-Trust Active profile, which is
+in essence SOAP based.</p>
+
+<p>Some of the qualities attributes that are easy to reach with REST
+services, such as simplicity, interoperability and scalability can
+definitely be affected with the introduction of a additional SOAP stack
+for negotiating an identity token. WS-Trust passive requestor profile,
+on the other hand, was designed for dumb clients like web browsers,
+clients that do not have capabilities to handle cryptographic materials
+or the SOAP stack itself.  This profile basically hides most of the
+WS-Trust details from client applications through a sequence of http
+redirections, which could be helpful in this scenario for negotiating a
+token and still keep simple REST clients. However, as some user
+interaction is required, this profile is not suitable for consuming REST
+services from desktop applications or other active client applications.</p>
+
+<p>If we take a deep look at the functionality provided by a Secure Token
+Service (STS), it is not more than a service that handle the lifecycle
+of a identity token, it knows how to issue a token, renew it or finally
+cancel it when it is not longer need it.  If we see all these scenarios
+from a point of view of REST, an identity token is just a resource,
+something that can be created, updated or even deleted. Of course, there
+is not any spec available yet for this scenario, all I will show here is
+just an possible implementation of a Restful STS.</p>
+
+<p>The mapping of supported Ws-Trust actions to http verbs for my Restful
+STS is defined below,</p>
+
+<ul>
+<li>Issue = POST, creates or issues a new token resource (A SAML token)</li>
+<li>Renew = PUT, renew an existing token</li>
+<li>Cancel = DELETE, cancel an existing token</li>
+<li>GET, gets an existing token (There is not such thing in Ws-Trust)</li>
+</ul>
+
+
+<p>I leave out the &ldquo;Validate&rdquo; action as part of this implementation.</p>
+
+<p>What I have created for this example is a REST facade layered on top of
+a STS implementation with the Geneva Framework. The definition of
+service contract for this Restful STS for supporting that mapping should
+look like this,</p>
+
+<p><del> {.c# name=&ldquo;code&rdquo;}
+[ServiceContract]public interface IRestSts{    [OperationContract]    [WebInvoke(UriTemplate=&ldquo;Tokens&rdquo;, Method=&ldquo;POST&rdquo;, RequestFormat=WebMessageFormat.Xml, ResponseFormat=WebMessageFormat.Xml)]    RequestSecurityTokenResponse IssueToken(RequestSecurityToken request);     [OperationContract]    [WebInvoke(Method = &ldquo;PUT&rdquo;, UriTemplate = &ldquo;Tokens/{tokenId}&rdquo;, RequestFormat = WebMessageFormat.Xml, ResponseFormat = WebMessageFormat.Xml)]    RequestSecurityTokenResponse RenewToken(string tokenId);     [OperationContract]    [WebInvoke(Method = &ldquo;DELETE&rdquo;, UriTemplate = &ldquo;Tokens/{tokenId}&rdquo;, RequestFormat = WebMessageFormat.Xml, ResponseFormat = WebMessageFormat.Xml)]    void CancelToken(string tokenId);     [OperationContract]    [WebGet(UriTemplate = &ldquo;Tokens/{tokenId}&rdquo;, RequestFormat = WebMessageFormat.Xml, ResponseFormat = WebMessageFormat.Xml)]    RequestSecurityTokenResponse GetToken(string tokenId);    }
+</del></p>
+
+<p>As I mentioned before, the client has to first acquire a token from the
+STS, that can be done with a regular Http POST containing a
+RequestSecurityToken message.</p>
+
+<p><a href="/images/legacy/FederatedidentityinRESTservices_A72D/Issue_REST.gif"><img src="/images/legacy/FederatedidentityinRESTservices_A72D/Issue_REST_thumb.gif" alt="Issue_REST" /></a></p>
+
+<p>The message embedded in the request body to the STS looks like this,</p>
+
+<p>~~~~ {.xml name=&ldquo;code&rdquo;}
+<RequestSecurityToken xmlns="http://schemas.xmlsoap.org/ws/2005/02/trust"></p>
+
+<pre><code>&lt;AppliesTo&gt;https://localhost/MyService&lt;/AppliesTo&gt;
+&lt;TokenType&gt;http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1&lt;/TokenType&gt;
+</code></pre>
+
+<p></RequestSecurityToken>
+~~~~</p>
+
+<p>And the corresponding response like this,</p>
+
+<p>~~~~ {.xml name=&ldquo;code&rdquo;}
+<RequestSecurityTokenResponse xmlns="http://schemas.xmlsoap.org/ws/2005/02/trust" xmlns:i="http://www.w3.org/2001/XMLSchema-instance"></p>
+
+<pre><code>&lt;Links&gt;
+    &lt;Link&gt;
+        &lt;href&gt;http://localhost:7362/STSWindows/Service.svc/_8a6fc87b-7e6a-45c9-a479-20ea42113e40&lt;/href&gt;
+        &lt;rel&gt;self&lt;/rel&gt;
+        &lt;type&gt;application/xml&lt;/type&gt;
+    &lt;/Link&gt;
+&lt;/Links&gt;
+&lt;RequestedSecurityToken&gt;....&lt;/RequestedSecurityToken&gt;
+&lt;TokenType&gt;http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1&lt;/TokenType&gt;
+</code></pre>
+
+<p></RequestSecurityTokenResponse>
+~~~~</p>
+
+<p>Both calls, the first one to get the token from the STS, and the second
+call to invoke the service in the Relying party should be protected with
+transport security to avoid any middle in the man attack.</p>
+
+<p>In this sample, the STS is using basic authentication to authenticate
+the user trying to get access to the token. If the authentication
+succeed, the STS implemented with Geneva will provide the necessary
+claims associated with that user.</p>
+
+<p>The code on the client side to ask for a new token is quite simple,</p>
+
+<p>static string GetToken(string address, string appliesTo, string
+username, string password)</p>
+
+<p>{</p>
+
+<p>    RequestSecurityToken request = new RequestSecurityToken</p>
+
+<p>    {</p>
+
+<p>        TokenType =
+&ldquo;<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>&rdquo;,</p>
+
+<p>        AppliesTo = appliesTo</p>
+
+<p>    };</p>
+
+<p>    DataContractSerializer requestSerializer = new
+DataContractSerializer(typeof(RequestSecurityToken));</p>
+
+<p>    WebRequest webRequest = HttpWebRequest.Create(address);</p>
+
+<p>    webRequest.Method = &ldquo;POST&rdquo;;</p>
+
+<p>    webRequest.ContentType = &ldquo;application/xml&rdquo;;</p>
+
+<p>    webRequest.Credentials = new NetworkCredential(username, password);</p>
+
+<p>    using (var st = webRequest.GetRequestStream())</p>
+
+<p>    {</p>
+
+<p>        requestSerializer.WriteObject(st, request);</p>
+
+<p>        st.Flush();</p>
+
+<p>    }</p>
+
+<p>    WebResponse webResponse = webRequest.GetResponse();</p>
+
+<p>    DataContractSerializer responseSerializer = new
+DataContractSerializer(typeof(RequestSecurityTokenResponse));</p>
+
+<p>    using (var st = webResponse.GetResponseStream())</p>
+
+<p>    {</p>
+
+<p>        var response =
+(RequestSecurityTokenResponse)responseSerializer.ReadObject(st);</p>
+
+<p>        return response.RequestedSecurityToken;</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>It creates a new RequestSecurityToken message, provides the user
+credentials and post that information to the STS. The response from the
+STS is a RequestSecurityTokenResponse containing the issued token,
+that&rsquo;s what this method returns in response.RequestedSecurityToken.</p>
+
+<p>Once the client gets the issued token from the response, it can include
+it as part of the request message to the relying party&rsquo;s service. For
+this sample, I decided to include the token in the &ldquo;Authorization&rdquo;
+header, which is a common mechanism to attach authentication credentials
+in a request message to a REST service (Basic authentication, and other
+authentication mechanisms use the same approach).</p>
+
+<p>WebRequest webRequest = HttpWebRequest.Create(address);</p>
+
+<p>webRequest.Method = &ldquo;GET&rdquo;;</p>
+
+<p>webRequest.Headers[&ldquo;Authorization&rdquo;] = token;</p>
+
+<p>Now, the hard part, the Relying Party needs a way to parse the token and
+authenticate the user before calling the service implementation.
+Fortunately, the guys from the WCF REST Starter kit have provide an
+excellent solution for this kind of scenarios, message interceptors.
+What I did here was to implement a message interceptor for SAML tokens,
+which internally used the Geneva Framework for performing all the
+validations and parsing the token.  An easy way to inject message
+interceptors in a service implementation is through a custom service
+factory (Zero config deployment),</p>
+
+<p>class AppServiceHostFactory : ServiceHostFactory</p>
+
+<p>{</p>
+
+<p>    protected override ServiceHost CreateServiceHost(Type serviceType,
+Uri[] baseAddresses)</p>
+
+<p>    {</p>
+
+<p>        WebServiceHost2 result = new WebServiceHost2(serviceType, true,
+baseAddresses);</p>
+
+<p>        result.Interceptors.Add(new
+MessageInterceptors.SamlAuthenticationInterceptor(new
+TrustedIssuerNameRegistry()));</p>
+
+<p>        return result;</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>The &ldquo;TrustedIssuerNameRegistry&rdquo; is a just a simple implementation of a
+Geneva &ldquo;IssuerNameRegistry&rdquo; provider that validates the issuer of the
+SAML token.</p>
+
+<p>All this stuff is of course transparent to the service implementation,
+it only receives a bunch of claims representing the user identity. Those
+claims can be got accessed through the current user principal. In the
+code below, the service generates a feed with all the received claims.</p>
+
+<p>IClaimsIdentity identity =
+(IClaimsIdentity)Thread.CurrentPrincipal.Identity;</p>
+
+<p>var feed = new SyndicationFeed()</p>
+
+<p>{</p>
+
+<p>    Id = &ldquo;<a href="http://Claims">http://Claims</a>&rdquo;,</p>
+
+<p>    Title = new TextSyndicationContent(&ldquo;My claims&rdquo;),</p>
+
+<p>};</p>
+
+<p>feed.Items = identity.Claims.Select(c =></p>
+
+<p>    new SyndicationItem()</p>
+
+<p>    {</p>
+
+<p>        Id = Guid.NewGuid().ToString(),</p>
+
+<p>        Title = new TextSyndicationContent(c.ClaimType),</p>
+
+<p>        LastUpdatedTime = DateTime.UtcNow,</p>
+
+<p>        Authors =</p>
+
+<p>            {</p>
+
+<p>                new SyndicationPerson()</p>
+
+<p>                {</p>
+
+<p>                    Name = c.Issuer</p>
+
+<p>                }</p>
+
+<p>            },</p>
+
+<p>        Content = new TextSyndicationContent(c.Value)</p>
+
+<p>    }</p>
+
+<p>);</p>
+
+<p>The complete sample is available to download from
+<a href="/images/legacy/FederatedRest.zip">here</a>. Note, it uses
+the latest Geneva Framework bits (And also the X509 certificates
+included with the samples, just run the certificate setup file included
+with the framework).</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/02/24/carrying-sensitive-information-in-saml-assertions/">Carrying Sensitive Information in SAML Assertions</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-02-24T00:00:00-03:00" pubdate data-updated="true">Feb 24<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/02/24/carrying-sensitive-information-in-saml-assertions/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>When SAML is used in conjunction with WS-Security, only an small piece
+of the token is encrypted, the proof key for the relying party. The rest
+of the token goes in plain text, that also includes the user&rsquo;s claims.</p>
+
+<p>&lt;saml:Assertion> </p>
+
+<p>  &lt;saml:Conditions NotBefore=&ldquo;2009-02-24T19:48:20.500Z&rdquo;
+NotOnOrAfter=&ldquo;2009-02-24T19:53:20.500Z&rdquo;>&lt;/saml:Conditions></p>
+
+<p>  &lt;saml:AttributeStatement></p>
+
+<p>  &lt;saml:Subject></p>
+
+<p>    &lt;saml:NameIdentifier>&lt;/saml:NameIdentifier></p>
+
+<p>    &lt;saml:SubjectConfirmation></p>
+
+<p>     
+&lt;saml:ConfirmationMethod>urn:oasis:names:tc:SAML:1.0:cm:holder-of-key&lt;/saml:ConfirmationMethod></p>
+
+<p>        &lt;KeyInfo
+xmlns=&ldquo;<a href="http://www.w3.org/2000/09/xmldsig#">http://www.w3.org/2000/09/xmldsig#</a>&rdquo;>&hellip;&lt;/KeyInfo></p>
+
+<p>   &lt;/saml:SubjectConfirmation></p>
+
+<p>  &lt;/saml:Subject></p>
+
+<p>  &lt;saml:Attribute AttributeName=&ldquo;displayName&rdquo;
+AttributeNamespace=&ldquo;<a href="http://schemas.microsoft.com/xsi/2005/05/role">http://schemas.microsoft.com/xsi/2005/05/role</a>&rdquo;></p>
+
+<p><strong>      &lt;</strong><strong>saml:AttributeValue>John Foo&lt;/saml:AttributeValue</strong><strong>>
+&lt;&mdash;Attribute value&mdash;></strong></p>
+
+<p>  &lt;/saml:Attribute></p>
+
+<p>  &lt;/saml:AttributeStatement></p>
+
+<p>  &lt;Signature
+xmlns=&ldquo;<a href="http://www.w3.org/2000/09/xmldsig#">http://www.w3.org/2000/09/xmldsig#</a>&rdquo;>&hellip;&lt;/Signature></p>
+
+<p>&lt;/saml:Assertion></p>
+
+<p>Knowing this, you should never include sensitive information as claims
+in a SAML token. This is also related to the <a href="http://www.identityblog.com/stories/2004/12/09/thelaws.html">identity law #2, &ldquo;Minimal
+Disclosure for a Constrained
+Use&rdquo;</a>. The
+Identity provider should only disclose the least amount of identifiying
+information for executing the operation on the relying party.</p>
+
+<p>Some examples are,</p>
+
+<ul>
+<li><em>A winery only needs to know whether the customer is in a legal age
+for buying alcohol according to the<strong>law, a claim like &ldquo;over21&rdquo;
+should be enough for that purpose, there is not need to know the
+customer birth</strong>date at all.</em></li>
+<li><em>An online store that sells products does not necessary need to know
+the number of every credit card owned by a customer, a friendly name
+representing the card and optionally the available balance could be
+enough for completing a purchase.</em></li>
+</ul>
+
+
+<p>SAML 2.0 introduces the concept of &ldquo;encrypted attribute&rdquo;, which clearly
+states its purpose, encrypt individual assertions in a SAML token. In
+this way, a token can now carry the encrypted proof key and optionally
+one or more encrypted assertions with sensitive information.</p>
+
+<p>You can take a look at <a href="https://spaces.internet2.edu/display/SHIB/SAMLDiffs">this
+page</a> for more
+information about the differences between SAML 1.1 and 2.0.</p>
+
+<p>Geneva Framework Beta 1 already implements a subset of SAML 2.0,
+however, it looks like this feature has been left out in the current
+release. Not sure either whether this feature will be included as part
+of the final release (Last quarter of 2009). I created <a href="http://social.msdn.microsoft.com/Forums/en-US/Geneva/thread/a63e31cb-a109-4e99-8538-2eb084ed3827">a
+post</a>
+in the forums some time ago, I haven&rsquo;t received any feedback yet.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/02/18/contract-projections-in-wcf-declarative-services/">Contract Projections in WCF Declarative Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-02-18T00:00:00-03:00" pubdate data-updated="true">Feb 18<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/02/18/contract-projections-in-wcf-declarative-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As my friend Jesus mentioned in the post &ldquo;<a href="http://weblogs.asp.net/gsusx/archive/2008/12/17/using-xaml-serialization-in-wcf-4-0.aspx">Using XAML serialization in
+WCF
+4.0</a>&rdquo;,
+WCF 4.0 introduces a new way to implement services that are totally
+defined in XAML, which receive the name of &ldquo;declarative services&rdquo;. In
+the past, creating a simple service involved three basic steps,</p>
+
+<ol>
+<li>Define the service contract</li>
+<li>Implement the service contract</li>
+<li>Host the service implementation</li>
+</ol>
+
+
+<p>#1 and #2 were all done in an imperative .NET programming language
+such as C# or VB.NET. Today, thanks to this new feature, we will able
+to define the service interface (#1) using XAML and implement the
+service (#2) using a declarative workflow (XAML too).</p>
+
+<p>This was announced as part of the Microsoft&rsquo;s Oslo modeling vision in
+the last PDC.</p>
+
+<p>Aaron Skonnard has recently written an excellent article for the MSDN,
+&ldquo;WCF and WF Services in the .NET framework 4.0, and Dublin&rdquo;, where he
+discusses all these new features more in detail, and the role of dublin
+in that vision. Something I found interesting in that article was the
+fact that he mentioned &ldquo;Contract Projections&rdquo; as part of &ldquo;declarative
+services&rdquo;.</p>
+
+<p>A contract projection allows separating the logical contract definition
+from the representation of the messages that are sent or received. We
+will able to have a single contract definition and specify different
+messaging styles like &ldquo;SOAP&rdquo; or &ldquo;REST/POX&rdquo; using a contract projection.</p>
+
+<p>As in the example shown in the article, a regular WCF service definition
+for a calculator service made in C# would look like this,</p>
+
+<p>~~~~ {#ctl00_mainContentContainer_ctl15 .libCScode style=&ldquo;WORD-BREAK: break-all; WORD-WRAP: break-word&rdquo; space=&ldquo;preserve&rdquo;}
+[ServiceContract]
+public interface ICalculator
+{</p>
+
+<pre><code>[OperationContract]
+int Add(int Op1, int Op2);
+[OperationContract]
+int Subtract(int Op1, int Op2);
+</code></pre>
+
+<p>};
+~~~~</p>
+
+<p>The equivalent representation in XAML (using declarative services) would
+look like this,</p>
+
+<p>~~~~ {#ctl00_mainContentContainer_ctl16 .libCScode style=&ldquo;WORD-BREAK: break-all; WORD-WRAP: break-word&rdquo; space=&ldquo;preserve&rdquo;}
+<ServiceContract Name="ICalculator"></p>
+
+<pre><code>&lt;OperationContract Name="Add"&gt;
+    &lt;OperationArgument Name="Op1" Type="p:Int32" /&gt;
+    &lt;OperationArgument Name="Op2" Type="p:Int32" /&gt;
+    &lt;OperationArgument Direction="Out" Name="res1" Type="p:Int32" /&gt;
+</code></pre>
+
+<p>   </OperationContract>
+   <OperationContract Name="Subtract"></p>
+
+<pre><code>    &lt;OperationArgument Name="Op3" Type="p:Int32" /&gt;
+    &lt;OperationArgument Name="Op4" Type="p:Int32" /&gt;
+    &lt;OperationArgument Direction="Out" Name="res2" Type="p:Int32" /&gt;
+</code></pre>
+
+<p>   </OperationContract>
+</ServiceContract>
+~~~~</p>
+
+<p>And finally, the projection of that contract at wire level like SOAP,</p>
+
+<p>~~~~ {#ctl00_mainContentContainer_ctl17 .libCScode style=&ldquo;WORD-BREAK: break-all; WORD-WRAP: break-word&rdquo; space=&ldquo;preserve&rdquo;}
+&lt;Service.KnownProjections></p>
+
+<pre><code>&lt;SoapContractProjection Name="ICalculatorSoapProjection"&gt;
+    &lt;!-- service contract definition goes here --&gt;
+&lt;/SoapContractProjection&gt;
+</code></pre>
+
+<p>&lt;/Service.KnownProjections>
+~~~~</p>
+
+<p>As you can see, we will able to have a single service implementation (or
+XAML workflow), and multiple contract projections or &ldquo;KnownProjections&rdquo;
+(for the different messaging styles) to get access to that service.</p>
+
+<p>With this new feature, it looks like REST/POX will be officially
+supported for consuming declarative services. (I talked in <a href="http://weblogs.asp.net/cibrax/archive/2008/10/24/rest-and-workflow-services-play-well-together.aspx">the
+past</a>
+about exposing workflow services with REST).</p>
+
+<p>As part of the PDC bits (The code that was distributed in a VPC), there
+is a interface &ldquo;IContractProjection&rdquo; for defining new kind of
+projections,</p>
+
+<p>public interface IContractProjection \
+{ \
+    // Methods \
+    void ApplyEndpointBehavior(ServiceEndpoint endpoint); \
+    ContractDescription GetContractDescription();</p>
+
+<p>    // Properties \
+    string ConfigurationName { get; } \
+    ServiceContract Contract { get; set; } \
+}</p>
+
+<p>For the moment, there is single implementation for Soap,
+&ldquo;SoapContractProjection&rdquo;. I do not know, we will see if the WCF/WF team
+provide more implementations in the future.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/02/17/issues-to-subdivide-an-entity-framework-model/">Issues to Subdivide an Entity Framework Model</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-02-17T00:00:00-03:00" pubdate data-updated="true">Feb 17<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/02/17/issues-to-subdivide-an-entity-framework-model/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>The other day, my team and I ran into some design issues while trying to
+split a big Entity Framework model into smaller pieces according to
+areas of functionality. At first glance, it seemed to be a common design
+problem, something easy to overcome, but it did not result that way. I
+could not find much information about people having the same issue
+either.</p>
+
+<p>In the system we are currently designing, we use modules or packages to
+group classes that belong to the same area of functionality. As you can
+guess, these modules do not represent more than a set of use cases or
+stories that are tightly coupled in design time.</p>
+
+<p>We also have, however, some classes that are common for all those
+modules, so we put them in a shared module. In few words, we have a
+entity model shaped like a star, being the shared module the center of
+the star, and the rest of the modules just leafs.</p>
+
+<p>The problem appeared when we tried to assign a different entity
+framework model to any of these modules for persisting the classes in a
+store. We could not find an easy way to reference the model with the
+shared entities from the rest of them, so we gave up after a while.</p>
+
+<p>A single model with all the entities was not an option for us, because
+it simple does not scale up. We took a similar approach in the past with
+another project, the result was a huge model full of entities and really
+hard to maintain. This solution also required having a extra service
+layer on top of the entity model to encapsulate functionality specific
+to each module, which made very difficult to have a rich domain model at
+first glance.</p>
+
+<p>After a search in several blogs, I came across this post &ldquo;<a href="http://blogs.msdn.com/adonet/archive/2008/11/25/working-with-large-models-in-entity-framework-part-2.aspx">Working with
+large models in entity
+framework</a>&rdquo;
+from the Ado team, where they discuss some possible techniques or
+workarounds for an scenario like this.</p>
+
+<p>They basically proposed the following solutions,</p>
+
+<p>​1. Reference one conceptual model (CSDL) from another. You create
+different models, and manually modify each CSDL to reference the model
+(CSDL) with the shared entities.</p>
+
+<p>The CSDL model supports a clause &ldquo;using&rdquo; for including types defined in
+another model, it is basically a simple way to reuse types. This sounds
+good, however, it lacks of design time experience, which makes this
+feature totally useless for the scenario we have (and really complicated
+to implement according to <a href="http://www.thedatafarm.com/blog/2008/11/27/CSDLsUsingConstructForBigModels.aspx">this
+post</a>
+written by Julie Lerman)</p>
+
+<p>​2. Duplicate metadata for the shared entities in each conceptual model
+(CSDL). Again, this approach sucks from a point of view of
+maintainability, typically you will have the same problems that you
+would see with duplicated code. One change in an shared entity will
+require changes in every model that reference it.</p>
+
+<p>​3. Expose foreign keys as scalar properties because you do not want to
+pull in all the shared entities into every Entity model. Not a good
+solution either, the shared entities get out of the unit of work or
+context (ObjectContext) generated by the designer. As result, you can
+not execute queries that require joins between the two contexts. Unless
+you include some helper methods to retrieve the shared entities using
+the scalar properties, you also lost the possibility of having a rich
+domain model.</p>
+
+<p>As you can see, we could not find any workaround that totally met our
+expectations, so we might stick to the solution #2 (Duplicating the
+entities). The solution #1 would be perfect with some design time
+support, I hope the ado team consider this for a future release.</p>
+
+<p>Do you have any thought or experience to share ?. I would be more than
+happy to hear your feedback regarding possible solutions for this
+scenario.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/02/10/upcoming-msdn-webcast-quot-geneva-cardspace-quot-for-latin-america/">Upcoming MSDN WebCast &quot;Geneva Cardspace&quot; for Latin America</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-02-10T00:00:00-03:00" pubdate data-updated="true">Feb 10<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/02/10/upcoming-msdn-webcast-quot-geneva-cardspace-quot-for-latin-america/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I will be presenting a MSDN webcast about &ldquo;Geneva Cardspace&rdquo; next
+Thursday 12th at 2 PM (GMT-05:00 Colombia, Panama). The event will be
+conducted in Spanish for all the community in Latin America. \</p>
+
+<p>You can register to this event following <a href="http://msevents.microsoft.com/CUI/WebCastEventDetails.aspx?EventID=1032400702&amp;EventCategory=4&amp;culture=es-R&amp;CountryCode=AR">this
+link</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/15/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/blog/page/13/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

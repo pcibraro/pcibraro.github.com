@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Geneva | Pablo Cibraro (Cibrax)]]></title>
+  <link href="http://cibrax.me/blog/categories/geneva/atom.xml" rel="self"/>
+  <link href="http://cibrax.me/"/>
+  <updated>2013-12-26T15:03:47-03:00</updated>
+  <id>http://cibrax.me/</id>
+  <author>
+    <name><![CDATA[Cibrax]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Negotiating SAML tokens for REST clients with the HttpClient class]]></title>
+    <link href="http://cibrax.me/blog/2009/03/18/negotiating-a-saml-token-for-rest-clients-with-httpclient/"/>
+    <updated>2009-03-18T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2009/03/18/negotiating-a-saml-token-for-rest-clients-with-httpclient</id>
+    <content type="html"><![CDATA[<p>Continuing my post <a href="http://weblogs.asp.net/cibrax/archive/2009/03/06/brokered-authentication-for-rest-active-clients-with-saml.aspx">“Brokered authentication for REST active
+clients”</a>,
+I will show today how the client code can be simplified using the new
+HttpClient (WCF REST Starter kit 2) and some custom http processing
+stages attached to its pipeline.</p>
+
+<p>The first thing we have to do is to implement a custom processing stage
+(a class that derives from HttpStage) to centralize all the logic needed
+to negotiate a SAML token from an existing STS.</p>
+
+<p>The pipeline contains basically two kinds of stage, a regular http stage
+that can be injected through the HttpClient.Stages collection, and a
+more specialized implementation HttpWebRequestTransportStage, which runs
+last in the pipeline and has access to all the transport settings. This
+last one can only be replaced with a custom version of the HttpClient
+that overrides the protected method “CreateTransportStage”,</p>
+
+<p>public class HttpClient : IDisposable</p>
+
+<p>{</p>
+
+<p>  protected virtual HttpStage CreateTransportStage();</p>
+
+<p>}</p>
+
+<p>Having said this, two possible options for implementing the token
+negotiation in a pipeline stage could be,</p>
+
+<p>​1. A regular http stage that can be initialized with the STS address
+and the user credentials through the class constructor or a property
+setter.</p>
+
+<p>​2. A custom HttpWebRequestTransportStage and the corresponding
+HttpClient (FederatedHttpClient) implementation to return that stage.</p>
+
+<p>From my point of view, the second approach seems to work better because
+the HttpClient instance does not get tied to the user credentials. This
+is the approach I will use for this example.</p>
+
+<p>public class NegociateTokenStage : HttpWebRequestTransportStage</p>
+
+<p>{</p>
+
+<p>private string stsUri = &ldquo;&rdquo;;</p>
+
+<p>public NegociateTokenStage(string stsUri) : base()</p>
+
+<p>{</p>
+
+<p>    this.stsUri = stsUri;</p>
+
+<p>}</p>
+
+<p>protected override void
+ProcessRequestAndTryGetResponse(HttpRequestMessage request, out
+HttpResponseMessage response, out object state)</p>
+
+<p>{</p>
+
+<p>    string token = GetToken(stsUri, request.Uri.AbsoluteUri,
+this.Settings.Credentials);</p>
+
+<p>    request.Headers.Add(&ldquo;Authorization&rdquo;, token);</p>
+
+<p>    base.ProcessRequestAndTryGetResponse(request, out response, out
+state);</p>
+
+<p>}</p>
+
+<p>The custom transport stage derives from the built-in transport stage
+“HttpWebRequestTransportStage” and adds some custom code in the
+ProcessRequestAndTryGetResponse to negotiate the SAML token from the STS
+before the final service gets called (This is being done in the GetToken
+method). After that, the SAML token get passed to the final service
+through the authorization html header.</p>
+
+<p>The custom implementation of the HttpClient application is quite simple,
+only returns our custom transport stage in the CreateTransportStage
+method,</p>
+
+<p>public class FederatedHttpClient : HttpClient</p>
+
+<p>{</p>
+
+<p>    public string StsUri</p>
+
+<p>    {</p>
+
+<p>        get; set;</p>
+
+<p>    }</p>
+
+<p>    protected override HttpStage CreateTransportStage()</p>
+
+<p>    {</p>
+
+<p>        NegociateTokenStage stage = new
+NegociateTokenStage(this.StsUri);</p>
+
+<p>        stage.Settings = this.TransportSettings;</p>
+
+<p>        return stage;</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>Now, the client application can use our custom version of the HttpClient
+for consuming the final service, only a few lines are required.</p>
+
+<p>FederatedHttpClient client = new FederatedHttpClient { StsUri =
+&ldquo;<a href="http://localhost:7481/STS/Service.svc/Tokens">http://localhost:7481/STS/Service.svc/Tokens</a>&rdquo; };</p>
+
+<p>client.TransportSettings.Credentials = new NetworkCredential(&ldquo;cibrax&rdquo;,
+&ldquo;foo&rdquo;);</p>
+
+<p>string response =
+client.Get(&ldquo;<a href="http://localhost:7397/RestServices/Service.svc/Claims">http://localhost:7397/RestServices/Service.svc/Claims</a>&rdquo;).Content.ReadAsString();</p>
+
+<p>The SAML negotiation is totally transparent to the client application,
+it does not even know that a SAML token exists, sweet :).</p>
+
+<p>The code is available to download at <a href="/images/legacy/FederatedRest2.zip">this
+location</a>.</p>
+
+<p>UPDATE: As John Lambert from the WCF team pointed out, a custom
+transport stage also needs to override the
+BeginProcessRequestAndTryGetResponse and
+EndProcessRequestAndTryGetResponse to support async scenarios. I will
+try to update the example to override these methods any time soon.
+Thanks John for the feedback!!!.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Security Token Handlers in Geneva Framework]]></title>
+    <link href="http://cibrax.me/blog/2009/02/04/security-token-handlers-in-geneva-framework/"/>
+    <updated>2009-02-04T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2009/02/04/security-token-handlers-in-geneva-framework</id>
+    <content type="html"><![CDATA[<p>According to the Geneva documentation,</p>
+
+<p><em>&ldquo;SecurityTokenHandler defines an interface for plugging custom token
+handling functionality. Using the SecurityTokenHandler you can add
+functionality to serialize, de-serialize, authenticate and create and
+specific kind of token&rdquo;</em></p>
+
+<p>I can see dead people &hellip;.. :)</p>
+
+<p><img src="/images/legacy/Six.jpg" alt="Six" /></p>
+
+<p>Haven&rsquo;t we seen this before ? Oh, yes, I think we did. The token
+managers in WSE, they are pretty much the same thing. It looks like the
+Geneva team came up with a solution that worked well in the past with
+WSE. One token manager for each kind of token we want to consume in our
+application. If your app needs to consume a custom token or customize an
+existing one, just derive the SecurityTokenHandler base class or one of
+the existing SecurityTokenHandler implementations and override some of
+its methods with custom functionality. For instance, the Geneva
+Framework now comes with two built-in token handlers for Username
+tokens, a MembershipUsernameSecurityTokenHandler for validating users
+against a membership provider and a WindowsUsernameSecurityTokenHandler
+for doing the same against a windows account store.</p>
+
+<p>Most of the code we had in the past as part of authorization policies
+(IAuthorizationPolicy) for mapping claims or validating tokens in a
+UsernamePasswordValidator or X509CertificateValidator has now moved to
+token handlers in the Geneva framework.</p>
+
+<p>I like this way of extending a custom handler for supporting new kind of
+tokens, it is quite more straightforward to me than the model currently
+supported by WCF.</p>
+]]></content>
+  </entry>
+  
+</feed>

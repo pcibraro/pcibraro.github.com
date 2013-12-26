@@ -1,0 +1,452 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>To push, or not to push, the Web Socket dilemma - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="Web Sockets is a relatively new specification introduced as part of HTML
+5 to support a full duplex-communication channel over http in web
+browsers &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2011/06/10/to-push-or-not-to-push-the-web-socket-dilemma">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">To Push, or Not to Push, the Web Socket Dilemma</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-06-10T00:00:00-03:00" pubdate data-updated="true">Jun 10<span>th</span>, 2011</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Web Sockets is a relatively new specification introduced as part of HTML
+5 to support a full duplex-communication channel over http in web
+browsers.  This  represents a great advance toward real-time and event
+driven web applications. Before Web Sockets jumped in scene, the only
+available  solutions for emulating real time notifications in web
+applications were different variants of Http Long polling. Real time
+notifications in this context became particularly important for specific
+scenarios, such as reporting stock pricing updates, online gaming or
+news reports to name a few.</p>
+
+<p>All the Http polling variants were pretty much similar in nature. They
+all try to emulate a bidirectional connection over http by keeping
+client connections open for a period of time until some notifications
+becomes available and can be sent as part of the response or the
+connection times out.  However, these techniques usually require the use
+of two connections for streaming data to and from the client. Another
+common issue with this approach is that developers need to implement the
+server side carefully to make an efficient use of the server resources.</p>
+
+<p>There is, however, an area where Http polling has proved to very
+effective over the years, and that is pub/sub. We can find in this area
+simple usages of pub/sub over http like syndication feeds or more
+complex solutions for business to business integration, but as you can
+see, they are not related to real time notifications in a web browser at
+all.</p>
+
+<p>Web Sockets on the other hand is going to be supported natively on any
+web browser compliant with HTML 5, so  removing the need of relying on
+different workarounds with HTTP Ajax and timers for emulating real time
+notifications in the browser.  As I said before, the specification is
+relatively new so the support you find today in all the major browsers
+is partial or incompatible in some cases. However, I am pretty sure Web
+Sockets will become the standard technology for pushing real time data
+to web browsers in the upcoming years. </p>
+
+<h2>Web Sockets in Detail</h2>
+
+<p>The Web Socket interface definition according to the spec looks as
+follow,</p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+[Constructor(in DOMString url)]
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+interface WebSocket {
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+readonly attribute DOMString URL;
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+// ready state
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+const unsigned short CONNECTING = 0;
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+const unsigned short OPEN = 1;
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+const unsigned short CLOSED = 2;
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+readonly attribute int readyState;
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+// networking
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+attribute EventListener onopen;
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+attribute EventListener onmessage;
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+attribute EventListener onclosed;
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+void postMessage(in DOMString data);
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+void disconnect();
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+};
+</del></p>
+
+<p>As you can see, this API is very straightforward and simple to use.
+There is a constructor you can use to create a new Web Socket instance
+or connection, a callback for receiving messages (onmessage) and two
+additional methods for sending new messages (postMessage) or close the
+socket instance (disconnect) respectively. .</p>
+
+<p>A Web Socket connection is established by upgrading from the HTTP
+protocol to the Web Socket protocol during an initial handshake between
+the client and the server, over the same underlying TCP/IP connection.
+Once the connection is established, the data can be sent back and forth
+between the client and the server in full-duplex mode. Here is how you
+create a new Web Socket connection in the browser,</p>
+
+<p>var mySocket = new WebSocket(&ldquo;ws://weblogs.asp.net/cibrax&rdquo;);</p>
+
+<p>The “ws” prefix indicates a Web Socket connection. There is also a “wss”
+prefix for secure connections. Once the connection has been opened, you
+can associate a handler for the “onmessage” event for start receiving
+messages,</p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+mySocket.onmessage = function(evt) { alert( &ldquo;Message Received:  &rdquo;  +  evt.data); };
+</del></p>
+
+<p>Or send messages with the “postMessage” method,</p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+mySocket.postMessage(&ldquo;Hello World!!!!&rdquo;);
+</del></p>
+
+<p>There are a couple of implementations already in .NET for implementing
+the server side part required for pushing notifications, and some of
+there are <a href="http://nugget.codeplex.com/">Nugget</a> (Not really a good name
+for an open source project given the existing NuGet project from
+Microsoft) or <a href="https://github.com/statianzo/Fleck">Fleck</a>.   The WCF
+team is also working on an implementation as part of the WCF Web Apis
+framework and you can see some announcements
+<a href="http://blogs.msdn.com/b/endpoint/archive/2011/04/24/websockets-ria-js-and-wcf-web-api-at-mix-a-whole-lotta-love-for-the-web.aspx">here</a>.</p>
+
+<h2>Web Sockets in the Cloud</h2>
+
+<p>There is a particular implementation in the cloud that caught my
+attention in the last few months, and that is
+<a href="http://pusher.com/">“Pusher”</a>. “Pusher” is a service hosted in the
+cloud that provides all the service side infrastructure for pushing
+notifications to the different clients (browsers running in all kind of
+devices or personal computers) using web sockets if it is available or a
+flash-based socket communication otherwise.</p>
+
+<p> <a href="http://weblogs.asp.net/blogs/cibrax/Pusher_03AF728F.jpg"><img src="http://weblogs.asp.net/blogs/cibrax/Pusher_thumb_3B1583BD.jpg" title="Pusher" alt="Pusher" /></a></p>
+
+<p>Your server code publishes notifications in an specific “Pusher” channel
+using a simple REST Api, and they take care of broadcasting the
+notifications to all the subscribers for that channel. They provide a
+javascript API  that you can use in a web page for subscribing to a
+channel, and the REST API for publishing messages on the server side.
+There is also different open source implementations for wrapping up the
+REST API in a simple object model, and you can find here for example to
+<a href="https://github.com/grahamscott/pusherdotnet">“PusherDotNet”</a>, a .NET
+implementation in C#. The pricing model is also very easy to
+understand, you pay for a flat rate that gives you access to a specific
+number of messages and connections per day.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-06-10T00:00:00-03:00" pubdate data-updated="true">Jun 10<span>th</span>, 2011</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2011/06/10/to-push-or-not-to-push-the-web-socket-dilemma/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2011/06/10/to-push-or-not-to-push-the-web-socket-dilemma/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2011/06/06/pub-sub-in-the-cloud-a-brief-comparison-between-azure-service-bus-and-pubnub/" title="Previous Post: Pub/Sub in the cloud–A brief comparison between Azure Service Bus and PubNub">&laquo; Pub/Sub in the cloud–A brief comparison between Azure Service Bus and PubNub</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2011/06/14/interop-bindings-for-wcf-released-in-codeplex/" title="Next Post: Interop Bindings for WCF released in codeplex">Interop Bindings for WCF released in codeplex &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2011/06/10/to-push-or-not-to-push-the-web-socket-dilemma/';
+        var disqus_url = 'http://cibrax.me/blog/2011/06/10/to-push-or-not-to-push-the-web-socket-dilemma/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,2824 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="One scenario that is very common in ASP.NET MVC is to bind form data
+(data posted with the media type application/x-www-form-urlencoded)  to &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/page/3">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/08/10/binding-form-data-in-asp-net-web-api/">Binding Form Data in ASP.NET Web API</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-08-10T00:00:00-03:00" pubdate data-updated="true">Aug 10<span>th</span>, 2012</time>
+        
+         | <a href="/blog/2012/08/10/binding-form-data-in-asp-net-web-api/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>One scenario that is very common in ASP.NET MVC is to bind form data
+(data posted with the media type application/x-www-form-urlencoded)  to
+individual parameters or a form collection in a controller action.
+However, that scenario does not work quite the same in ASP.NET Web API
+as the body content is treated a forward-only stream that can only be
+read once. </p>
+
+<p>If you define an action with multiple simple type arguments such as the
+one shown bellow, the model binding runtime will try to map those by
+default from the request URI (query string or route data). </p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">void</span> <span class="nf">Post</span><span class="p">(</span><span class="kt">int</span> <span class="n">id</span><span class="p">,</span> <span class="kt">string</span> <span class="k">value</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>That data never comes from the body content unless you decorate the
+argument with the [FromBody] attribute. However, only one argument in
+the action can be decorated with this attribute, and you get an
+exception when you try to decorate more than one. Nevertheless, the
+desired effect is far from what you would expect.</p>
+
+<p>If you define an action as follow,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">void</span> <span class="nf">Post</span><span class="p">([</span><span class="n">FromBody</span><span class="p">]</span><span class="kt">int</span> <span class="n">id</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And you POST a form with the following data,</p>
+
+<p><a href="http://localhost:64561/api/values">http://localhost:64561/api/values</a></p>
+
+<p>METHOD: POST</p>
+
+<p>CONTENT-TYPE: application/x-www-form-urlencoded</p>
+
+<p>BODY: id=4</p>
+
+<p>Nothing will be mapped. It does not matter you defined a single
+parameter with the same as the one posted in the body.</p>
+
+<p>If you really want to have a single type argument mapped to the body
+content, you have to POST a message with the following content</p>
+
+<p><a href="http://localhost:64561/api/values">http://localhost:64561/api/values</a></p>
+
+<p>METHOD: POST</p>
+
+<p>CONTENT-TYPE: application/x-www-form-urlencoded</p>
+
+<p>BODY: =4</p>
+
+<p>As you can see, no key defined so the whole is mapped to our argument in
+the action. That’s the default behavior for single types. If you want to
+change that behavior, the framework is completely extensible and you can
+replace the whole model binding infrastructure included out of the box
+for one that you find more useful as it is explained
+<a href="http://blogs.msdn.com/b/jmstall/archive/2012/04/18/mvc-style-parameter-binding-for-webapi.aspx">here</a>
+by Mike Stalls (which shows how you can replicate the same model used by
+ASP.NET MVC).</p>
+
+<p>For complex types, the framework includes two MediaTypeFormatter
+implementations. The first one is FormUrlEncodedMediaTypeFormatter,
+which knows how to map every key/value in the form data to a
+FormDataCollection or a JTokenType (a dynamic type for expressing JSON
+available as part of the Json.NET library). These two are useful when
+you want to get access to all the values in form in a generic manner.
+You define for example a controller that receives a FormDataCollection
+instance like this,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">void</span> <span class="nf">Post</span><span class="p">(</span><span class="n">FormDataCollection</span> <span class="n">form</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The second one is JQueryMvcFormUrlEncodedFormatter, which derives from
+the first one and knows how to map the form data to a concrete type
+representing a model. For example, a model defined as follow will match
+a body content with the keys “Id” and “Value”</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">MyModel</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>   <span class="k">public</span> <span class="kt">int</span> <span class="n">Id</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'>   <span class="k">public</span> <span class="kt">string</span> <span class="n">Value</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Therefore, your controller action can either receive a generic form
+collection (or a JTokenType) or a complex model type as any of these two
+will handle the deserialization of the body content type into the
+expected model.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/07/09/implementing-synchronous-mediatypeformatters-in-asp-net-web-api/">Implementing Synchronous MediaTypeFormatters in ASP.NET Web API</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-07-09T00:00:00-03:00" pubdate data-updated="true">Jul 9<span>th</span>, 2012</time>
+        
+         | <a href="/blog/2012/07/09/implementing-synchronous-mediatypeformatters-in-asp-net-web-api/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>One of main characteristics of MediaTypeFormatter’s in ASP.NET Web API
+is that they leverage the Task Parallel Library (TPL) for reading or
+writing an model into an stream. When you derive your class from the
+base class MediaTypeFormatter, you have to either implement the
+WriteToStreamAsync or ReadFromStreamAsync methods for writing or reading
+a model from a stream respectively.</p>
+
+<p>These two methods return a Task, which internally does all the
+serialization work, as it is illustrated bellow.</p>
+
+<p><del> {.alt}
+public abstract class MediaTypeFormatter
+</del></p>
+
+<pre><code>{
+</code></pre>
+
+<p><del> {.alt}
+  public virtual Task WriteToStreamAsync(Type type, object value,
+</del></p>
+
+<pre><code>     Stream writeStream, HttpContent content, TransportContext transportContext);
+</code></pre>
+
+<p><del> {.alt}
+  public virtual Task<object> ReadFromStreamAsync(Type type, Stream readStream,
+</del></p>
+
+<pre><code>     HttpContent content, IFormatterLogger formatterLogger);
+</code></pre>
+
+<p><del> {.alt}
+}
+</del></p>
+
+<pre><code> 
+</code></pre>
+
+<p>However, most of the times, serialization is a safe operation that can
+be done synchronously. In fact, many of the serializer classes you will
+find in the .NET framework only provide sync methods. So the question
+is, how you can transform that synchronous work into a Task ?.</p>
+
+<p>Creating a new task using the method Task.Factory.StartNew for doing all
+the serialization work would be probably the typical answer. That would
+work, as a new task is going to be scheduled. However, that might
+involve some unnecessary context switches, which are out of our control
+and might be affect performance on server code specially.  </p>
+
+<p>If you take a look at the source code of the MediaTypeFormatters shipped
+as part of the framework, you will notice that they actually using
+another pattern, which uses a TaskCompletionSource class.</p>
+
+<p><del> {.alt}
+public Task WriteToStreamAsync(Type type, object value, Stream writeStream,
+</del></p>
+
+<pre><code>HttpContent content, TransportContext transportContext)
+</code></pre>
+
+<p><del> {.alt}
+{
+</del></p>
+
+<pre><code> 
+</code></pre>
+
+<p><del> {.alt}
+  var tsc = new TaskCompletionSource<AsyncVoid>();
+</del></p>
+
+<pre><code>  tsc.SetResult(default(AsyncVoid));
+</code></pre>
+
+<p><del> {.alt}
+ 
+</del></p>
+
+<pre><code>  //Do all the serialization work here synchronously
+</code></pre>
+
+<p><del> {.alt}
+ 
+</del></p>
+
+<pre><code>  return tsc.Task;
+</code></pre>
+
+<p><del> {.alt}
+}
+</del></p>
+
+<pre><code> 
+</code></pre>
+
+<p><del> {.alt}
+/// <summary>
+</del></p>
+
+<pre><code>/// Used as the T in a "conversion" of a Task into a Task{T}
+</code></pre>
+
+<p><del> {.alt}
+/// </summary>
+</del></p>
+
+<pre><code>private struct AsyncVoid
+</code></pre>
+
+<p><del> {.alt}
+{
+</del></p>
+
+<pre><code>}
+</code></pre>
+
+<p>They are basically doing all the serialization work synchronously and
+using a TaskCompletionSource for returning a task already done.</p>
+
+<p>To conclude this post, this is another approach you might want to
+consider when using serializers that are not compatible with an async
+model.</p>
+
+<p><strong>Update:</strong> Henrik Nielsen from the ASP.NET team pointed out the
+existence of a built-in media type formatter for writing sync
+formatters. BufferedMediaTypeFormatter
+<a href="http://t.co/FxOfeI5x">http://t.co/FxOfeI5x</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/06/06/html-5-para-dispositivos-mobiles-proyecto-liike/">HTML 5 Para Dispositivos Mobiles – Proyecto Liike</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-06-06T00:00:00-03:00" pubdate data-updated="true">Jun 6<span>th</span>, 2012</time>
+        
+         | <a href="/blog/2012/06/06/html-5-para-dispositivos-mobiles-proyecto-liike/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>La serie de videos que grabe con Miguel Angel Saenz y Ariel Schapiro de
+Microsoft Argentina acerca del proyecto “Liike” de Patterns &amp; Practices
+para desarrollos de aplicaciones mobiles con HTML 5 ha sido publicada en
+channel9.</p>
+
+<p>Les dejo la lista de videos para que los puedan ir viendo y conociendo
+un poco mas con este proyecto mas que interesante.</p>
+
+<p><a href="http://channel9.msdn.com/posts/1Serie-HTML5-para-dispositivos-mviles-Proyecto-Liike-parte-1-introduccin">http://channel9.msdn.com/posts/1Serie-HTML5-para-dispositivos-mviles-Proyecto-Liike-parte-1-introduccin</a>
+\
+<a href="http://channel9.msdn.com/posts/2Serie-HTML5-para-dispositivos-mviles-Proyecto-Liike-parte-2-overview-de-aplicacin-Mileage-Stats">http://channel9.msdn.com/posts/2Serie-HTML5-para-dispositivos-mviles-Proyecto-Liike-parte-2-overview-de-aplicacin-Mileage-Stats</a>
+\
+<a href="http://channel9.msdn.com/posts/3Serie-HTML5-para-dispositivos-mviles-Proyecto-Liike-parte-3-determinacin-de-vista-en-html-a-mostrar">http://channel9.msdn.com/posts/3Serie-HTML5-para-dispositivos-mviles-Proyecto-Liike-parte-3-determinacin-de-vista-en-html-a-mostrar</a>
+\
+<a href="http://channel9.msdn.com/posts/4Serie-HTML5-para-dispositivos-mviles-Proyecto-Liike-parte-4-Single-Page-application">http://channel9.msdn.com/posts/4Serie-HTML5-para-dispositivos-mviles-Proyecto-Liike-parte-4-Single-Page-application</a>
+\
+<a href="http://channel9.msdn.com/posts/5Serie-HTML5-para-dispositivos-mviles-Proyecto-Liike-parte-5-nuevos-controles-HTML5">http://channel9.msdn.com/posts/5Serie-HTML5-para-dispositivos-mviles-Proyecto-Liike-parte-5-nuevos-controles-HTML5</a>&ndash;
+\
+<a href="http://channel9.msdn.com/posts/6Serie-HTML5-para-dispositivos-mviles-Proyecto-Liike-parte-6-Botn-Switch-to-Desktop-Site">http://channel9.msdn.com/posts/6Serie-HTML5-para-dispositivos-mviles-Proyecto-Liike-parte-6-Botn-Switch-to-Desktop-Site</a>
+\
+<a href="http://channel9.msdn.com/posts/7Serie-HTML5-para-dispositivos-mviles-Proyecto-Liike-parte-7-Testing-de-aplicaciones-mviles-en-HTML5">http://channel9.msdn.com/posts/7Serie-HTML5-para-dispositivos-mviles-Proyecto-Liike-parte-7-Testing-de-aplicaciones-mviles-en-HTML5</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/05/11/apache-cordova-a-new-alternative-for-developing-native-apps-in-win-phone-7/">Apache Cordova. A New Alternative for Developing Native Apps in Win Phone 7</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-05-11T00:00:00-03:00" pubdate data-updated="true">May 11<span>th</span>, 2012</time>
+        
+         | <a href="/blog/2012/05/11/apache-cordova-a-new-alternative-for-developing-native-apps-in-win-phone-7/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><a href="http://incubator.apache.org/cordova/">Apache Cordova</a> is one of those
+projects that recently caught my attention for developing applications
+in mobile. This project previously known as PhoneGap was donated by
+Adobe to the Apache Foundation to be part of a new and attractive open
+source alternative for developing mobile applications.  If you haven’t
+heard of it before, it basically provides the required infrastructure to
+run native applications in different mobile platforms such as IOS,
+Android, and Windows Phone 7 using an hybrid approach with an embedded
+browser. There is a thin native layer that provides access to different
+native features in phone through an standard object model in JavaScript,
+so the developers can write their applications using HTML 5 and have
+access to different features through that model. Therefore, the two most
+important components in this project are the native layer and the
+JavaScript component model, which are supported across the different
+platforms.</p>
+
+<p>The Microsoft Interoperability team collaborated as part of the project
+to support Win7 phone as another available platform, which <a href="http://blogs.msdn.com/b/interoperability/archive/2011/12/16/full-support-for-phonegap-on-windows-phone-is-now-complete.aspx">was
+announced by Abu
+Obeida</a>
+in December last year. Another major announcement these days was the
+support for a <a href="http://blogs.msdn.com/b/interoperability/archive/2012/04/26/more-news-from-ms-open-tech-announcing-the-open-source-metro-style-theme.aspx">Metro theme in JQuery
+Mobile</a>,
+which gives the ability to give applications written in HTML 5 for this
+platform the same look and feel as a native applications.</p>
+
+<p>If you want to know more about the platform, there is an excellent
+introductory article written by Colin Eberhardt for the MSDN Magazine,
+<a href="http://msdn.microsoft.com/en-us/magazine/hh975345.aspx">“Develop HTML Windows Phone Apps with Apache
+Cordova”</a></p>
+
+<p>One the things I noticed in the project, is that there is available a
+project template in Visual Studio for creating the initial application.
+However, you need to manually deploy that template in the right folder
+to make it available in Visual Studio, which might be an error prone
+task. I decided to make a little contribution to the project and write
+an Visual Studio extension (a vsix package) to automatically deploy the
+template, which I am not sure yet if it is going to be approved or not,
+but I think it is a nice thing to have for easing adoption. This is part
+of the <a href="https://github.com/pcibraro/incubator-cordova-wp7">fork associated to my
+user</a> in case you
+want to use it.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/04/20/increasing-your-system-reliability-with-the-azure-service-bus-queues/">Increasing Your System Reliability With the Azure Service Bus Queues</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-04-20T00:00:00-03:00" pubdate data-updated="true">Apr 20<span>th</span>, 2012</time>
+        
+         | <a href="/blog/2012/04/20/increasing-your-system-reliability-with-the-azure-service-bus-queues/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>A common scenario for many web applications running in the cloud is to
+integrate with existing systems through web services (no matter the
+messaging style they use). Although in these scenarios, an SLA is
+typically used as an agreement between the two parties to assure certain
+level of availability, many things can still fail. Therefore, it is
+always a good idea to have a mechanism in place to handle any possible
+error condition and retry the execution when it is possible.</p>
+
+<p>As example, you could have a web application that calls an online CRM
+system (like Salesforce.com or MS Dynamics) for allowing the users to
+report incidents. In that scenario, we can not assume any possible call
+to the CRM system will always succeed. On the other hand, this kind of
+call does not require an immediate response for the user, so it can be
+scheduled for later execution and retried if something unexpected
+happens.</p>
+
+<p>A persistent storage for the messages like a queue is always a good
+choice for decoupling clients from services, and also accomplish the
+goal previously discussed. When you move to Windows Azure, there are two
+different queue offerings, Queues as part of the Storage service, and
+Queues (or Topics) as part of the Service Bus.</p>
+
+<p>The Service Bus SDK provides a programming model on top of WCF for
+consuming or sending messages to the queues, which makes this solution
+very appealing for this scenario. The Service Bus also provides Topics,
+which are an specific kind of queues that supports subscriptions.</p>
+
+<p>By using Service Bus Queues, the calls to any third party service could
+be eventually wrapped up in WCF services that are invoked by the web
+application. The following image illustrates the possible architecture,</p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/queues_131E8A64.jpg"><img src="http://weblogs.asp.net/blogs/cibrax/queues_thumb_6A33755A.jpg" title="queues" alt="queues" /></a></p>
+
+<p>One of the core classes in the WCF programming model for the Service Bus
+Queues is BrokeredMessage. This class represents a message that can be
+sent to/from an existing queue, and contains a lot of  standard
+properties such as MessageId, ReplyTo, SessionId or Label to name a few.
+It also contain a dictionary for custom properties that an application
+can assign to the message.</p>
+
+<p>In the example above, the MessageId property can be used to correlate
+the input and out messages in the queue and update the corresponding
+result in the web application. The WCF service can also use the ReplyTo
+property, which represents the queue name in which the response should
+go. Sessions is another concept supported in the Service Bus Queues,
+which are useful for correlating a set of messages as a batch for
+processing.   This is something optional and requires the queue to
+support sessions when they are created.</p>
+
+<p>In WCF, the BrokeredMessage is assigned to the service call with a
+message property BrokeredMessageProperty as it is illustrated bellow,</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+var channelFactory = new ChannelFactory<ICRMServiceClient>(&#8220;crminput&rdquo;);
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+var clientChannel = channelFactory.CreateChannel();
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+// Use the OperationContextScope to create a block within which to access the current OperationScope
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+using (var scope = new OperationContextScope((IContextChannel)clientChannel))
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>// Create a new BrokeredMessageProperty object
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>var property = new BrokeredMessageProperty();
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>// Use the BrokeredMessageProperty object to set the BrokeredMessage properties
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>property.Label = "Incident";
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>property.MessageId = Guid.NewGuid().ToString();
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>property.ReplyTo = "sb://xxx.servicebus.windows.net/input";
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>// Add BrokeredMessageProperty to the OutgoingMessageProperties bag provided 
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>// by the current Operation Context 
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>OperationContext.Current.OutgoingMessageProperties.Add(BrokeredMessageProperty.Name, property);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>//Do the service call here
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+}
+</del></p>
+
+<p>On the service side, the BrokeredMessageProperty instance can be
+retrieved in a similar way</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+var incomingProperties = OperationContext.Current.IncomingMessageProperties;
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+var property = incomingProperties[BrokeredMessageProperty.Name] as BrokeredMessageProperty;
+</del></p>
+
+<p>Another important feature in the programming model for supporting
+execution retries in our example is the ReceiveContext. By decorating
+the WCF service contract with the ReceiveContextEnabled attribute, we
+can manually specify whether the operation was successfully completed or
+not. If the operation was not completed, the message will remain in the
+queue and the operation will be executed again next time.</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+[ServiceContract()]
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+public interface ICRMService
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>[OperationContract(IsOneWay=true)]
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>[ReceiveContextEnabled(ManualControl = true)]
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>void CreateCustomer(Customer customer);
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+}
+</del></p>
+
+<p> </p>
+
+<p>The following code shows how the operation implementation looks like,</p>
+
+<p> </p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+var incomingProperties = OperationContext.Current.IncomingMessageProperties;
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+var property = incomingProperties[BrokeredMessageProperty.Name] as BrokeredMessageProperty;
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+//Complete the Message
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+ReceiveContext receiveContext;
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+if (ReceiveContext.TryGet(incomingProperties, out receiveContext))
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+{
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+   //Do Something              <br/>
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+   receiveContext.Complete(TimeSpan.FromSeconds(10.0d));
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+}
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+else
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+{
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+   throw new InvalidOperationException(&rdquo;&hellip;&ldquo;);
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+}
+</del></p>
+
+<p>As you can see, the ReceiveContext instance is marked as complete or
+implicitly set as not complete when an exception is thrown.</p>
+
+<p>The assemblies for the Service Bus SDK are available as part of a Nuget
+package “Windows Azure Service Bus”. As part of the package
+registration, all the required configuration extensions for the WCF such
+as custom bindings and behaviors are also added in the application
+configuration file.</p>
+
+<p>NetMessagingBinding is the one you need to use for sending or receiving
+messages from a queue. That binding is constantly polling the queues for
+detecting new messages, and activating the WCF service when a new
+message arrives. For that reason, you need to keep the web application
+App pool running all the time. This can be accomplished in Windows Azure
+with a simple approach as this one mentioned by Christian Weyer in this
+<a href="http://weblogs.thinktecture.com/cweyer/2011/01/poor-mans-approach-to-application-pool-warm-up-for-iis-in-a-windows-azure-web-role.html">post</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/04/03/authenticating-your-windows-domain-users-in-the-cloud/">Authenticating Your Windows Domain Users in the Cloud</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-04-03T00:00:00-03:00" pubdate data-updated="true">Apr 3<span>rd</span>, 2012</time>
+        
+         | <a href="/blog/2012/04/03/authenticating-your-windows-domain-users-in-the-cloud/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Moving to the cloud can represent a big challenge for many organizations
+when it comes to reusing existing infrastructure. For applications that
+drive existing business processes in the organization, reusing IT assets
+like active directory represent good part of that challenge. For
+example, a new web mobile application that sales representatives can use
+for interacting with an existing CRM system in the organization.</p>
+
+<p>In the case of Windows Azure, the Access Control Service (ACS) already
+provides some integration with ADFS through WS-Federation. That means
+any organization can create a new trust relationship between the STS
+running in the ACS and the STS running in ADFS. As the following image
+illustrates, the ADFS running in the organization should be somehow
+exposed out of network boundaries to talk to the ACS. This is usually
+accomplish through an ADFS proxy running in a DMZ.</p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/ActiveDirectoryForCloud1_6F847519.jpg"><img src="http://weblogs.asp.net/blogs/cibrax/ActiveDirectoryForCloud1_thumb_7171C422.jpg" title="ActiveDirectoryForCloud1" alt="ActiveDirectoryForCloud1" /></a></p>
+
+<p>This is the official story for authenticating existing domain users with
+the ACS.  Getting an ADFS up and running in the organization, which
+talks to a proxy and also trust the ACS could represent a painful
+experience. It basically requires  advance knowledge of ADSF and
+exhaustive testing to get everything right. </p>
+
+<p>However, if you want to get an infrastructure ready for authenticating
+your domain users in the cloud in a matter of minutes, you will probably
+want to take a look at the sample I wrote for talking to an existing
+Active Directory using a regular WCF service through the Service Bus
+Relay Binding.</p>
+
+<p>You can use the WCF ability for self hosting the authentication service
+within a any program running in the domain (a Windows service
+typically). The service will not require opening any port as it is
+opening an outbound connection to the cloud through the Relay Service.
+In addition, the service will be protected from being invoked by any
+unauthorized party with the ACS, which will act as a firewall between
+any client and the service. In that way, we can get a very safe solution
+up and running almost immediately.</p>
+
+<p>To make the solution even more convenient, I implemented an STS in the
+cloud that internally invokes the service running on premises for
+authenticating the users. Any existing web application in the cloud can
+just establish a trust relationship with this STS, and authenticate the
+users via WS-Federation passive profile with regular http calls, which
+makes this very attractive for web mobile for example.</p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/ActiveDirectoryForCloud2_74570308.jpg"><img src="http://weblogs.asp.net/blogs/cibrax/ActiveDirectoryForCloud2_thumb_723A043F.jpg" title="ActiveDirectoryForCloud2" alt="ActiveDirectoryForCloud2" /></a></p>
+
+<p>This is how the WCF service running on premises looks like,</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+[ServiceBehavior(Namespace = &ldquo;<a href="http://agilesight.com/active_directory/agent">http://agilesight.com/active_directory/agent</a>&rdquo;)]
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+public class ProxyService : IAuthenticationService
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>IUserFinder userFinder;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>IUserAuthenticator userAuthenticator;
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public ProxyService()
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    : this(new UserFinder(), new UserAuthenticator())
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public ProxyService(IUserFinder userFinder, IUserAuthenticator userAuthenticator)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    this.userFinder = userFinder;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    this.userAuthenticator = userAuthenticator;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public AuthenticationResponse Authenticate(AuthenticationRequest request)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    if (userAuthenticator.Authenticate(request.Username, request.Password))
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        return new AuthenticationResponse
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>            Result = true,
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>            Attributes = this.userFinder.GetAttributes(request.Username)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        };    
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    }
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    return new AuthenticationResponse { Result = false };
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+}
+</del></p>
+
+<p>Two external dependencies are used by this service for authenticating
+users (IUserAuthenticator) and for retrieving user attributes from the
+user’s directory (IUserFinder). The UserAuthenticator implementation is
+just a wrapper around the LogonUser Win Api.</p>
+
+<p>The UserFinder implementation relies on Directory Services in .NET for
+searching the user attributes in an existing directory service like
+Active Directory or the local user store.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+public UserAttribute[] GetAttributes(string username)
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>var attributes = new List&lt;UserAttribute&gt;();
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>var identity = UserPrincipal.FindByIdentity(new PrincipalContext(this.contextType, this.server, this.container), IdentityType.SamAccountName, username);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>if (identity != null)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    var groups = identity.GetGroups();
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    foreach(var group in groups)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        attributes.Add(new UserAttribute { Name = "Group", Value = group.Name });
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    }
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    if(!string.IsNullOrEmpty(identity.DisplayName))
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        attributes.Add(new UserAttribute { Name = "DisplayName", Value = identity.DisplayName });
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    if(!string.IsNullOrEmpty(identity.EmailAddress))
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        attributes.Add(new UserAttribute { Name = "EmailAddress", Value = identity.EmailAddress });
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>return attributes.ToArray();
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+}
+</del></p>
+
+<p>As you can see, the code is simple and uses all the existing
+infrastructure in Azure to simplify a problem that looks very complex at
+first glance with ADFS.</p>
+
+<p>All the source code for this sample is available to download (or change)
+in this GitHub repository,</p>
+
+<p><a href="https://github.com/AgileSight/ActiveDirectoryForCloud">https://github.com/AgileSight/ActiveDirectoryForCloud</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/03/22/debugging-node-js-applications-for-windows-azure/">Debugging Node.js Applications for Windows Azure</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-03-22T00:00:00-03:00" pubdate data-updated="true">Mar 22<span>nd</span>, 2012</time>
+        
+         | <a href="/blog/2012/03/22/debugging-node-js-applications-for-windows-azure/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>In case you are developing a new web application with Node.js for
+Windows Azure, you might notice there is no easy way to debug the
+application unless you are developing in an integrated IDE like Cloud9.
+For those that develop applications locally using a text editor (or
+WebMatrix) and Windows Azure Powershell for Node.js, it requires some
+steps not documented anywhere for the moment.</p>
+
+<p>I spent a few hours on this the other day I practically got nowhere
+until I received some help from <a href="http://tomasz.janczuk.org">Tomek</a> and
+the rest of them. The IISNode version that currently ships with the
+Windows Azure for Node.js SDK does not support debugging by default, so
+you need to install the IISNode full version available in the <a href="https://github.com/windowsazure/iisnode/downloads">github
+repository</a>. </p>
+
+<p>Once you have installed the full version, you need to enable debugging
+for the web application by modifying the web.config file</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+&lt;iisnode
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code> debuggingEnabled="true"
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code> loggingEnabled="true"
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code> devErrorsEnabled="true"
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+   />
+</del></p>
+
+<p>The xml above needs to be inserted within the existing
+“&lt;system.webServer/>” section.</p>
+
+<p>The last step is to open a WebKit browser (e.g. Chrome) and navigate to
+the URL where your application is hosted but adding the segment “/debug”
+to  the end. The full URL to the node.js application must be used, for
+example,
+<a href="http://localhost:81/myserver.js/debug">http://localhost:81/myserver.js/debug</a></p>
+
+<p>That should open a new instance of Node inspector on the browser, so you
+can debug the application from there.</p>
+
+<p>Enjoy!!</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/03/06/building-hypermedia-web-apis/">Building Hypermedia Web APIs</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-03-06T00:00:00-03:00" pubdate data-updated="true">Mar 6<span>th</span>, 2012</time>
+        
+         | <a href="/blog/2012/03/06/building-hypermedia-web-apis/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Hypermedia is one of those concepts really hard to grasp when building
+Http aware APIs (or Web API’s). As human beings, we are constantly
+dealing with hypermedia in the existing web by following links or
+posting data from some forms that take us to a next level.</p>
+
+<p>We typically remember the entry point or URL for the retrieving the home
+page of web site, and we can move from there on to different sections
+using hypermedia artifacts. Those URL usually tend to be nice and easy
+to remember, but they don’t have to be as it is not something http by
+itself mandates. We could rely on a search engine like Google or Bing to
+find those URLs for us. You can even use some cryptographic URLs for the
+web pages in your website, and still provide a nice experience for the
+user by proving the right links to browse the content.</p>
+
+<p>When you build Http API’s for being consumed for other systems, the
+history is not any different. There is no any reason for client
+applications to remember all the possible resources and their location
+(URLs) if the server can provide those. Hardcoding URL’s on the client
+side is a bad thing for two main reasons,</p>
+
+<ol>
+<li>The server can change the location for an specific resource, so all
+the clients having a hardcoded URL for that resource will break.</li>
+<li>It pushes some knowledge about the application state workflow to the
+client side. What happens if an action in a resource is only
+available for a given state, shall we put that logic in any possible
+API consumer ?. Definitely not, the server should always mandate
+what can be done or not with a resource. For example, if the state
+of a purchase order is canceled, the client application application
+shouldn’t be allowed to submit that PO. If we have an user in front
+of an UI using that API, he shouldn’t see the submit button enabled
+(That logic for enabling or disabling the button could be driven by
+the server using links).</li>
+</ol>
+
+
+<p>This is one of the gray areas that typically differentiates a regular
+Web API’s from a RESTful API, but there are some other constraints that
+also applies, so this discussing about RESTful services probably don’t
+make sense in most cases. What matters in the end is that the API uses
+HTTP correctly as application protocol and leverage hypermedia when it
+is possible. By enabling Hypermedia, you can create self-discoverable
+APIs, which are not an excuse for not providing documentation as I
+usually hear, but are more flexible in terms of updatability.</p>
+
+<p>Many of the media types we use nowadays for building Web API’s such as
+JSON or XML don’t have a built-in concept for representing hypermedia
+links as HTML does with links and forms. You can leverage those media
+types by defining a way to express hypermedia, but again, it requires
+client to understand how the hypermedia semantics are defined on top of
+those. Other media types like XHtml or ATOM already support some of the
+hypermedia concepts like links or forms.</p>
+
+<p>By moving forward with this idea of Hypermedia API on top of JSON or
+XML, Mike Kelly wrote a draft for an specific media type called
+<a href="http://stateless.co/hal_specification.html">“HAL”</a>.   HAL extends JSON
+and XML with all the semantics required to express resources and their
+links. This fragment from the spec draft illustrates how an order can be
+modeled using the xml variant of HAL,</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+<resource href="/orders">
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+  <link rel="next" href="/orders?page=2" />
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+  <link rel="search" href="/orders?id={order_id}" />
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+  <resource rel="order" href="/orders/123">
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>&lt;link rel="customer" href="/customer/bob" title="Bob Jones &amp;lt;bob@jones.com&gt;" /&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>&lt;resource rel="basket" href="/orders/123/basket"&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>  &lt;item&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    &lt;sku&gt;ABC123&lt;/sku&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    &lt;quantity&gt;2&lt;/sku&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    &lt;price&gt;9.50&lt;/price&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>  &lt;/item&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>  &lt;item&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    &lt;sku&gt;GFZ111&lt;/sku&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    &lt;quantity&gt;1&lt;/quantity&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    &lt;price&gt;11.00&lt;/price&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>  &lt;/item&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>&lt;/resource&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>&lt;total&gt;30.00&lt;/total&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>&lt;currency&gt;USD&lt;/currency&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>&lt;status&gt;shipped&lt;/status&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>&lt;placed&gt;2011-01-16&lt;/placed&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+  </resource>
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+  <resource rel="order" href="/orders/124">
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>&lt;link rel="customer" href="/customer/jen" title="Jen Harris &amp;lt;jen@internet.com&gt;" /&gt;    
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>&lt;resource rel="basket" href="/orders/124/basket"&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>  &lt;item&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    &lt;sku&gt;KLM222&lt;/sku&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    &lt;quantity&gt;1&lt;/sku&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    &lt;price&gt;9.00&lt;/price&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>  &lt;/item&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>  &lt;item&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    &lt;sku&gt;HHI50&lt;/sku&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    &lt;quantity&gt;1&lt;/quantity&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    &lt;price&gt;11.00&lt;/price&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>  &lt;/item&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>&lt;/resource&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>&lt;total&gt;20.00&lt;/total&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>&lt;currency&gt;USD&lt;/currency&lt;status&gt;processing&lt;/status&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>&lt;placed&gt;2011-01-16&lt;/placed&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+  </resource>
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+</resource>
+</del></p>
+
+<p>You can see the different entities in your system can be modeled and
+represented as resources, which are linked, and attributes like “rel” or
+“href” are used to express the role of the entity and it’s location.
+Steve Michelotti created an specific formatter for HAL in WCF Web API
+available <a href="https://bitbucket.org/smichelotti/hal-media-type">here</a>, but
+it hasn’t be updated to the latest ASP.NET Web API version yet.</p>
+
+<p>I have been able to see two different kinds of hypermedia APIs over the
+years. APIs returning links for representing state transitions or linked
+resources that put some out of band assumptions on the consumer for how
+the transition should be executed. For example, consider the following
+example with the representation of a PO.</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+<purchaseOrder>
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+  <id>90</id>
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+  <sku>AJJ34</sku><br/>
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+  <link rel="customer" href="/customers/foo"/>
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+  <link rel="approve" href="/po/90/approve"/>
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+  <link rel="cancel" href="/po/90/cancel"/>
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+</purchaseOrder>
+</del></p>
+
+<p>The representation contains a link for retrieving the representation of
+the associated customer (which assumes the client should send an HTTP to
+that URL for getting the representation), and two additional links for
+approving or canceling the PO (which also assumes the client knows how
+to post a message to those URLs). You see, the consumer is still coupled
+to the Web API implementation with some out of band details, but still
+is self-discoverable and the consumer can determine which actions can be
+executed over that resource (See the associated customer details,
+approve it or cancel it).</p>
+
+<p>There are also other kind of APIs that use Forms as you would find them
+in the HTML or XHTML media types. Good part of these APIs are driven by
+forms submissions. Let’s see an example to illustrate the concept.</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<ul id="purchaseOrder">
+~~~~
+
+~~~~ {style=&#8221;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&#8221;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&#8221;}
+  <li id="id">90</li>
+~~~~
+
+~~~~ {style=&#8221;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&#8221;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&#8221;}
+  <li id="sku">AJJ34</li>  
+~~~~
+
+~~~~ {style=&#8221;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&#8221;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&#8221;}
+</ul>
+
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+<a href="/customers/foo" rel="customer"/>
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+<a href="/po/90/approve_form" rel="approve"/>
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+<a href="/po/90/cancel_form" rel="cancel"/>
+</del></p>
+
+<p>The purchase order is returned this time as an XHTML representation and
+contains links which basically supports the HTTP GET semantics. An HTTP
+GET to the “customer” link would return the associated customer
+representation. However, an HTTP GET to the “approve” or “cancel” links
+would return an http form this time for approving or canceling the
+order.</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+<form action="/po/90/approve" method="POST">
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+  <input type="hidden" id="id">90</input>
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+  <input type="hidden" id="___forgeryToken">XXXXXXXX</input>
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+</form>
+</del></p>
+
+<p>The consumer now has been decoupled of certain details for approving the
+order for example. It only needs to submit this form using an HTTP POST
+to the URL specified in the action attribute. The server can also
+includes additional information in the form as a forgery token for
+example to avoid “Cross-site Request Forgery” (CSRF) attacks.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/02/29/doing-di-with-autofac-in-asp-net-web-api/">Doing DI With Autofac in ASP.NET Web API</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-02-29T00:00:00-03:00" pubdate data-updated="true">Feb 29<span>th</span>, 2012</time>
+        
+         | <a href="/blog/2012/02/29/doing-di-with-autofac-in-asp-net-web-api/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>ASP.NET Web API provides a very similar model to MVC for resolving
+dependencies using a service locator pattern. What you basically do is
+to provide the implementation of that service locator to return any of
+the requested dependencies, and that implementation is typically tied to
+a DI container. </p>
+
+<p>The service locator can be injected into the Web API runtime using the
+ServiceResolver entry in the global configuration object
+(GlobalConfiguration.Configuration.ServiceResolver), which basically
+supports different overloads.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+public void SetResolver(IDependencyResolver resolver);
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+public void SetResolver(object commonServiceLocator);
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+public void SetResolver(Func&lt;Type, object> getService, Func&lt;Type, IEnumerable<object>> getServices);
+</del></p>
+
+<p>The first overload receives an instance of a IDependencyResolver
+implementation, which provides two methods for resolving one or multiple
+dependencies.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+public interface IDependencyResolver
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>object GetService(Type serviceType);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>IEnumerable&lt;object&gt; GetServices(Type serviceType);
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+}
+</del></p>
+
+<p>GetService should return null if the dependency can not resolved.
+GetServices should return an empty IEnumerable if the same thing
+happens.</p>
+
+<p>The second overload uses reflection for invoking the same two methods,
+GetService and GetServices.</p>
+
+<p>The third overload receives a set of Func delegates for doing the same
+thing.</p>
+
+<p>Autofac already provides a very smooth integration with ASP.NET Web API
+through a set of assemblies available in the “Autofac ASP.NET MVC
+integration” nuget package. The bad news is that you can not use the
+DepedencyResolver implementation in that package as it is not compatible
+with the one required by ASP.NET Web API.</p>
+
+<p>The AutofacDepedencyResolver class in that package implements
+System.Web.Mvc.IDependencyResolver, while ASP.NET Web API expects a
+System.Web.Http.Services.IDependencyResolver implementation. Nothing
+that we can not fix with  a simple few lines of code. We can reuse the
+existing implementation through the third overload that receives a set
+of delegates.</p>
+
+<p>The following code snippet illustrates how you can register all
+dependencies in the Autofac container and use that for resolving all the
+Web API dependencies,</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ContainerBuilder builder = new ContainerBuilder();
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+builder.RegisterType<ContactRepository>()
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>.As&lt;IContactRepository&gt;()
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>.InstancePerHttpRequest();
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+builder.RegisterApiControllers(Assembly.GetExecutingAssembly());
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+IContainer container = builder.Build();
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+var resolver = new AutofacDependencyResolver(container);
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+GlobalConfiguration.Configuration.ServiceResolver.SetResolver(
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>t =&gt; resolver.GetService(t),
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>t =&gt; resolver.GetServices(t));
+</code></pre>
+
+<p>~~~~</p>
+
+<p>One the things you can do with Autofac is to set the lifetime of the
+dependencies instances to be equal to a http request lifetime by using
+the “InstancePerHttpRequest” method. I also created a simple extension
+method “RegisterApiControllers” to automatically register all the
+existing Api controllers in the the project into the DI container.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+public static class RegistrationExtensions
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public static IRegistrationBuilder&lt;object, ScanningActivatorData, DynamicRegistrationStyle&gt; RegisterApiControllers(this ContainerBuilder builder, params Assembly[] controllerAssemblies)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    return
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        from t in builder.RegisterAssemblyTypes(controllerAssemblies)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        where typeof(IHttpController).IsAssignableFrom(t) &amp;&amp; t.Name.EndsWith("Controller")
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        select t;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+}
+</del></p>
+
+<p>Using the code above, you should be able to use a API controller that
+looks like this (The contact repository is injected as a depedency)</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+public class ContactController : ApiController
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>IContactRepository repository;
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public ContactController(IContactRepository repository)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    this.repository = repository;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/02/27/handling-exceptions-in-your-asp-net-web-api/">Handling Exceptions in Your ASP.NET Web API</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-02-27T00:00:00-03:00" pubdate data-updated="true">Feb 27<span>th</span>, 2012</time>
+        
+         | <a href="/blog/2012/02/27/handling-exceptions-in-your-asp-net-web-api/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>The Http status codes for reporting errors to clients can mainly be
+categorized on two groups, client errors and server errors. Any status
+code under 500 is considered an issue generated by something wrong on
+the request message sent by the client. For example, 404 for resource
+not found, 400 for bad request (some invalid data in the request
+message) or 403 for forbidden (an unauthorized operation) are some of
+the most well know client errors.  On the hand, any other code over 500
+is considered as a problem on the server side such as 500 for internal
+server error or 503 for server unavailable. This kind of error means
+that something unexpected happened on the server side while processing
+the request but it is not the client fault.</p>
+
+<p>It’s always a good practice when implementing a Web Api to use the
+correct http status codes for every situation. While it’s relatively
+easy to return a response with an specific status code in a controller
+action using the new HttpResponseMessage class, you might end up with a
+lot of repetitive code for handling all the possible exceptions in the
+different execution branches. All the dependencies for a controller like
+repositories or domain services are usually unaware of http details. For
+example, you might call a method in a repository that throws an
+exception when something is wrong, but it would be responsibility of the
+calling code in the Web Api controller to map that exception to an http
+status code.</p>
+
+<p>As any cross cutting concern, exception handling can also be implemented
+in a centralized manner using a filter. This was the way it was
+implemented in MVC as well in the HandleErrorAttribute filter. ASP.NET
+Web API is not any different in that aspect, and you can also implement
+a custom filter for mapping an exception to an http status code.</p>
+
+<p>This is how the filter implementation looks like,</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+public class ExceptionHandlerFilter : ExceptionFilterAttribute
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public ExceptionHandlerFilter()
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    this.Mappings = new Dictionary&lt;Type, HttpStatusCode&gt;();
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    this.Mappings.Add(typeof(ArgumentNullException), HttpStatusCode.BadRequest);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    this.Mappings.Add(typeof(ArgumentException), HttpStatusCode.BadRequest);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public IDictionary&lt;Type, HttpStatusCode&gt; Mappings
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    get;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    private set;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public override void OnException(HttpActionExecutedContext actionExecutedContext)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    if (actionExecutedContext.Exception != null)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        var exception = actionExecutedContext.Exception;
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        if (actionExecutedContext.Exception is HttpException)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>            var httpException = (HttpException)exception;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>            actionExecutedContext.Result = new HttpResponseMessage&lt;Error&gt;(
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>                new Error { Message = exception.Message },
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>                (HttpStatusCode)httpException.GetHttpCode());
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        }
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        else if (this.Mappings.ContainsKey(exception.GetType()))
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>            var httpStatusCode = this.Mappings[exception.GetType()];
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>            actionExecutedContext.Result = new HttpResponseMessage&lt;Error&gt;(
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>                new Error { Message = exception.Message }, httpStatusCode);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        }
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        else
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>            actionExecutedContext.Result = new HttpResponseMessage&lt;Error&gt;(
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>                new Error { Message = exception.Message }, HttpStatusCode.InternalServerError);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        }
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    }
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+}
+</del></p>
+
+<p>As you can see, the filter derives from a built-in class
+ExceptionFilterAttribute that provides a virtual method “OnException”
+for implementing our exception handling code. The
+ExceptionFilterAttribute does not nothing by default.</p>
+
+<p>The exception handling logic in this implementation mainly address three
+different scenarios,</p>
+
+<ol>
+<li>If an HttpException was raised anywhere in the Web API controller
+code, the status code and message in that exception will be reused
+and set in the response message.</li>
+<li>If the exception type is associated to an specific status code using
+a custom mapping, that status code will be used. For example, the
+filter automatically maps the ArgumentNullException to a “Bad
+Request” status code. The developer can customize this mapping when
+the filter is registered.</li>
+<li>Any other exception not found in the mapping is considered a server
+error and the generic “InternalServerError” status code is used.</li>
+</ol>
+
+
+<p>In all the cases, a model for representing the exception is set in the
+response message so the framework will take care of serializing that
+using the wire format expected by the client. The HttpResponseMessage
+also contains a string property “ReasonPhrase”, which could be used to
+sent the exception message back to the client. However, this property
+does not seem to be sent correctly when everything is hosted in IIS.</p>
+
+<p>Let see a few different cases of how this filter works in action.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+public Contact Get(int id)
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>var contact = repository.Get(id);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>if (contact == null)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    throw new HttpException((int)HttpStatusCode.NotFound, "Contact not found");
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>//Do stuff
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>return contact;
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+}
+</del></p>
+
+<p>A contact was not found, so a new HttpException with status code 404 is
+thrown in the controller action. This will be automatically mapped to a
+response message with 404 in the exception filter.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+public void Delete(int id)
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>bool canBeDeleted = this.repository.CanDelete(id);
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>if (!canBeDeleted)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    throw new NotAuthorizedException("The contact can not be deleted");
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>this.repository.Delete(id);
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+}
+</del></p>
+
+<p>Assuming the client did have permissions to delete an existing contact,
+a custom exception “NotAuthorizedException” was thrown in the controller
+action. The default behavior in the filter will be to set an internal
+server error (500) in the response message. However, that logic can be
+overriding by adding a new mapping for that exception when the filter is
+registered.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+var exceptionHandler = new ExceptionHandlerFilter();
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+exceptionHandler.Mappings.Add(typeof(NotAuthorizedException), HttpStatusCode.Forbidden);
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+GlobalConfiguration.Configuration.Filters.Add(exceptionHandler);
+</del></p>
+
+<p>In that way, the client will receive a more meaningful status code
+representing a forbidden action.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/4/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/blog/page/2/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

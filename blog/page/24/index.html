@@ -1,0 +1,2315 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="Juval Lowy has posted an updated version of the WCF configuration schema
+here. If you want to have intellisence support to modify the WCF &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/page/24">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/03/07/439763/">Intellisense Support for WCF Configuration Files - February CTP</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-03-07T00:00:00-03:00" pubdate data-updated="true">Mar 7<span>th</span>, 2006</time>
+        
+         | <a href="/blog/2006/03/07/439763/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Juval Lowy has posted an updated version of the WCF configuration schema
+<a href="http://www.idesign.net/idesign/temp/dotNetConfig.zip">here</a>.</p>
+
+<p>If you want to have intellisence support to modify the WCF configuration
+files in the February CTP, you will have to download that schema and
+replace the existing schema in C:\Program Files\Microsoft Visual
+Studio 8\Xml\Schemas.</p>
+
+<p>This is a temporary fix for a bug in the February CTP.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/02/21/438670/">Improve the Performance of Your Services With Secure Conversation</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-02-21T00:00:00-03:00" pubdate data-updated="true">Feb 21<span>st</span>, 2006</time>
+        
+         | <a href="/blog/2006/02/21/438670/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Secure Conversation is a feature designed to improve the performance of
+an application that needs to interchange more than one messages with a
+service.</p>
+
+<p>When SC is enabled, the token negotiation and authentication happens
+once compared to other tokens where that negotiation is done for each
+request to the service.</p>
+
+<p>In the first negotiation, the client sends a &#8221;RequestSecurityToken&#8221;
+message to the service in order to ask for a session token. That message
+is part of the WS-Trust specification and it is protected (encrypted and
+signed) with a security token that will be the base token for the
+session token.</p>
+
+<p>After that, the service creates a new token called Secure context token
+(SCT), which contains a reference to the original token and a symmetric
+key to perform cryptographic operations like encrypt or sign messages.
+(Message confidentiality and integrity).</p>
+
+<p>WSE and WCF, both implement this feature and the service itself is
+responsible to emit the SCT. Therefore, the service is also a &ldquo;Security
+token service&rdquo; or STS.</p>
+
+<p>The service returns the SCT to the client application and keeps the
+state of the original token using different strategies (Cookies,
+in-memory stores, etc). This
+<a href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnwebsrv/html/sctinfarm.asp" title="article">article</a> 
+in the MSDN describes very well what are the different approaches that a
+STS can use to maintain the state of a session.</p>
+
+<p>The most import benefits of using a SCT to protect the communication
+between a client and service are:</p>
+
+<p> </p>
+
+<p>1. The service execution is three or four times faster than the same
+execution with other tokens.</p>
+
+<p>​2. It is valid for a short time but it can be automatically renewed. As
+consequence, the  client application does not need to keep the original
+token.</p>
+
+<p>   This is really important when the original token contains some
+sensitive information such an user name or password. (Username Token).</p>
+
+<p> </p>
+
+<p><strong>Secure conversation in WSE</strong></p>
+
+<p> </p>
+
+<p>Activating SC in WSE is really easy, it is just a flag in the policy
+configuration. All the policies for the turn-key scenarios support two
+attributes, &ldquo;establishSecurityContext&rdquo; to turn on the SC feature and
+renewExpiredSecurityContext to automatically renew the SCT when it
+expires (This attribute is helpful when storing the original token in
+the client is not a feasible solution).</p>
+
+<p> </p>
+
+<p>The sample below shows how to activate SC for a &ldquo;MutualCertificate&rdquo;
+turn-key scenario:</p>
+
+<p> </p>
+
+<p>&lt;mutualCertificate10Security <strong>establishSecurityContext=&ldquo;true&rdquo;</strong>
+<strong>renewExpiredSecurityContext=&ldquo;true&rdquo;</strong>></p>
+
+<p>  &lt;serviceToken></p>
+
+<p>    &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
+findValue=&ldquo;CN=WSE2QuickStartServer&rdquo;
+findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
+
+<p>  &lt;/serviceToken></p>
+
+<p>  &lt;protection></p>
+
+<p>    &lt;request signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>    &lt;response signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>    &lt;fault signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo; /></p>
+
+<p>  &lt;/protection></p>
+
+<p>&lt;/mutualCertificate10Security></p>
+
+<p> </p>
+
+<p>WSE supports two modes to mantain the state of the original security
+token for a particular session.</p>
+
+<ul>
+<li>Cookie mode, where the state is stored in a temporary cookie. This
+mode was designed to support web farm scenarios.</li>
+<li>In-Memory cache in the STS</li>
+</ul>
+
+
+<p> </p>
+
+<p>&lt;microsoft.web.services3></p>
+
+<p>  &lt;tokenIssuer></p>
+
+<p>    &lt;statefulSecurityContextToken enabled=&ldquo;false&rdquo; /></p>
+
+<p>  &lt;/tokenIssuer></p>
+
+<p>&lt;/microsoft.web.services3></p>
+
+<p> </p>
+
+<p>The default value for this setting is &ldquo;true&rdquo;, which enables the Cookie
+mode. The state for a kerberos token can not be maintained in a cookie
+and therefore it is the only turn-key scenario that doesn&rsquo;t support
+stateful SCT.</p>
+
+<p> </p>
+
+<p>The code below shows how to reuse a SCT from a client application.</p>
+
+<p> </p>
+
+<p>HelloWorldServiceWse serviceProxy = new HelloWorldServiceWse();</p>
+
+<p>UsernameToken usernameToken = new UsernameToken(&ldquo;user&rdquo;, &ldquo;password&rdquo;);</p>
+
+<p>serviceProxy.SetClientCredential(usernameToken);</p>
+
+<p>serviceProxy.SetPolicy(&ldquo;ClientPolicy&rdquo;);</p>
+
+<p>serviceProxy.HelloWorld();</p>
+
+<p>SecureConversationCorrelationState correlationState =
+serviceProxy.ResponseSoapContext.SessionState.Get&lt;SecureConversationCorrelationState>(&ldquo;&rdquo;);</p>
+
+<p>if (correlationState != null)</p>
+
+<p>{</p>
+
+<p>    SecurityContextToken sct = correlationState.Token as
+SecurityContextToken;</p>
+
+<p>    if (sct != null)</p>
+
+<p>    {</p>
+
+<p>        serviceProxy = new HelloWorldServiceWse();</p>
+
+<p>        serviceProxy.SetClientCredential(sct);</p>
+
+<p>        // Set the ClientPolicy onto the proxy</p>
+
+<p>        serviceProxy.SetPolicy(&ldquo;ClientPolicy&rdquo;);</p>
+
+<p>        serviceProxy.HelloWorld();</p>
+
+<p>        sct.Cancel();</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>   </p>
+
+<p><strong>Secure conversation in WCF</strong></p>
+
+<p> </p>
+
+<hr />
+
+<p>WCF turn on SC by default for all binding that support WS-Security
+(WsHttpBinding, NetTcpBinding, netMsmqBinding).</p>
+
+<p>The Custom binding also offers the possibility to enable SC depending on
+the value of the attribute &ldquo;authenticationMode&rdquo; (The value for this
+attribute must be &#8221;SecureConversation&#8221;). In addition, you can configure
+a binding that will be used to establish a communication with the STS by
+means of the element &ldquo;secureConversationBootstrap&rdquo;.</p>
+
+<p>WCF is completely different from WSE since it hides the SCT from the
+client application and automatically maintains a copy of this
+token at channel level (A channel is related to a contract). That is, it
+will reuse the SCT as long as the client application uses the same
+instance of the client channel.</p>
+
+<p>When the channel is closed in a normal fashion, a message is sent to the
+service to release the SCT.  If the channel closes abruptly, the SCT
+will eventually be released on the service after after a period of
+in-actively.</p>
+
+<p> </p>
+
+<p>The configuration below shows two equivalent bindings that use the SC
+feature:</p>
+
+<p> </p>
+
+<p>&lt;bindings></p>
+
+<p>  &lt;wsHttpBinding></p>
+
+<p>    &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>      &lt;security mode=&ldquo;Message&rdquo;></p>
+
+<p>        &lt;message clientCredentialType=&ldquo;Certificate&rdquo;
+establishSecurityContext=&ldquo;true&rdquo;/></p>
+
+<p>      &lt;/security></p>
+
+<p>    &lt;/binding></p>
+
+<p>  &lt;/wsHttpBinding></p>
+
+<p>  &lt;customBinding></p>
+
+<p>    &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>      &lt;security authenticationMode=&ldquo;SecureConversation&rdquo;</p>
+
+<p>            requireSecurityContextCancellation =&ldquo;false&rdquo;></p>
+
+<p>         &lt;secureConversationBootstrap
+authenticationMode=&ldquo;MutualCertificate&rdquo;></p>
+
+<p>         &lt;/secureConversationBootstrap></p>
+
+<p>      &lt;/security></p>
+
+<p>      &lt;httpTransport/></p>
+
+<p>    &lt;/binding></p>
+
+<p>   &lt;/customBinding></p>
+
+<p>&lt;/bindings></p>
+
+<p> </p>
+
+<hr />
+
+<hr />
+
+<p>The &ldquo;requireSecurityContextCancellation&rdquo; attribute specifies if the
+client application must send a &ldquo;shutdown&rdquo; message to the service after
+closing the client channel.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/02/14/438210/">Jason Hogg Is Blogging</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-02-14T00:00:00-03:00" pubdate data-updated="true">Feb 14<span>th</span>, 2006</time>
+        
+         | <a href="/blog/2006/02/14/438210/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Jason Hogg is blogging, what good news. I have been working with Jason
+for almost two years on different projects (Shadowfax, some applications
+blocks, and other projects for web services). \
+Jason is program manager on the Patterns &amp; Practices team, a smart guy
+and guru on web services. \
+He has been writing excellent articles about WSE, SAML and his work on
+Microsoft.  Check out his blog at
+<a href="http://blogs.msdn.com/thehoggblog/">http://blogs.msdn.com/thehoggblog/</a>\</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/02/13/438103/">WS-Compression for WSE 3</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-02-13T00:00:00-03:00" pubdate data-updated="true">Feb 13<span>th</span>, 2006</time>
+        
+         | <a href="/blog/2006/02/13/438103/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><a href="http://weblogs.shockbyte.com.ar/rodolfof">Roldolfo Finochietti</a> has
+written a nice implementation of WS-Compression for WSE 3.0. \
+You can download
+it <a href="http://weblogs.shockbyte.com.ar/rodolfof/archive/2006/02/07/4585.aspx">here</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/02/06/437501/">Proxy Factory</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-02-06T00:00:00-03:00" pubdate data-updated="true">Feb 6<span>th</span>, 2006</time>
+        
+         | <a href="/blog/2006/02/06/437501/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Last week, Sergio, a friend of mine asked me the following question
+about WCF &ldquo;Hey Pablo, do you know how WCF does to create a channel with
+a specific interface on the fly ?&rdquo;.</p>
+
+<p>He was talking about this piece of code:</p>
+
+<p>\</p>
+
+<p>ChannelFactory&lt;IMyService> factory = new
+ChannelFactory&lt;IMyService>();</p>
+
+<p>IMyService myService = factory.CreateChannel();</p>
+
+<p>\</p>
+
+<p>My answer at that moment was &ldquo;Nice question but I don&rsquo;t have idea, let
+me take a look&rdquo;.</p>
+
+<p>That trigger my curiosity so I decided to find out the way to do
+something similar. After all, that could be useful in some scenarios
+where a Service interface is required (A way to separate the service
+interface from the service implementation).</p>
+
+<p>After some investigation, I could reproduce something similar although I
+am not sure if this code is the same code as WCF.</p>
+
+<p>\</p>
+
+<p>As first step, I used some code provided by Cristofer Gonzales to build
+a template for a proxy. The code for that class looks as follows:</p>
+
+<p>\</p>
+
+<p>public class MyProxy&lt;T> : System.Runtime.Remoting.Proxies.RealProxy
+where T : class</p>
+
+<p>{</p>
+
+<p>  public MyProxy() : base(typeof(T))</p>
+
+<p>  {</p>
+
+<p>  }</p>
+
+<p>  public new T GetTransparentProxy()</p>
+
+<p>  {</p>
+
+<p>    return (T)base.GetTransparentProxy();</p>
+
+<p>  }</p>
+
+<p>  public override System.Runtime.Remoting.Messaging.IMessage
+Invoke(System.Runtime.Remoting.Messaging.IMessage imsg)</p>
+
+<p>  {  </p>
+
+<p>    Console.WriteLine(&ldquo;Invoking the transparent Proxy &hellip;&rdquo;);</p>
+
+<p>    ReturnMessage retmsg = null;</p>
+
+<p>   </p>
+
+<p>    int result = 0;</p>
+
+<p>    if (imsg is IMethodCallMessage)</p>
+
+<p>    {</p>
+
+<p>      IMethodCallMessage call = imsg as IMethodCallMessage;</p>
+
+<p>      Console.WriteLine(&ldquo;Calling to the method:&rdquo;);</p>
+
+<p>      Console.WriteLine(&ldquo;\Name: {0}&rdquo;, call.MethodName);</p>
+
+<p>    }</p>
+
+<p>    else if (imsg is IMethodReturnMessage)</p>
+
+<p>    {</p>
+
+<p>      Console.WriteLine(&ldquo;Returning &hellip;&rdquo;);</p>
+
+<p>      retmsg = new ReturnMessage(null, null, 0, null,
+(IMethodCallMessage)imsg);</p>
+
+<p>    </p>
+
+<p>      return retmsg;</p>
+
+<p>    }</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p>\</p>
+
+<p>This proxy class will contain the same methods as the class specified as
+T and will intercept all the calls to those methods (Using a Transparent
+proxy).</p>
+
+<p>\</p>
+
+<p>Secondly, I defined a factory for the proxies. This class pretend to be
+equivalent to the class FactoryChannel in WCF.</p>
+
+<p>\</p>
+
+<p>class Factory&lt;T></p>
+
+<p>{</p>
+
+<p>  public Factory()</p>
+
+<p>  {</p>
+
+<p>  }</p>
+
+<p>  public T Create()</p>
+
+<p>  {</p>
+
+<p>    MyProxy&lt;IMyService> proxy = new MyProxy&lt;IMyService>();</p>
+
+<p>    return (T)proxy.GetTransparentProxy();</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p>\</p>
+
+<p>Finally, I created some classes to test the factory and proxy classes.</p>
+
+<p>public interface IMyService</p>
+
+<p>{</p>
+
+<p>  void HelloWorld(string message);</p>
+
+<p>}</p>
+
+<p>class Program</p>
+
+<p>{</p>
+
+<p>  static void Main(string[] args)</p>
+
+<p>  {</p>
+
+<p>    Factory&lt;IMyService> factory = new Factory&lt;IMyService>();</p>
+
+<p>    IMyService service = factory.Create();</p>
+
+<p>    service.HelloWorld(&ldquo;Cibrax&rdquo;);</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p>\</p>
+
+<p>This is really cool, isn&rsquo;t it ?.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/02/02/437180/">Implementing a WS-Federation Scenario With WSE</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-02-02T00:00:00-03:00" pubdate data-updated="true">Feb 2<span>nd</span>, 2006</time>
+        
+         | <a href="/blog/2006/02/02/437180/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Federation is key concept that allows to enable collaboration across
+multiple security or trust realms.\
+There are many resources on Internet about this topic so I won&rsquo;t enter
+in details during this post.\
+The solution that I will give is based on the second extension of this
+pattern:</p>
+
+<p>\</p>
+
+<p><a href="http://msdn.microsoft.com/practices/default.aspx?pull=/library/en-us/dnpag2/html/wss_ch1_brokauthsts.asp">http://msdn.microsoft.com/practices/default.aspx?pull=/library/en-us/dnpag2/html/wss_ch1_brokauthsts.asp</a></p>
+
+<p>\</p>
+
+<p>By the way, this is one of the security patterns published by the
+Pattern and Practices team in Microsoft.\
+This a good starting point if you want to be familiar with different and
+useful patterns for web services.</p>
+
+<p>\</p>
+
+<p><strong>Sample scenario</strong>\
+\
+Imagine the following scenario:</p>
+
+<p>\</p>
+
+<p>Fabrikam has exposed some services to make on line operations, such as
+purchase goods, make orders and others.\
+These services can be used only by customers so the access to them is
+restricted.\
+Contoso is one of Fabrikam&rsquo;s customers and it has developed an internal
+desktop application to consume some of these services.\
+As you can see, this is a typical scenario for Federation where we have
+both companies in different security domains or realms but they trust
+each other.</p>
+
+<p>\</p>
+
+<p>The services exposed by Fabrikam authenticate the users by means of X509
+certificates, so one certificate is used for the client(Contoso) and
+another for the service(Fabrikam).\
+Contoso has deployed the desktop application in almost 100 machines and
+therefore installing both certificates in each one is not a practical
+solution in this case.</p>
+
+<p>\</p>
+
+<p>\
+<img src="/images/legacy/Federation/Problem.gif" alt="" /></p>
+
+<p>\</p>
+
+<p>The Brokered Authentication pattern by means of security token services
+meets really well the requirements for this solution.\</p>
+
+<p><img src="/images/legacy/Federation/Solution.gif" alt="" /></p>
+
+<p>\</p>
+
+<p>The arrows in this figure only show the work flow path and not the real
+path of the interchanged messages (Pair of request and response
+messages).</p>
+
+<p>\</p>
+
+<p>​1. Contoso deploys a STS with both certificates and the desktop
+application can ask for a SAML token to this service using a
+UsernameToken, a Kerberos token, or other kind of client credential.\
+2. The STS in the Fabrikam&rsquo;s domain only accepts SAML tokens signed by a
+well-know Authority (The Contoso&rsquo;s STS in this case) and creates an
+equivalent SAML token signed by him.\
+3. The Fabrikam&rsquo;s services only accept SAML tokens signed by Fabrikam&rsquo;s
+STS.</p>
+
+<p>\</p>
+
+<p>With this solution, Fabrikam can start to accept request from
+other customers and the services will not notice the difference.\
+In addition, if the communication between the STS and the services in
+Fabrikam is protected by means of a Kerberos token instead of a SAML
+token, the\
+X509 certificates must be only deployed in the servers where both STS
+run.</p>
+
+<p>\</p>
+
+<hr />
+
+<p><strong>Implementation</strong></p>
+
+<p>\
+In order to implement this sample scenario, I used the SAML
+implementation for WSE. You can download the code for this project in
+the <a href="http://practices.gotdotnet.com/projects/saml">GDN workspace</a>.\
+The image above illustrates the turn-key scenario used to secure the
+communication between the different participants in the architecture.</p>
+
+<p>\</p>
+
+<p><img src="/images/legacy/Federation/Turnkey.gif" alt="" />\</p>
+
+<p>​1. WSE Policy file in the client application</p>
+
+<p>&lt;policies xmlns=&ldquo;<a href="http://schemas.microsoft.com/wse/2005/06/policy">http://schemas.microsoft.com/wse/2005/06/policy</a>&rdquo;></p>
+
+<p>  &lt;extensions></p>
+
+<p>    &lt;extension name=&ldquo;saml&rdquo;
+type=&ldquo;Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion.SamlPolicyAssertion,
+Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion&rdquo;/></p>
+
+<p>  &lt;/extensions></p>
+
+<p>\</p>
+
+<p>  &lt;policy name=&ldquo;PurchaseGoods&rdquo;></p>
+
+<p>    &lt;saml issuer=&ldquo;<a href="http://localhost/FabrikamSTS/SamlTokenIssuer.ashx">http://localhost/FabrikamSTS/SamlTokenIssuer.ashx</a>&rdquo;
+issuerPolicy=&ldquo;FabrikamSTS&rdquo; establishSecurityContext=&ldquo;true&rdquo;
+renewExpiredSecurityContext=&ldquo;true&rdquo; requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>      &lt;protection></p>
+
+<p>        &lt;request signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;response signatureOptions=&ldquo;IncludeAddressing,
+IncludeTimestamp, IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;fault signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo; /></p>
+
+<p>      &lt;/protection></p>
+
+<p>    &lt;/saml></p>
+
+<p>  &lt;/policy></p>
+
+<p>  &lt;policy name=&ldquo;FabrikamSTS&rdquo;></p>
+
+<p>    &lt;saml issuer=&ldquo;<a href="http://localhost/ContosoSTS/SamlTokenIssuer.ashx">http://localhost/ContosoSTS/SamlTokenIssuer.ashx</a>&rdquo;
+issuerPolicy=&ldquo;ContosoSTS&rdquo; establishSecurityContext=&ldquo;false&rdquo;
+renewExpiredSecurityContext=&ldquo;false&rdquo; requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>      &lt;protection></p>
+
+<p>        &lt;request signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;response signatureOptions=&ldquo;IncludeAddressing,
+IncludeTimestamp, IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;fault signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo; /></p>
+
+<p>      &lt;/protection></p>
+
+<p>    &lt;/saml></p>
+
+<p>  &lt;/policy></p>
+
+<p>  &lt;policy name=&ldquo;ContosoSTS&rdquo;></p>
+
+<p>    &lt;usernameForCertificateSecurity establishSecurityContext=&ldquo;true&rdquo;
+renewExpiredSecurityContext=&ldquo;true&rdquo; requireSignatureConfirmation=&ldquo;false&rdquo;
+messageProtectionOrder=&ldquo;SignBeforeEncryptAndEncryptSignature&rdquo;
+requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>      &lt;serviceToken></p>
+
+<p>        &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
+findValue=&ldquo;CN=ContosoSTS&rdquo; findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
+
+<p>      &lt;/serviceToken></p>
+
+<p>      &lt;protection></p>
+
+<p>        &lt;request signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo;
+/></p>
+
+<p>        &lt;response signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo;
+/></p>
+
+<p>        &lt;fault signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo;
+/></p>
+
+<p>      &lt;/protection></p>
+
+<p>    &lt;/usernameForCertificateSecurity></p>
+
+<p>  &lt;/policy></p>
+
+<p>&lt;/policies></p>
+
+<p>\</p>
+
+<p>The policy definition above contains three policies:</p>
+
+<p>\</p>
+
+<p>​1. PurchaseGoods: This policy is used to secure the communication
+between the client and the Fabrikam&rsquo;s service (PurchaseGoods service).
+As you can see, this service requires a SAML token created by the
+Fabrikam&rsquo;s STS. The address for that STS is specified in the attribute
+&ldquo;issuer&rdquo;.</p>
+
+<p>​2. FabrikamSTS: This policy is used to secure the communication between
+the client and the STS in the Fabrikam realm. The Fabrikam&rsquo;s STS
+requires a SAML token from Contoso </p>
+
+<p>​3. ContosoSTS: This policy is used to secure the communication between
+the client and the STS in the Contoso realm. In this case, to make the
+things simpler, I decided to use a UsernameForCertificate turn-key
+scenario although any of the available turn-key scenarios can be used
+here.</p>
+
+<p>\</p>
+
+<p>​2. WSE Policy file in the Contoso&rsquo;s STS</p>
+
+<p>\</p>
+
+<p>&lt;policies xmlns=&ldquo;<a href="http://schemas.microsoft.com/wse/2005/06/policy">http://schemas.microsoft.com/wse/2005/06/policy</a>&rdquo;></p>
+
+<p>  &lt;policy name=&ldquo;ContosoSTS&rdquo;></p>
+
+<p>    &lt;usernameForCertificateSecurity establishSecurityContext=&ldquo;true&rdquo;
+renewExpiredSecurityContext=&ldquo;true&rdquo;
+requireSignatureConfirmation=&ldquo;false&#8221;  
+messageProtectionOrder=&#8221;SignBeforeEncryptAndEncryptSignature&rdquo;
+requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>      &lt;serviceToken></p>
+
+<p>        &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
+findValue=&ldquo;CN=ContosoSTS&rdquo; findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
+
+<p>      &lt;/serviceToken></p>
+
+<p>      &lt;protection></p>
+
+<p>        &lt;request signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo;
+/></p>
+
+<p>        &lt;response signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo;
+/></p>
+
+<p>        &lt;fault signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo;
+/></p>
+
+<p>      &lt;/protection></p>
+
+<p>    &lt;/usernameForCertificateSecurity></p>
+
+<p>  &lt;/policy></p>
+
+<p>&lt;/policies></p>
+
+<p>\</p>
+
+<p>​3. SAML configuration for the Contoso&rsquo;s STS</p>
+
+<p>\</p>
+
+<p>&lt;WseSaml></p>
+
+<p>  &lt;samlTokenIssuer allowCachingToken=&ldquo;true&rdquo; ttlInSeconds=&ldquo;300&rdquo;></p>
+
+<p>  &lt;!&mdash; the config for the saml token issuer, this is the only config we
+use. This token is used to sign the SAML token &mdash;></p>
+
+<p>    &lt;serviceTokens></p>
+
+<p>      &lt;!&mdash; SAML Authority certificate &mdash;></p>
+
+<p>      &lt;add
+uri=&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue/SAML">http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue/SAML</a>&rdquo;
+storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo; findValue=&ldquo;CN=ContosoSTS&rdquo;
+findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
+
+<p>      &lt;!&mdash; Fabrikam STS &mdash;></p>
+
+<p>      &lt;add uri=&ldquo;<a href="http://localhost/FabrikamSTS/SamlTokenIssuer.ashx">http://localhost/FabrikamSTS/SamlTokenIssuer.ashx</a>&rdquo;
+storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo; findValue=&ldquo;CN=FabrikamSTS&rdquo;
+findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
+
+<p>    &lt;/serviceTokens></p>
+
+<p>    &lt;policy name=&ldquo;ContosoSTS&rdquo;></p>
+
+<p>    &lt;/policy></p>
+
+<p>  &lt;/samlTokenIssuer></p>
+
+<p>&lt;/WseSaml></p>
+
+<p>\</p>
+
+<p>A quick description of the configuration above:</p>
+
+<p>\</p>
+
+<p>​a. allowCachingToken attribute: This attribute specifies whether the
+SAML token can be stored in a cache or not. Depending on this attribute,
+the STS will add or not a DoNotCacheCondition to the SAML token.</p>
+
+<p>​b. ttlInSeconds attribute: Lifetime in seconds for the SAML token</p>
+
+<p>​c. serviceTokens element: It specifies the location for the different
+X509 certificates required by the STS. The &ldquo;SAML authority certificate&rdquo;
+is used to sign the SAML token. (This signature is really important
+since the target service can trust or not in the SAML token depending on
+the certificate used to create it). The &ldquo;Fabrikam STS certificate&rdquo; is
+used to encrypt some sections in the SAML token, and thefore only the
+Fabrikam STS can decrypt those sections and use the token. In other
+words, it defines the X509 certificate for the target service.</p>
+
+<p>​d. policy element: The WSE policy used to secure the communication
+between the clients and the STS.</p>
+
+<p>\</p>
+
+<p>​4. WSE policy file in the Fabrikam&rsquo;s STS</p>
+
+<p>\</p>
+
+<p>&lt;policies></p>
+
+<p>  &lt;extensions></p>
+
+<p>    &lt;extension name=&ldquo;saml&rdquo;
+type=&ldquo;Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion.SamlPolicyAssertion,
+Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion&rdquo;/></p>
+
+<p>  &lt;/extensions></p>
+
+<p>  &lt;policy name=&ldquo;FabrikamSTS&rdquo;></p>
+
+<p>    &lt;saml issuer=&ldquo;<a href="http://localhost/ContosoSTS/SamlTokenIssuer.ashx">http://localhost/ContosoSTS/SamlTokenIssuer.ashx</a>&rdquo;
+issuerPolicy=&ldquo;issuerPolicy&rdquo; establishSecurityContext=&ldquo;false&rdquo;
+renewExpiredSecurityContext=&ldquo;false&rdquo; requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>      &lt;trustedTokenIssuers></p>
+
+<p>        &lt;add></p>
+
+<p>          &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
+findValue=&ldquo;CN=ContosoSTS&rdquo; findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
+
+<p>        &lt;/add></p>
+
+<p>      &lt;/trustedTokenIssuers></p>
+
+<p>      &lt;protection></p>
+
+<p>        &lt;request signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;response signatureOptions=&ldquo;IncludeAddressing,
+IncludeTimestamp, IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;fault signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo; /></p>
+
+<p>      &lt;/protection></p>
+
+<p>    &lt;/saml></p>
+
+<p>  &lt;/policy></p>
+
+<p>&lt;/policies></p>
+
+<p>\</p>
+
+<p>This STS only accepts SAML tokens created by the Contoso&rsquo;s STS
+(trustedTokenIssuers element in the policy definition). In other words,
+it only accepts SAML tokens signed by any of the issuers specified in
+the &ldquo;trustedTokenIssuers&rdquo; element.</p>
+
+<p>\</p>
+
+<p>​5. SAML configuration for the Fabrikam&rsquo;s STS</p>
+
+<p>\</p>
+
+<p>&lt;WseSaml></p>
+
+<p>  &lt;samlTokenIssuer allowCachingToken=&ldquo;true&rdquo; ttlInSeconds=&ldquo;300&rdquo; ></p>
+
+<p>  &lt;!&mdash; the config for the saml token issuer, this is the only config we
+use. This token is used to sign the SAML token &mdash;></p>
+
+<p>  &lt;serviceTokens></p>
+
+<p>    &lt;!&mdash; SAML Authority certificate. Certificate used to sign the token
+&mdash;></p>
+
+<p>    &lt;add
+uri=&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue/SAML">http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue/SAML</a>&rdquo;</p>
+
+<p>storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo; findValue=&ldquo;CN=FabrikamSTS&rdquo;
+findType=&ldquo;FindBySubjectDistinguishedName&rdquo;/></p>
+
+<p>    &lt;!&mdash; Fabrikam service. Certificate used to encrypt the token
+subject &mdash;></p>
+
+<p>    &lt;add uri=&ldquo;<a href="http://localhost/FabrikamServices/PurchaseGoods.asmx">http://localhost/FabrikamServices/PurchaseGoods.asmx</a>&rdquo;</p>
+
+<p>storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
+findValue=&ldquo;CN=FabrikamServices&rdquo;
+findType=&ldquo;FindBySubjectDistinguishedName&rdquo;/></p>
+
+<p>  &lt;/serviceTokens></p>
+
+<p>  &lt;policy name=&ldquo;FabrikamSTS&rdquo;>&lt;/policy></p>
+
+<p>  &lt;/samlTokenIssuer></p>
+
+<p>&lt;/WseSaml></p>
+
+<p>\</p>
+
+<p>As you can see, this configuration is similar to the configuration in
+the Contoso STS. The only difference is the configuration for the
+service tokens.</p>
+
+<p>\</p>
+
+<p>​6. WSE policy file in the Fabrikam&rsquo;s service</p>
+
+<p>\</p>
+
+<p>&lt;policies></p>
+
+<p>  &lt;extensions></p>
+
+<p>    &lt;extension name=&ldquo;saml&rdquo;
+type=&ldquo;Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion.SamlPolicyAssertion,
+Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion&rdquo;/></p>
+
+<p>  &lt;/extensions></p>
+
+<p>  &lt;policy name=&ldquo;FabrikamServices&rdquo;></p>
+
+<p>    &lt;saml issuer=&ldquo;<a href="http://localhost/FabrikamSTS/SamlTokenIssuer.ashx">http://localhost/FabrikamSTS/SamlTokenIssuer.ashx</a>&rdquo;
+issuerPolicy=&ldquo;issuerPolicy&rdquo; establishSecurityContext=&ldquo;true&rdquo;
+renewExpiredSecurityContext=&ldquo;true&rdquo; requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>      &lt;trustedTokenIssuers></p>
+
+<p>        &lt;add></p>
+
+<p>          &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
+findValue=&ldquo;CN=FabrikamSTS&rdquo; findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
+
+<p>        &lt;/add></p>
+
+<p>      &lt;/trustedTokenIssuers></p>
+
+<p>      &lt;protection></p>
+
+<p>        &lt;request signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;response signatureOptions=&ldquo;IncludeAddressing,
+IncludeTimestamp, IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;fault signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo; /></p>
+
+<p>      &lt;/protection></p>
+
+<p>    &lt;/saml></p>
+
+<p>   &lt;/policy></p>
+
+<p>&lt;/policies></p>
+
+<p>\</p>
+
+<p>Again, it is similar to the policy in the Fabrikam&rsquo;s STS but the
+configuration for the &#8221;trustedTokenIssuers&#8221; element changes.</p>
+
+<p>\</p>
+
+<p>Send me an email if are interested in the source code of this sample. </p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/01/31/436973/">Routing Messages by Means of the Body Element in WCF</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-01-31T00:00:00-03:00" pubdate data-updated="true">Jan 31<span>st</span>, 2006</time>
+        
+         | <a href="/blog/2006/01/31/436973/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>This post describes how to implement a behavior to route messages by
+means of the body element in the soap envelope.</p>
+
+<p>Routing messages in this way is useful in some scenarios where
+the action is not available in the addressing headers or the SoapAction
+http header.</p>
+
+<p>The WCF SDK contains a sample that shows how to do something like that
+but I don&rsquo;t like it very much since it depends on the service contract.
+ </p>
+
+<p>In that sample, the service itself is responsible to dispatch the
+message to the right method.</p>
+
+<p>\</p>
+
+<p>[ServiceContract(Namespace = &ldquo;<a href="http://Microsoft.ServiceModel.Samples">http://Microsoft.ServiceModel.Samples</a>&rdquo;),
+XmlSerializerFormat]</p>
+
+<p>public interface IUntypedCalculator</p>
+
+<p>{</p>
+
+<p>   [OperationContract(Action=&ldquo;*&rdquo;)]</p>
+
+<p>   Message Calculate(Message request);</p>
+
+<p>}</p>
+
+<p>\</p>
+
+<p>That operation accepts any message and dispatch according to the body
+element in that message.</p>
+
+<p>This implementation is mainly based on the interface
+&ldquo;IDispathOperationSelector&rdquo;. This interface allows you to optionally
+inspect the message and return the name for the operation that will be
+executed.</p>
+
+<p>It contains the following methods:</p>
+
+<p>\</p>
+
+<p>public interface IDispatchOperationSelector</p>
+
+<p>{</p>
+
+<p>  string SelectOperation(ref Message message);</p>
+
+<p>}</p>
+
+<p>\</p>
+
+<p>You can specify the name for the operation in the contract definition.  </p>
+
+<p>\</p>
+
+<p>[ServiceContract()]</p>
+
+<p>interface IHelloWorld</p>
+
+<p>{</p>
+
+<p>  [OperationContract(Name=&ldquo;helloWorld&rdquo;), XmlSerializerFormat()]</p>
+
+<p>  HelloWorldResponseMessage HelloWorld(HelloWorldRequestMessage
+message);</p>
+
+<p>}</p>
+
+<p>\</p>
+
+<p>In the sample above, the operation name is &ldquo;helloWorld&rdquo;. If you don&rsquo;t
+specify the Name parameter for the OperationContract attribute, it takes
+the method name as default name (&ldquo;HelloWorld&rdquo;).</p>
+
+<p>\</p>
+
+<p>The IServiceBehavior implementation provides an opportunity to set the
+operation selector in the service processing pipeline. The easiest way
+to add a behavior to service is via code as shown below. The service can
+have more than one endpoint. This example sets the
+IDispatchOperationSelector on all those endpoints.</p>
+
+<p>\</p>
+
+<p>/// &lt;summary></p>
+
+<p>/// Sets this class as operation selector for all dispatch behaviors in
+the service</p>
+
+<p>/// &lt;/summary></p>
+
+<p>public void ApplyBehavior(ServiceDescription description,
+ServiceHostBase serviceHostBase,
+System.Collections.ObjectModel.Collection&lt;DispatchBehavior> behaviors,
+System.Collections.ObjectModel.Collection&lt;BindingParameterCollection>
+parameters)</p>
+
+<p>{</p>
+
+<p>  foreach (DispatchBehavior dispatchBehavior in behaviors)</p>
+
+<p>    dispatchBehavior.OperationSelector = this;</p>
+
+<p>}</p>
+
+<p>\</p>
+
+<p><strong>Complete code</strong></p>
+
+<p>\</p>
+
+<hr />
+
+<p>+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+| <strong>HelloWorld.cs</strong>                                                        |
+|                                                                          |
+| \                                                                        |
+|                                                                          |
+| ****                                                                     |
+|                                                                          |
+| using System;                                                            |
+|                                                                          |
+| using System.Collections.Generic;                                        |
+|                                                                          |
+| using System.Text;                                                       |
+|                                                                          |
+| using System.Xml.Serialization;                                          |
+|                                                                          |
+| using System.Runtime.Serialization;                                      |
+|                                                                          |
+| using System.ServiceModel;                                               |
+|                                                                          |
+| \                                                                        |
+| namespace Service                                                        |
+|                                                                          |
+| {                                                                        |
+|                                                                          |
+|   [XmlRoot(ElementName=&ldquo;helloWorld&rdquo;)]                                    |
+|                                                                          |
+|   public class HelloWorldRequest                                         |
+|                                                                          |
+|   {                                                                      |
+|                                                                          |
+|     [XmlElement(&ldquo;value&rdquo;)]                                                |
+|                                                                          |
+|     public string Value;                                                 |
+|                                                                          |
+|   }                                                                      |
+|                                                                          |
+| \                                                                        |
+|   [XmlRoot(ElementName = &ldquo;helloWorldResponse&rdquo;)]                          |
+|                                                                          |
+|   public class HelloWorldResponse                                        |
+|                                                                          |
+|   {                                                                      |
+|                                                                          |
+|     [XmlElement(&ldquo;value&rdquo;)]                                                |
+|                                                                          |
+|     public string Value;                                                 |
+|                                                                          |
+|   }                                                                      |
+|                                                                          |
+| \                                                                        |
+|   [MessageContract()]                                                    |
+|                                                                          |
+|   public class HelloWorldRequestMessage                                  |
+|                                                                          |
+|   {                                                                      |
+|                                                                          |
+|     [MessageBody(Name=&ldquo;helloWorld&rdquo;)]                                     |
+|                                                                          |
+|     public HelloWorldRequest request;                                    |
+|                                                                          |
+|   }                                                                      |
+|                                                                          |
+| \                                                                        |
+|   [MessageContract()]                                                    |
+|                                                                          |
+|   public class HelloWorldResponseMessage                                 |
+|                                                                          |
+|   {                                                                      |
+|                                                                          |
+|     [MessageBody(Name=&ldquo;helloWorldResponse&rdquo;)]                             |
+|                                                                          |
+|     public HelloWorldResponse response;                                  |
+|                                                                          |
+|   }                                                                      |
+|                                                                          |
+| \                                                                        |
+|   [ServiceContract()]                                                    |
+|                                                                          |
+|   interface IHelloWorld                                                  |
+|                                                                          |
+|   {                                                                      |
+|                                                                          |
+|     [OperationContract(Name=&ldquo;helloWorld&rdquo;), XmlSerializerFormat()]        |
+|                                                                          |
+|     HelloWorldResponseMessage HelloWorld(HelloWorldRequestMessage        |
+| message);                                                                |
+|                                                                          |
+|   }                                                                      |
+|                                                                          |
+| \                                                                        |
+|   [RouteByBodyElementBehavior()]                                         |
+|                                                                          |
+|   class HelloWorldService : IHelloWorld                                  |
+|                                                                          |
+|   {                                                                      |
+|                                                                          |
+|     #region IHelloWorld Members                                         |
+|                                                                          |
+|                                                                          |
+|                                                                          |
+|     public HelloWorldResponseMessage HelloWorld(HelloWorldRequestMessage |
+| message)                                                                 |
+|                                                                          |
+|     {                                                                    |
+|                                                                          |
+|       HelloWorldResponse response = new HelloWorldResponse();            |
+|                                                                          |
+|       response.Value = &ldquo;Hello World &rdquo; + message.request.Value;           |
+|                                                                          |
+|                                                                          |
+|                                                                          |
+|       HelloWorldResponseMessage responseMessage = new                    |
+| HelloWorldResponseMessage();                                             |
+|                                                                          |
+|       responseMessage.response = response;                               |
+|                                                                          |
+|       return responseMessage;                                            |
+|                                                                          |
+|    }                                                                     |
+|                                                                          |
+|    #endregion                                                           |
+|                                                                          |
+|   }                                                                      |
+|                                                                          |
+| }                                                                        |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+</p>
+
+<p>\</p>
+
+<p>+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+| <strong>RouteByBodyElementBehavior.cs</strong>                                        |
+|                                                                          |
+| \                                                                        |
+|                                                                          |
+| ****                                                                     |
+|                                                                          |
+| using System;                                                            |
+|                                                                          |
+| using System.Collections.Generic;                                        |
+|                                                                          |
+| using System.Text;                                                       |
+|                                                                          |
+| using System.Xml;                                                        |
+|                                                                          |
+| using System.Reflection;                                                 |
+|                                                                          |
+| using System.IO;                                                         |
+|                                                                          |
+| using System.ServiceModel;                                               |
+|                                                                          |
+| \                                                                        |
+| namespace Service                                                        |
+|                                                                          |
+| {                                                                        |
+|                                                                          |
+|   /// &lt;summary>                                                        |
+|                                                                          |
+|   /// This behavior routes messages by means of the body element         |
+|                                                                          |
+|   /// &lt;/summary>                                                       |
+|                                                                          |
+|   [AttributeUsage(AttributeTargets.Class, AllowMultiple=false)]          |
+|                                                                          |
+|   class RouteByBodyElementBehavior : Attribute, IServiceBehavior,        |
+| IDispatchOperationSelector                                               |
+|                                                                          |
+|   {                                                                      |
+|                                                                          |
+|     #region IDispatchOperationSelector Members                          |
+|                                                                          |
+|     /// &lt;summary>                                                      |
+|                                                                          |
+|     /// Selects the operation according to first element in the body     |
+| element                                                                  |
+|                                                                          |
+|     /// &lt;/summary>                                                     |
+|                                                                          |
+|     /// &lt;param name=&ldquo;message&rdquo;>&lt;/param>                               |
+|                                                                          |
+|     /// &lt;returns>&lt;/returns>                                          |
+|                                                                          |
+|     public string SelectOperation(ref Message message)                   |
+|                                                                          |
+|     {                                                                    |
+|                                                                          |
+|       XmlDocument document = new XmlDocument();                          |
+|                                                                          |
+|       document.Load(message.GetReaderAtBodyContents());                  |
+|                                                                          |
+|                                                                          |
+|                                                                          |
+|       //Get the body element operation                                   |
+|                                                                          |
+|       string bodyElement = document.DocumentElement.LocalName;           |
+|                                                                          |
+|                                                                          |
+|                                                                          |
+|      // Create new message                                               |
+|                                                                          |
+|      XmlNodeReader reader = new XmlNodeReader(document.DocumentElement); |
+|                                                                          |
+|      Message newMsg = Message.CreateMessage(message.Version, null,       |
+| reader);                                                                 |
+|                                                                          |
+| \                                                                        |
+|      // Preserve the headers of the original message                     |
+|                                                                          |
+|      newMsg.Headers.CopyHeadersFrom(message);                            |
+|                                                                          |
+|      foreach (string propertyKey in message.Properties.Keys)             |
+|                                                                          |
+|        newMsg.Properties.Add(propertyKey,                                |
+| message.Properties[propertyKey]);                                        |
+|                                                                          |
+| \                                                                        |
+|      // Close the original message and return new message                |
+|                                                                          |
+|      message.Close();                                                    |
+|                                                                          |
+|      message = newMsg;                                                   |
+|                                                                          |
+| \                                                                        |
+|      return bodyElement;                                                 |
+|                                                                          |
+|    }                                                                     |
+|                                                                          |
+|    #endregion                                                           |
+|                                                                          |
+| \                                                                        |
+|                                                                          |
+|    #region IServiceBehavior Members                                     |
+|                                                                          |
+|    /// &lt;summary>                                                       |
+|                                                                          |
+|    /// Sets this class as operation selector for all dispatch behaviors  |
+| in the service                                                           |
+|                                                                          |
+|    /// &lt;/summary>                                                      |
+|                                                                          |
+|    public void ApplyBehavior(ServiceDescription description,             |
+| ServiceHostBase serviceHostBase,                                         |
+| System.Collections.ObjectModel.Collection&lt;DispatchBehavior>            |
+| behaviors,                                                               |
+| System.Collections.ObjectModel.Collection&lt;BindingParameterCollection>  |
+| parameters)                                                              |
+|                                                                          |
+|    {                                                                     |
+|                                                                          |
+|      foreach (DispatchBehavior dispatchBehavior in behaviors)            |
+|                                                                          |
+|        dispatchBehavior.OperationSelector = this;                        |
+|                                                                          |
+|    }                                                                     |
+|                                                                          |
+|    #endregion                                                           |
+|                                                                          |
+|  }                                                                       |
+|                                                                          |
+| }                                                                        |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/01/24/436334/">WS-Polling Implementation for WSE</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-01-24T00:00:00-03:00" pubdate data-updated="true">Jan 24<span>th</span>, 2006</time>
+        
+         | <a href="/blog/2006/01/24/436334/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I used some of free time last week to write a prototype of
+<a href="http://www.w3.org/Submission/ws-polling/">WS-Polling</a> for WSE 3.0. \
+Unfortunately, I couldn&rsquo;t finish the complete specification but it is
+enough to execute web services asynchronously.\
+If you haven&rsquo;t read anything about WS-Polling before, it is basically a
+specification to execute web services asynchronously and poll to the
+server later in order to get the response.\
+If you take a look to this specification, you probably will able to see
+three main parts:\
+\
+1. A mechanism to execute web services and store the response for later
+retrieval\
+2. Some headers to query information about the status of an execution\
+3. A mailbox implementation\
+\
+For the moment, I only implemented the first part and I&rsquo;m trying to
+finish the second one.\
+\</p>
+
+<h3>Implementation structure</h3>
+
+<p>The diagram below illustrates the classes used by this implementation. \
+\
+<img src="/images/legacy/Classes.gif" alt="" /> \
+\
+I defined a abstract class PollingService that declares a method to get
+messages. This class also uses an IMessageStore provider to store and
+retrieve the request and response messages for the concrete service. \
+The concrete service is a normal service that implements different
+business methods and inherits from the base class PollingService. e.g.
+MyHelloWorldService\
+The IMessageStore is an interface that declares methods to store and
+retrieve messages from an specific store such as Database, MSMQ or a
+file. \
+PollingClient and ConcreteProxy are both proxies to invoke methods in
+the Concrete service, but the last one was created by the tool
+WSEWsdl3.exe and it doesn&rsquo;t know how to invoke the service
+asynchronously.\
+I had to develop a custom PollingClient since the proxy created with
+WSEWsdl3.exe does not offer the following features:\
+\
+1. Access to the WS-Addressing headers. For this implementation, the
+client must change the wsa:ReplyTo header and get access to others
+headers\
+such as wsa:MessageID and wsa:To. \
+2. Make a one-way call. The proxy created by the tool waits for an
+answer from the service in most of the cases.</p>
+
+<h3>How this solution works</h3>
+
+<p><img src="/images/legacy/Sequence.gif" alt="" /></p>
+
+<p>​1. The client application wants to invoke a asynchronous method on the
+webservice so it creates a PollingClient instance and calls to the
+method &ldquo;InvokeService&rdquo;.\
+2. The PollingClient instance sets the value
+&ldquo;<a href="http://www.w3.org/2005/08/ws-polling/HoldResponse">http://www.w3.org/2005/08/ws-polling/HoldResponse</a>&rdquo; for the header
+wsa:ReplyTo and uses the WSE infrastructure to send the request message
+to the server.\
+3. The concrete service receives the request message and checks the
+value for the wsa:ReplyTo header. \
+If this value is &ldquo;<a href="http://www.w3.org/2005/08/ws-polling/HoldResponse">http://www.w3.org/2005/08/ws-polling/HoldResponse</a>&rdquo;, it
+executes the concrete method asynchronously, otherwise it executes the
+concrete method in the usual way.\
+4. If the concrete method was executed asynchronously, the service
+stores the request and response messages by means of the configured
+IStoreProvider. Otherwise, it returns the response message to the
+client.\
+5. The client application can ask later for the response message using
+the GetMessages method on the PollingClient instance. \
+(The GetMessages method will receive the wsa:MessageID for the original
+request message as parameter)</p>
+
+<h3>Some code</h3>
+
+<p>​1. Creating the Concrete service\</p>
+
+<p>[WebService(Namespace = &ldquo;<a href="http://tempuri.org/">http://tempuri.org/</a>&rdquo;)]\
+[WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]\
+[Policy(&ldquo;ServicePolicy&rdquo;)]\
+public class Service : WSEPolling.PollingService\
+{\
+\
+  public Service()\
+  {\
+\
+  }\
+\
+\
+  [SoapMethod(&ldquo;HelloWorld&rdquo;)]\
+  public string HelloWorld(string name)\
+  {\
+    return &ldquo;Hello World &rdquo; + name;\
+  }\
+\
+}\</p>
+
+<p>This class looks like a normal web service but it inherits from the base
+class PollingService.</p>
+
+<p>​2. Creating the client application\</p>
+
+<p>class Program\
+{\
+    static void Main(string[] args)\
+    {\
+      PollingClient client = new PollingClient(new
+Uri(&ldquo;<a href="http://localhost/WSEPollingService/Service.ashx">http://localhost/WSEPollingService/Service.ashx</a>&rdquo;));\
+\
+      client.SetPolicy(&ldquo;ClientPolicy&rdquo;); \
+\
+      string s = &ldquo;Test&rdquo;;\
+\
+      Uri id = client.InvokeService(&ldquo;HelloWorld&rdquo;, s,
+&ldquo;<a href="http://tempuri.org/">http://tempuri.org/</a>&rdquo;);\
+\
+      System.Threading.Thread.Sleep(1000);\
+\
+      WSEPolling.GetMessageRequest request = new
+WSEPolling.GetMessageRequest();\
+      request.MessageID = id.ToString();\
+\
+      //Gets the entire soap envelope\
+      SoapEnvelope response = client.GetMessage(request);\
+\
+      //Gets only the body of the soap envelope\
+      //string message = (string)client.GetMessageBody(request,
+typeof(string), &ldquo;<a href="http://tempuri.org/">http://tempuri.org/</a>&rdquo;);\
+\
+      string message = response.OuterXml;\
+\
+       Console.WriteLine(message);\
+    }\
+}</p>
+
+<p>In the code below, I created a PollingClient instance to invoke the
+&ldquo;HelloWorld&rdquo; service. The InvokeService method returns the wsa:MessageId
+value for the request message, which I keep in the variable &ldquo;id&rdquo;. \
+At the end, I retrieve the response message from the server passing the
+value of the variable &ldquo;id&rdquo; to the GetMessage method.\</p>
+
+<p>​3. The PollingService class</p>
+
+<p>public class PollingService : SoapService\
+{\
+  static IMessageStore _store;\
+\
+  static PollingService()\
+  {\
+    _store = new DatabaseMessageStore();\
+    _store.Init(null);\
+  }\
+\
+  [SoapMethod(WSPolling.Actions.GetMessage)]\
+  public virtual SoapEnvelope GetMessage(GetMessageRequest request)\
+  {\
+    SoapEnvelope envelope = _store.GetResponse(request);\
+\
+    RelatesTo relatesTo = new
+RelatesTo(RequestSoapContext.Current.Addressing.MessageID.Value);\
+    envelope.Context.Addressing.RelatesTo = relatesTo;\
+\
+    return envelope;\
+  }\
+\
+  protected override SoapMethodInvoker RouteRequest(SoapEnvelope
+request)\
+  {\
+    return new AsyncSoapMethodInvoker(this,
+base.RouteRequest(request));\
+  }\
+\
+  protected virtual void StoreResponse(SoapEnvelope response)\
+  {\
+    _store.StoreResponse (response); \
+  }\
+\
+  protected virtual void StoreRequest(SoapEnvelope request)\
+  {\
+     _store.StoreRequest(request);\
+  }\
+\
+  class AsyncSoapMethodInvoker : SoapMethodInvoker\
+  {\
+    private SoapMethodInvoker _invoker;\
+    private PollingService _service;\
+\
+    public AsyncSoapMethodInvoker(PollingService service,
+SoapMethodInvoker invoker)\
+    {\
+      this._invoker = invoker;\
+      this._service = service;\
+    }\
+\
+    public override SoapEnvelope Invoke(SoapEnvelope message)\
+    {\
+      if (message.Context.Addressing.Action !=
+WSPolling.Actions.GetMessage &amp;&amp;\
+        message.Context.Addressing.ReplyTo != null &amp;&amp;\
+        message.Context.Addressing.ReplyTo.Address.Value.ToString() ==
+WSPolling.HoldResponseURI)\
+      {\
+        this._service.StoreRequest(message);\
+        WaitCallback callBack = new WaitCallback(this.Invoke);\
+        ThreadPool.QueueUserWorkItem(callBack, message);\
+        return new SoapEnvelope();\
+      }\
+      else\
+      {\
+        SoapEnvelope response = _invoker.Invoke(message);\
+        return response;\
+      }\
+    }\
+\
+    public override bool OneWay\
+    {\
+      get { return _invoker.OneWay; }\
+    }\
+\
+    private void Invoke(object state)\
+    {\
+      SoapEnvelope request = (SoapEnvelope)state;\
+      SoapEnvelope response = _invoker.Invoke(request);\
+\
+      _service.StoreResponse(response);\
+    }\
+  }\
+}</p>
+
+<p>The RouteRequest is the key method in this implementation. \
+This method returns a SoapMethodInvoker instance, which knows how to
+call a specific method in the concrete service. (WSE provides a default
+implementation of this class)\
+In this case, I developed my own class AsyncSoapMethodInvoker, which
+calls to the SoapMethod synchronously or asynchronously depending on the
+value of wsa:ReplyTo header.\
+As you can see in the code, I used the Thread pool provided by .NET to
+execute the web method asynchronously.</p>
+
+<p>​4. The Database message store implementation</p>
+
+<p>class DatabaseMessageStore : IMessageStore\
+{\
+  private string _connectionString = null;\
+\
+  public void Init(XmlElement configuration)\
+  {\
+    ConnectionStringSettings settings =
+ConfigurationManager.ConnectionStrings[&ldquo;Messages&rdquo;];\
+\
+    if(settings == null)\
+      throw new ConfigurationErrorsException(&ldquo;The connection string
+&lsquo;Messages&rsquo; is not configured&rdquo;);\
+\
+    if(settings.ConnectionString == null)\
+      throw new ConfigurationErrorsException(&ldquo;Invalid value for the
+connection string &lsquo;Messages&rsquo;&rdquo;);\
+\
+    this._connectionString = settings.ConnectionString;\
+  }\
+\
+  public void StoreRequest(SoapEnvelope request)\
+  {\
+    using (SqlConnection connection = new
+SqlConnection(this._connectionString))\
+    {\
+      connection.Open();\
+      using (SqlCommand command = new SqlCommand(&ldquo;InsertMessage&rdquo;,
+connection))\
+      {\
+        command.CommandType = System.Data.CommandType.StoredProcedure;\
+        command.Parameters.Add(new SqlParameter(&ldquo;@MessageID&rdquo;,
+request.Context.Addressing.MessageID.Value.ToString()));\
+        command.Parameters.Add(new SqlParameter(&ldquo;@To&rdquo;,
+request.Context.Addressing.To.Value.ToString()));\
+\
+        command.ExecuteNonQuery();\
+      }\
+      connection.Close();\
+    }\
+  }\
+\
+  public void StoreResponse(SoapEnvelope response)\
+  {\
+    response.Context.Addressing.GetXml(response);\
+    using (SqlConnection connection = new
+SqlConnection(this._connectionString))\
+    {\
+      connection.Open();\
+      using (SqlCommand command = new SqlCommand(&ldquo;UpdateMessage&rdquo;,
+connection))\
+      {\
+        command.CommandType = System.Data.CommandType.StoredProcedure;\
+        command.Parameters.Add(new SqlParameter(&ldquo;@MessageID&rdquo;,
+response.Context.Addressing.RelatesTo.Value.ToString()));\
+        command.Parameters.Add(new SqlParameter(&ldquo;@Message&rdquo;,
+response.OuterXml));\
+        command.ExecuteNonQuery();\
+      }\
+      connection.Close();\
+    }\
+  }\
+\
+  public SoapEnvelope GetResponse(GetMessageRequest request)\
+  {\
+    SoapEnvelope response = new SoapEnvelope();\
+    using (SqlConnection connection = new
+SqlConnection(this._connectionString))\
+    {\
+      connection.Open();\
+      using (SqlCommand command = new SqlCommand(&ldquo;GetMessage&rdquo;,
+connection))\
+      {\
+        command.CommandType = System.Data.CommandType.StoredProcedure;\
+        command.Parameters.Add(new SqlParameter(&ldquo;@MessageID&rdquo;,
+request.MessageID.ToString()));\
+\
+        using (SqlDataReader reader =
+command.ExecuteReader(System.Data.CommandBehavior.CloseConnection))\
+        {\
+          if (reader.Read())\
+          {\
+            if (reader[&ldquo;Message&rdquo;] == DBNull.Value )\
+            {\
+              NoMessageAvailable noMessage = new
+NoMessageAvailable(Reason.ResponseNotReady);\
+              response.Context.Addressing.Action =
+WSPolling.Actions.NoMessageAvailable; \
+              response.SetBodyObject(noMessage);\
+            }\
+            else\
+            {\
+              string message = (string)reader[&ldquo;Message&rdquo;];\
+\
+              response.Load(new StringReader(message));\
+              response.Context.Addressing.RemoveXml(response);\
+            }\
+          }\
+          else\
+          {\
+            NoMessageAvailable noMessage = new
+NoMessageAvailable(Reason.NoMessageFound);\
+            response.Context.Addressing.Action =
+WSPolling.Actions.NoMessageAvailable; \
+            response.SetBodyObject(noMessage);\
+          }\
+\
+          reader.Close();\
+\
+        }\
+      }\
+\
+      connection.Close();\
+    }\
+\
+    return response;\
+  }\
+}</p>
+
+<p>This class is quite simple. It implements the interface IMessageStore
+and contains code to store and query messages from a SQL database. \
+\
+Well, this is all I have for the moment. You can download the code from
+the following <a href="/images/legacy/WSPolling.zip">location</a>.\
+This is a prototype and it should not be used in production
+environments.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2005/12/14/433118/">Web Service Security Patterns Released</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2005-12-14T00:00:00-03:00" pubdate data-updated="true">Dec 14<span>th</span>, 2005</time>
+        
+         | <a href="/blog/2005/12/14/433118/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>The Patterns &amp; Practices team has released the web service security
+patterns in the MSDN.\
+This guide provides excellent material about many security patterns and
+how they can be applied in different scenarios. For example, to
+authenticate a client or to validate a message as well.</p>
+
+<p>The patterns are grouped under the following categories:</p>
+
+<p>Authentication patterns</p>
+
+<p>Message protection patterns</p>
+
+<p>Implementing Transport and Message Layer Security</p>
+
+<p>Resource Access Patterns</p>
+
+<p>Service Boundary Protection Patterns</p>
+
+<p>Service Deployment Patterns</p>
+
+<p>If are looking for good security practices or &ldquo;security&rdquo; is one of your
+main concerns, I recommend you to take a look. \
+\
+You can find them under the following link
+<a href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnpag2/html/wssp.asp">http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnpag2/html/wssp.asp</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2005/11/25/431528/">Interoperability Between WSE 2.0 and WSE 3.0</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2005-11-25T00:00:00-03:00" pubdate data-updated="true">Nov 25<span>th</span>, 2005</time>
+        
+         | <a href="/blog/2005/11/25/431528/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>This is probably one of the main concerns for people involved in the
+development of web services using WSE. \
+Unfortunately, WSE 3.0 was designed from the beginning to be compatible
+at wire level with Indigo and therefore it doesn&rsquo;t interoperate well
+with WSE 2.0.\
+To be clear, &ldquo;Wire compatible&rdquo; means equivalent messages. \
+I wrote this post to provide some necessary points to obtain
+interoperability between both versions.\</p>
+
+<h3>WS-Security xx specs</h3>
+
+<p>At this moment, there are two available versions of this specification,
+1.0 and 1.1 (Also called WS-Security extensions). \
+WSE 2.0 only implements the first version whereas WSE 3.0 uses features
+of both versions (such as signature confirmation and key derivation). \
+Both endpoints, the client and the server should use features provided
+only by WS-Security 1.0.\</p>
+
+<h3>Secure conversation</h3>
+
+<p>Secure Conversation is a special feature provided by WSE, in which
+client and server negotiate a session token to protect the communication
+for a specific period of time. This feature decrease the response time
+because the token negotiation happens once compared to other turn-key
+scenarios where the negotiation is done for each message. (This feature
+is really important when the client and the server interchange many
+messages during a period of time). \
+The SecureContext token used in WSE 3.0 is not compatible with WSE 2.0
+since it was modified to support new features like &ldquo;Stateful secure
+context tokens&rdquo;.\</p>
+
+<h3>WS-Addressing xx specs</h3>
+
+<p>WSE 3.0 uses a newer version of this specification (The same as Indigo)
+and therefore the messages produced by both versions are not
+compatible.\
+There is not a good way to fix this problem, but probably a SoapFilter
+to update the addressing headers can be a solution.\</p>
+
+<h3>Algorithm suite</h3>
+
+<p>WSE 3.0 uses by default the same algorithm suite as Indigo, AES256 for
+symmetric encryption and RSA-OAEP for key wrap. On the other hand, WSE
+2.0 uses AES128 and RSA-15.\
+You will have to update the configuration settings in both endpoints in
+order to use the same algorithm suite.\
+I explained how to change this setting in a previous
+<a href="http://weblogs.asp.net/cibrax/archive/2005/09/19/425555.aspx">post</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/25/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/blog/page/23/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

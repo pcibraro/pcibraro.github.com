@@ -1,0 +1,433 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>HttpClient in the WCF REST Starter Kit Preview 2 - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="HttpClient is a new utility class introduced in the WCF REST Startert
+Kit Preview 2 for consuming REST services. This new class is made up of
+three &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2009/03/13/httpclient-in-the-wcf-rest-starter-kit-preview-2">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">HttpClient in the WCF REST Starter Kit Preview 2</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-03-13T00:00:00-03:00" pubdate data-updated="true">Mar 13<span>th</span>, 2009</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>HttpClient is a new utility class introduced in the WCF REST Startert
+Kit Preview 2 for consuming REST services. This new class is made up of
+three different parts,</p>
+
+<p>​1. A rich object model to manipulate the Http request and response
+objects in a more natural way. This is done through the use of the
+HttpRequestMessage and HttpResponseMessage classes.</p>
+
+<p>​2. Some overloads or extension methods to reduce the number of code
+lines required to consume a service. For example, the HttpClient class
+itself contains method overloads to send messages to a service through
+some of the well-know http verbs, such as Get, Post, Put, Delete, Head
+or Options.  The HttpRequestMessage and HttpResponse classes also
+contain methods for serializing/deserializing the incoming/outgoing
+messages in different formats.</p>
+
+<p>HttpClient client = new HttpClient();           </p>
+
+<p>var echo = client.Get(new
+Uri(&ldquo;<a href="http://localhost:1449/MyRestService/Service.svc/Echo">http://localhost:1449/MyRestService/Service.svc/Echo</a>&rdquo;)).Content.ReadAsString();</p>
+
+<p>The sample code above sends a Http Get message to an “Echo” service and
+gets the response as a simple string.</p>
+
+<p>​3. An extensible execution pipeline made up of customizable steps or
+stages. This pipeline takes the form of a pipeline controller pattern
+where each step executes one after another to return back the execution
+control to the pipeline (It is basically a coordinator). This feature
+gives enough flexibility to perform additional work over the
+request/response messages such as validations or caching to name a few.</p>
+
+<p>Every step in the pipeline is represented by a HttpStage class. This
+class contains two overloads,</p>
+
+<p>public class MyCustomStage : HttpStage</p>
+
+<p>{</p>
+
+<p>    protected internal override void
+ProcessRequestAndTryGetResponse(HttpRequestMessage request, out
+HttpResponseMessage response, out object state)</p>
+
+<p>    {</p>
+
+<p>    }</p>
+
+<p>    protected internal override void ProcessResponse(HttpResponseMessage
+response, object state)</p>
+
+<p>    {</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>The “ProcessRequestAndTryGetResponse” is executed first in the pipeline,
+and it allows doing some processing over the request message. It is also
+possible in this method to return a response message, if that happens,
+all the stages that come after this one are not executed and the
+response is returned to the client application. As result of this, the
+REST service does not get called because the last stage in the pipeline
+is usually the one that sends the request through http to the service.
+This approach is generally useful for performing some caching or mocking
+the responses from unit tests.</p>
+
+<p>The following example interrupts the pipeline execution and returns an
+string (“myfoo”) as response message,</p>
+
+<p>public class MyStage : HttpStage</p>
+
+<p>{</p>
+
+<p>    protected internal override void
+ProcessRequestAndTryGetResponse(HttpRequestMessage request, out
+HttpResponseMessage response, out object state)</p>
+
+<p>    {</p>
+
+<p>        response = new HttpResponseMessage</p>
+
+<p>        {</p>
+
+<p>            Content = HttpContent.Create(&ldquo;myfoo&rdquo;),</p>
+
+<p>            Method = &ldquo;GET&rdquo;,</p>
+
+<p>            StatusCode = System.Net.HttpStatusCode.OK,</p>
+
+<p>            Uri = request.Uri</p>
+
+<p>        };</p>
+
+<p>        state = null;</p>
+
+<p>    }</p>
+
+<p>    protected internal override void ProcessResponse(HttpResponseMessage
+response, object state)</p>
+
+<p>    {</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>The “ProcessResponse” method is executed after a response message is
+found in the pipeline. As it name states, it allows doing some
+additional processing over that response message.</p>
+
+<p>A more specialized version of these stages is also provided by the
+starter kit, HttpProcessingStage</p>
+
+<p>public class MyCustomStage : HttpProcessingStage</p>
+
+<p>{</p>
+
+<p>    public override void ProcessRequest(HttpRequestMessage request)</p>
+
+<p>    {</p>
+
+<p>    }</p>
+
+<p>    public override void ProcessResponse(HttpResponseMessage response)</p>
+
+<p>    {</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>This class derives from the standard “HttpStage” and adds some plumbing
+code to simplify the work of a developer only interested in inspecting
+or modifying the request or response messages. It works like a Message
+Inspector in WCF.</p>
+
+<p>These custom stages can be added to the HttpClient trough the “Stages”
+collection,</p>
+
+<p>client.Stages.Add(new MyStage());</p>
+
+<p>If you want to start playing with this new useful class, go an grab the
+latest preview of the <a href="http://www.codeplex.com/aspnet/Wiki/View.aspx?title=WCF%20REST&amp;referringTitle=Home">Starter kit from
+Codeplex</a>.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-03-13T00:00:00-03:00" pubdate data-updated="true">Mar 13<span>th</span>, 2009</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/rest/'>REST</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2009/03/13/httpclient-in-the-wcf-rest-starter-kit-preview-2/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2009/03/13/httpclient-in-the-wcf-rest-starter-kit-preview-2/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2009/03/11/code-generation-with-t4-an-entities-to-dto-example/" title="Previous Post: Code generation with T4, Entities to DTOs example">&laquo; Code generation with T4, Entities to DTOs example</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2009/03/16/poolingagent-and-atompubclient-in-the-wcf-rest-starter-kit-preview-2/" title="Next Post: PollingAgent and AtomPubClient in the WCF Rest Starter kit preview 2">PollingAgent and AtomPubClient in the WCF Rest Starter kit preview 2 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2009/03/13/httpclient-in-the-wcf-rest-starter-kit-preview-2/';
+        var disqus_url = 'http://cibrax.me/blog/2009/03/13/httpclient-in-the-wcf-rest-starter-kit-preview-2/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

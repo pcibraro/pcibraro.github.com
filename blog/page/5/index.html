@@ -1,0 +1,2051 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="Deployment is considered today as one of the major pain points in the
+Windows Azure platform.  A simple application deployment today can take
+around &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/page/5">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/11/03/initial-thoughts-on-the-windows-azure-accelerator-for-web-roles/">Initial Thoughts on the Windows Azure Accelerator for Web Roles</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-11-03T00:00:00-03:00" pubdate data-updated="true">Nov 3<span>rd</span>, 2011</time>
+        
+         | <a href="/blog/2011/11/03/initial-thoughts-on-the-windows-azure-accelerator-for-web-roles/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Deployment is considered today as one of the major pain points in the
+Windows Azure platform.  A simple application deployment today can take
+around 20 or 30 minutes to complete, and to make the things even worse,
+there is not support for partial updates meaning that a simple change
+requires a complete upgrade or deployment.  The Windows Azure team has
+recently introduced the support for web deploy in the platform to deal
+with this issue. Using Web Deploy, you can deploy a complete application
+or part of it in an existing web role instance in a matter of seconds,
+which is a huge improvement to what we had so far. </p>
+
+<p>However, Web Deploy only supports deployments to a single instance in a
+web role.  If your web role is made up of two or more instances, which
+is the typical configuration instances to be covered by a 100% uptime,
+web deploy won’t work in that scenario.</p>
+
+<p>This is where the <a href="http://waawebroles.codeplex.com/">Windows Azure Accelerator for Web
+Roles</a> enters the scene. This is a
+project created by the Developer and Platform evangelism team in
+Microsoft for deploying one or more websites across multiple Web Role
+instances using Web Deploy.  It basically explores the idea of using a
+single web role for hosting multiple web sites, simplifying the
+deployment and minimizing costs.</p>
+
+<p>As part of the project, you will find an MVC application that you can
+deploy in one hosted service in Azure.  That application provides an
+visual administrative interface to define and manage the websites or
+applications you want to host in the web role. </p>
+
+<p>As you will be managing multiples websites internally hosted in a web
+role, you will need to assign different http host headers to those web
+sites and have domains or CName records already set for those. For
+example, if the address of your hosted service is cibrax.cloudapp.net
+(The MVC application will be listening on this address), you can later
+set some CName records in your domain for redirecting users to the
+hosted service address (<a href="http://www.mydomain.com">www.mydomain.com</a> –>
+cibrax.cloudapp.net)</p>
+
+<p>Therefore, you won’t able to use this project if you don’t own a public
+domain in which you can set up some CName records.</p>
+
+<p>Another important aspect of the accelerator is that it replicates your
+websites across all the instances of the web role breaking that big
+limitation in Web Deploy. It internally uses the blob storage to perform
+this replication.</p>
+
+<p>In a traditional web application hosted in Azure, you will want to have
+some configuration settings as part the hosted service configuration so
+they can easily be changed without deploying your application
+completely, which is what it would happen if you have everything in the
+web.config file for example. This is no longer needed with the
+accelerator as you can now deploy an application from scratch in a few
+seconds.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/10/26/using-windows-azure-regions-efficiently/">Using Windows Azure Regions Efficiently</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-10-26T00:00:00-03:00" pubdate data-updated="true">Oct 26<span>th</span>, 2011</time>
+        
+         | <a href="/blog/2011/10/26/using-windows-azure-regions-efficiently/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Moving your application to the cloud might not be easy as it sounds. The
+typical sample we always see in documentation or demos about an ASP.NET
+application created from the Visual Studio template and deploy it in
+Azure as a package is definitely very far from reality. There are
+multiple factors that can affect the response time and availability of
+your applications in the cloud but you can not easily see until you
+embark on a real project. Application distribution and deployment is one
+of those factors, and the one we are going to discuss in this post.</p>
+
+<p>Windows Azure uses the idea of regions to manage the physical
+distribution of your applications and data. A region in a nutshell
+represents a Microsoft data center where you can deploy your application
+or part of it. Nowadays, you can find multiple regions spread across the
+globe in places such as North America, Europe and Asia.</p>
+
+<p>There is another abstraction layer on top of regions called &ldquo;Affinity
+Groups&rdquo;, which simply tells the Fabric controller to do its best to
+ensure groups of related services are deployed in close proximity
+whenever possible to ensure optimization for inter-app communication.
+For example, in a typical web application with a database,  you will
+want to deploy the web application as close as possible to the database
+server. </p>
+
+<p>Finally, another important concept you need to understand in this
+deployment model is the idea of “hosted service”. A hosted service
+basically represents an unit of deployment associated to a public DNS in
+the cloud. You deploy your applications in a hosted service, which is
+also tied to a region or affinity group. What Azure gives you is a
+public address for reaching that hosted service in the cloud, which is
+“[you app name].cloudapp.net” for applications hosted in the production
+environment and an auto generated guid for applications hosted in the
+staging environment. You can also think in a hosted service as a load
+balancer that forwards requests from that public address to one of the
+instances or VMs associated to it.</p>
+
+<p>Let’s discuss the aspects you need to consider for selecting the right
+regions for deploying your application.</p>
+
+<ul>
+<li>Network latency: reducing the network latency is very important as
+it will impact directly on the response time for your applications.
+You will want to have your users as close as possible physically
+from your applications and data. For example, if you have some
+potential users in the US and Europe, you will want to deploy two
+exact replicas from your application and data in the US and Europe
+data centers. As you might guess, this is not as easy as it sounds
+and there are a lot of challenges you need to address, how you can
+effectively redirect the users to the right region, or how you can
+synchronize your data across regions are typical questions or
+concerns you have to tackle first.</li>
+<li>Availability: you will want to have your applications available all
+the time. Many things can happen, but you need to understand that a
+region or data center might become offline and your application
+should be prepared to handle that scenario. Your applications and
+data should be replicated across multiple regions to not be affected
+when things like this occur.   </li>
+</ul>
+
+
+<p>Microsoft already offers a set of tools or technologies you can use to
+address these two aspects, so let’s discuss some of them in detail in
+the next paragraphs.</p>
+
+<h2>Windows Azure Traffic Manager</h2>
+
+<p>While this technology is still a CTP and not available for all public in
+general, it will provide several methods for distributing internet
+traffic among two or more hosted services in different Windows Azure
+datacenters. It is in essence a distributed DNS service that knows which
+Windows Azure Services are sitting behind the traffic manager URL and
+distributes requests based on different policies  or modes you can
+configure. It will initially support three modes, “Failover”,
+“Performance” and “Round-Robin”.</p>
+
+<p>In the “Failover” mode,  all the traffic is redirected to a single
+hosted service, unless it fails. If the redirection fails because the
+hosted service is not longer available,  it then directs the traffic to
+the hosted service configured as failover. For example, you can
+configure the South Central US region as a backup for the North Central
+US region and vice versa. If any of those regions go offline, the other
+one will take its place.</p>
+
+<p>In the “Performance” mode, all traffic is mapped to the hosted service
+“closest” to the client requesting it.  For example, this will direct
+users from the US to one of the US datacenters and European users will
+probably end up in one of the European datacenters.</p>
+
+<p>Finally, in the “Round-robin” mode, the traffic is distributed in a
+round robin fashion across several hosted services configured in the
+policy.</p>
+
+<p>As you can see, this tool only tackles the two aspects mentioned before
+from the point of view of traffic redirection. However, you also need to
+make sure the data is also consistently available in all the regions,
+and that’s something this tool won’t solve. For example, if the users
+are redirected from North US to Central US, you need to make sure the
+data they get access look the same.</p>
+
+<h2>Content Delivery Network (CDN)</h2>
+
+<p>You can imagine the Windows Azure Content Delivery Network as a huge
+http cache spread across the globe for content such as images, files,
+scripts, or static html to name a few. You can either configure CDN for
+a blob storage account or an http endpoint in your application (and
+endpoint with an url ending in “cdn”, for example xxx.cloudapp.net/cdn).
+All that content will be cached in the nodes that are part of the
+network using standard Http caching. The CDN will serve later the cached
+copy closest to the user requesting it, improving in this way the
+response time.</p>
+
+<p>There are today more than 18 locations or nodes globally (United States,
+Europe, Asia, Australia and South America) and this number keeps
+growing.</p>
+
+<h2>SQL Azure Data Sync</h2>
+
+<p>While the Azure Table Service already provides some built-in support for
+crash recovery based on the idea of partitions that are replicated
+across different nodes (in different sub regions, for example North US
+and Central US), a SQL Azure database is not prepared for that
+scenario.  If you also use something like the Traffic Manager to
+redirect users to the closest data center, you probably would want to
+have all the databases in the different regions in sync between them
+making all this process transparent to the user.</p>
+
+<p>If you want to support that scenario, the SQL Azure Data Sync is the
+tool that will help you in this matter. In a nutshell, SQL Azure Data
+Sync is a cloud-based data synchronization service built on the
+Microsoft Sync Framework technologies. It provides bi-directional data
+synchronization and data management capabilities allowing data to be
+easily shared across SQL Azure databases within multiple data centers.</p>
+
+<p>There are a few things you will have to configure in this tool</p>
+
+<ul>
+<li>The databases you want to keep in sync, and also the tables and
+columns in those databases</li>
+<li>The schedule or frequency for doing the synchronization.</li>
+<li>How you want to resolve any conflict that might occur during the
+synchronization.</li>
+</ul>
+
+
+<p>As you can see, the combination of this tool with the traffic manager
+will help you to keep applications and data in sync between different
+region for the most common scenarios.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/10/05/custom-domains-for-azure-hosted-services/">Custom Domains for Azure Hosted Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-10-05T00:00:00-03:00" pubdate data-updated="true">Oct 5<span>th</span>, 2011</time>
+        
+         | <a href="/blog/2011/10/05/custom-domains-for-azure-hosted-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>A hosted service in azure is typically assigned with two public
+addresses, one for the production environment with a DNS name ending in
+cloudapp.net such as [your name].cloudapp.net and an auto generated DNS
+name for the staging environment such as
+4969aae4e18f4699aa88223e1e73ba8e.cloudapp.net. There are multiple
+reasons you might want to map your custom domain name to these public
+names in Azure, but these are the most common ones I can imagine,</p>
+
+<ul>
+<li>You don’t want to tie your websites to a single cloud hosting vendor
+such as Microsoft</li>
+<li>You host multiple websites in a single hosted service in azure, so a
+single address such as xxx.cloudapp.net  does not make sense
+anymore. In that scenario, you need to use different port numbers
+for the websites or use host headers, which is the typical solution.
+For example, you might want to map [your name].com and [your other
+name].com to two different websites in the same hosted service
+(xxx.cloudapp.net).</li>
+<li>You want to map a single domain to multiple hosted services in azure
+in different regions, and use geographic DNS routing to balance
+traffic. For example, you might have xxx-us.cloudapp.net for a
+hosted service in the US and xxx-eu.cloudapp.net for another hosted
+service in Europe but a single domain [your name].com that
+automatically routes the traffic according to the source of the http
+requests.</li>
+</ul>
+
+
+<p>In the two first cases, the use of CName records in a domain that you
+own will work for redirecting all the traffic from there to the hosted
+service in Azure. The last one might require an additional DNS service
+like the Traffic Manager in Azure or Route53 in Amazon. </p>
+
+<p>It’s common nowadays for most websites to host two different versions of
+the same portal for mobile devices and regular browsers, which basically
+fits in the scenario I described as number #2. We can not use the
+default addressing schema in Azure anymore because the IIS instance
+running in hosted service wouldn’t know how to route the traffic to the
+right portal. However, this can be resolved with a combination of CName
+records at DNS level and host headers at IIS configuration level.</p>
+
+<p>Configuring different host headers for the websites in IIS is easy to
+achieve with the use of multiples bindings and endpoints at
+configuration level.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+<Sites>
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+  <Site name="Mobile" physicalDirectory="..\xxx">
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>&lt;Bindings&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>  &lt;Binding name="HttpIn" endpointName="HttpIn" hostHeader="m.xxx.com" /&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>  &lt;Binding name="HttpInStaging" endpointName="HttpIn" hostHeader="stagingm.xxx.com" /&gt;          
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>&lt;/Bindings&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+  </Site>
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+  <Site name="Portal" physicalDirectory="..\xxx">
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>&lt;Bindings&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>  &lt;Binding name="HttpIn" endpointName="HttpIn" hostHeader="www.xxx.com" /&gt;      
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>  &lt;Binding name="HttpInStaging" endpointName="HttpIn" hostHeader="staging.xxx.com" /&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>&lt;/Bindings&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+  </Site>
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+</Sites>
+</del></p>
+
+<p>The snippet above illustrates how the Service Definition should look for
+supporting two different web sites for the mobile site and regular web
+site. An important thing to notice in the configuration is that I also
+included the host headers for staging, so you can test staging as well
+before making the switch to production. This means will require a
+different set of CName records for staging and production,</p>
+
+<ul>
+<li>The “www” and “m” records will point to the production website in
+azure, xxx.cloudapp.net</li>
+<li>The “staging” and “stagingm” records will point to the auto
+generated address for staging in azure</li>
+</ul>
+
+
+<p>A CName record for the auto generated address in staging is not a good
+thing as it gets generated every time you create a new staging
+deployment. However, there is no other good way to fix in the meantime
+unless you actually do not include this definition for staging and you
+test everything local by pointing your windows host file to the IP
+address in staging (For instance, <a href="http://www.xxx.com">www.xxx.com</a>
+[Staging IP Address] and m.xxx.com [Staging IP Address]).</p>
+
+<p>The service definition can not be changed or updated once the deployment
+has been completed so make sure to get it right in the first place.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/09/19/pub-sub-in-the-cloud-for-it-management/">Pub/Sub in the Cloud for IT Management</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-09-19T00:00:00-03:00" pubdate data-updated="true">Sep 19<span>th</span>, 2011</time>
+        
+         | <a href="/blog/2011/09/19/pub-sub-in-the-cloud-for-it-management/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>In the recent “Build” event, Microsoft introduced a new feature Windows
+Server 8 known as “Windows Powershell Web Access” for exposing a the
+server powershell console through a web interface. Although this feature
+looks very promising in first place, I only think it is convenient for
+intranet scenarios. I don’t initially see an organization exposing their
+servers directly to internet for using this feature from a phone as it
+represents a high risk.</p>
+
+<p>As I discussed a time ago in this post <a href="http://weblogs.asp.net/cibrax/archive/2011/06/06/pub-sub-in-the-cloud-a-brief-comparison-between-azure-service-bus-and-pubnub.aspx">“Pub/Sub in the cloud
+..”</a>,
+technologies like Windows Azure Service Bus, PubNub or Fanout 
+(implemented in Node.JS) can act as intermediaries in the cloud for
+passing messages between clients and servers that are not publically
+addressable or can talk each other directly in the same network. All
+these technologies relies on outbound http connections for talking to
+the cloud, which are not typically blocked by firewalls.</p>
+
+<p>What happens if you decide to extend this idea of passing messages from
+clients to servers to the IT Management world, and those messages
+actually represent actions you want to perform on your servers like
+restarting a web server or getting a list of active process. You would
+be able to control any of the servers in your organization from any
+device connected to the internet right ?. Do you think it’s too risky
+too ?.  Ok, let’s add an additional layer on the cloud, which can act as
+firewall and control access about who can do what on the different
+servers. This additional layer on the cloud can also have a very nice
+HTML 5 visual interface that any IT guy in your organization can easily
+understand and use from any browser or device connected to the internet.
+At that point, you have everything you need to be in control of your
+servers from anywhere, even when you are driving back from work.</p>
+
+<p>That’s the main idea of project where I have been working for the last
+few months in Tellago Studios and it was announced to the world today as
+<a href="http://moesion.com">Moesion.com</a>. Take a look and subscribe to the beta
+program today, there will be a free personal edition that you could use
+for managing your servers.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/09/15/making-wcf-web-async-apis/">Making WCF Web Async Apis</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-09-15T00:00:00-03:00" pubdate data-updated="true">Sep 15<span>th</span>, 2011</time>
+        
+         | <a href="/blog/2011/09/15/making-wcf-web-async-apis/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>One of the hidden gems that you can get today from the WCF Web Api
+source code in codeplex (wcf.codeplex.com) is the support for the
+task-based asynchronous model introduced in .NET 4.0. The new model
+simplifies a lot the way you do asynchronous stuff in .NET, and it’s
+going to get even better with the async support in C# 5.</p>
+
+<p>The idea here is that you represent an asynchronous operation with a
+Task&lt;T> class, where T is the resulting type. There is no need to call
+an End operation to retrieve the result anymore, as the result can be
+obtained from the task itself. You also get some of other cool features
+for free like support for cancellations, exception handling and
+operation composition.</p>
+
+<p>With the recent addition of this new model to WCF, making async
+operations in a service is just a matter of returning a Task&lt;T> class,
+and WCF will take care of the rest for us
+<img src="http://weblogs.asp.net/blogs/cibrax/wlEmoticon-smile_66A26CF7.png" alt="Smile" />.
+The following code illustrates how an async operation looks like</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+[WebGet(UriTemplate = &ldquo;contacts&rdquo;)]
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+public Task<HttpResponseMessage> Contacts()
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>// Create an HttpClient (we could also reuse an existing one)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>HttpClient client = new HttpClient();
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>// Submit GET requests for contacts and return task directly
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>return client.GetAsync(backendAddress + "/contacts");
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+}
+</del></p>
+
+<p>This code is available as part of the TaskAsync sample also included in
+the source code. In that code, the operation is basically calling an
+external service using http in an asynchronous manner.</p>
+
+<p>That’s pretty cool, isn’t it ?. What about invoking a query against a
+database and returns the results asynchronously in a service operation
+?. ADO.NET supports an asynchronous model already, but Entity Framework
+still does not. Nothing that can not be resolved easily with an
+extension method in IQueryable,</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+public static class AsyncExtensions
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+{  <br/>
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public static Task&lt;IEnumerable&lt;T&gt;&gt; AsAsync&lt;T&gt;(this IQueryable&lt;T&gt; source) where T : EntityObject
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    var query = (ObjectQuery&lt;T&gt;)source;        
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    var cmd = new SqlCommand();
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    cmd.Connection = (SqlConnection)((EntityConnection)query.Context.Connection).StoreConnection;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    cmd.CommandText = query.ToTraceString(); 
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    cmd.Parameters.AddRange(query.Parameters.Select(x =&gt; new SqlParameter(x.Name, x.Value ?? DBNull.Value)).ToArray());        
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    cmd.Connection.ConnectionString = new SqlConnectionStringBuilder(cmd.Connection.ConnectionString)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    {            
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        AsynchronousProcessing = true        
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    }.ToString();        
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    cmd.Connection.Open();
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    var tcs = new TaskCompletionSource&lt;IEnumerable&lt;T&gt;&gt;();
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    Task.Factory.FromAsync&lt;SqlDataReader&gt;(cmd.BeginExecuteReader(), cmd.EndExecuteReader).ContinueWith(task =&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>            if (task.IsFaulted) tcs.TrySetException(task.Exception.InnerExceptions);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>            else if (task.IsCanceled) tcs.TrySetCanceled();
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>            else tcs.TrySetResult(query.Context.Translate&lt;T&gt;(task.Result).Cast&lt;T&gt;());
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        });
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    return tcs.Task;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+}
+</del></p>
+
+<p>This extension method allows to do things like context.Customers.Where(c
+=> c.Id == 1).AsAsync() to execute an async query against EF to return
+a customer with ID equals to 1.</p>
+
+<p>Ok, so far we have an extension method that executes a query
+asynchronously, so now, it’s a matter of returning that resulting task
+in our operation.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+[ServiceContract]
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+public class CustomerResource
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>[WebGet]
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public Task&lt;IEnumerable&lt;CustomerDTO&gt;&gt; GetAllCustomers()
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    var model = new NorthwindEntities();
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    return model.Customers.AsAsync()
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        .ToApm(t =&gt; t.Result.Select(c =&gt; new CustomerDTO { Id = c.CustomerID, Name = c.ContactName }));
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+}
+</del></p>
+
+<p>Two things to notice in the code above.</p>
+
+<ol>
+<li>I am doing a projection to return a dto and not the original entity,
+which I might not want to serialize completely on the wire</li>
+<li>I am doing a task continuation or composition through the “ToApm”
+extension method. For illustrative purposes, that code means I want
+to do a projection right after the query execution is completed and
+return that.</li>
+</ol>
+
+
+<p>The code for the “ToApm” extension method is quite simple as well.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+public static class TaskExtensions
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public static Task&lt;TResult&gt; ToApm&lt;TResult, TSource&gt;(this Task&lt;TSource&gt; task, Func&lt;Task&lt;TSource&gt;, TResult&gt; action)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    var tcs = new TaskCompletionSource&lt;TResult&gt;();
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    task.ContinueWith(delegate
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        if (task.IsFaulted) tcs.TrySetException(task.Exception.InnerExceptions);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        else if (task.IsCanceled) tcs.TrySetCanceled();
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        else tcs.TrySetResult(action(task));
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    return tcs.Task;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+}
+</del></p>
+
+<p>It does a continuation on the original task passed as argument and also
+verifies whether the task was cancelled or some exception occurred
+before returning the result.</p>
+
+<p>Go and grab the WCF source in codeplex to start playing with these cool
+features today</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/08/05/running-the-express-web-development-framework-on-node-for-windows/">Running the “Express” Web Development Framework on Node for Windows</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-08-05T00:00:00-03:00" pubdate data-updated="true">Aug 5<span>th</span>, 2011</time>
+        
+         | <a href="/blog/2011/08/05/running-the-express-web-development-framework-on-node-for-windows/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As some of you might know, with the release of Node version 0.5.2, there
+is now support for Windows. It’s a single executable “node.exe” that you
+need to start using node on your machine, and you can get it from this
+<a href="http://blog.nodejs.org/2011/07/22/node-v0-5-2/">location</a>.</p>
+
+<p>Express is a Sinatra inspired web development framework for Node. You
+can find more information about this framework
+<a href="http://jade-lang.com/">here</a>.</p>
+
+<p>Once you download node in your system, you need to setup an optional
+environment variable “NODE_PATH”, which points to the root path or
+location that Node will use to resolve the external module references. A
+module in Node represents an unit of code reuse, pretty similar to a
+library or an assembly in .NET, but it’s not something binary, it is
+just JavaScript code. You can also optionally set the node executable
+path in the “PATH” environmental variable to run the exe from any
+location.</p>
+
+<p>In my case, I created the following structure on my disk for running
+Node.</p>
+
+<p>d:></p>
+
+<p>&mdash;&mdash;> NodeJs</p>
+
+<p>&mdash;&mdash;&mdash;> Node.exe</p>
+
+<p>&mdash;&mdash;&mdash;> Applications</p>
+
+<p>“NODE_PATH” and “PATH” both points to the folder “NodeJS” on my “d:”
+drive. All the applications or samples will be deployed in the
+“Applications” folder.</p>
+
+<p>In the Linux world, Node also comes with a very useful package manager
+“NPM” that automatically resolves external module dependencies for you. 
+As analogy with other platforms like Ruby or .NET, “NPM” would be
+equivalent to Ruby GEMS or NuGet.</p>
+
+<p>Unfortunately, “NPM” is still not ready for being used on Windows, there
+are some technical details that need to be addressed to migrate the
+current implementation to windows. Good news is that Jeroen Janssen has
+created a similar implementation in Python so you can run it in windows.
+The name of this implementation is “ryppi” and you can get it from this
+<a href="https://github.com/japj/ryppi">github repository</a>. It’s a single Phyton
+script “ryppi.py” that currently works with Python 2.X only. If you have
+Python 2.x already installed on your system, you can run the script as
+follow to resolve an external dependency “python ryppi install
+&lt;PACKAGE_NAME>”.</p>
+
+<p>In the case of “Express”, you can run  “python ryppi install Express”
+from the location where you set the “NODE_PATH” variable. After running
+the command, you should be able to see a new folder “node_modules” in
+that location, and an “express” folder inside of it. That’s the only
+package you need to run the “Express” core, but you also might want to
+download “jade” and “saas” for using the <a href="http://jade-lang.com/">Jade View
+Engine</a> and the <a href="http://sass-lang.com/">SAAS</a>
+engine respectively.</p>
+
+<p>In addition to the “Express” core library, there is an node application
+you can use to setup the initial folder structure for your web
+applications. The “Express” application is available under
+“node_modules/express/bin/express”, and you can run it with node
+itself. Bad news is that this application does not run on windows
+because it uses the “child_process” module, which is not currently
+supported on windows. I modified that application to get rid of the
+“child_process” module and use all the functionality available in
+windows. This updated version is available to download from
+<a href="/images/legacy/express">here</a>.</p>
+
+<p>If you replace the version in “node_modules/express/bin/express” by the
+one I updated, you should able to run it with node as follow “node.exe
+./node_modules/express/bin/express –help”. That will show the help
+instructions to setup a new web application. A new web application with
+all the defaults can be created by just passing a name to that “express”
+application, “node.exe ./node_modules/express/bin/express mywebapp”.
+One thing to have in mind is that the application will be created as a
+new folder in the current location, so you might want to run it from
+“NodeJs/Applications” if you are planning to have the web application in
+there.</p>
+
+<p>The command will generate a new folder “mywebapp” with all the
+boilerplate structure you need to run a web application from scratch. 
+The folder structure looks like this,</p>
+
+<ul>
+<li><p>public (contains all the JavaScript, images and stylesheets that make
+up your site)</p></li>
+<li><p>views (contains all the views)</p></li>
+<li><p>app.js (the root application)</p></li>
+</ul>
+
+
+<p>You can start the web application by running “node app”, and that’s it,
+you have your first “express” application running on windows
+<img src="http://weblogs.asp.net/blogs/cibrax/wlEmoticon-smile_32D32B80.png" alt="Smile" />.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/07/25/hosting-your-own-pub-sub-in-the-cloud-with-appharbor-and-hermes/">Hosting Your Own Pub/Sub in the Cloud With AppHarbor and Hermes</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-07-25T00:00:00-03:00" pubdate data-updated="true">Jul 25<span>th</span>, 2011</time>
+        
+         | <a href="/blog/2011/07/25/hosting-your-own-pub-sub-in-the-cloud-with-appharbor-and-hermes/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As you might read in my latest post, Hermes is one our new pet projects
+in Tellago for doing Pub/Sub over http. The idea is simple, but still
+very useful for integration scenarios in the enterprise. The fact that
+Hermes is all based on Http and uses one of the most famous open source
+initiatives for NoSQL databases like MongoDB, makes this project very
+appealing for the cloud as well. Many of the cloud platforms already
+provide MongoDB as a service that you can use in your applications
+hosted in the cloud.</p>
+
+<p>AppHarbor is probably one of the best “PaaS” solutions for running .NET
+applications in the cloud. The marketing slogan for this platform is
+“Azure done right”, so you can take your own conclusions
+<img src="http://weblogs.asp.net/blogs/cibrax/wlEmoticon-smile_34496852.png" alt="Smile" />.
+AppHabor not only let us running any regular .NET application in the
+cloud, but also offers MongoDB as an addon that you can configure in
+your deployment, so it makes a good use case for running Hermes in the
+cloud.</p>
+
+<p>The Hermes’s source code that you get from the <a href="https://github.com/TellagoDevLabs/Hermes">GitHub
+repository</a> uses by default
+NuGet for resolving all the external dependencies, which <a href="http://blog.dantup.com/2011/05/vote-for-native-nuget-support-on-appharbor-to-save-your-repositories-from-the-bloatmonster">is not
+something currently supported in
+AppHarbor</a>,
+so the first thing you need to do is to prepare the visual studio
+solution and all the projects to reference the binaries from a local
+folder (let’s say “libs”). The only project that you should deploy to
+the cloud is RestService, which represents the host for the REST
+services that you might want to use for publishing or subscribing
+messages to/from Hermes.</p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/Hermes_Cloud_3A903EE0.png"><img src="http://weblogs.asp.net/blogs/cibrax/Hermes_Cloud_thumb_4B2839CE.png" title="Hermes_Cloud" alt="Hermes_Cloud" /></a></p>
+
+<p>The line you need to comment out in the RestService project file for not
+using NuGet to resolve the external dependencies,</p>
+
+<p>&lt;Target Name=&ldquo;BeforeBuild&rdquo;> \
+    &lt;Exec Condition=&ldquo;Exists(&lsquo;\$(ProjectDir)packages.config&rsquo;)&rdquo;
+Command=&ldquo;&quot;\$(SolutionDir)..\Tools\nuget.exe&quot; install
+&quot;\$(ProjectDir)packages.config&quot; -o
+&quot;\$(SolutionDir)Packages&quot;&rdquo; /> \
+ &lt;/Target></p>
+
+<p>Once you have that project running and using local references, you are
+ready to deploy it to the cloud. You might want to create a new project
+in AppHabor or use an existing one for doing this.</p>
+
+<p>Every project in AppHarbor is basically mapped to a Git repository that
+you can use. Every time you make a push to that repository, they take
+care of building the solution, running the unit tests on it and publish
+it in a public address in their platform. The instructions for deploying
+the solution to their Git repository is all available in the project’s
+home page, and I can say it is pretty straightforward.</p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/Hermes_Cloud1_05A339A3.png"><img src="http://weblogs.asp.net/blogs/cibrax/Hermes_Cloud1_thumb_34A5757A.png" title="Hermes_Cloud1" alt="Hermes_Cloud1" /></a></p>
+
+<p>The public URL will be available in the home page as well once you make
+the first deployment as you can see in the image above. You can also
+associate a MongoDB instance to the project through the Add-ons option.</p>
+
+<p>You will have to configure two additional things in the configuration
+file (web.config) of the RestService, the public URL in AppHarbor and
+the MondoDB connection string (available through a configuration
+variable).</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+<connectionStrings>
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>&lt;add name="db.connectionString" connectionString="mongodb://appharbor:XXXXXXXX" /&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  </connectionStrings>
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  <appSettings>
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>&lt;add key="baseAddress" value="http://XXXXXXXXXX.apphb.com" /&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>............
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  </appSettings>
+</del></p>
+
+<p>And that’s all, once you have configured that in the web.config file and
+pushed those changes to AppHarbor, you should be able to start using
+Hermes in the cloud. You can try the Publisher and Subscriber sample
+applications in the source code for testing your deployment in the
+cloud.</p>
+
+<p>Enjoy
+<img src="http://weblogs.asp.net/blogs/cibrax/wlEmoticon-smile_34496852.png" alt="Smile" /></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/07/12/hermes-a-new-open-source-alternative-for-doing-pub-sub-over-http/">Hermes – a New Open Source Alternative for Doing Pub/sub Over Http</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-07-12T00:00:00-03:00" pubdate data-updated="true">Jul 12<span>th</span>, 2011</time>
+        
+         | <a href="/blog/2011/07/12/hermes-a-new-open-source-alternative-for-doing-pub-sub-over-http/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>After a few months of collaborative work across several members in our
+Tellago crew, Hermes is finally
+<a href="https://github.com/TellagoDevLabs/Hermes/">here</a>. Hermes, also known as
+the great messenger of god in the Greek mythology, was the name we gave
+to this new open source alternative for doing durable pub/sub messaging
+over http.</p>
+
+<p>There is no doubt that MSMQ has been the predominant technology for
+doing Pub/Sub within the Microsoft stack given the reliability it
+provides as a temporary storage for messages. However, the main problem
+of using a queue technology like that is that you sacrifice
+interoperability for better reliability, and interoperability usually
+matters a lot in the enterprise. How many times you have heard stories
+of people doing crazy things in the enterprise with queue connectors or
+similar technologies for decoupling systems implemented in different
+platform stacks.</p>
+
+<p>Http is something universal accepted in all the existing platforms and
+makes the things really simple in that sense. Almost all the existing
+programming languages in the world provide libraries for consuming Http
+endpoints or Web Apis with a few lines of code.</p>
+
+<p>There are some Pub/Sub alternatives using Http and RESTful services in
+the cloud like the AppFabric Service Bus or PubNub, but Hermes is also
+suited to be used within the boundaries of a single organization.  Every
+time you want to decouple two systems or provide valuable business
+events to other systems you don&rsquo;t know upfront, Hermes becomes a great
+candidate for implementing that kind of scenario.</p>
+
+<p>As I said before, you might sacrifice reliability in the sense that you
+are using Http for publishing the events into the Hermes repository, and
+a http channel must be available at that time, but that’s an issue on
+the publisher side only. The subscription side is implemented through
+simple http polling with Atom, so the subscriber can read the messages
+when an Http channel is available. Also, all the transformation
+responsibilities are moved to the subscriber side simplifying a lot the
+core messaging engine in Hermes.</p>
+
+<p>Hermes uses MongoDB as the backend storage for the messages, making
+extremely easy to store, partition and index high volumes of messages
+for a large number of topics and subscriptions.</p>
+
+<p>You can read more details about the underline architecture in <a href="http://weblogs.asp.net/gsusx/archive/2011/07/12/tellago-announces-hermes-a-publish-subscribe-messaging-engine-based-on-http-and-mongodb.aspx">the
+announcement</a>
+made by Jesus.</p>
+
+<p>Enjoy!!.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/06/30/telesharp-an-application-repository-for-net-applications/">Telesharp – an Application Repository for .NET Applications</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-06-30T00:00:00-03:00" pubdate data-updated="true">Jun 30<span>th</span>, 2011</time>
+        
+         | <a href="/blog/2011/06/30/telesharp-an-application-repository-for-net-applications/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>A year ago, we released SO-Aware as our first product in Tellago
+Studios. SO-Aware represented a new way to manage web services and all
+the related artifacts like configuration, tests or monitoring data in
+the Microsoft stack. It was based on the idea of using a lightweight SOA
+governance approach with a central repository exposed through RESTful
+services.</p>
+
+<p>At that point, we thought the same idea could be extended to enterprise
+applications in general by providing a generic repository for many of
+the runtime or design time artifacts generated during the development
+like configuration, application description or topology (a high level
+view of the components that made up a system), logging information or
+binaries. It took us several months to give a form to that idea and
+implement it as a product, but it is finally here and I am very proud to
+announce the release today under the name of “TeleSharp”.</p>
+
+<p>Telesharp provides in a nutshell the following features,</p>
+
+<p>​1. Configure your application topology in a central repository.
+Application topology in this context means that you can decompose your
+application and describe it in terms of components and how they interact
+each other. For example, you can tell that the CRM system is made up of
+a couple of WCF services and a ASP.NET MVC front end.</p>
+
+<p>​2. Centralize configuration for your applications and components.  You
+can import existing .NET configuration sections into the repository and
+associate them to the different components. In addition, environment
+overrides are supported for the configuration sections. We provide
+tooling and extensions in Visual Studio for managing all the
+configuration, and a set of powershell commands for automating the
+configuration deployment.</p>
+
+<p>​3. Browse all the assemblies and types remotely in your application
+servers in a web browser using an interface similar to any of the
+existing .NET reflection tools. You can easily determine this way
+whether the server is running the correct version of your applications.</p>
+
+<p>​4. Centralize logging and exception management into the repository. You
+get different reports and a pivot viewer experience for browsing all the
+different logging information generated by your applications. In
+addition, TeleSharp provides different providers for pushing the logging
+information to the central repository using well-known frameworks like
+ELMAH, Log4Net, EntLib or even Windows ETW. </p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/TeleSharp_07AA69C4.jpg"><img src="http://weblogs.asp.net/blogs/cibrax/TeleSharp_thumb_5AB506E8.jpg" title="TeleSharp" alt="TeleSharp" /></a></p>
+
+<p>The central repository itself is implemented as a set of OData services
+that any application can easily consume using regular Http. You can read
+more details in this introductory
+<a href="http://tellagostudios.com/bringing-true-agility-enterprise-net-tellago-studios-announces-telesharp">post</a></p>
+
+<p>If you think this product can be a good fit in your organization, you
+can request a trial version in our <a href="http://www.tellagostudios.com">Tellago
+Studios</a> website.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/06/14/interop-bindings-for-wcf-released-in-codeplex/">Interop Bindings for WCF Released in Codeplex</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-06-14T00:00:00-03:00" pubdate data-updated="true">Jun 14<span>th</span>, 2011</time>
+        
+         | <a href="/blog/2011/06/14/interop-bindings-for-wcf-released-in-codeplex/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I am happy to announce that one of the projects in which Microsoft and
+Tellago have been collaborating together during the last few months was
+released as part of
+<a href="http://wcf.codeplex.com/wikipage?title=WCF%20Express%20Interop%20Bindings">wcf.codeplex.com</a>.
+The primary aim of this “WCF Interop Bindings” project is to simplify
+the work needed for making WCF services interoperable with other service
+stacks like Oracle WebLogic, IBM Websphere, Metro or Apache Axis. </p>
+
+<p>The main goal behind web services has always been to enable
+communication between heterogeneous systems. However, we all know that
+archiving such level of interoperability in the context of web services
+and WS-* is really complicated and requires good knowledge of the
+different message stacks to generate compatible messages at the wire
+level.</p>
+
+<p>For that reason, the WCF team came up with this interesting idea of
+providing a set of pre-defined bindings with a limited set of settings
+that you can use out of the box for supporting the most common interop
+scenarios with the mentioned stacks using protocols like WS-Security,
+WS-SecureConversation or WS-ReliableMessaging.</p>
+
+<p><strong>Bindings provided out of the box in the current bits</strong></p>
+
+<p>The current bits provides a set of custom binding implementations for
+Oracle WebLogic, IBM Websphere, Metro and Apache Axis. The name of those
+bindings basically matches the message stack you want to use. For
+example, the following configuration illustrates how a service can be
+configured to be compatible at wire level with Oracle WebLogic using
+Username over certificates as the security scenario.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+<configuration>
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  &lt;system.serviceModel>
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>&lt;services&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>  &lt;service name="Microsoft.ServiceModel.Interop.Samples.HelloWorldService" behaviorConfiguration="helloWorld"&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    &lt;endpoint address="Username_WebLogic" binding="webLogicBinding" bindingConfiguration="helloWorld_UsernameOverCertificate" 
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+contract=&ldquo;Microsoft.ServiceModel.Interop.Samples.IHelloWorld&rdquo;/>
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    &lt;endpoint address="Mex" binding="mexHttpBinding" contract="IMetadataExchange"/&gt; 
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>  &lt;/service&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>&lt;/services&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>&lt;bindings&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>  &lt;webLogicBinding&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    &lt;binding name="helloWorld_UsernameOverCertificate"&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>      &lt;security mode="UserNameOverCertificate"/&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    &lt;/binding&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>  &lt;/webLogicBinding&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>&lt;/bindings&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>&lt;behaviors&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>  &lt;serviceBehaviors&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    &lt;behavior name="helloWorld"&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>      &lt;serviceMetadata httpGetEnabled="true"/&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>      &lt;serviceDebug httpHelpPageEnabled="true"/&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>      &lt;serviceCredentials&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        &lt;serviceCertificate
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>          storeLocation="LocalMachine"
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>          storeName="TrustedPeople"
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>          x509FindType="FindBySubjectDistinguishedName"
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>          findValue="CN=HelloWorldService"/&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>      &lt;/serviceCredentials&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    &lt;/behavior&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>  &lt;/serviceBehaviors&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>&lt;/behaviors&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>&lt;extensions&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>  &lt;bindingExtensions&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    &lt;add name="webLogicBinding" type="Microsoft.ServiceModel.Interop.WebLogic.Configuration.WebLogicBindingCollectionElement,
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+ Microsoft.ServiceModel.Interop, Version=1.0.0.0, Culture=neutral, PublicKeyToken=4fc38efee625237e&#8221;/>
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>  &lt;/bindingExtensions&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>&lt;/extensions&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  &lt;/system.serviceModel>
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+</configuration>
+</del></p>
+
+<p><strong>Visual Studio 2010 Integration</strong></p>
+
+<p>The binding implementations are not the only thing you get out of the
+box with the current bits. The WCF team also wanted to provide
+developers with a rich experience for configuring and creating the
+services with one of the pre-defined interop scenarios. Having that in
+mind, this project also integrates in Visual Studio 2010 by providing a
+set of project templates for creating WCF services for an specific
+scenario and a configuration wizard for generating the binding
+configuration.</p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/ProjectTemplates_7BB28048.png"><img src="http://weblogs.asp.net/blogs/cibrax/ProjectTemplates_thumb_40127188.png" title="ProjectTemplates" alt="ProjectTemplates" /></a></p>
+
+<p>As you can see in the image above, two new project templates are
+automatically registered under the &ldquo;WCF&rdquo; category that you can use to
+create a new service configured with one of the provided interop
+bindings. You can use the &ldquo;WCF Interoperable Service Library&rdquo; template
+for creating a new WCF service as part of the service library, or &ldquo;WCF
+Interoperable Service Application&rdquo; for creating a new WCF service as
+part of a Web Application. The templates will automatically launch a
+configuration wizard for selecting the desired interop scenario as it is
+shown in the images bellow.</p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/Wizard1_43D01658.png"><img src="http://weblogs.asp.net/blogs/cibrax/Wizard1_thumb_5AAEE7D4.png" title="Wizard1" alt="Wizard1" /></a>
+\
+<a href="http://weblogs.asp.net/blogs/cibrax/Wizard2_6D173889.png"><img src="http://weblogs.asp.net/blogs/cibrax/Wizard2_thumb_1CF1DA4B.png" title="Wizard2" alt="Wizard2" /></a></p>
+
+<p>In the wizard you can pick one of the existing interop scenarios, and
+specific settings for those scenarios like Security or Reliable
+Messaging to give an example. At the end of wizard, the configuration
+file associated to the WCF project will be automatically updated with
+the chosen binding and settings.</p>
+
+<p>Enjoy!!</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/6/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/blog/page/4/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

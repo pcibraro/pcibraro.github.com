@@ -1,0 +1,525 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>ASP.NET MVC, WCF REST and Data Services – When to use what for RESTful services - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="Disclaimer: This post only contains personal opinions about this
+subject In the way I see it, REST mainly comes in for two scenarios, when you
+need &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2010/10/08/asp-net-mvc-wcf-rest-and-data-services-when-to-use-what-for-restful-services">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">ASP.NET MVC, WCF REST and Data Services – When to Use What for RESTful Services</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-10-08T00:00:00-03:00" pubdate data-updated="true">Oct 8<span>th</span>, 2010</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p><em>Disclaimer: This post only contains personal opinions about this
+subject</em></p>
+
+<p>In the way I see it, REST mainly comes in for two scenarios, when you
+need to expose some AJAX endpoints for your web application or when you
+need to expose an API to external applications through well defined
+services.  </p>
+
+<p>For AJAX endpoints, the scenario is clear, you want to expose some data
+for being consumed by different web pages with client scripts. At this
+point, what you expose is either HTML, text, plain XML, or JSON, which
+is the most common, compact and efficient format for dealing with data
+in javascript. Different client libraries like JQuery or MooTools
+already come with built-in support for JSON. This data is not intended
+for being consumed by other clients rather than the pages running in the
+same web domain. In fact, some companies add custom logic in these
+endpoints for responding only to requests originated in the same domain.</p>
+
+<p>For RESTful services, the scenario is completely different, you want to
+expose data or business logic to many different client applications
+through a well know API. Good examples of REST services are twitter, the
+Windows Azure storage services or the Amazon S3 services to name a few.</p>
+
+<p>Smart client applications implemented with Silverlight, Flex or Adobe
+Air also represent client applications that can be included in this
+category with some restrictions, as they can not make cross domain call
+to http services by default unless you override the cross-domain
+policies.   </p>
+
+<p>A common misconception is to think that REST services only mean CRUD for
+data, which is one of the most common scenarios, but business workflows
+can also be exposed through this kind of service as it is shown in this
+article <a href="http://www.infoq.com/articles/webber-rest-workflow">“How to get a cup of
+coffe”</a></p>
+
+<p>When it comes to the .NET world, you have three options for implementing
+REST services (I am not considering third party framework or OS projects
+in this post),</p>
+
+<ol>
+<li>ASP.NET MVC</li>
+<li>WCF REST</li>
+<li>WCF Data Services (OData)</li>
+</ol>
+
+
+<h2>ASP.NET MVC</h2>
+
+<p>This framework represents the implementation of the popular
+model-view-controller (MVC) pattern for building web applications in the
+.NET space. The reason for moving traditional web application
+development toward this pattern is to produce more testable components
+by having a clean separation of concerns. The three components in this
+architecture are the model, which only represents data that is shared
+between the view and the controller, the view, which knows how to render
+output results for different web agents (i.e. a web browser), and
+finally the controller, which coordinates the execution of an use case
+and the place where all the main logic associated to the application
+lives on. Testing ASP.NET Forms applications was pretty hard, as the
+implementation of a page usually mixed business logic with rendering
+details, the view and the controller were tied together, and therefore
+you did not have a way to focus testing efforts on the business logic
+only. You could prepare your asp.net forms application to use MVC or MVP
+(Model-View-Presenter) patterns to have all that logic separated, but
+the framework itself did not enforce that.</p>
+
+<p>On the other hand, in ASP.NET MVC, the framework itself drives the
+design of the web application to follow an MVC pattern. Although it is
+not common, developers can still make terrible mistakes by putting
+business logic in the views, but in general, the main logic for the
+application will be in the controllers, and those are the ones you will
+want to test.</p>
+
+<p>In addition, controllers are TDD friendly, and the ASP.NET MVC team has
+made a great work by making sure that all the ASP.NET intrinsic objects
+like the Http Context, Sessions, Request or Response can be mocked in an
+unit test.</p>
+
+<p>While this framework represents a great addition for building web
+applications on top of ASP.NET, the API or some components in the
+framework (like view engines) not necessarily make a lot of sense when
+building stand alone services. I am not saying that you could not build
+REST services with ASP.NET MVC, but you will have to leverage some of
+the framework extensibility points to support some of the scenarios you
+might want to use with this kind of services.</p>
+
+<p>Content negotiation is a good example of an scenario not supported by
+default in the framework, but something you can implement on your own
+using some of the available extensions. For example, if you do not want
+to tie your controller method implementation to an specific content
+type, you should return an specific ActionResult implementation that
+would know how to handle and serialize the response in all the supported
+content types. Same thing for request messages, you might need to
+implement model binders for mapping different content types to the
+objects actually expected by the controller.</p>
+
+<p>The public API for the controller also exposes methods that are more
+oriented to build web applications rather than services. For instance,
+you have methods for rendering javascript content, or for storing
+temporary data for the views.</p>
+
+<p>If you are already developing a website with ASP.NET MVC, and you need
+to expose some AJAX endpoints (which actually represents UI driven
+services) for being consumed in the views, probably the best thing you
+can do is to implement them with MVC too as operations in the
+controller. It does not make sense at this point to bring WCF to
+implement those, as it would only complicate the overall architecture of
+the application. WCF would only make sense if you need to implement some
+business driven services that need to be consumed by your MVC
+application and some other possible clients applications as well.</p>
+
+<p>This framework also introduced a new routing mechanism for mapping URLs
+to controller actions in ASP.NET, making possible to have friendly and
+nice URLS for exposing the different resources in the API.</p>
+
+<p>As this framework is layered on top of ASP.NET, one thing you might find
+complicated to implement is security. Security in ASP.NET is commonly
+tied to a web application, so it is hard to support schemes where you
+need different authentication mechanisms for your services. For example,
+if you have basic authentication enabled for the web application hosting
+the services, it would be complicated to support other authentication
+mechanism like OAuth. You can  develop custom modules for handling these
+scenarios, but that is something else you need to implement.   </p>
+
+<h2>WCF REST</h2>
+
+<p>The WCF Web Http programming model was first introduced as part of the
+.NET framework 3.5 SP1 for building non-SOAP http services that might
+follow or not the different REST architectural constraint. This new
+model brought to the scene some new capabilities for WCF by adding new
+attributes in the service model ([WebGet] and [WebInvoke]) for routing
+messages to service operations through URIs and Http methods, behaviors
+for doing same basic content negotiation and exception handling, a new
+WebOperationContext static object for getting access and controlling
+different http header and messages, and finally a new binding
+WebHttpBinding for handling some underline details related to the http
+protocol.</p>
+
+<p>The WCF team later released an REST starter kit in codeplex with new
+features on top of this web programming model to help developers to
+produce more RESTful services. This starter kit also included a
+combination of examples and Visual Studio templates for showing how some
+of the REST constraints could be implemented in WCF, and also a couple
+of interesting features to support help pages, output caching,
+intercepting request messages and a very useful Http client library for
+consuming existing services (HttpClient)</p>
+
+<p>Many of those features were finally included in the latest WCF release,
+4.0, and also the ability of routing messages to the services with
+friendly URLs using the same ASP.NET routing mechanism that ASP.NET MVC
+uses.</p>
+
+<p>As services are first citizens in WCF, you have exclusive control over
+security, message size quotas and throttling for every individual
+services and not for all services running in a host as it would happen
+with ASP.NET.  In addition, WCF provides its own hosting infrastructure,
+which is not dependant of ASP.NET so it is possible to self hosting
+services in any regular .NET application like a windows service for
+example.</p>
+
+<p>In the case of hosting services in ASP.NET with IIS, previous versions
+of WCF (3.0 and 3.5) relied on a file with “svc” extension to activate
+the service host when a new message arrived. WCF 4.0 now supports
+file-less activation for services hosted in ASP.NET, which relies on a
+configuration setting, and also a mechanism based on Http routing
+equivalent to what ASP.NET MVC provides, making possible to support
+friendly URLs. However, there is an slight difference in the way this
+last one works compared to ASP.NET MVC. In ASP.NET MVC, a route
+specifies the controller and also the operation or method that should
+handle a message. In WCF, the route is associated to a factory that
+knows how to create new instances of the service host associated to the
+service, and URI templates attached to [WebGet] and [WebInkoke]
+attributes in the operations take care of the final routing. This
+approach works much better in the way I see it, as you can create an URI
+schema more oriented to resources, and route messages based on Http
+Verbs as well without needing to redefine additional routes. </p>
+
+<p>The support for doing TDD at this point is somehow limited fore the fact
+that services rely on the static context class for getting and setting
+http headers, making very difficult to initialize that one in a test or
+mock it for setting some expectations.</p>
+
+<p>The content negotiation story was improved in WCF 4.0, but it still
+needs some twists to make it complete as you might need to extend the
+default WebContentTypeMapper class for supporting custom media types
+other than the standard “application/xml” for xml and “application/json”
+for JSON.</p>
+
+<p>The WCF team is seriously considering to improve these last two aspects
+and adding some other capabilities to the stack for a next version.</p>
+
+<h2>WCF Data Services</h2>
+
+<p>WCF Data Services, formerly called ADO.NET Data Services, was introduced
+in the .NET stack as way of making any IQueryable data source public to
+the world through a REST API. Although a WCF Data Service sits on top of
+the WCF Web programming model, and therefore is a regular WCF service, I
+wanted to make a distinction here for the fact that this kind of service
+exposes metadata for the consumers, and also adds some restrictions for
+the URIs and the types that can be exposed in the service. All these
+features and restrictions have been documented and published as a
+separate specification known as OData. </p>
+
+<p>The framework includes a set of providers or extensibility points that
+you can customize to make your model writable, extend the available
+metadata, intercepting messages or supporting different paging and
+querying schemas. </p>
+
+<p>A WCF Data Service basically uses URI segments as mechanism for
+expressing queries that can be translated to an underline linq provider,
+making possible to execute the queries on the data source itself, and
+not something that happens in memory. The result of executing those
+queries is what finally got returned as response from the service.
+Therefore, WCF Data services use URI segments to express many of
+supported linq operators, and the entities that need to be retrieved.
+This capability of course is what limit the URI space that you can use
+on your service, as any URI that does not follow the OData standard will
+result in an error.</p>
+
+<p>Content negotiation is also limited to two media types, JSON and Xml
+Atom, and the content payload itself is restricted to specific types
+that you can find as part of the OData specification.</p>
+
+<p>Besides of those two limitations, WCF Data Service is still extremely
+useful for exposing a complete data set with query capabilities through
+a REST interface with just a few lines of code. JSON and Atom are two
+very accepted formats nowadays, making this technology very appealing
+for exposing data that can easily be consumed by any existing client
+platform, and even web browsers.</p>
+
+<p>Also, for Web applications with ajax and smart client applications, you
+do not need to reinvent the wheel and create a complete set of services
+for just exposing data with a CRUD interface. You get your existing data
+model, configure some views or filters for the data you want to expose
+in the model in the data service itself, and that is all.          </p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-10-08T00:00:00-03:00" pubdate data-updated="true">Oct 8<span>th</span>, 2010</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2010/10/08/asp-net-mvc-wcf-rest-and-data-services-when-to-use-what-for-restful-services/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2010/10/08/asp-net-mvc-wcf-rest-and-data-services-when-to-use-what-for-restful-services/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2010/09/28/the-swift-knife-for-managing-x509-certificates-in-windows/" title="Previous Post: The swiss knife for managing X509 certificates in Windows">&laquo; The swiss knife for managing X509 certificates in Windows</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2010/10/14/so-aware-integration-with-visual-studio-2008/" title="Next Post: SO-Aware integration with Visual Studio 2008">SO-Aware integration with Visual Studio 2008 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2010/10/08/asp-net-mvc-wcf-rest-and-data-services-when-to-use-what-for-restful-services/';
+        var disqus_url = 'http://cibrax.me/blog/2010/10/08/asp-net-mvc-wcf-rest-and-data-services-when-to-use-what-for-restful-services/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

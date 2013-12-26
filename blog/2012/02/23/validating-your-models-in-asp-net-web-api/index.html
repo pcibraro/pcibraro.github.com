@@ -1,0 +1,689 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Validating your models in ASP.NET Web API - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="One of the nice things about having a single extensibility model between
+ASP.NET MVC and Web API is that you can get many of the great MVC
+features &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2012/02/23/validating-your-models-in-asp-net-web-api">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Validating Your Models in ASP.NET Web API</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-02-23T00:00:00-03:00" pubdate data-updated="true">Feb 23<span>rd</span>, 2012</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>One of the nice things about having a single extensibility model between
+ASP.NET MVC and Web API is that you can get many of the great MVC
+features for free. Model binding and validation is one of them.</p>
+
+<p>A simple action in Web API controller is typically associated to a Http
+verb and can optionally receive or return a model (or a message if you
+want to have better control over the http messaging details). For
+example, the following implementation illustrates a simple case for
+creating a contact when an Http POST is received,</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+public class ContactController : ApiController
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>IContactRepository repository;
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>public ContactController(IContactRepository repository)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    this.repository = repository;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>public HttpResponseMessage Post(Contact contact)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    int id = this.repository.Create(contact);
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    var response = new HttpResponseMessage(HttpStatusCode.Created);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    response.Headers.Location = new Uri("/api/Contact/" + id);
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    return response;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+}
+</del></p>
+
+<p>All the details for deserializing the request message into a Contact
+model is automatically handled by the Web API infrastructure. It
+actually uses the model binding feature found in MVC but it also adds
+content negotiation on top of it.</p>
+
+<p>Content negotiation in Web API is implemented through formatters that
+know how to serialize/deserialize an specific payload associated to a
+content type (json or html for example) into a model.</p>
+
+<p>As you probably know, the model binding infrastructure in MVC also
+allows validations on model classes decorated with data annotations.
+That means you can decorate your models with different validation
+attributes as it shown bellow,</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+public class Contact
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>[Required]
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>public string FullName { get; set; }
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>[Email]
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>public string Email { get; set; }
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+}
+</del></p>
+
+<p>The model binding infrastructure will validate the model but Web API
+will not do anything with it by default. If you want to reject a message
+based on the result of the validations, you need to implement a custom
+filter in the current bits.</p>
+
+<p>That can be done by extending an ActionFilterAttribute and overriding
+the OnActionExecuting method.</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+public class ValidationActionFilter : ActionFilterAttribute
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>public override void OnActionExecuting(System.Web.Http.Controllers.HttpActionContext actionContext)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>    if (!actionContext.ModelState.IsValid)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>        var errors = actionContext.ModelState
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>            .Where(e =&gt; e.Value.Errors.Count &gt; 0)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>            .Select(e =&gt; new Error
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>            {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>                Name = e.Key,
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>                Message = e.Value.Errors.First().ErrorMessage
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>            }).ToArray();
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>        actionContext.Response = new HttpResponseMessage&lt;Error[]&gt;(errors, HttpStatusCode.BadRequest);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>    }
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+}
+</del></p>
+
+<p>As you can see, the implementation is very simple. It only checks
+whether the model state is valid and return a list of validation errors.
+The execution pipeline will be automatically interrupted and response
+will be sent back to the client with the list of errors. I am also using
+a model for representing an error so Web API can send the expected wire
+format to the client application (If the client is expecting json, it
+will receive a list of errors formatted as json for example).</p>
+
+<p>This validation attribute can be injecting into the execution pipeline
+by either decorating the api controller with it or by adding it to the
+global filters collection.</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+public static void RegisterGlobalFilters(GlobalFilterCollection filters)
+</del></p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
+
+<pre><code>filters.Add(new HandleErrorAttribute());
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
+
+<pre><code>filters.Add(new ValidationActionFilter());
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
+}
+</del></p>
+
+<p>Now, let’s see how this works in action with Fiddler. If we send a json
+message with an invalid email,</p>
+
+<hr />
+
+<p><strong>POST <a href="http://localhost:16913/api/Contact">http://localhost:16913/api/Contact</a> HTTP/1.1</strong></p>
+
+<p><strong>Content-Type: application/json</strong></p>
+
+<p><strong>Host: localhost:16913</strong></p>
+
+<p><strong>Content-Length: 30</strong></p>
+
+<p><strong>{&ldquo;fullname&rdquo;:&ldquo;re&rdquo;,&ldquo;email&rdquo;:&ldquo;re&rdquo;}</strong></p>
+
+<p>We will receive a response also formatted as json,</p>
+
+<hr />
+
+<p><strong>HTTP/1.1 400 Bad Request</strong></p>
+
+<p><strong>Content-Type: application/json; charset=utf-8</strong></p>
+
+<hr />
+
+<p>[{&ldquo;Message&rdquo;:&ldquo;The Email field is not a valid e-mail
+address.&rdquo;,&ldquo;Name&rdquo;:&ldquo;Email&rdquo;}]</p>
+
+<p>  <strong>\
+</strong>If we change the request message a little bit to expect xml as
+response</p>
+
+<hr />
+
+<p><strong>POST <a href="http://localhost:16913/api/Contact">http://localhost:16913/api/Contact</a> HTTP/1.1</strong></p>
+
+<p><strong>Accept: text/xml</strong></p>
+
+<p><strong>Content-Type: application/json</strong></p>
+
+<p><strong>Host: localhost:16913</strong></p>
+
+<p><strong>Content-Length: 31</strong></p>
+
+<p><strong>{&ldquo;fullname&rdquo;:&ldquo;re&rdquo;,&ldquo;email&rdquo;:&ldquo;foo&rdquo;}</strong></p>
+
+<p>We will get a list of errors formatted as xml this time</p>
+
+<hr />
+
+<p><strong>HTTP/1.1 400 Bad Request</strong></p>
+
+<p><strong>Content-Type: text/xml; charset=utf-8</strong></p>
+
+<p><strong>&lt;?xml version=&ldquo;1.0&rdquo; encoding=&ldquo;utf-8&rdquo;?>&lt;ArrayOfError
+xmlns:xsi=&ldquo;<a href="http://www.w3.org/2001/XMLSchema-instance">http://www.w3.org/2001/XMLSchema-instance</a>&rdquo;
+xmlns:xsd=&ldquo;<a href="http://www.w3.org/2001/XMLSchema">http://www.w3.org/2001/XMLSchema</a>&rdquo;>&lt;Error>&lt;Name>Email&lt;/Name>&lt;Message>The
+Email field is not a valid e-mail
+address.&lt;/Message>&lt;/Error>&lt;/ArrayOfError></strong></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-02-23T00:00:00-03:00" pubdate data-updated="true">Feb 23<span>rd</span>, 2012</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2012/02/23/validating-your-models-in-asp-net-web-api/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2012/02/23/validating-your-models-in-asp-net-web-api/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2012/02/17/integrating-backbone-js-with-asp-net-web-api/" title="Previous Post: Integrating Backbone.js with ASP.NET Web API">&laquo; Integrating Backbone.js with ASP.NET Web API</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2012/02/27/handling-exceptions-in-your-asp-net-web-api/" title="Next Post: Handling exceptions in your ASP.NET Web API">Handling exceptions in your ASP.NET Web API &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2012/02/23/validating-your-models-in-asp-net-web-api/';
+        var disqus_url = 'http://cibrax.me/blog/2012/02/23/validating-your-models-in-asp-net-web-api/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

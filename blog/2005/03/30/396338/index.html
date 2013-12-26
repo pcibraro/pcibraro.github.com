@@ -1,0 +1,400 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Installing a SQL database with WIX - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="I like to share a sample about how to install a Sql database using a
+custom action shipped within WIX, it is an easy task and it can be
+useful in &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2005/03/30/396338">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Installing a SQL Database With WIX</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2005-03-30T00:00:00-03:00" pubdate data-updated="true">Mar 30<span>th</span>, 2005</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>I like to share a sample about how to install a Sql database using a
+custom action shipped within WIX, it is an easy task and it can be
+useful in many scenarios.\
+Let&rsquo;s take a look to this source file &ldquo;sql.wxs&rdquo;:</p>
+
+<p>\</p>
+
+<p>&lt;Wix xmlns=&lsquo;<a href="http://schemas.microsoft.com/wix/2003/01/wi">http://schemas.microsoft.com/wix/2003/01/wi</a>&rsquo;>\
+  &lt;Product Name=&lsquo;SQL app 1.0&rsquo; Id=&lsquo;DB501C18-86C7-4D14-AEC0-86416A69ABDE&rsquo;
+Language=&lsquo;1033&rsquo; Codepage=&lsquo;1252&rsquo;\
+     Version=&lsquo;1.0.0&rsquo; Manufacturer=&lsquo;Cibrax Ltd.&rsquo;>\
+            &lt;Package Id=&lsquo;????????&ndash;????&ndash;????&ndash;????&ndash;????????????&rsquo;
+Keywords=&lsquo;Installer&rsquo; Description=&ldquo;SQL App 1.0 Installer&rdquo;\
+              Comments=&lsquo;SQL app is a registered trademark of Cibrax
+Ltd.&rsquo; Manufacturer=&lsquo;Cibrax Ltd.&rsquo; InstallerVersion=&lsquo;100&rsquo;\
+              Languages=&lsquo;1033&rsquo; Compressed=&lsquo;yes&rsquo; SummaryCodepage=&lsquo;1252&rsquo;
+/>\
+        &lt;Media Id=&lsquo;1&rsquo; Cabinet=&lsquo;Sample.cab&rsquo; EmbedCab=&lsquo;yes&rsquo; />\
+        &lt;User Id=&ldquo;MySQLUser&rdquo; Name=&ldquo;[SQLUSER]&rdquo;
+Password=&ldquo;[SQLUSERPASSWORD]&rdquo;>&lt;/User>\
+        &lt;Directory Id=&lsquo;TARGETDIR&rsquo; Name=&lsquo;SourceDir&rsquo;>\
+            &lt;Directory Id=&lsquo;ProgramFilesFolder&rsquo; Name=&lsquo;PFiles&rsquo;>\
+                &lt;Directory Id=&lsquo;INSTALLDIR&rsquo; Name=&lsquo;TestSQL&rsquo;>\
+                      &lt;Component Id=&ldquo;MySqlComponent&rdquo;
+Guid=&ldquo;C50999A0-02FD-42d5-9F65-7375318DD328&rdquo;>\
+                        &lt;SqlDatabase Id=&ldquo;MySqlDatabase&rdquo;
+Database=&ldquo;MyDatabase&rdquo; Server=&ldquo;[SQLSERVER]&rdquo; Instance=&ldquo;[SQLINSTANCE]&rdquo;\
+                            CreateOnInstall=&ldquo;yes&rdquo; DropOnUninstall=&ldquo;yes&rdquo;
+User=&ldquo;MySQLUser&rdquo; ContinueOnError=&ldquo;yes&rdquo;>\
+                              &lt;SqlScript Id=&ldquo;CreateTables&rdquo;
+ExecuteOnInstall=&ldquo;yes&rdquo; BinaryKey=&ldquo;CreateTablesBin&rdquo;>&lt;/SqlScript>\
+                        &lt;/SqlDatabase>\
+                      &lt;/Component>\
+                &lt;/Directory>\
+             &lt;/Directory>\
+         &lt;/Directory>\
+        &lt;Binary Id=&ldquo;CreateTablesBin&rdquo;
+src=&ldquo;CreateTables.sql&rdquo;>&lt;/Binary>\
+        &lt;Feature Id=&lsquo;Complete&rsquo; Level=&lsquo;1&rsquo; Description=&ldquo;Full&rdquo; Title=&ldquo;Full
+Installation&rdquo;>\
+            &lt;ComponentRef Id=&lsquo;MySqlComponent&rsquo; />\
+        &lt;/Feature>\
+    &lt;/Product>\
+&lt;/Wix>\</p>
+
+<p>I&rsquo;ll start describing the most important elements in this script:</p>
+
+<p><strong>&lt;User></strong> \</p>
+
+<p>It contains authentication settings necessary to sign on against the Sql
+database server. \
+As you can see, the user and password are properties, so you can change
+them later in runtime maybe using a user dialog or custom action. Other
+point to consider, you can nest this element within the component, in
+that case, the installer will create a windows user account user during
+the install, and we don&rsquo;t need that in this sample.</p>
+
+<p><strong>&lt;SqlDatabase></strong> \</p>
+
+<p>Using this element we can specify some settings required to create the
+database, such as database name, server, instance and user. The user
+attribute contains a reference to the existing user element, in this
+case, &ldquo;MySQLUser&rdquo;. \
+It supports other conditional attributes, such as CreateOnInstall,
+DropUnistall and ContinueOnError. These attributes specifies what to do
+during the install, uninstall and when an error occurs. \
+The properties will take default values if you do not provided them, for
+example, the default value for Server is “localhost”.</p>
+
+<p><strong>&lt;SqlScript></strong> \</p>
+
+<p>I will use this element to execute a sql script because the previous
+element only creates an empty database, but in this sample, I also want
+to create some empty tables within the database.\
+The BinaryKey contains a reference to the script file in the Binary
+table.</p>
+
+<p>The CreateTables.sql file is a simple script to create a new table, and
+looks like this:</p>
+
+<p>CREATE TABLE [dbo].[Test] (\
+    [Test_Id] [int] NOT NULL \
+) ON [PRIMARY]\</p>
+
+<p>At this point, we have a simple wix script to install a new database,
+but what is next? Obviously, we need to compile this file using
+&ldquo;candle.exe&rdquo; and then, &ldquo;light.exe&rdquo;. \
+We will start compiling this script in a wix object file using
+&ldquo;candle.exe&rdquo; ( Replace &ldquo;[Wix Path]&rdquo; with the current wix path in your
+machine ):\
+\</p>
+
+<p>[Wix path]\candle.exe sql.wxs</p>
+
+<p>If everything goes fine, you will able to find a sql.wixobj file in the
+same folder than sql.wxs. \
+As next step, we will use &ldquo;light.exe&rdquo; to create the final msi file.</p>
+
+<p>[Wix path]\light.exe sql.wixobj</p>
+
+<p>Ughh, you will get a wix linker error after running this command, but
+what is wrong with the script? Well, to install a sql database, wix uses
+some custom actions, which will run along the msi, and we did not
+specify any of these custom actions in our script. \
+Do we need to include these custom actions in our script? Not exactly,
+&ldquo;light.exe&rdquo; can include them automatically when the msi is generated. \
+To do that, we need to provide some extra parameters:</p>
+
+<p>[Wix path]\light.exe -out sql.msi sql.wixobj [Wix path]\ca\sca.wixlib</p>
+
+<p>After running this command, you will find a new sql.msi file. Now, you
+can use it to install your database in any machine.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2005-03-30T00:00:00-03:00" pubdate data-updated="true">Mar 30<span>th</span>, 2005</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/wix/'>Wix</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2005/03/30/396338/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2005/03/30/396338/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+      
+        <a class="basic-alignment right" href="/blog/2005/04/11/399839/" title="Next Post: Hosting the CLR within a custom action">Hosting the CLR within a custom action &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2005/03/30/396338/';
+        var disqus_url = 'http://cibrax.me/blog/2005/03/30/396338/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

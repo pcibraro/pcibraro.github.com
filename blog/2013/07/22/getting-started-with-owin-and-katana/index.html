@@ -1,0 +1,536 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Getting started with Owin and Katana - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="Introduction The .NET ecosystem offers today a lot of alternatives for developing web
+applications. You can either use any of the frameworks &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2013/07/22/getting-started-with-owin-and-katana">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Getting Started With Owin and Katana</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-07-22T00:00:00-03:00" pubdate data-updated="true">Jul 22<span>nd</span>, 2013</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h2>Introduction</h2>
+
+<p>The .NET ecosystem offers today a lot of alternatives for developing web
+applications. You can either use any of the frameworks supported by
+Microsoft with ASP.NET such as Forms, MVC or Web API, or any other open
+source alternative like FubuMVC, ServiceStack, NancyFx or OpenRasta to
+name a few. From an architecture standpoint, all these frameworks have
+three main layers in common (in spite of the difference with the
+implementation details), hosting, middleware, and application.</p>
+
+<p>The hosting layer is responsible for managing the underline process,
+where the http connections are established and managed, and also to
+materialize those connections into request/response objects that are
+sent to the upper layers. For example, the hosting layer could be
+ASP.NET running in IIS, or it could also be a console application that
+uses the http listener directly.</p>
+
+<p>The middleware layer provides common infrastructure services, which runs
+at low level in the http stack, such as security, caching, or any other
+concern that can be handled at this level.</p>
+
+<p>The application layer is where the applications or services are
+implemented using the features available in the framework.</p>
+
+<p>However, the distinction between the middleware and application layers
+is not always clear, which causes that many of the middleware services
+end up being implemented in the application layer. For example, you
+could implement middleware services for security in ASP.NET MVC using
+filters, which rely on features specific to the application level in
+that framework. This make almost impossible to reuse all these services
+across all the available frameworks, so you will find different
+implementations of the same services for the different frameworks. To
+give an example, basic authentication is something that could be
+implemented as middleware service and reused, but today is implemented
+differently in each framework.</p>
+
+<p>Someone would suggest that a ASP.NET Http Module could be a good option
+for implementing a middleware service, but that’s not necessarily true
+as it would only work when the hosting layer uses ASP.NET.</p>
+
+<p>This exact problem is what <a href="http://owin.org/spec/owin-1.0.0.html">OWIN
+specification</a> tries to address by
+providing a common abstraction for any http-aware service or application
+with minimal dependencies on existing frameworks or implementations.  At
+very core level, OWIN defines a handler, which is represented as an
+application delegate,</p>
+
+<p>using AppFunc = Func&lt; \
+        IDictionary&lt;string, object>, // Environment \
+        Task>; // Done</p>
+
+<p>The idea is to represent the three layers discussed above as a set of
+handlers using the “chain of responsibility” pattern. The environment
+argument is a dictionary that the different handlers use to exchange
+values, and the next handler in the chain is represented with the task
+argument. Having said that, the first handler in the chain would be
+responsible for the hosting layer, and it should populate the
+environment with keys that describe the received http request message,
+such as scheme, port, request path, headers, etc. All those common
+headers are discussed as part of the specification.</p>
+
+<p>Katana is a Microsoft implementation of the OWIN specification, which
+includes handlers for the hosting and middleware layers. It’s an open
+source project, which can be found in this
+<a href="http://katanaproject.codeplex.com/SourceControl/latest">location</a>. All
+the investment that Microsoft has done so far for ASP.NET in the
+different application frameworks (i.e. MVC or Web API), it’s now being
+refactored as OWIN handlers that can be reused across different
+application frameworks. For example, cookie authentication or even OAuth
+are being implemented as middleware services that can be reused not only
+by ASP.NET web apps but also for other application frameworks in the
+open source world.</p>
+
+<p>The application layer is also implemented as another OWIN handler, which
+is responsible for setting up all the infrastructure required to handle
+the request/response at the application level. You will find application
+handlers for ASP.NET MVC, ASP.NET Web API, SignalR, or NancyFx to give
+an example. </p>
+
+<h2>Gettting Started with OWIN and Katana</h2>
+
+<p>The easiest way to get started with OWIN is to use the assembly
+distributed as nuget package. You will find a single nuget package for
+this called “OWIN”. This assembly only contains an interface
+IAppBuilder, which can be used to configure all the handlers that you
+want to use in your web application. This is a very low level interface
+that you won’t have to implement yourself if you use Katana.</p>
+
+<p>In addition to the “OWIN” assembly, you will find two additional nuget
+packages</p>
+
+<ul>
+<li>Owin.Extensions: Provides a set of very useful extensions methods
+for the IAppBuilder interface that you can use to configure the
+handlers.</li>
+<li>Owin.Types: Provides a set of wrappers to represent the environment
+dictionary as a typed object representing the request and response
+messages.</li>
+</ul>
+
+
+<p>You can implement your first OWIN handler using these three packages
+(You will not able to run it without the hosting handlers provided by
+Katana).</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">MyMiddleware</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">Func</span><span class="p">&lt;</span><span class="n">IDictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">object</span><span class="p">&gt;,</span> <span class="n">Task</span><span class="p">&gt;</span> <span class="n">next</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">public</span> <span class="nf">MyMiddleware</span><span class="p">(</span><span class="n">Func</span><span class="p">&lt;</span><span class="n">IDictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">object</span><span class="p">&gt;,</span> <span class="n">Task</span><span class="p">&gt;</span> <span class="n">next</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="n">next</span> <span class="p">=</span> <span class="n">next</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">public</span> <span class="n">Task</span> <span class="nf">Invoke</span><span class="p">(</span><span class="n">IDictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">object</span><span class="p">&gt;</span> <span class="n">env</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>    <span class="kt">var</span> <span class="n">headers</span> <span class="p">=</span> <span class="p">(</span><span class="n">IDictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">[]&gt;)</span><span class="n">env</span><span class="p">[</span><span class="s">&quot;owin.RequestHeaders&quot;</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">var</span> <span class="n">url</span> <span class="p">=</span> <span class="kt">string</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span><span class="s">&quot;{0}://{1}{2}{3}&quot;</span><span class="p">,</span>
+</span><span class='line'>                <span class="p">(</span><span class="kt">string</span><span class="p">)</span><span class="n">env</span><span class="p">[</span><span class="s">&quot;owin.RequestScheme&quot;</span><span class="p">],</span>
+</span><span class='line'>                <span class="n">headers</span><span class="p">[</span><span class="s">&quot;host&quot;</span><span class="p">].</span><span class="n">First</span><span class="p">(),</span>
+</span><span class='line'>                <span class="p">(</span><span class="kt">string</span><span class="p">)</span><span class="n">env</span><span class="p">[</span><span class="s">&quot;owin.RequestPathBase&quot;</span><span class="p">],</span>
+</span><span class='line'>                <span class="p">(</span><span class="kt">string</span><span class="p">)</span><span class="n">env</span><span class="p">[</span><span class="s">&quot;owin.RequestPath&quot;</span><span class="p">]);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="p">((</span><span class="kt">string</span><span class="p">)</span><span class="n">env</span><span class="p">[</span><span class="s">&quot;owin.RequestQueryString&quot;</span><span class="p">]</span> <span class="p">!=</span> <span class="s">&quot;&quot;</span><span class="p">)</span>
+</span><span class='line'>      <span class="n">url</span> <span class="p">+=</span> <span class="s">&quot;?&quot;</span> <span class="p">+</span> <span class="p">(</span><span class="kt">string</span><span class="p">)</span><span class="n">env</span><span class="p">[</span><span class="s">&quot;owin.RequestQueryString&quot;</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;The received URL is {0}&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="n">next</span><span class="p">(</span><span class="n">env</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is a low level handler that sends the request url to the console.
+As you can see, it relies on some existing properties in the
+environment, which should have been set by Katana in the hosting layer.
+The handler also receives the next handler to call in the chain as part
+of the constructor.</p>
+
+<p>The entry point in any Katana application must be a class that receives
+the IAppBuilder interface as argument to configure all the handlers, as
+it is shown below,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'> <span class="k">public</span> <span class="k">class</span> <span class="nc">Startup</span>
+</span><span class='line'> <span class="p">{</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">Configuration</span><span class="p">(</span><span class="n">IAppBuilder</span> <span class="n">app</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>       <span class="n">app</span><span class="p">.</span><span class="n">UseType</span><span class="p">&lt;</span><span class="n">MyMiddleware</span><span class="p">&gt;();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>UseType is one the extension methods provided by “Owin.Extensions” to
+configure a new handler in the pipeline. You can also other extension
+methods to define a handler on the fly using delegates as this one,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="n">app</span><span class="p">.</span><span class="n">UseHandlerAsync</span><span class="p">(</span><span class="k">async</span> <span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="n">res</span><span class="p">)</span> <span class="p">=&gt;</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">res</span><span class="p">.</span><span class="n">ContentType</span> <span class="p">=</span> <span class="s">&quot;text/plain&quot;</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">await</span> <span class="n">res</span><span class="p">.</span><span class="n">WriteAsync</span><span class="p">(</span><span class="s">&quot;Hello World&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>There is one more nuget package that you will find useful to create OWIN
+handlers, which is “Microsoft.Owin”. This is a package provided as part
+of Katana (It’s still a pre-release), which extends the Owin Request and
+Response classes with more properties and methods, and also helper
+methods to deal with these classes.</p>
+
+<h2>Hosting an application with Katana</h2>
+
+<p>Katana provides three options to host a web application.</p>
+
+<p>​1. OwinHost.exe. It’s a command tool that you can use to run the
+application. You can use multiple command arguments to specify the
+assembly with the entry point for configuring the IAppBuilder or other
+configuration settings such as the port number or tracing. This is tool
+is available as part of the nuget package “OwinHost”.</p>
+
+<p>​2. .NET application. There is a WebApp class that you can use to
+self-host a web application in any regular .NET application such as
+console app or a windows service. This class is available as part of the
+“Microsoft.Owin.Hosting” assembly.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">using</span> <span class="p">(</span><span class="n">WebApp</span><span class="p">.</span><span class="n">Start</span><span class="p">&lt;</span><span class="n">Startup</span><span class="p">&gt;(</span><span class="k">new</span> <span class="n">StartOptions</span> <span class="p">{</span> <span class="n">Port</span> <span class="p">=</span> <span class="m">5000</span> <span class="p">}))</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>   <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;Press Enter to quit.&quot;</span><span class="p">);</span>
+</span><span class='line'>   <span class="n">Console</span><span class="p">.</span><span class="n">ReadKey</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You need to pass the startup entry as argument to the static method
+“Start”.</p>
+
+<p>​3. ASP.NET. You need to reference the nuget package
+“Microsoft.Owin.Hosting.SystemWeb” (Pre-Release) from your web
+application project, and include the Startup class in that project as
+well.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-07-22T00:00:00-03:00" pubdate data-updated="true">Jul 22<span>nd</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2013/07/22/getting-started-with-owin-and-katana/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2013/07/22/getting-started-with-owin-and-katana/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/06/03/pushing-etw-events-through-signalr/" title="Previous Post: Pushing ETW events through SignalR">&laquo; Pushing ETW events through SignalR</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/07/26/writing-an-authenticationhandler-for-katana/" title="Next Post: Writing an AuthenticationHandler for Katana">Writing an AuthenticationHandler for Katana &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2013/07/22/getting-started-with-owin-and-katana/';
+        var disqus_url = 'http://cibrax.me/blog/2013/07/22/getting-started-with-owin-and-katana/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

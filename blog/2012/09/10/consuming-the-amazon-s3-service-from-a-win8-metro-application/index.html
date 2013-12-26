@@ -1,0 +1,496 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Consuming the Amazon S3 service from a Win8 Metro Application - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="As many of the existing Http APIs for Cloud Services, AWS also provides
+a set of different platform SDKs for hiding many of complexities present
+in &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2012/09/10/consuming-the-amazon-s3-service-from-a-win8-metro-application">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Consuming the Amazon S3 Service From a Win8 Metro Application</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-09-10T00:00:00-03:00" pubdate data-updated="true">Sep 10<span>th</span>, 2012</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>As many of the existing Http APIs for Cloud Services, AWS also provides
+a set of different platform SDKs for hiding many of complexities present
+in the APIs. While there is a platform SDK for .NET, which is open
+source and available in C#, that SDK does not work in Win8 Metro
+Applications for the changes introduced in WinRT. WinRT offers a
+complete different set of APIs for doing I/O operations such as doing
+http calls or using cryptography for signing or encrypting data, two
+aspects that are absolutely necessary for consuming AWS. All the I/O
+APIs available as part of WinRT are asynchronous, and uses the TPL model
+for .NET applications (HTML and JavaScript Metro applications use a
+model based in promises, which is similar concept). </p>
+
+<p>In the case of S3, the http Authorization header is used for two
+purposes, authenticating clients and make sure the messages were not
+altered while they were in transit. For doing that, it uses a signature
+or hash of the message content and some of the headers using a symmetric
+key (That&rsquo;s just one of the available mechanisms). Windows Azure for
+example also uses the same mechanism in many of its APIs.</p>
+
+<p>There are three challenges that any developer working for first time in
+Metro will have to face to consume S3, the new WinRT APIs, the
+asynchronous nature of them and the complexity introduced for generating
+the Authorization header. Having said that, I decided to write this post
+with some of the gotchas I found myself trying to consume this Amazon
+service.</p>
+
+<p>​1. Generating the signature for the Authorization header</p>
+
+<p>All the cryptography APIs in WinRT are available under
+Windows.Security.Cryptography namespace. Many of operations available in
+these APIs uses the concept of buffers (IBuffer) for representing a
+chunk of binary data. As you will see in the example below, these
+buffers are mainly generated with the use of static methods in a WinRT
+class CryptographicBuffer available as part of the namespace previously
+mentioned.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">private</span> <span class="kt">string</span> <span class="nf">DeriveAuthToken</span><span class="p">(</span><span class="kt">string</span> <span class="n">resource</span><span class="p">,</span> <span class="kt">string</span> <span class="n">httpMethod</span><span class="p">,</span> <span class="kt">string</span> <span class="n">timestamp</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>   <span class="kt">var</span> <span class="n">stringToSign</span> <span class="p">=</span> <span class="kt">string</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span><span class="s">&quot;{0}\n&quot;</span> <span class="p">+</span>
+</span><span class='line'>      <span class="s">&quot;\n&quot;</span> <span class="p">+</span>
+</span><span class='line'>      <span class="s">&quot;\n&quot;</span> <span class="p">+</span>
+</span><span class='line'>      <span class="s">&quot;\n&quot;</span> <span class="p">+</span>
+</span><span class='line'>      <span class="s">&quot;x-amz-date:{1}\n&quot;</span> <span class="p">+</span>
+</span><span class='line'>      <span class="s">&quot;/{2}/&quot;</span><span class="p">,</span> <span class="n">httpMethod</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">resource</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="kt">var</span> <span class="n">algorithm</span> <span class="p">=</span> <span class="n">MacAlgorithmProvider</span><span class="p">.</span><span class="n">OpenAlgorithm</span><span class="p">(</span><span class="s">&quot;HMAC_SHA1&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="kt">var</span> <span class="n">keyMaterial</span> <span class="p">=</span> <span class="n">CryptographicBuffer</span><span class="p">.</span><span class="n">CreateFromByteArray</span><span class="p">(</span><span class="n">Encoding</span><span class="p">.</span><span class="n">UTF8</span><span class="p">.</span><span class="n">GetBytes</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">secret</span><span class="p">));</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="kt">var</span> <span class="n">hmacKey</span> <span class="p">=</span> <span class="n">algorithm</span><span class="p">.</span><span class="n">CreateKey</span><span class="p">(</span><span class="n">keyMaterial</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="kt">var</span> <span class="n">signature</span> <span class="p">=</span> <span class="n">CryptographicEngine</span><span class="p">.</span><span class="n">Sign</span><span class="p">(</span>
+</span><span class='line'>                <span class="n">hmacKey</span><span class="p">,</span>
+</span><span class='line'>                <span class="n">CryptographicBuffer</span><span class="p">.</span><span class="n">CreateFromByteArray</span><span class="p">(</span><span class="n">Encoding</span><span class="p">.</span><span class="n">UTF8</span><span class="p">.</span><span class="n">GetBytes</span><span class="p">(</span><span class="n">stringToSign</span><span class="p">))</span>
+</span><span class='line'>            <span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="k">return</span> <span class="n">CryptographicBuffer</span><span class="p">.</span><span class="n">EncodeToBase64String</span><span class="p">(</span><span class="n">signature</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The algorithm that determines the information or content you need to use
+for generating the signature is very well described as part of the AWS
+documentation. In this case, this method is generating a signature
+required for creating a new bucket. A HmacSha1 hash is computed using a
+secret or symetric key provided by AWS in the management console. \
+ \
+2. Sending an Http Request to the S3 service</p>
+
+<p>WinRT also ships with the System.Net.Http.HttpClient that was first
+introduced some months ago with ASP.NET Web API. This client provides a
+rich interface on top the traditional WebHttpRequest class, and also
+solves some of limitations found in this last one. There are a few
+things that don&rsquo;t work with a raw WebHttpRequest such as setting the
+Host header, which is something absolutely required for consuming S3.
+Also, HttpClient is more friendly for doing unit tests, as it receives a
+HttpMessageHandler as part of the constructor that can fake to emulate a
+real http call. This is how the code for consuming the service with
+HttpClient looks like,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">async</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">S3Response</span><span class="p">&gt;</span> <span class="n">CreateBucket</span><span class="p">(</span><span class="kt">string</span> <span class="n">name</span><span class="p">,</span> <span class="kt">string</span> <span class="n">region</span> <span class="p">=</span> <span class="k">null</span><span class="p">,</span> <span class="k">params</span> <span class="kt">string</span><span class="p">[]</span> <span class="n">acl</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>   <span class="kt">var</span> <span class="n">timestamp</span> <span class="p">=</span> <span class="kt">string</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span><span class="s">&quot;{0:r}&quot;</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">.</span><span class="n">UtcNow</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">var</span> <span class="n">auth</span> <span class="p">=</span> <span class="n">DeriveAuthToken</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s">&quot;PUT&quot;</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">var</span> <span class="n">request</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpRequestMessage</span><span class="p">(</span><span class="n">HttpMethod</span><span class="p">.</span><span class="n">Put</span><span class="p">,</span> <span class="s">&quot;http://s3.amazonaws.com/&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">request</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">Host</span> <span class="p">=</span> <span class="kt">string</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span><span class="s">&quot;{0}.s3.amazonaws.com&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">request</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">TryAddWithoutValidation</span><span class="p">(</span><span class="s">&quot;Authorization&quot;</span><span class="p">,</span> <span class="s">&quot;AWS &quot;</span> <span class="p">+</span> <span class="k">this</span><span class="p">.</span><span class="n">key</span> <span class="p">+</span> <span class="s">&quot;:&quot;</span> <span class="p">+</span> <span class="n">auth</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">request</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="s">&quot;x-amz-date&quot;</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">var</span> <span class="n">client</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpClient</span><span class="p">();</span>
+</span><span class='line'>    <span class="kt">var</span> <span class="n">response</span> <span class="p">=</span> <span class="k">await</span> <span class="n">client</span><span class="p">.</span><span class="n">SendAsync</span><span class="p">(</span><span class="n">request</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="k">new</span> <span class="n">S3Response</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>         <span class="n">Succeed</span> <span class="p">=</span> <span class="n">response</span><span class="p">.</span><span class="n">StatusCode</span> <span class="p">==</span> <span class="n">HttpStatusCode</span><span class="p">.</span><span class="n">OK</span><span class="p">,</span>
+</span><span class='line'>         <span class="n">Message</span> <span class="p">=</span> <span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">Content</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span> <span class="p">?</span>
+</span><span class='line'>            <span class="k">await</span> <span class="n">response</span><span class="p">.</span><span class="n">Content</span><span class="p">.</span><span class="n">ReadAsStringAsync</span><span class="p">()</span> <span class="p">:</span> <span class="k">null</span>
+</span><span class='line'>     <span class="p">};</span>
+</span><span class='line'> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You will notice a few additional things in this code. By default,
+HttpClient validates the values for some well-know headers, and
+Authorization is one of them. It won&rsquo;t allow you to set a value with &ldquo;:&rdquo;
+on it, which is something that S3 expects. However, that&rsquo;s not a problem
+at all, as you can skip the validation by using the
+TryAddWithoutValidation method. \
+Also, the code is heavily relying on the new async and await keywords to
+transform all the asynchronous calls into synchronous ones. In case you
+would want to unit test this code and faking the call to the real S3
+service, you should have to modify it to inject a custom
+HttpMessageHandler into the HttpClient. The following implementation
+illustrates this concept,</p>
+
+<p>In case you would want to unit test this code and faking the call to the
+real S3 service, you should have to modify it to inject a custom
+HttpMessageHandler into the HttpClient. The following implementation
+illustrates this concept,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">FakeHttpMessageHandler</span> <span class="p">:</span> <span class="n">HttpMessageHandler</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">HttpResponseMessage</span> <span class="n">response</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">public</span> <span class="nf">FakeHttpMessageHandler</span><span class="p">(</span><span class="n">HttpResponseMessage</span> <span class="n">response</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>       <span class="k">this</span><span class="p">.</span><span class="n">response</span> <span class="p">=</span> <span class="n">response</span><span class="p">;</span>
+</span><span class='line'>   <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="k">protected</span> <span class="k">override</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;</span> <span class="n">SendAsync</span><span class="p">(</span><span class="n">HttpRequestMessage</span> <span class="n">request</span><span class="p">,</span> <span class="n">System</span><span class="p">.</span><span class="n">Threading</span><span class="p">.</span><span class="n">CancellationToken</span> <span class="n">cancellationToken</span><span class="p">)</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'>      <span class="kt">var</span> <span class="n">tcs</span> <span class="p">=</span> <span class="k">new</span> <span class="n">TaskCompletionSource</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;();</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="n">tcs</span><span class="p">.</span><span class="n">SetResult</span><span class="p">(</span><span class="n">response</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">return</span> <span class="n">tcs</span><span class="p">.</span><span class="n">Task</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You can use this handler for injecting any response while you are unit
+testing the code.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-09-10T00:00:00-03:00" pubdate data-updated="true">Sep 10<span>th</span>, 2012</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2012/09/10/consuming-the-amazon-s3-service-from-a-win8-metro-application/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2012/09/10/consuming-the-amazon-s3-service-from-a-win8-metro-application/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2012/08/10/binding-form-data-in-asp-net-web-api/" title="Previous Post: Binding form data in ASP.NET Web API">&laquo; Binding form data in ASP.NET Web API</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2012/09/12/unit-and-integration-testing-with-the-web-api-httpclient/" title="Next Post: Doing unit and integration tests with the Web API HttpClient">Doing unit and integration tests with the Web API HttpClient &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2012/09/10/consuming-the-amazon-s3-service-from-a-win8-metro-application/';
+        var disqus_url = 'http://cibrax.me/blog/2012/09/10/consuming-the-amazon-s3-service-from-a-win8-metro-application/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

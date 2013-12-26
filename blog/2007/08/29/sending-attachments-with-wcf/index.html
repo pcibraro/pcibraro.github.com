@@ -1,0 +1,402 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Sending Attachments with WCF - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="WCF mainly supports two modes to send attachments in a efficient way, an
+streamed mode and a buffered/chunked mode. In the first mode, the transport &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2007/08/29/sending-attachments-with-wcf">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Sending Attachments With WCF</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-08-29T00:00:00-03:00" pubdate data-updated="true">Aug 29<span>th</span>, 2007</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>WCF mainly supports two modes to send attachments in a efficient way, an
+streamed mode and a buffered/chunked mode.</p>
+
+<p>In the first mode, the transport basically transfers large amount of
+data using small buffers with a minimal overhead. This mode of
+transferring the data has some drawbacks, for instance it does not
+support message security (Only transport security through SSL), or the
+robustness of reliable messaging. On the other hand, interoperability is
+easier to archive since no WS-* standard is used. Nicholas describes
+the restrictions very well on this post,
+<a href="http://blogs.msdn.com/drnick/archive/2006/03/31/565558.aspx">http://blogs.msdn.com/drnick/archive/2006/03/31/565558.aspx</a></p>
+
+<p>I will show a simple example that uses the Streamed mode to upload a
+file to the server. The contract for this service looks as follow:</p>
+
+<p>[ServiceContract()]</p>
+
+<p>public interface IFileTransferService</p>
+
+<p>{</p>
+
+<p>  [OperationContract(IsOneWay = true)]</p>
+
+<p>  void Upload(FileTransferRequest request);</p>
+
+<p>}</p>
+
+<p>As Nicholas mentioned on his post, when this mode is used, only the
+stream object can go in the message body, the rest of the arguments must
+go as headers. That is the main reason of using a message contract
+FileTransferRequest.</p>
+
+<p>[MessageContract()]</p>
+
+<p>public class FileTransferRequest</p>
+
+<p>{</p>
+
+<p>  [MessageHeader(MustUnderstand = true)]</p>
+
+<p>  public string FileName;</p>
+
+<p> </p>
+
+<p>  [MessageBodyMember(Order = 1)]</p>
+
+<p>  public System.IO.Stream Data;</p>
+
+<p> </p>
+
+<p>}</p>
+
+<p>Processing large files with buffered transfer does not scale well, and
+could be something impossible to do because of the high memory
+requeriments on the client and server side. The workaround for this is
+chunking combined with reliable messaging, which basically split large
+files in small fragments (For instance, 64 o 128 KB fragments) and use
+reliable messaging to assure the ordered delivery of those fragments.
+WCF does not provide a transport with chunk support by default, but
+fortunately it is implemented in an example of the SDK.</p>
+
+<p>This simple is under the folder [SDK
+folder]\Samples\Extensibility\Channels\ChunkingChannel</p>
+
+<p>In addition to the mode used to transfer the streams, WCF also supports
+the concept of message encoders, which basically serializes a
+xml infoset into a stream of bytes using an specific encoding. WCF ships
+by default with three encoders, Text, Binary and MTOM. Any of
+the features provided by these encoders should be considered carefully
+to avoid performance issues in the application.</p>
+
+<p>The Text and MTOM encoders provides interoperability with other
+platforms while the Binary formatter uses a proprietary format. Anyway,
+let&rsquo;s discuss these types of encoder more in detail:</p>
+
+<p><strong>Text Encoder</strong>: As it name says, it is a text message encoder and
+supports both plain XML encoding (For Rest/POST scenarios) as well as
+SOAP Encoding. When this encoder is used, the attachments are encoded as
+base64 and added as part of the xml message. This transformation to a
+base64 encoding makes the final size of the attachments bigger, almost
+30% bigger than the original size.</p>
+
+<p><strong>Binary Encoder</strong>: It uses a compact binary format, optimized for a WCF
+to WCF communication. This encoder is the recommend one for sending
+attachments when interoperability is not a requirement.</p>
+
+<p><strong>MTOM Encoder</strong>:  It uses a Message Transmission Optimization Mechanism
+(MTOM) encoding. MTOM is a efficient technology for transmitting large
+blocks of binary data in a soap message as-is, without conversion to
+text. In addition, MTOM is a interoperable standard and also supports
+Message Security (WS-Security). When Message Security is used, WCF
+basically performs the following steps:</p>
+
+<p>​1. Encodes all the blocks of binary data as Base64.</p>
+
+<p>​2. Applies message security (Integrity and Confidentiality) to the
+resulting block of Base64 text.</p>
+
+<p>​3. Adds the security headers to the soap message</p>
+
+<p>​4. Transmits the binary data separately from the soap message (The
+Base64 data created in the step 2 is discarded)</p>
+
+<p>For more details about moving large amounts of data and final
+recommendations, see this <a href="http://blogs.msdn.com/yassers/archive/2006/01/21/515887.aspx">excellent
+post</a>
+of <a href="http://blogs.msdn.com/yassers/">Yasser Shohoud</a>.</p>
+
+<p>Examples,</p>
+
+<p><a href="/images/legacy/BufferedUpload.zip">Buffered Upload</a></p>
+
+<p><a href="/images/legacy/StreamedUpload.zip">Streamed Upload</a></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-08-29T00:00:00-03:00" pubdate data-updated="true">Aug 29<span>th</span>, 2007</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/wcf/'>WCF</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2007/08/29/sending-attachments-with-wcf/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2007/08/29/sending-attachments-with-wcf/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2007/08/21/removing-the-svc-extension-for-wcf-services/" title="Previous Post: Removing the SVC extension for WCF services">&laquo; Removing the SVC extension for WCF services</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2007/10/03/nulltransport-for-wcf/" title="Next Post: NullTransport for WCF">NullTransport for WCF &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2007/08/29/sending-attachments-with-wcf/';
+        var disqus_url = 'http://cibrax.me/blog/2007/08/29/sending-attachments-with-wcf/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

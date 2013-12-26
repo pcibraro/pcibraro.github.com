@@ -1,0 +1,407 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Describing RESTful applications - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="The other day I came across this interesting
+article written by
+Subbu Allamaraju, where he discusses some of
+the aspects that drive the design of a &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2009/01/08/describing-restful-applications">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Describing RESTful Applications</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-01-08T00:00:00-03:00" pubdate data-updated="true">Jan 8<span>th</span>, 2009</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>The other day I came across <a href="http://www.infoq.com/articles/subbu-allamaraju-rest">this interesting
+article</a> written by
+<a href="http://www.subbu.org/">Subbu Allamaraju</a>, where he discusses some of
+the aspects that drive the design of a pure and self-describing RESTful
+interface for a service (Or service contract in other words).</p>
+
+<p>He points out three main pieces that every service contract should have:</p>
+
+<p>​1. An uniform interface. An uniform interface is probably one the
+aspects that we best know about REST, or we may heard often when a REST
+service is described. This refers to the fact that each service exposes
+the same interface, which is a good thing for eliminating ad hoc
+messages and focusing primarily on an standard API that defines pieces
+of information that can be retrieved and manipulated. Instead of adding
+special function calls or interfaces to the architecture, new services
+add new pieces of information can be manipulated using standard
+requests. For instance, in Http RESTful services, this point involves
+using standard http verbs, headers and status codes.</p>
+
+<p>​2. Resource representations based on media types. This is quite
+interesting, what he proposes is to use a more specialized
+&ldquo;content-type&rdquo; for any of the xml schemas that a service may return. He
+confirms that generic media types such as &ldquo;application/xml&rdquo; are not
+enough to distinguish resource representations. We might want to know if
+the resource represents an account or a customer without making any
+assumptions about the resource&rsquo;s URI. In those cases, content types like
+&ldquo;application/vnd.bank.org.accounts+xml&rdquo; or
+&ldquo;application/vnd.bank.org.customers+xml&rdquo; would be more helpful and still
+being valid according to the spec  &ldquo;rfc3023, XML media types&rdquo;.</p>
+
+<p>200 OK \
+<strong>Content-Type: application/vnd.bank.org.account+xml</strong></p>
+
+<p>&lt;accounts xmlns=&ldquo;urn:org:bank:accounts&rdquo;> \
+    &lt;account> \
+        &lt;id>AZA12093&lt;/id>        \
+        &lt;balance currency=&ldquo;USD&rdquo;>993.95&lt;/balance> \
+    &lt;/account> \
+&lt;/accounts></p>
+
+<p>​3. Contextual links to resources. In addition to the resource
+representation, the client should also receive links representing what
+it can do next (Taking the form of a workflow). As Subbu concludes, this
+aspect decouples the client from the actual URIs of resources, and the
+client does not need to know the rest of the URIs until run-time.</p>
+
+<p>200 OK \
+Content-Type: application/vnd.bank.org.account+xml;charset=UTF-8</p>
+
+<p>&lt;accounts xmlns=&ldquo;urn:org:bank:accounts&rdquo;> \
+    &lt;account> \
+        &lt;id>AZA12093&lt;/id> \
+        <strong>&lt;link
+href=&ldquo;</strong><a href="http://bank.org/account/AZA12093"><strong>http://bank.org/account/AZA12093</strong></a><strong>&rdquo;
+rel=&ldquo;self&rdquo;/> \
+        &lt;link
+rel=&ldquo;</strong><a href="http://bank.org/rel/transfer"><strong>http://bank.org/rel/transfer</strong></a><strong>edit&rdquo;
+\
+              type=&ldquo;application/vnd.bank.org.transfer+xml&rdquo; \
+             
+href=&ldquo;</strong><a href="http://bank.org/transfers%22/"><strong>http://bank.org/transfers&#8221;/</strong></a><strong>>
+\
+        &lt;link
+rel=&rdquo;</strong><a href="http://bank.org/rel/customer"><strong>http://bank.org/rel/customer</strong></a><strong>&ldquo;
+\
+              type=&#8221;application/vnd.bank.org.customer+xml&rdquo; \
+             
+href=&ldquo;</strong><a href="http://bank.org/customer/7t676323a%22/"><strong>http://bank.org/customer/7t676323a&#8221;/</strong></a><strong>>
+\
+</strong>        &lt;balance currency=&#8221;USD&rdquo;>993.95&lt;/balance> \
+    &lt;/account> \
+    &hellip;..</p>
+
+<p>As you can see in the example above, the account representation contains
+links to itself (Self link) and other resources. The operations that can
+be performed over those resources are expressed by the &ldquo;rel&rdquo; attribute.</p>
+
+<p>Altough there is not built-in support in WCF to enforce these aspects
+automatically, it can be easily done in the service implementation using
+specific data contracts and the WebOperationContext. </p>
+
+<p>Setting up the content type before returning the service response:</p>
+
+<p>public Account GetAccount(string id)</p>
+
+<p>{</p>
+
+<p>  WebOperationContext.Current.OutgoingResponse.ContentType =
+&ldquo;application/vnd.bank.org.account+xml&rdquo;;</p>
+
+<p>  return repository.Accounts.Where(a => a.Id == id).FirstOrDefault();</p>
+
+<p>}</p>
+
+<p>A link can be modeled as a regular data contract:</p>
+
+<p>[DataContract(Name=&ldquo;link&rdquo;)]</p>
+
+<p>public class Link</p>
+
+<p>{</p>
+
+<p>   [DataMember(Name=&ldquo;href&rdquo;)]</p>
+
+<p>   public string Href { get; set; }</p>
+
+<p> </p>
+
+<p>   [DataMember(Name = &ldquo;rel&rdquo;)]</p>
+
+<p>   public string Rel { get; set; }</p>
+
+<p> </p>
+
+<p>   [DataMember(Name = &ldquo;type&rdquo;)]</p>
+
+<p>   public string Type { get; set; }</p>
+
+<p>}</p>
+
+<p>Read the <a href="http://www.infoq.com/articles/subbu-allamaraju-rest">article</a>
+for more information.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-01-08T00:00:00-03:00" pubdate data-updated="true">Jan 8<span>th</span>, 2009</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2009/01/08/describing-restful-applications/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2009/01/08/describing-restful-applications/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2008/12/23/sticky-notes-pluggin-for-visual-studio-2008/" title="Previous Post: Sticky notes plugin for Visual studio 2008">&laquo; Sticky notes plugin for Visual studio 2008</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2009/01/19/running-a-partial-ssl-website-in-asp-net-mvc/" title="Next Post: Running a partial SSL website with ASP.NET MVC">Running a partial SSL website with ASP.NET MVC &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2009/01/08/describing-restful-applications/';
+        var disqus_url = 'http://cibrax.me/blog/2009/01/08/describing-restful-applications/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

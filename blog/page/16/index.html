@@ -1,0 +1,2285 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="Many of the WCF services that we build today rely on the WCF context
+(OperationContext and WebOperationContext) for performing different
+things, &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/page/16">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/12/11/testing-wcf-rest-services/">Testing WCF REST Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-12-11T00:00:00-03:00" pubdate data-updated="true">Dec 11<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/12/11/testing-wcf-rest-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Many of the WCF services that we build today rely on the WCF context
+(OperationContext and WebOperationContext) for performing different
+things, specially REST services where the context is necessary for
+settings and getting Http status codes or headers. The fact that the WCF
+context does not expose interfaces or base classes complicates the unit
+testing a lot. In this sense, I like the approach taken by the ASP.NET
+MVC team, all the classes exposed by the HttpContext as properties are
+base classes, so they can be easily mocked. \
+In order to test a WCF service with what we have today, we have to
+either test the service as a black box (integration tests, which
+requires a lot of plumbing code to setup all the WCF infrastructure for
+the test, channels, host, client, etc) or create some wrappers to
+encapsulate the WCF context behavior, as I mentioned in this post <a href="http://weblogs.asp.net/cibrax/archive/2008/05/16/unit-tests-for-wcf.aspx">&ldquo;Unit
+tests for WCF
+services&rdquo;</a></p>
+
+<p>Today I will discuss both approaches more in detail with some sample
+code. The service implementation I will use here is a simple service
+that given a category returns a feed with products associated to that
+specific category.</p>
+
+<p>[ServiceContract]</p>
+
+<p>public interface IProductCatalog</p>
+
+<p>{</p>
+
+<p>    [WebGet(UriTemplate = &ldquo;?category={category}&rdquo;)]</p>
+
+<p>    [OperationContract]</p>
+
+<p>    Atom10FeedFormatter GetProducts(string category);</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public Atom10FeedFormatter GetProducts(string category)</p>
+
+<p>{</p>
+
+<p>    var items = new List&lt;SyndicationItem>();</p>
+
+<p>    foreach(var product in repository.GetProducts(category))</p>
+
+<p>    {</p>
+
+<p>        items.Add(new SyndicationItem()</p>
+
+<p>        {</p>
+
+<p>            Id = String.Format(CultureInfo.InvariantCulture,
+&ldquo;<a href="http://products/">http://products/</a>{0}&rdquo;, product.Id),</p>
+
+<p>            Title = new TextSyndicationContent(product.Name),</p>
+
+<p>            LastUpdatedTime = new DateTime(2008, 7, 1, 0, 0, 0,
+DateTimeKind.Utc),</p>
+
+<p>            Authors =</p>
+
+<p>            {</p>
+
+<p>                new SyndicationPerson()</p>
+
+<p>                {</p>
+
+<p>                    Name = &ldquo;cibrax&rdquo;</p>
+
+<p>                }</p>
+
+<p>            },</p>
+
+<p>            Content = new TextSyndicationContent(string.Format(&ldquo;Category
+Id {0} &ndash; Price {1}&rdquo;,</p>
+
+<p>                product.Category, product.UnitPrice))</p>
+
+<p>        });</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    var feed = new SyndicationFeed()</p>
+
+<p>    {</p>
+
+<p>        Id = &ldquo;<a href="http://Products">http://Products</a>&rdquo;,</p>
+
+<p>        Title = new TextSyndicationContent(&ldquo;Product catalog&rdquo;),</p>
+
+<p>        Items = items</p>
+
+<p>    };</p>
+
+<p> </p>
+
+<p>    MyWebContext.Current.OutgoingResponse.ContentType =
+&ldquo;application/atom+xml&rdquo;;</p>
+
+<p>    return feed.GetAtom10Formatter();</p>
+
+<p>}</p>
+
+<p>As you can see, this is a regular WCF service with the following
+characteristics,</p>
+
+<p>​1. The products are queried from a product repository, a class that
+implements IProductRepository so it can be mocked.</p>
+
+<p>public interface IProductRepository</p>
+
+<p>{</p>
+
+<p>    IQueryable&lt;Product> GetProducts(string category);</p>
+
+<p>}</p>
+
+<p>​2. It is not using the WCF context (WebOperationContext), it is using
+MyWebContext instead. This is a custom class I created for wrapping the
+WCF context behavior. As we will see later, this class will help us to
+mock the WCF context in the unit tests.</p>
+
+<p>public class MyWebContext : IDisposable</p>
+
+<p>{</p>
+
+<p>    private const string TlsName = &ldquo;webContext&rdquo;;</p>
+
+<p> </p>
+
+<p>    public MyWebContext(IWebOperationContext context)</p>
+
+<p>    {</p>
+
+<p>        var tls = Thread.GetNamedDataSlot(TlsName);</p>
+
+<p>        Thread.SetData(tls, context);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public static IWebOperationContext Current</p>
+
+<p>    {</p>
+
+<p>        get</p>
+
+<p>        {</p>
+
+<p>            var tls = Thread.GetNamedDataSlot(TlsName);</p>
+
+<p>            var context = Thread.GetData(tls);</p>
+
+<p> </p>
+
+<p>            if (context != null)</p>
+
+<p>            {</p>
+
+<p>                return (IWebOperationContext)context;</p>
+
+<p>            }</p>
+
+<p>            else</p>
+
+<p>            {</p>
+
+<p>                return new
+WebOperationContextWrapper(WebOperationContext.Current);</p>
+
+<p>            }</p>
+
+<p>        }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public void Dispose()</p>
+
+<p>    {</p>
+
+<p>        var tls = Thread.GetNamedDataSlot(TlsName);</p>
+
+<p>        Thread.SetData(tls, null);</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>The Current property of this class first tries to get an
+IWebOperationContext from the thread local storage (That could be set by
+the unit tests), and if none is available, it returns a wrapper to the
+original WCF context.</p>
+
+<p><strong>Integration Tests</strong></p>
+
+<p>Integration tests focus more on testing the service as a whole, checking
+not only the service behavior but also extensions in the WCF channel
+stack and any other external dependency referenced by the service
+itself. Integration tests are preferred over unit tests for certain
+scenarios, if I want to test for instance how a service behaves with an
+built-in extension for &ldquo;conditional gets&rdquo; in the WCF channel stack, that
+can be easily done with an integration test.</p>
+
+<p>Integration tests usually have the following structure:</p>
+
+<p>​1. Some code to setup the WCF host, usually located at the beginning of
+the test or as part of the test fixture initializer.</p>
+
+<p>​2. The service invocation itself using a previously initialized web
+http request or an specific WCF channel.</p>
+
+<p>[TestMethod]</p>
+
+<p>public void ShouldGetProductsFeed()</p>
+
+<p>{</p>
+
+<p>    ProductCatalog catalog = new ProductCatalog(</p>
+
+<p>        new InMemoryProductRepository(</p>
+
+<p>            new List&lt;Product>{</p>
+
+<p>            new Product { Id = &ldquo;1&rdquo;, Category = &ldquo;foo&rdquo;, Name = &ldquo;Foo1&rdquo;,
+UnitPrice = 1 },</p>
+
+<p>            new Product { Id = &ldquo;2&rdquo;, Category = &ldquo;bar&rdquo;, Name = &ldquo;bar2&rdquo;,
+UnitPrice = 2 }</p>
+
+<p>        }));</p>
+
+<p> </p>
+
+<p>    WebServiceHost host = new WebServiceHost(catalog, new
+Uri(&ldquo;<a href="http://localhost:7777/Products">http://localhost:7777/Products</a>&rdquo;));</p>
+
+<p> </p>
+
+<p>    IEnumerable&lt;SyndicationItem> items;</p>
+
+<p> </p>
+
+<p>    try</p>
+
+<p>    {</p>
+
+<p>        host.Open();</p>
+
+<p> </p>
+
+<p>        items = Consume(new
+Uri(&ldquo;<a href="http://localhost:7777/Products?category=foo">http://localhost:7777/Products?category=foo</a>&rdquo;));</p>
+
+<p>    }</p>
+
+<p>    finally</p>
+
+<p>    {</p>
+
+<p>        if (host.State == System.ServiceModel.CommunicationState.Opened)</p>
+
+<p>            host.Close();</p>
+
+<p>        else</p>
+
+<p>            host.Abort();</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    Assert.AreEqual(1, items.Count());</p>
+
+<p>    Assert.IsTrue(items.Any(i => i.Id == &ldquo;<a href="http://products/1">http://products/1</a>&rdquo; &amp;&amp;
+i.Title.Text == &ldquo;Foo1&rdquo;));</p>
+
+<p>}</p>
+
+<p>&ldquo;Consume&rdquo; in the code above is a helper method that internally uses
+WebHttpRequest for sending a http get to the WCF service.</p>
+
+<p>private IEnumerable&lt;SyndicationItem> Consume(Uri feedUri)</p>
+
+<p>{</p>
+
+<p>    WebRequest request = CreateWebRequest(feedUri);</p>
+
+<p>    XmlReaderSettings settings = new XmlReaderSettings { CloseInput =
+true };</p>
+
+<p>    using (XmlReader reader =
+XmlReader.Create(request.GetResponse().GetResponseStream(), settings))</p>
+
+<p>    {</p>
+
+<p>        SyndicationFeed feed = SyndicationFeed.Load(reader);</p>
+
+<p>        return feed.Items;</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>private WebRequest CreateWebRequest(Uri feedUri)</p>
+
+<p>{</p>
+
+<p>    HttpWebRequest webRequest =
+(HttpWebRequest)WebRequest.Create(feedUri);</p>
+
+<p>    webRequest.ContentType = &ldquo;application/rss+xml&rdquo;;</p>
+
+<p> </p>
+
+<p>    webRequest.Timeout = 60 * 1000;</p>
+
+<p> </p>
+
+<p>    webRequest.Method = &ldquo;GET&rdquo;;</p>
+
+<p> </p>
+
+<p>    return webRequest;</p>
+
+<p>}</p>
+
+<p><strong>Unit Tests</strong></p>
+
+<p>Unit tests focus on the service implementation only, leaving out most of
+the external dependencies and any additional processing made by the WCF
+channel stack. The IWebOperationContext interface I mentioned before
+will help us to mock many of the properties provided by the WCF context.
+This is a good thing for getting/setting expectations that we want to
+verify in the test itself. This interface and the wrappers are available
+as part of the project Netfx,
+<a href="http://code.google.com/p/netfx/">http://code.google.com/p/netfx/</a></p>
+
+<p>[TestClass]</p>
+
+<p>public class UnitTests</p>
+
+<p>{</p>
+
+<p>    [TestMethod]</p>
+
+<p>    public void ShouldGetProductsFeed()</p>
+
+<p>    {</p>
+
+<p>        ProductCatalog catalog = new ProductCatalog(</p>
+
+<p>            new InMemoryProductRepository(</p>
+
+<p>                new List&lt;Product>{</p>
+
+<p>                new Product { Id = &ldquo;1&rdquo;, Category = &ldquo;foo&rdquo;, Name = &ldquo;Foo1&rdquo;,
+UnitPrice = 1 },</p>
+
+<p>                new Product { Id = &ldquo;2&rdquo;, Category = &ldquo;bar&rdquo;, Name = &ldquo;bar2&rdquo;,
+UnitPrice = 2 }</p>
+
+<p>            }));</p>
+
+<p> </p>
+
+<p>        Mock&lt;IWebOperationContext> mockContext = new
+Mock&lt;IWebOperationContext> { DefaultValue = DefaultValue.Mock };</p>
+
+<p>        IEnumerable&lt;SyndicationItem> items;</p>
+
+<p> </p>
+
+<p>        <strong>using (new MyWebContext(mockContext.Object))</strong></p>
+
+<p><strong>        {</strong></p>
+
+<p><strong>            var formatter = catalog.GetProducts(&ldquo;foo&rdquo;);</strong></p>
+
+<p><strong>            items = formatter.Feed.Items;</strong></p>
+
+<p><strong>        }</strong></p>
+
+<p> </p>
+
+<p>        mockContext.VerifySet(c => c.OutgoingResponse.ContentType,
+&ldquo;application/atom+xml&rdquo;);</p>
+
+<p> </p>
+
+<p>        Assert.AreEqual(1, items.Count());</p>
+
+<p>        Assert.IsTrue(items.Any(i => i.Id == &ldquo;<a href="http://products/1">http://products/1</a>&rdquo; &amp;&amp;
+i.Title.Text == &ldquo;Foo1&rdquo;));</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>What&rsquo;s deserve some attention in the unit test above is the code for
+creating the mocked WebContext and the code required for verifying the
+expectations.</p>
+
+<p>using (new MyWebContext(mockContext.Object))</p>
+
+<p>{</p>
+
+<p>    var formatter = catalog.GetProducts(&ldquo;foo&rdquo;);</p>
+
+<p>    items = formatter.Feed.Items;</p>
+
+<p>}</p>
+
+<p>That will insert the mockContext object in the Thread Local Storage so
+it can be accessed later in the service implementation by
+MyWebContext.Current (The &ldquo;using&rdquo; clause here makes an explicit call to
+IDispose as well, so the mockContext is removed from that storage after
+the operation is called).  </p>
+
+<p>The test also verifies that the ContentType header was set with the
+correct value in the operation,</p>
+
+<p>mockContext.VerifySet(c => c.OutgoingResponse.ContentType,
+&ldquo;application/atom+xml&rdquo;);</p>
+
+<p><a href="/images/legacy/WCF.Tests.zip">Complete code available to download from
+here</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/12/11/some-issues-added-in-codeplex-for-the-wcf-rest-starter-kit/">Some Issues Added in Codeplex for the WCF REST Starter Kit</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-12-11T00:00:00-03:00" pubdate data-updated="true">Dec 11<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/12/11/some-issues-added-in-codeplex-for-the-wcf-rest-starter-kit/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I just created some issues in codeplex for the features I discussed last
+week in these two posts:</p>
+
+<p><strong>Add support for switching the content type dynamically</strong></p>
+
+<p><a href="http://www.codeplex.com/aspnet/WorkItem/View.aspx?WorkItemId=2846">http://www.codeplex.com/aspnet/WorkItem/View.aspx?WorkItemId=2846</a></p>
+
+<p>Related Post:
+<a href="http://weblogs.asp.net/cibrax/archive/2008/12/05/dynamic-content-type-a-nice-to-have-feature-for-the-rest-starter-kit.aspx">http://weblogs.asp.net/cibrax/archive/2008/12/05/dynamic-content-type-a-nice-to-have-feature-for-the-rest-starter-kit.aspx</a></p>
+
+<p><strong>Add support for conditional get in WebCache behavior</strong></p>
+
+<p><a href="http://www.codeplex.com/aspnet/WorkItem/View.aspx?WorkItemId=2847">http://www.codeplex.com/aspnet/WorkItem/View.aspx?WorkItemId=2847</a></p>
+
+<p>Related Post:
+<a href="http://weblogs.asp.net/cibrax/archive/2008/12/08/adding-conditional-get-support-to-the-wcf-rest-starter-kit.aspx">http://weblogs.asp.net/cibrax/archive/2008/12/08/adding-conditional-get-support-to-the-wcf-rest-starter-kit.aspx</a></p>
+
+<p>Feel free to vote any of them :)</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/12/08/adding-conditional-get-support-to-the-wcf-rest-starter-kit/">Adding Conditional Get Support to the WCF REST Starter Kit</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-12-08T00:00:00-03:00" pubdate data-updated="true">Dec 8<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/12/08/adding-conditional-get-support-to-the-wcf-rest-starter-kit/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><a href="http://weblogs.asp.net/cibrax/archive/2008/10/06/importance-of-conditional-gets-in-rest.aspx">Some weeks
+ago</a>,
+I discussed how important &ldquo;Conditional Get&rdquo; can be for some scenarios,
+specially when we want to make a better use of the network traffic.</p>
+
+<p>The WCF REST Starter kit introduced a new extension &ldquo;WebCache&rdquo;,
+implemented as an operation behavior, to automatically add caching
+support to any &ldquo;Get&rdquo; operation in a service contract. Using this new
+feature is a simple as annotating an existing service operation with a
+&ldquo;WebCache&rdquo; attribute, as it is shown below:</p>
+
+<p>[WebCache(CacheProfileName = &ldquo;CacheFor1Min&rdquo;)]</p>
+
+<p>[WebGet(UriTemplate = &ldquo;customer/{id}&rdquo;)]</p>
+
+<p>[OperationContract]</p>
+
+<p>public Customer GetCustomer(string id)</p>
+
+<p>The underline implementation of this new behavior relies on the existing
+ASP.NET web cache. For more details about this new feature, Jesus
+Rodriguez has written a very <a href="http://weblogs.asp.net/gsusx/">good summary
+here</a>. I also mentioned how to enable Sql
+dependencies with this feature <a href="http://weblogs.asp.net/cibrax/archive/2008/11/03/using-sqlcache-dependencies-with-the-new-wcf-webcache-attribute-rest-starter-kit.aspx">in this
+post.</a></p>
+
+<p>Unfortunately, this implementation does not support Conditional Get out
+of the box, which means that the client always receive a complete
+response, no matter if the response was served directly from the cache
+or not. For instance, if one operation returns a feed with one hundred
+items, and the client application does not have a way to specify when
+was the last time it got access to that feed, it will have to download
+the complete feed all the times.</p>
+
+<p>Although the ASP.NET does provide support for conditional gets through
+the public methods &ldquo;SetLastModified&rdquo; (for date times) and &ldquo;SetETag&rdquo; (for
+entity representations), the web cache behavior does not make use of
+them.</p>
+
+<p>If we just modified the Web cache behavior to include the following line
+at the end, the additional LastModified header will be included in the
+response</p>
+
+<p>if (!string.IsNullOrEmpty(cacheProfile.VaryByCustom))</p>
+
+<p>{</p>
+
+<p>   
+HttpContext.Current.Response.Cache.SetVaryByCustom(cacheProfile.VaryByCustom);</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p><strong>HttpContext.Current.Response.Cache.SetLastModified(DateTime.Now);
+//Line Added for Conditional Get support</strong></p>
+
+<p>It is a simple as that. After enabling some trace to the service, we
+will see</p>
+
+<p>Server ASP.NET Development Server/9.0.0.0\
+Date Mon, 08 Dec 2008 15:41:54 GMT\
+X-AspNet-Version 2.0.50727\
+Cache-Control public, max-age=44\
+Expires Mon, 08 Dec 2008 15:42:42 GMT\
+<strong>Last-Modified Mon, 08 Dec 2008 15:41:43 GMT\
+</strong>Vary *\
+Content-Type application/xml; charset=utf-8\
+Content-Length 195\
+Connection Close</p>
+
+<p>However, setting DateTime.Now for every operation is not efficient for
+every scenario because it will be tied to the item lifetime in the
+cache. For instance, if our service operation is returning a feed, we
+might want to use the feed&rsquo;s last update time.</p>
+
+<p>It will be much better if have a configurable way to set up this date
+for every entry in the cache. For that reason, I came up with a solution
+based on a simple strategy pattern through a pluggeable interface
+&ldquo;ILastModified&rdquo;,</p>
+
+<p>public interface ILastModified</p>
+
+<p>{</p>
+
+<p>    DateTime? GetLastModifiedForOutput(object[] outputs, object
+returnValue);</p>
+
+<p>}</p>
+
+<p>The method &ldquo;GetLastModifiedForOutput&rdquo; basically determines the
+&ldquo;LastModified&rdquo; date for the given outputs parameters and return value of
+the service operation. Given this simple interface, we could have
+default implementations for feeds or the current date time.</p>
+
+<p>public class SyndicationLastModified : ILastModified</p>
+
+<p>{</p>
+
+<p>    public DateTime? GetLastModifiedForOutput(object[] outputs, object
+returnValue)</p>
+
+<p>    {</p>
+
+<p>        if(returnValue is SyndicationFeedFormatter)</p>
+
+<p>        {</p>
+
+<p>            var formatter = (SyndicationFeedFormatter)returnValue;</p>
+
+<p>            return formatter.Feed.LastUpdatedTime.UtcDateTime;</p>
+
+<p>        }</p>
+
+<p> </p>
+
+<p>        return null;</p>
+
+<p> </p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public class CurrentDateLastModified : ILastModified</p>
+
+<p>{</p>
+
+<p>    public DateTime? GetLastModifiedForOutput(object[] outputs, object
+returnValue)</p>
+
+<p>    {</p>
+
+<p>        return DateTime.Now;</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>And finally configure these classes as part of the WebCache attribute.</p>
+
+<p>[WebCache(CacheProfileName = &ldquo;CacheFor1Min&rdquo;,
+<strong>LastModifiedType=typeof(CurrentDateLastModified)</strong>)]</p>
+
+<p>[WebGet(UriTemplate = &ldquo;customer/{id}&rdquo;)]</p>
+
+<p>[OperationContract]</p>
+
+<p>public Customer GetCustomer(string id)</p>
+
+<p>{</p>
+
+<p>    if (id == &ldquo;foo&rdquo;)</p>
+
+<p>        return new Customer { Id = id, FullName = &ldquo;John Foo&rdquo; };</p>
+
+<p>    else if (id == &ldquo;bar&rdquo;)</p>
+
+<p>        return new Customer { Id = id, FullName = &ldquo;John Bar&rdquo; };</p>
+
+<p> </p>
+
+<p>    return new Customer { Id = id, FullName = &ldquo;Unknow&rdquo; };</p>
+
+<p>}</p>
+
+<p>If no LastModifiedType is specified as argument for the &ldquo;WebCache&rdquo;
+attribute, the default behavior is used,  resulting in a complete
+response message served to the client all the times. Otherwise, the
+server will evaluate the &ldquo;If-Modified-Since&rdquo; header first to know if the
+valid response for that request should be &ldquo;serving all the content&rdquo; vs
+returning a &ldquo;Http 304 &ndash; Not Modified&rdquo; status code.</p>
+
+<p><a href="/images/legacy/WebCache.zip">The sample code is available
+here</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/12/05/dynamic-content-type-a-nice-to-have-feature-for-the-rest-starter-kit/">Dynamic Content Type - a Nice to Have Feature for the WCF REST Starter Kit</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-12-05T00:00:00-03:00" pubdate data-updated="true">Dec 5<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/12/05/dynamic-content-type-a-nice-to-have-feature-for-the-rest-starter-kit/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>One of the missing features in the WCF web model is the ability to have
+a single operation definition and switch the content type for the
+response according to some runtime setting (Which could be the Accept or
+Content-Type request header for instance).</p>
+
+<p>Today, I came across this post &ldquo;<a href="http://damianblog.com/2008/10/31/wcf-rest-dynamic-response/">WCF REST Services: Setting the response
+format based on request&rsquo;s expected
+type</a>&rdquo; that
+shows exactly that. The solution is very clean and based on some
+extensions to the existing WebHttpBehavior and WebHttpHost classes.</p>
+
+<p>Kyle Beyer took a similar approach to switch the context type of the
+request messages as well. His implementation was layered on top of
+existing classes in the REST Starter kit, and it can find
+<a href="http://daptivate.com/archive/2008/11/16/wcf-and-rest-an-approach-to-using-the-content-type-and-accept-http-headers-for-object-serialization.aspx">here</a>.</p>
+
+<p>Both implementations inspect the &ldquo;Content-Type&rdquo; header of the request
+messages to determine the WCF formatter to use. What it would very nice
+to have in the Starter kit is the possibility to switch the content type
+dynamically not only by the &ldquo;Content-Type&rdquo; header, but also by some
+other settings like UriTemplates or QueryString arguments.</p>
+
+<p>It wouldn&rsquo;t be nice to have an attribute with the following syntax:</p>
+
+<p>[WebHelp(Comment = &ldquo;Returns the items in the collection in the format
+specified by the Accept header, along with URI links to each item.&rdquo;)]</p>
+
+<p>[WebGet(UriTemplate = CollectionServiceBase&lt;TItem>.ItemsUriTemplate)]</p>
+
+<p>[OperationContract]</p>
+
+<p>[DynamicContentType(Direction=DynamicDirection.Both,
+Resolution=DynamicResolution.QueryString,
+QueryStringArgument=&ldquo;content&rdquo;)]</p>
+
+<p>ItemInfoList&lt;TItem> GetItems();</p>
+
+<p>Where Direction and Resolution could support some of these values,</p>
+
+<p>public enum Direction</p>
+
+<p>{</p>
+
+<p>    RequestOnly,</p>
+
+<p>    ResponseOnly,</p>
+
+<p>    Both</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public enum Resolution</p>
+
+<p>{</p>
+
+<p>    ContentTypeHeader,</p>
+
+<p>    UriTemplate,</p>
+
+<p>    QueryString</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>With that attribute in place, it will not be necessary anymore to
+redefine the same operation many times just to change the content type.
+For instance, the following service contract can be simplified with the
+use of this new attribute,</p>
+
+<p>[OperationContract]</p>
+
+<p>ItemInfoList&lt;TItem> GetItemsInXml();</p>
+
+<p> </p>
+
+<p>[WebGet(UriTemplate = CollectionServiceBase&lt;TItem>.JsonItemsTemplate,
+ResponseFormat = WebMessageFormat.Json)]</p>
+
+<p>[OperationContract]</p>
+
+<p>ItemInfoList&lt;TItem> GetItemsInJson();</p>
+
+<p>I will see if I have some time to implement a prototype using that
+syntax for the DynamicContentType attribute.</p>
+
+<p>In the meantime, I think it would be great to have support out of the
+box for a feature like this in the WCF REST Starter kit, what&rsquo;s your
+opinion ?</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/12/03/wcf-workflow-services-in-business-applications/">WCF Workflow Services in Business Applications</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-12-03T00:00:00-03:00" pubdate data-updated="true">Dec 3<span>rd</span>, 2008</time>
+        
+         | <a href="/blog/2008/12/03/wcf-workflow-services-in-business-applications/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>It&rsquo;s pretty interesting to see how useful workflow services can be
+sometimes, specially for business applications that require
+orchestrating several back-end services calls.</p>
+
+<p>As one of the programmers involved in the development of the WS-I Sample
+application for .NET, an application that demonstrates  how to build
+interoperable web services in .NET using the WS-I Basic Profile 1.0
+(Each vendor in the WS-I working group basically implemented the same
+application using its development platform, more information can be
+found
+<a href="http://www.ws-i.org/deliverables/workinggroup.aspx?wg=sampleapps">here</a>),
+it was a surprise to me to find another implementation as part of the
+WCF SDK, made this time all declaratively through WCF workflow services
+and just a few activities. To give you an idea, the original version of
+the same application took us some days and hundred lines of code just to
+have something complete and working.</p>
+
+<p>The SDK version is available under the folder, [SDK
+Folder]\WCF_WF_CardSpace_Samples\WCF\Scenario\WorkflowServices\Conversations</p>
+
+<p>Workflow services, initially introduced in WCF 3.5 with the Receive and
+Send activities, will now take a very important role as part of the Oslo
+vision. We will have the opportunity to write pure declarative
+long-running services with XAML, including all the WCF contracts for
+receiving/sending messages. This will make possible to store the
+complete workflow representation in the Oslo repository, and take later
+full control of this workflow&rsquo;s instances from Dublin, the new hosting
+environment for long-running services. David Chappell has written an
+excellent article about WF 4.0, Dublin the oslo vision, you can find it
+<a href="http://www.davidchappell.com/blog/2008/11/first-look-at-wf-40-dublin-and-oslo.html">here</a>,
+this a must read for developers interested in this area.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/11/25/my-durable-wcf-restful-calculator/">My Durable WCF RESTful Calculator</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-11-25T00:00:00-03:00" pubdate data-updated="true">Nov 25<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/11/25/my-durable-wcf-restful-calculator/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>A durable service in WCF is by a definition a service that can persist
+all its internal state across calls in some durable storage. For every
+operation, the service state is retrieved from the storage, the
+operation is executed and finally the state is persisted again in the
+storage. Therefore, there is not need to keep the service instance idle
+in memory while waiting for client calls. It is equivalent to a long run
+session, which make this feature something ideal for long-running
+processes like workflows (In fact, workflow services are mount on top of
+this feature),</p>
+
+<p>In order to create a durable service, WCF provides a &ldquo;DurableService&rdquo;
+attribute (It&rsquo;s a service behavior) that can be applied to a regular
+service definition. The service itself has to be either serializable or
+have members decorated with DataContract or DataMember attributes to be
+serialized and stored in the persistent storage.</p>
+
+<p>The service activation, as in workflow services, is managed by the WCF
+context correlation mechanism. Once a service instance has been created,
+the client application has to propagate some context information(which
+includes the service instance id) in order to route all the new messages
+to the right service instance. Jesus has already discussed how this
+mechanism works more in detail in this
+<a href="http://weblogs.asp.net/gsusx/archive/2007/06/14/orcas-durable-services.aspx">post</a>
+(Although the post is bit old and some names have changed since then, it
+is worth reading).</p>
+
+<p>For purposes of this post, I decided to create a simple calculator
+example that exposes different operations through the classic http
+verbs,</p>
+
+<p>[ServiceContract(Namespace =
+&ldquo;<a href="http://Microsoft.WorkflowServices.Samples">http://Microsoft.WorkflowServices.Samples</a>&rdquo;)]</p>
+
+<p>public interface ICalculator</p>
+
+<p>{</p>
+
+<p>    [OperationContract()]</p>
+
+<p>    [WebInvoke(Method = &ldquo;POST&rdquo;)]</p>
+
+<p>    int PowerOn();</p>
+
+<p> </p>
+
+<p>    [OperationContract()]</p>
+
+<p>    [WebInvoke(Method = &ldquo;PUT&rdquo;, UriTemplate = &ldquo;add&rdquo;)]</p>
+
+<p>    int Add(int value);</p>
+
+<p> </p>
+
+<p>    [OperationContract()]</p>
+
+<p>    [WebInvoke(Method = &ldquo;PUT&rdquo;, UriTemplate = &ldquo;subtract&rdquo;)]</p>
+
+<p>    int Subtract(int value);</p>
+
+<p> </p>
+
+<p>    [OperationContract()]</p>
+
+<p>    [WebInvoke(Method = &ldquo;PUT&rdquo;, UriTemplate = &ldquo;multiply&rdquo;)]</p>
+
+<p>    int Multiply(int value);</p>
+
+<p> </p>
+
+<p>    [OperationContract()]</p>
+
+<p>    [WebInvoke(Method = &ldquo;PUT&rdquo;, UriTemplate = &ldquo;divide&rdquo;)]</p>
+
+<p>    int Divide(int value);</p>
+
+<p> </p>
+
+<p>    [OperationContract()]</p>
+
+<p>    [WebInvoke(Method = &ldquo;DELETE&rdquo;)]</p>
+
+<p>    void PowerOff();</p>
+
+<p>} </p>
+
+<p>The implementation of this service is also quite straightforward.</p>
+
+<p>[Serializable]</p>
+
+<p>[DurableService]</p>
+
+<p>public class DurableCalculator : ICalculator</p>
+
+<p>{</p>
+
+<p>    int _currentValue = 0;</p>
+
+<p> </p>
+
+<p>    [DurableOperation(CanCreateInstance=true)]</p>
+
+<p>    public int PowerOn()</p>
+
+<p>    {</p>
+
+<p>        return _currentValue;</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    [DurableOperation]</p>
+
+<p>    public int Add(int value)</p>
+
+<p>    {</p>
+
+<p>        return (_currentValue += value);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    [DurableOperation]</p>
+
+<p>    public int Subtract(int value)</p>
+
+<p>    {</p>
+
+<p>        return (_currentValue &ndash;= value);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    [DurableOperation]</p>
+
+<p>    public int Multiply(int value)</p>
+
+<p>    {</p>
+
+<p>        return (_currentValue *= value);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    [DurableOperation]</p>
+
+<p>    public int Divide(int value)</p>
+
+<p>    {</p>
+
+<p>        return (_currentValue /= value);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    [DurableOperation(CompletesInstance=true)]</p>
+
+<p>    public void PowerOff()</p>
+
+<p>    {</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>As you can see, I decorated the service implementation with the
+&ldquo;DurableService&rdquo; and &ldquo;DurableOperation&rdquo; attributes to make this simple
+service a durable one.</p>
+
+<p>WCF only comes with built-in support for transferring the context
+information between the client and service with Http Cookies or Soap
+Headers. While cookies would be the right mechanism for http REST
+services, unfortunately they do not work as expected. The path that WCF
+uses for creating the cookies is relative, so the context manager throws
+the following exception on the client side,</p>
+
+<p><strong><em>Unhandled Exception: System.Net.CookieException: An error occurred
+when parsing the Cookie header for Uri
+&lsquo;<a href="http://localhost:8080/DurableCalculator">http://localhost:8080/DurableCalculator</a>&rsquo;. &mdash;&ndash;>
+System.Net.CookieException: The &lsquo;Path&rsquo;=&lsquo;/DurableCalculator/PowerOn&rsquo; part
+of the cookie  is invalid.</em></strong></p>
+
+<p>As workaround, we can use for this scenario the custom context binding I
+created <a href="http://weblogs.asp.net/cibrax/archive/2008/10/30/rest-and-workflow-services-play-well-together-part-ii.aspx">some weeks
+ago</a>
+to exchange the context information as regular http headers.</p>
+
+<p>&lt;connectionStrings></p>
+
+<p>  &lt;add name=&ldquo;DurableService&rdquo; connectionString=&ldquo;Initial
+Catalog=SQLWorkflows;Data Source=.\SQLEXPRESS;Integrated
+Security=SSPI;&rdquo;/></p>
+
+<p>&lt;/connectionStrings></p>
+
+<p>&lt;system.serviceModel></p>
+
+<p>  &lt;services></p>
+
+<p>    &lt;service name=&ldquo;ServiceConsole.DurableCalculator&rdquo;
+behaviorConfiguration=&ldquo;MyServiceBehavior&rdquo;></p>
+
+<p>      &lt;endpoint address=&ldquo;&rdquo; behaviorConfiguration=&ldquo;MyServiceBehavior&rdquo;
+<strong>binding=&ldquo;webHttpContext&rdquo;</strong> contract=&ldquo;ServiceConsole.ICalculator&rdquo; /></p>
+
+<p>    &lt;/service></p>
+
+<p>&lt;/services></p>
+
+<p>&lt;behaviors></p>
+
+<p>  &lt;endpointBehaviors></p>
+
+<p>    &lt;behavior name=&ldquo;MyServiceBehavior&rdquo;></p>
+
+<p>      &lt;webHttp /></p>
+
+<p>    &lt;/behavior></p>
+
+<p>  &lt;/endpointBehaviors></p>
+
+<p>  &lt;serviceBehaviors></p>
+
+<p>    &lt;behavior name=&ldquo;MyServiceBehavior&rdquo;></p>
+
+<p>      &lt;persistenceProvider
+type=&ldquo;System.ServiceModel.Persistence.SqlPersistenceProviderFactory,
+System.WorkflowServices, Version=3.5.0.0, Culture=neutral,
+PublicKeyToken=31bf3856ad364e35&rdquo;
+connectionStringName=&ldquo;DurableService&rdquo;/></p>
+
+<p>    &lt;/behavior></p>
+
+<p>  &lt;/serviceBehaviors></p>
+
+<p>&lt;/behaviors></p>
+
+<p>&lt;extensions></p>
+
+<p>  &lt;bindingExtensions></p>
+
+<p>    &lt;add name=&ldquo;webHttpContext&rdquo;
+type=&ldquo;Microsoft.ServiceModel.Samples.WebHttpContextBindingCollectionElement,
+WebHttpContext, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null&rdquo;
+/></p>
+
+<p>  &lt;/bindingExtensions></p>
+
+<p>&lt;/extensions></p>
+
+<p>&lt;/system.serviceModel></p>
+
+<p>If you pay special attention to the configuration settings above, in
+addition to the binding configuration, I also included the
+&ldquo;persitenceProvider&rdquo; behavior for configuring the persistence provider
+that will serialize and store the service instance (In this case, the
+SQL server provider).</p>
+
+<p>Now, thanks to this support, my calculator service will survive to
+application and server restarts :). Download the complete code from this
+<a href="/images/legacy/DurableRestCalculator.zip">location</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/11/19/open-source-alternatives-in-net-for-building-restful-services/">Open Source Alternatives in .NET for Building RESTful Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-11-19T00:00:00-03:00" pubdate data-updated="true">Nov 19<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/11/19/open-source-alternatives-in-net-for-building-restful-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Usually all my posts about REST are about WCF or mention this technology
+in some parts. Today, I decided to take a different approach and discuss
+some of the projects available today for building REST services, 
+<a href="http://www.codeplex.com/resourceful">Resourceful</a> and <a href="http://wiki.developer.mindtouch.com/Dream">Dream
+framework</a> (Both available
+for mono as well).\
+It is worth mentioning however that the WCF team has made an excellent
+work introducing the new Web Model in .NET 3.5, it has definitively
+helped a lot to adopt this kind of service in the .NET platform. In my
+opinion, there are still some aspects in WCF that could be improved,</p>
+
+<ol>
+<li>WCF services are hard to unit test. It is possible but requires some
+extra work. I already mentioned some techniques  based on
+integration tests and mocks in this post <a href="http://weblogs.asp.net/cibrax/archive/2008/05/16/unit-tests-for-wcf.aspx">&ldquo;Unit tests for
+WCF&rdquo;</a></li>
+<li>Poor support for defining multiple resource representations/formats
+within a single operation definition.</li>
+<li>Any aspect you would like to add here ?</li>
+</ol>
+
+
+<p>Ok, I will try now to summarize some of available features or
+implementation details in these two projects.</p>
+
+<p><strong>Resourceful</strong></p>
+
+<ul>
+<li>Service definitions are totally imperative. Whereas a service
+definition (and operations) in WCF is made declaratively through
+attributes (annotating classes with WCF attributes), the service
+definition in Resourceful is totally imperative, it has to be made
+through several lines of code.</li>
+</ul>
+
+
+<blockquote><p>LocalApplicationDescription app = new LocalApplicationDescription();</p>
+
+<p>// get-user</p>
+
+<p>LocalApplicationMethod getUser = app.NewMethod(&ldquo;getUser&rdquo;,
+HttpMethod.Get, _usersController.GetUser);</p>
+
+<p>getUser.NewResponseRepresentation(MediaType.ApplicationXml);</p>
+
+<p>getUser.NewResponseRepresentation(MediaType.ApplicationExWwwFormUrlencoded);</p>
+
+<p> </p>
+
+<p>ApplicationResource userResource = app.NewResource(&ldquo;users/{username}&rdquo;,
+new TemplateParameter(&ldquo;username&rdquo;, &ldquo;xsd:string&rdquo;));</p>
+
+<p>app.Bind(userResource, getUser);</p>
+
+<p>The developer has to perform two things, first define the operation
+itself specifying a friendly name along with the supported Http
+methods and resource representations and afterwards, create a resource
+mapping (&ldquo;users/{username}&rdquo; in this case). {username} is a URI
+template hole, equivalent to the Uri Templates in WCF.</p>
+
+<p>The method signature for the NewMethod is the following,</p>
+
+<p>NewMethod(string id, string name,Action&lt;IRepresentationContext>
+handler)</p>
+
+<p>As you can see, the last argument is a delegate that points to the
+operation implementation. IRepresentationContext is equivalent to the
+WebOperationContext class in WCF, it contains all the runtime context
+settings that a service can use. This actually better than WCF because
+IRepresentationContext can be mocked for unit tests.</p>
+
+<p>In the example above, _usersController is a simple class with the
+service implementation (This separation of concerns definitively helps
+a lot for unit testing). Some code for the GetUser operation
+implementation looks as follow,</p>
+
+<p>public void GetUser(IRepresentationContext context)</p>
+
+<p>{</p>
+
+<p>    string username = context.TemplateParameters[&ldquo;username&rdquo;];</p>
+
+<p> </p>
+
+<p>    UserAccount user = this.Engine.FindUser(username);</p>
+
+<p> </p>
+
+<p>    if (user == null)</p>
+
+<p>    {</p>
+
+<p>        this.RenderStatus(context, HttpStatus.NotFound);</p>
+
+<p>        return;</p>
+
+<p>    }</p>
+
+<p> </p></blockquote>
+
+<ul>
+<li>Support for WADL. The framework uses the service definition (the
+LocalApplicationDescription class in the example above) to publish
+all the available operations in the service.</li>
+</ul>
+
+
+<blockquote><p> <img src="/images/legacy/wadl.jpg" alt="" /></p></blockquote>
+
+<ul>
+<li>Support for multiple resource representations in a single operation.
+This is possible because the framework does not support the concept
+of channels (Or aspects) that can be plugged into the service to
+perform additional work, all the translation must be done in the
+operation implementation itself. The service operation can only get
+the resource representation as an stream from the
+IRepresentationContext (Same thing can be done in WCF if the input
+parameter for the operation method is an stream or a message),</li>
+</ul>
+
+
+<blockquote><p>public void CreateUser(IRepresentationContext context)</p>
+
+<p>{</p>
+
+<p>    if (context.Request.MediaType != MediaType.ApplicationXml)</p>
+
+<p>    {</p>
+
+<p>        this.RenderStatus(context, HttpStatus.UnsupportedMediaType);</p>
+
+<p>        return;</p>
+
+<p>    }</p></blockquote>
+
+<p>     UserAccount user = UserAccount.FromXml(new
+StreamReader(context.Request.GetEntityStream()));</p>
+
+<blockquote><p>In the example above, CreateUser only supports POX (Plain old xml)
+representation for the users, so it also makes the translation from
+XML to an user entity.</p></blockquote>
+
+<ul>
+<li>There is not support for channels or aspects to perform additional
+work before a message arrives/leaves a service. There is, however,
+an special class for hosting service instances, it can be used from
+a console application or IIS as an http handler.</li>
+</ul>
+
+
+<blockquote><p>Uri rootUri = new Uri(string.Format(&ldquo;<a href="http://localhost:3000/v1/">http://localhost:3000/v1/</a>&rdquo;,
+address));</p>
+
+<p> </p>
+
+<p>BookmarkService service = new BookmarkService();</p>
+
+<p> </p>
+
+<p>HttpServer host = new HttpServer(rootUri);</p>
+
+<p> </p>
+
+<p>host.ReceiveWebRequest += delegate(HttpListenerContext context)</p>
+
+<p>{</p>
+
+<p>    service.Process(new HttpListenerContextAdapter(context, rootUri));</p>
+
+<p>};</p>
+
+<p> </p>
+
+<p>host.Start();</p></blockquote>
+
+<ul>
+<li>Rich and fluent client API for consuming existing REST services.
+This is probably one of the nicest things about this framework, a
+lot of examples are provided for consuming well-know REST services
+on the web such as Amazon S3,  ADO.NET services, Simple DB or
+Delicious to name a few. This client API can be used from
+Silverlight applications as well.</li>
+</ul>
+
+
+<p><strong>Dream Framework</strong> </p>
+
+<ul>
+<li>Service definitions are declarative as in WCF. Two attributes are
+used, one for the service definition &ldquo;DreamService&rdquo; and another for
+each operation in that service, &ldquo;DreamFeature&rdquo;.   </li>
+</ul>
+
+
+<blockquote><p>[DreamService(&ldquo;Dream Tutorial Address-Book&rdquo;, &ldquo;Copyright &copy; 2006, 2007
+MindTouch, Inc.&rdquo;,</p>
+
+<p>      Info =
+&ldquo;<a href="http://doc.opengarden.org/Dream_SDK/Tutorials/Address_Book">http://doc.opengarden.org/Dream_SDK/Tutorials/Address_Book</a>&rdquo;,</p>
+
+<p>      SID = new string[] {
+&ldquo;<a href="http://services.mindtouch.com/dream/tutorial/2007/03/addressbook">http://services.mindtouch.com/dream/tutorial/2007/03/addressbook</a>&rdquo; }</p>
+
+<p>    )]</p>
+
+<p>    public class AddressBookService : DreamService {</p>
+
+<p>        [DreamFeature(&ldquo;GET:firstname/{name}&rdquo;, &ldquo;Get list of all
+addresses matching first name&rdquo;)]</p>
+
+<p>        public Yield GetFirstName(DreamContext context, DreamMessage
+request, Result&lt;DreamMessage> response) {</p>
+
+<p> </p>
+
+<p>I will not enter much in detail here, but the &ldquo;DreamFeature&rdquo; supports
+almost the same things as WCF and Resourceful, an Http verb and the
+URI template for the resource. For more information about how to
+create an Dream service from scratch, take a look at <a href="http://wiki.developer.mindtouch.com/Dream/Tutorials/Creating_a_Magic_8-Ball_service">this
+page</a>.</p></blockquote>
+
+<ul>
+<li>Every operation implementation should receive three arguments and
+return an enumerator. The arguments are basically the runtime
+context (Equivalent to WebOperationContext in WCF), the request
+message and a handler to send responses to the client.</li>
+</ul>
+
+
+<blockquote><blockquote><p>using Yield = System.Collections.Generic.IEnumerator&lt;IYield>;</p>
+
+<p>public Yield GetFirstName(DreamContext context, DreamMessage
+request, Result&lt;DreamMessage> response) {</p></blockquote>
+
+<p>They implement a weird mechanism based on custom enumerators to
+execute callbacks on the service host. The service can basically
+returns IYield objects representing callbacks with the C# keyword
+&ldquo;yield&rdquo;. The response is automatically sent to the client application
+when the service invokes &ldquo;yield break&rdquo;.</p>
+
+<p>[DreamFeature(&ldquo;GET:addresses&rdquo;, &ldquo;Get all addresses&rdquo;)]</p>
+
+<p>public Yield GetAddresses(DreamContext context, DreamMessage request,
+Result&lt;DreamMessage> response) {</p>
+
+<p> </p>
+
+<p>    // send back the entire address book</p>
+
+<p>    lock(_addresses) {</p>
+
+<p>        response.Return(DreamMessage.Ok(_addresses));</p>
+
+<p>    }</p>
+
+<p>    yield break;</p>
+
+<p>}</p></blockquote>
+
+<ul>
+<li>Supports for long running services with durable state, it&rsquo;s not
+clear to me however how they restore that state between calls. The
+fields must be annotated with the attribute &ldquo;DreamServiceState&rdquo; in
+order to use this feature.</li>
+</ul>
+
+
+<blockquote><p>[DreamServiceState]private XDoc _addresses;</p>
+
+<p> </p></blockquote>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/11/14/using-the-wcf-oauth-channel-with-an-ado-net-service/">Using the WCF OAuth Channel With an ADO.NET Service</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-11-14T00:00:00-03:00" pubdate data-updated="true">Nov 14<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/11/14/using-the-wcf-oauth-channel-with-an-ado-net-service/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As I promised in my previous post &ldquo;OAuth Channel for WCF RESTful
+services&rdquo;, it is now time to show this new channel in action with a real
+service. To make this sample more interesting, I decided to base this
+implementation on an ADO.NET service that provides information about
+contacts.</p>
+
+<p>This post will be a kind of walk-through to demonstrate all the steps
+required to implement the ADO.NET service, and then, the final
+integration with OAuth.</p>
+
+<p><strong>1.Create a custom data source (IQueryable) implementation for using
+with the ADO.NET data service</strong></p>
+
+<p>[DataServiceKey(&ldquo;Id&rdquo;)]</p>
+
+<p>public class Contact</p>
+
+<p>{</p>
+
+<p>    public int Id { get; set; }</p>
+
+<p>    public string Name { get; set; }</p>
+
+<p>    public string Email { get; set; }</p>
+
+<p>    public string Owner { get; set; }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public class ContactsData</p>
+
+<p>{</p>
+
+<p>    static Contact[] _contacts;</p>
+
+<p> </p>
+
+<p>    static ContactsData()</p>
+
+<p>    {</p>
+
+<p>        _contacts = new Contact[]{</p>
+
+<p>          new Contact(){ Id=0, Name=&ldquo;Mike&rdquo;, Email=&ldquo;<a href="&#109;&#x61;&#x69;&#108;&#x74;&#x6f;&#x3a;&#x6d;&#105;&#x6b;&#101;&#64;&#x63;&#111;&#x6e;&#x74;&#111;&#x73;&#111;&#x2e;&#x63;&#x6f;&#109;">&#x6d;&#x69;&#107;&#x65;&#x40;&#99;&#111;&#110;&#116;&#x6f;&#115;&#111;&#x2e;&#x63;&#x6f;&#x6d;</a>&rdquo;,
+Owner = &ldquo;jane&rdquo; },</p>
+
+<p>          new Contact(){ Id=1, Name=&ldquo;Saaid&rdquo;, Email=&ldquo;<a href="&#109;&#x61;&#105;&#108;&#x74;&#111;&#x3a;&#x53;&#x61;&#97;&#x69;&#x64;&#x40;&#104;&#111;&#x74;&#x6d;&#x61;&#x69;&#x6c;&#x2e;&#x63;&#x6f;&#x6d;">&#83;&#x61;&#97;&#105;&#100;&#64;&#x68;&#111;&#116;&#109;&#97;&#105;&#108;&#x2e;&#99;&#x6f;&#109;</a>&rdquo;,
+Owner = &ldquo;jane&rdquo;},</p>
+
+<p>          new Contact(){ Id=2, Name=&ldquo;John&rdquo;, Email=&ldquo;<a href="&#109;&#x61;&#105;&#108;&#x74;&#x6f;&#58;&#106;&#x31;&#50;&#51;&#64;&#108;&#105;&#118;&#x65;&#x2e;&#x63;&#x6f;&#x6d;">&#x6a;&#49;&#50;&#x33;&#x40;&#x6c;&#x69;&#x76;&#101;&#46;&#99;&#111;&#109;</a>&rdquo;, Owner
+= &ldquo;john&rdquo;},</p>
+
+<p>          new Contact(){ Id=3, Name=&ldquo;Pablo&rdquo;, Email=&ldquo;<a href="&#109;&#97;&#105;&#x6c;&#x74;&#111;&#58;&#80;&#97;&#x62;&#108;&#111;&#64;&#x6d;&#x61;&#105;&#108;&#x2e;&#99;&#111;&#x6d;">&#80;&#97;&#x62;&#108;&#111;&#64;&#109;&#x61;&#105;&#108;&#46;&#99;&#111;&#x6d;</a>&rdquo;,
+Owner = &ldquo;john&rdquo;}};</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public IQueryable&lt;Contact> Contacts</p>
+
+<p>    {</p>
+
+<p>        get { return _contacts.AsQueryable&lt;Contact>(); }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>}</p>
+
+<p>What I defined here is a simple Contact class representing the contact
+entity and a ContactsData for the ADO.NET service data source. The
+service will automatically reflect the IQueryable properties in this
+data source class. The &ldquo;DataServiceKey&rdquo; attribute on top of the contact
+entity is required by ADO.NET services to define an artificial primary
+key on custom classes (It took me some to figure this out).</p>
+
+<p><strong>2. Implement the ADO.NET data service</strong></p>
+
+<p>public class contacts : DataService&lt;ContactsData></p>
+
+<p>{</p>
+
+<p>    // This method is called only once to initialize service-wide
+policies.</p>
+
+<p>    public static void InitializeService(IDataServiceConfiguration
+config)</p>
+
+<p>    {</p>
+
+<p>        config.SetEntitySetAccessRule(&ldquo;*&rdquo;, EntitySetRights.AllRead);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    [QueryInterceptor(&ldquo;Contacts&rdquo;)]</p>
+
+<p>    public Expression&lt;Func&lt;Contact, bool>> OnQueryContact()</p>
+
+<p>    {</p>
+
+<p>        var name = Thread.CurrentPrincipal.Identity.Name;</p>
+
+<p>        return c => c.Owner.Equals(name,
+StringComparison.OrdinalIgnoreCase);</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>The &ldquo;QueryInterceptor&rdquo; in this service implementation basically filters
+the resulting contacts based on the authenticated user. As I showed in
+my previous post, the authentication is performed by the OAuth channel.</p>
+
+<p><strong>3. Configure the OAuth WCF channel for the ADO.NET data service</strong></p>
+
+<p>&lt;%@ ServiceHost Language=&ldquo;C#&rdquo;
+Factory=&ldquo;ExampleOAuthChannel.AppServiceHostFactory&rdquo;
+Service=&ldquo;ADOServices.OAuth.contacts&rdquo; %></p>
+
+<p>using System;\
+using System.ServiceModel;\
+using System.ServiceModel.Activation;\
+using Microsoft.ServiceModel.Web;</p>
+
+<p>namespace ExampleOAuthChannel \
+{\
+  class AppServiceHostFactory : ServiceHostFactory\
+  {\
+    protected override ServiceHost CreateServiceHost(Type serviceType,
+Uri[] baseAddresses)\
+    {\
+        WebServiceHost2 result = new WebServiceHost2(serviceType, true,
+baseAddresses);\
+        result.Interceptors.Add(new OAuthChannel.OAuthInterceptor(\
+   ADOServices.OAuth.OAuthServicesLocator.Provider,
+ADOServices.OAuth.OAuthServicesLocator.AccessTokenRepository));\
+        return result;\
+    }\
+  }\
+}</p>
+
+<p>Nothing new in this step, I only registered the OAuth interceptor in the
+WCF service host for the ADO.NET service.</p>
+
+<p><a href="/images/legacy/ADOServices_OAuth.zip">Download the complete
+example</a>. (It
+includes a client application implementation as well)</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/11/14/oauth-channel-for-wcf-restful-services/">OAuth Channel for WCF RESTful Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-11-14T00:00:00-03:00" pubdate data-updated="true">Nov 14<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/11/14/oauth-channel-for-wcf-restful-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>While OpenID and WS-Federation focus on delegating user identity (or a
+collection of identity claims), OAuth was designed to address a
+different and complementary scenario, the delegation of user
+authorization. In few words, OAuth allows a client application to obtain
+user consent (as access tokens) for executing operations over private
+resources on his behalf.</p>
+
+<p>The analogy given by Eran Hammer Lahav in this post &ldquo;<a href="http://www.hueniverse.com/hueniverse/2007/09/explaining-oaut.html">Explaining
+OAuth</a>&rdquo;
+is very close to what the specification tries to address,</p>
+
+<p><em>&ldquo;Many luxury cars today come with a valet key. It is a special key you
+give the parking attendant and unlike your regular key, will not allow
+the car to drive more than a mile or two. Some valet keys will not open
+the trunk, while others will block access to your onboard cell phone
+address book. Regardless of what restrictions the valet key imposes, the
+idea is very clever. You give someone limited access to your car with a
+special key, while using another key to unlock everything else.&rdquo;</em></p>
+
+<p>Now, if we analyze the specification in more detail, we will see that
+the real purpose behind OAuth is to create a network of collaboration 
+between applications. It will not be necessary anymore to keep all our
+stuff just in a single place, we can have for instance our pictures in a
+website, our contacts in another place and a third application making
+use of them, all these applications collaborating together.</p>
+
+<p>If you want to know more about how OAuth works, you should read the
+following posts</p>
+
+<ul>
+<li><a href="http://www.hueniverse.com/hueniverse/2007/10/beginners-guide.html">&ldquo;Begginer&rsquo;s Guide to OAuth &ndash; Part
+I&rdquo;</a></li>
+<li><a href="http://www.hueniverse.com/hueniverse/2007/10/beginners-gui-1.html">&ldquo;Begginer&rsquo;s Guide to OAuth &ndash; Part II &ndash; Protocol
+Workflow&rdquo;</a></li>
+<li><a href="http://www.hueniverse.com/hueniverse/2008/10/beginners-guide.html">&ldquo;Begginer&rsquo;s Guide to OAuth &ndash; Part III &ndash; Security
+Architecture&rdquo;</a></li>
+</ul>
+
+
+<p>When I initially said that OpenID and OAuth complement each other, I
+meant that the user can first authenticated by an OpenID provider, and
+then redirected to the relying party to obtain his consent.
+(Authorization for consuming a private resource).</p>
+
+<p><a href="http://blog.bittercoder.com/">Alex Henderson (Aka Bittercoder)</a> has
+written a pretty good OAuth library in .NET for implementing an OAuth
+consumer and service provider. The library is available
+<a href="http://code.google.com/p/devdefined-tools/wiki/OAuth">here</a> under a MIT
+license (do wherever you want with it), and it is very easy to use. Alex
+has definitively made a very good work.</p>
+
+<p>My WCF channel implementation for OAuth mounts on top of his library and
+it basically transforms a OAuth token into a .NET security principal
+that can be used later within the service implementation. The channel is
+implemented as a RequestInterceptor, one of new features introduced in
+the REST WCF Starter Kit. This interceptor basically captures the
+request at channel level and performs all the validations required by
+OAuth. The following sample illustrates how the interceptors can be
+plugged into an existing service host (service.svc),</p>
+
+<p>&lt;%@ ServiceHost Language=&ldquo;C#&rdquo; Debug=&ldquo;true&rdquo;
+Service=&ldquo;ExampleOAuthChannel.FeedService&rdquo;
+Factory=&ldquo;ExampleOAuthChannel.AppServiceHostFactory&rdquo;%></p>
+
+<p>using System;\
+using System.ServiceModel;\
+using System.ServiceModel.Activation;\
+using Microsoft.ServiceModel.Web;</p>
+
+<p>namespace ExampleOAuthChannel \
+{\
+  class AppServiceHostFactory : ServiceHostFactory\
+  {\
+    protected override ServiceHost CreateServiceHost(Type serviceType,
+Uri[] baseAddresses)\
+    {\
+        WebServiceHost2 result = new WebServiceHost2(serviceType, true,
+baseAddresses);\
+        result.Interceptors.Add(new OAuthChannel.OAuthInterceptor(\
+   OAuthServicesLocator.Provider,
+OAuthServicesLocator.AccessTokenRepository));\
+        return result;\
+    }\
+  }\
+}</p>
+
+<p>OAuthServicesLocator.Provider and
+OAuthServiceLocator.AccessTokenRepository are just part of the OAuth
+implementation.</p>
+
+<p>The interaction (and all the messages interchanged) between the consumer
+and the provider was very well summarized by Alex in this post <a href="http://blog.bittercoder.com/PermaLink,guid,83488336-290d-4c4b-a314-14fe255e5b4e.aspx">&ldquo;OAuth
+for
+beginners&rdquo;</a></p>
+
+<p>The following code illustrates some of the functionality implemented in
+the OAuth interceptor,</p>
+
+<p>Message request = requestContext.RequestMessage;</p>
+
+<p>HttpRequestMessageProperty requestProperty =
+(HttpRequestMessageProperty)request.Properties[HttpRequestMessageProperty.Name];</p>
+
+<p> </p>
+
+<p>OAuthContext context = new
+OAuthContextBuilder().FromUri(requestProperty.Method,
+request.Headers.To);</p>
+
+<p> </p>
+
+<p>try</p>
+
+<p>{</p>
+
+<p>    _provider.AccessProtectedResourceRequest(context);</p>
+
+<p> </p>
+
+<p>    OAuthChannel.Models.AccessToken accessToken =
+_repository.GetToken(context.Token);</p>
+
+<p> </p>
+
+<p>    TokenPrincipal principal = new TokenPrincipal(</p>
+
+<p>        new GenericIdentity(accessToken.UserName, &ldquo;OAuth&rdquo;),</p>
+
+<p>        accessToken.Roles,</p>
+
+<p>        accessToken);</p>
+
+<p> </p>
+
+<p>    InitializeSecurityContext(request, principal);</p>
+
+<p>}</p>
+
+<p>catch (OAuthException authEx)</p>
+
+<p>{</p>
+
+<p>    XElement response = XElement.Load(new StringReader(&ldquo;&lt;?xml
+version=&#34;1.0\&rdquo; encoding=\&ldquo;utf-8\&rdquo;?>&lt;html
+xmlns=\&ldquo;<a href="http://www.w3.org/1999/xhtml\">http://www.w3.org/1999/xhtml\</a>&rdquo; version=\&ldquo;&ndash;//W3C//DTD XHTML
+2.0//EN\&rdquo; xml:lang=\&ldquo;en\&rdquo;
+xmlns:xsi=\&ldquo;<a href="http://www.w3.org/2001/XMLSchema-instance\">http://www.w3.org/2001/XMLSchema-instance\</a>&rdquo;
+xsi:schemaLocation=\&ldquo;<a href="http://www.w3.org/1999/xhtml">http://www.w3.org/1999/xhtml</a>
+<a href="http://www.w3.org/MarkUp/SCHEMA/xhtml2.xsd\">http://www.w3.org/MarkUp/SCHEMA/xhtml2.xsd\</a>&rdquo;>&lt;HEAD>&lt;TITLE>Request
+Error&lt;/TITLE>&lt;/HEAD>&lt;BODY>&lt;DIV id=\&ldquo;content\&rdquo;>&lt;P
+class=\&ldquo;heading1\&rdquo;>&lt;B>&ldquo; +
+HttpUtility.HtmlEncode(authEx.Report.ToString()) +
+&rdquo;&lt;/B>&lt;/P>&lt;/DIV>&lt;/BODY>&lt;/html>&ldquo;));</p>
+
+<p>    Message reply = Message.CreateMessage(MessageVersion.None, null,
+response);</p>
+
+<p>    HttpResponseMessageProperty responseProperty = new
+HttpResponseMessageProperty() { StatusCode = HttpStatusCode.Forbidden,
+StatusDescription = authEx.Report.ToString() };</p>
+
+<p>    responseProperty.Headers[HttpResponseHeader.ContentType] =
+&ldquo;text/html&rdquo;;</p>
+
+<p>    reply.Properties[HttpResponseMessageProperty.Name] =
+responseProperty;</p>
+
+<p>    requestContext.Reply(reply);</p>
+
+<p> </p>
+
+<p>    requestContext = null;</p>
+
+<p>}</p>
+
+<p>It basically validates the OAuth ticket using the library written by
+Alex and initializes a new principal containing the ticket identity. If
+the ticket can not be validated for some reason, it returns a friendly
+exception to the consumer.</p>
+
+<p>UPDATE: Alex has now include the channel as part of the OAuth Library.
+It is available under the following links,</p>
+
+<p><a href="http://devdefined-tools.googlecode.com/svn/trunk/projects/oauth/DevDefined.OAuth.Wcf/">http://devdefined-tools.googlecode.com/svn/trunk/projects/oauth/DevDefined.OAuth.Wcf/</a></p>
+
+<p><a href="http://devdefined-tools.googlecode.com/svn/trunk/projects/oauth/ExampleOAuthChannel/">http://devdefined-tools.googlecode.com/svn/trunk/projects/oauth/ExampleOAuthChannel/</a></p>
+
+<p>Coming next  &ldquo;Using the WCF OAuth channel with an ADO.NET service&rdquo; (The
+complete source code will be available as part of that post)</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/11/06/routing-to-the-right-workflow-service-instance-through-uri-templates-rest-workflows-part-iii/">Routing to the Right Workflow Service Instance Through URI Templates (REST Workflows Part III)</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-11-06T00:00:00-03:00" pubdate data-updated="true">Nov 6<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/11/06/routing-to-the-right-workflow-service-instance-through-uri-templates-rest-workflows-part-iii/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Continuing from my previous posts &ldquo;<a href="http://weblogs.asp.net/cibrax/archive/2008/10/24/rest-and-workflow-services-play-well-together.aspx">REST and Workflow services play well
+together
+I</a>&rdquo;
+and &ldquo;<a href="http://weblogs.asp.net/cibrax/archive/2008/10/30/rest-and-workflow-services-play-well-together-part-ii.aspx">REST and Workflow services play well together
+II</a>&rdquo;,
+in which I created a new binding to send the workflow context as an http
+header, I&rsquo;ve applied some modifications to that sample to support also
+routing through URI templates. This is very helpful for scenarios where
+client applications are not necessarily aware of the existence of a
+workflow services on the other end, so the context information is
+reconstructed from the resource URI using Uri templates.</p>
+
+<p>For example, the following Uri template &ldquo;/orders/{instanceId}&rdquo; applied
+to the Uri
+<a href="http://localhost:8000/orders/3C3DE415-71F4-4538-ADA6-87A735827DF6">http://localhost:8000/orders/3C3DE415-71F4-4538-ADA6-87A735827DF6</a>
+will result in a match for the key &ldquo;instanceId&rdquo; with a value of
+&ldquo;3C3DE415-71F4-4538-ADA6-87A735827DF6&rdquo;. We can now pass that instanceId
+variable to the WF context correlation manager so it will be able to
+locate and load the corresponding workflow service instance.</p>
+
+<p>The configuration for the binding on the service side looks as follow,</p>
+
+<p>&lt;webHttpContext></p>
+
+<p>&lt;binding name=&ldquo;myServiceBinding&rdquo; contextMode=&ldquo;UriTemplate&rdquo;></p>
+
+<p>  &lt;uriTemplates></p>
+
+<p>    &lt;add name=&ldquo;orders&rdquo; value=&ldquo;order/{instanceId}&rdquo;>&lt;/add></p>
+
+<p>    &lt;add name=&ldquo;payments&rdquo; value=&ldquo;payment/order/{instanceId}&rdquo;>&lt;/add></p>
+
+<p>  &lt;/uriTemplates></p>
+
+<p>&lt;/binding></p>
+
+<p>&lt;/webHttpContext></p>
+
+<p>UriTemplates is a collection, you can configure there all the possible
+URIs that your workflow can handle. In that example, instanceId is the
+name of the variable used by WF to locate the workflow instance, other
+variable names can also be used. For example &ldquo;conversationId&rdquo; can be
+used to continue the workflow in a specific ReceiveActivity (Usually
+required when the workflow is waiting for some event in a parallel
+branch activity)</p>
+
+<p>We can now return the following links (representing the possible
+branches in the workflow) to the client,</p>
+
+<p>currentOrder.Next = new Next[] {</p>
+
+<p>    new Next</p>
+
+<p>    {</p>
+
+<p>        Rel = &ldquo;<a href="http://starbucks.example.org/payment">http://starbucks.example.org/payment</a>&rdquo;,</p>
+
+<p>        Uri = &ldquo;<a href="http://localhost:8000/payment/order/">http://localhost:8000/payment/order/</a>&rdquo; +
+WorkflowEnvironment.WorkflowInstanceId.ToString(),</p>
+
+<p>    },</p>
+
+<p>    new Next</p>
+
+<p>    {</p>
+
+<p>        Rel = &ldquo;<a href="http://starbucks.example/order/update">http://starbucks.example/order/update</a>&rdquo;,</p>
+
+<p>        Uri = &ldquo;<a href="http://localhost:8000/order/">http://localhost:8000/order/</a>&rdquo; +
+WorkflowEnvironment.WorkflowInstanceId.ToString()</p>
+
+<p>    }</p>
+
+<p>};</p>
+
+<p>The client application will not need to remember to send a context
+header in the next execution to resume an existing workflow instance,
+the Uri will be enough to parse the context information.</p>
+
+<p>Download the complete sample from <a href="/images/legacy/RestWorkflowsIII.zip">this
+location</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/17/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/blog/page/15/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

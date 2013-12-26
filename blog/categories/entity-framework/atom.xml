@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Entity-Framework | Pablo Cibraro (Cibrax)]]></title>
+  <link href="http://cibrax.me/blog/categories/entity-framework/atom.xml" rel="self"/>
+  <link href="http://cibrax.me/"/>
+  <updated>2013-12-26T15:03:47-03:00</updated>
+  <id>http://cibrax.me/</id>
+  <author>
+    <name><![CDATA[Cibrax]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Using the WCF OAuth channel with an ADO.NET service]]></title>
+    <link href="http://cibrax.me/blog/2008/11/14/using-the-wcf-oauth-channel-with-an-ado-net-service/"/>
+    <updated>2008-11-14T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2008/11/14/using-the-wcf-oauth-channel-with-an-ado-net-service</id>
+    <content type="html"><![CDATA[<p>As I promised in my previous post &ldquo;OAuth Channel for WCF RESTful
+services&rdquo;, it is now time to show this new channel in action with a real
+service. To make this sample more interesting, I decided to base this
+implementation on an ADO.NET service that provides information about
+contacts.</p>
+
+<p>This post will be a kind of walk-through to demonstrate all the steps
+required to implement the ADO.NET service, and then, the final
+integration with OAuth.</p>
+
+<p><strong>1.Create a custom data source (IQueryable) implementation for using
+with the ADO.NET data service</strong></p>
+
+<p>[DataServiceKey(&ldquo;Id&rdquo;)]</p>
+
+<p>public class Contact</p>
+
+<p>{</p>
+
+<p>    public int Id { get; set; }</p>
+
+<p>    public string Name { get; set; }</p>
+
+<p>    public string Email { get; set; }</p>
+
+<p>    public string Owner { get; set; }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public class ContactsData</p>
+
+<p>{</p>
+
+<p>    static Contact[] _contacts;</p>
+
+<p> </p>
+
+<p>    static ContactsData()</p>
+
+<p>    {</p>
+
+<p>        _contacts = new Contact[]{</p>
+
+<p>          new Contact(){ Id=0, Name=&ldquo;Mike&rdquo;, Email=&ldquo;<a href="&#109;&#x61;&#x69;&#x6c;&#x74;&#x6f;&#58;&#109;&#105;&#107;&#101;&#64;&#x63;&#x6f;&#110;&#116;&#111;&#x73;&#111;&#46;&#x63;&#111;&#109;">&#x6d;&#x69;&#107;&#x65;&#x40;&#x63;&#x6f;&#110;&#116;&#x6f;&#115;&#x6f;&#x2e;&#99;&#111;&#x6d;</a>&rdquo;,
+Owner = &ldquo;jane&rdquo; },</p>
+
+<p>          new Contact(){ Id=1, Name=&ldquo;Saaid&rdquo;, Email=&ldquo;<a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#83;&#97;&#x61;&#105;&#100;&#x40;&#x68;&#x6f;&#x74;&#109;&#x61;&#x69;&#x6c;&#x2e;&#x63;&#111;&#109;">&#x53;&#97;&#x61;&#105;&#x64;&#x40;&#x68;&#111;&#x74;&#x6d;&#97;&#105;&#x6c;&#x2e;&#x63;&#111;&#109;</a>&rdquo;,
+Owner = &ldquo;jane&rdquo;},</p>
+
+<p>          new Contact(){ Id=2, Name=&ldquo;John&rdquo;, Email=&ldquo;<a href="&#109;&#97;&#x69;&#108;&#x74;&#111;&#x3a;&#x6a;&#x31;&#50;&#x33;&#64;&#108;&#x69;&#x76;&#x65;&#x2e;&#99;&#x6f;&#109;">&#106;&#x31;&#50;&#x33;&#64;&#108;&#105;&#x76;&#x65;&#46;&#x63;&#x6f;&#x6d;</a>&rdquo;, Owner
+= &ldquo;john&rdquo;},</p>
+
+<p>          new Contact(){ Id=3, Name=&ldquo;Pablo&rdquo;, Email=&ldquo;<a href="&#x6d;&#x61;&#105;&#x6c;&#x74;&#x6f;&#x3a;&#x50;&#97;&#x62;&#x6c;&#x6f;&#64;&#109;&#x61;&#105;&#x6c;&#x2e;&#99;&#111;&#x6d;">&#x50;&#x61;&#x62;&#108;&#111;&#x40;&#109;&#x61;&#105;&#108;&#x2e;&#x63;&#x6f;&#109;</a>&rdquo;,
+Owner = &ldquo;john&rdquo;}};</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    public IQueryable&lt;Contact> Contacts</p>
+
+<p>    {</p>
+
+<p>        get { return _contacts.AsQueryable&lt;Contact>(); }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>}</p>
+
+<p>What I defined here is a simple Contact class representing the contact
+entity and a ContactsData for the ADO.NET service data source. The
+service will automatically reflect the IQueryable properties in this
+data source class. The &ldquo;DataServiceKey&rdquo; attribute on top of the contact
+entity is required by ADO.NET services to define an artificial primary
+key on custom classes (It took me some to figure this out).</p>
+
+<p><strong>2. Implement the ADO.NET data service</strong></p>
+
+<p>public class contacts : DataService&lt;ContactsData></p>
+
+<p>{</p>
+
+<p>    // This method is called only once to initialize service-wide
+policies.</p>
+
+<p>    public static void InitializeService(IDataServiceConfiguration
+config)</p>
+
+<p>    {</p>
+
+<p>        config.SetEntitySetAccessRule(&ldquo;*&rdquo;, EntitySetRights.AllRead);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    [QueryInterceptor(&ldquo;Contacts&rdquo;)]</p>
+
+<p>    public Expression&lt;Func&lt;Contact, bool>> OnQueryContact()</p>
+
+<p>    {</p>
+
+<p>        var name = Thread.CurrentPrincipal.Identity.Name;</p>
+
+<p>        return c => c.Owner.Equals(name,
+StringComparison.OrdinalIgnoreCase);</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>The &ldquo;QueryInterceptor&rdquo; in this service implementation basically filters
+the resulting contacts based on the authenticated user. As I showed in
+my previous post, the authentication is performed by the OAuth channel.</p>
+
+<p><strong>3. Configure the OAuth WCF channel for the ADO.NET data service</strong></p>
+
+<p>&lt;%@ ServiceHost Language=&ldquo;C#&rdquo;
+Factory=&ldquo;ExampleOAuthChannel.AppServiceHostFactory&rdquo;
+Service=&ldquo;ADOServices.OAuth.contacts&rdquo; %></p>
+
+<p>using System;\
+using System.ServiceModel;\
+using System.ServiceModel.Activation;\
+using Microsoft.ServiceModel.Web;</p>
+
+<p>namespace ExampleOAuthChannel \
+{\
+  class AppServiceHostFactory : ServiceHostFactory\
+  {\
+    protected override ServiceHost CreateServiceHost(Type serviceType,
+Uri[] baseAddresses)\
+    {\
+        WebServiceHost2 result = new WebServiceHost2(serviceType, true,
+baseAddresses);\
+        result.Interceptors.Add(new OAuthChannel.OAuthInterceptor(\
+   ADOServices.OAuth.OAuthServicesLocator.Provider,
+ADOServices.OAuth.OAuthServicesLocator.AccessTokenRepository));\
+        return result;\
+    }\
+  }\
+}</p>
+
+<p>Nothing new in this step, I only registered the OAuth interceptor in the
+WCF service host for the ADO.NET service.</p>
+
+<p><a href="/images/legacy/ADOServices_OAuth.zip">Download the complete
+example</a>. (It
+includes a client application implementation as well)</p>
+]]></content>
+  </entry>
+  
+</feed>

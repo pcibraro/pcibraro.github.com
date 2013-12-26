@@ -1,0 +1,990 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Web-Services | Pablo Cibraro (Cibrax)]]></title>
+  <link href="http://cibrax.me/blog/categories/web-services/atom.xml" rel="self"/>
+  <link href="http://cibrax.me/"/>
+  <updated>2013-12-26T15:03:47-03:00</updated>
+  <id>http://cibrax.me/</id>
+  <author>
+    <name><![CDATA[Cibrax]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Windows Live Contacts API]]></title>
+    <link href="http://cibrax.me/blog/2008/04/09/windows-live-contacts/"/>
+    <updated>2008-04-09T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2008/04/09/windows-live-contacts</id>
+    <content type="html"><![CDATA[<p>With the boom in social networking, many web sites have started offering
+new tools for building or expanding your initial network of contacts.</p>
+
+<p>For instance, sites like Facebook or Linkedin provide a tool to get your
+Windows Live contacts and use them to more easily find or invite those
+people into your social networks.</p>
+
+<p>Although the idea is very good, the current implementation contains some
+serious security issues from my point of view.  The user has to enter in
+some way his Windows LiveID credentials into those sites (using a custom
+http form), so they can log into Windows Live and get the user&rsquo;s
+contacts.</p>
+
+<p>There is not any particular difference between this approach and a
+phising web site created by a malicious user only with the intention of
+getting your personal information.</p>
+
+<p>Not all people (including me) trust these sites enough to provide them
+with valuable Windows LiveID credentials. These sites are very
+well-known, but we are not certainly sure which will be the final user
+of our credentials. (or even, if they are keeping them somewhere).</p>
+
+<p>This security issue could be basically solved if Windows Live provided
+two fundamental things:</p>
+
+<p>1.  Http REST Services to get the user contacts or other personal
+information.</p>
+
+<p>​2. An authentication mechanism for those services based on security
+tokens. Something similar to what <a href="http://oauth.net/">OAuth</a> provides,
+so the user will never have to enter his credentials in a site different
+from Microsoft again. Another advantage of this protocol is that the
+user will finally decide whether he authorize third party sites to get
+his personal information or not. If you are curious about how OAuth
+works behind scene,  an excellent &ldquo;Begginer&rsquo;s guide&rdquo; is available
+<a href="http://www.hueniverse.com/hueniverse/2007/10/beginners-gui-1.html">here</a>.</p>
+
+<p>Fortunately, the Windows Live team has made an excellent progress in
+these two aspects. One one hand, they have developed an &ldquo;<a href="http://msdn2.microsoft.com/en-us/library/cc287637.aspx">Windows Live
+ID Delegated Authentication
+SDK</a>&rdquo; to
+integrate Application providers through a protocol pretty similar to
+OAuth (I haven&rsquo;t had enough time yet to take a more detailed look at
+this SDK)</p>
+
+<p>From the MSDN site,</p>
+
+<p>&ldquo;<em>Delegated Authentication is based on a block of information, called a
+consent token, that is provided to your Web site by the Windows Live ID
+service for a given resource provider (such as contacts and photos). To
+obtain a consent token for use at a particular resource provider, you
+must first request it from the user by means of the Windows Live ID
+consent service. Your application must then manage the authentication
+data that is returned. For detailed information about how to request and
+manage consent, see the</em><a href="http://msdn.microsoft.com/en-us/library/cc287637.aspx"><em>Windows Live Delegated Authentication
+SDK</em></a>.&rdquo;</p>
+
+<p>On other hand, as part of &ldquo;<a href="http://msdn2.microsoft.com/en-us/library/cc305075.aspx">Windows Live User Data
+APIs</a>&rdquo;, they
+have started providing REST services to allow Windows Live users to
+safely and securely share their information stored in Windows Live
+services. One of this services is what they have called &ldquo;<a href="http://msdn2.microsoft.com/en-us/library/bb463989.aspx">Windows Live
+Contacts API</a>&rdquo;,
+a REST service that enables developers to programmatically submit
+queries to, and retrieve results from, the Windows Live Contacts Address
+Book database service.</p>
+
+<p>Hopefully, it will be a matter of time until <a href="http://dev.live.com/blogs/devlive/archive/2008/03/25/237.aspx">Facebook or Linkedin start
+integrating</a>
+services like these into their sites for the benefit of all :).</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Jason Hogg is blogging]]></title>
+    <link href="http://cibrax.me/blog/2006/02/14/438210/"/>
+    <updated>2006-02-14T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2006/02/14/438210</id>
+    <content type="html"><![CDATA[<p>Jason Hogg is blogging, what good news. I have been working with Jason
+for almost two years on different projects (Shadowfax, some applications
+blocks, and other projects for web services). \
+Jason is program manager on the Patterns &amp; Practices team, a smart guy
+and guru on web services. \
+He has been writing excellent articles about WSE, SAML and his work on
+Microsoft.  Check out his blog at
+<a href="http://blogs.msdn.com/thehoggblog/">http://blogs.msdn.com/thehoggblog/</a>\</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[WS-Compression for WSE 3]]></title>
+    <link href="http://cibrax.me/blog/2006/02/13/438103/"/>
+    <updated>2006-02-13T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2006/02/13/438103</id>
+    <content type="html"><![CDATA[<p><a href="http://weblogs.shockbyte.com.ar/rodolfof">Roldolfo Finochietti</a> has
+written a nice implementation of WS-Compression for WSE 3.0. \
+You can download
+it <a href="http://weblogs.shockbyte.com.ar/rodolfof/archive/2006/02/07/4585.aspx">here</a>.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Implementing a WS-Federation scenario with WSE]]></title>
+    <link href="http://cibrax.me/blog/2006/02/02/437180/"/>
+    <updated>2006-02-02T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2006/02/02/437180</id>
+    <content type="html"><![CDATA[<p>Federation is key concept that allows to enable collaboration across
+multiple security or trust realms.\
+There are many resources on Internet about this topic so I won&rsquo;t enter
+in details during this post.\
+The solution that I will give is based on the second extension of this
+pattern:</p>
+
+<p>\</p>
+
+<p><a href="http://msdn.microsoft.com/practices/default.aspx?pull=/library/en-us/dnpag2/html/wss_ch1_brokauthsts.asp">http://msdn.microsoft.com/practices/default.aspx?pull=/library/en-us/dnpag2/html/wss_ch1_brokauthsts.asp</a></p>
+
+<p>\</p>
+
+<p>By the way, this is one of the security patterns published by the
+Pattern and Practices team in Microsoft.\
+This a good starting point if you want to be familiar with different and
+useful patterns for web services.</p>
+
+<p>\</p>
+
+<p><strong>Sample scenario</strong>\
+\
+Imagine the following scenario:</p>
+
+<p>\</p>
+
+<p>Fabrikam has exposed some services to make on line operations, such as
+purchase goods, make orders and others.\
+These services can be used only by customers so the access to them is
+restricted.\
+Contoso is one of Fabrikam&rsquo;s customers and it has developed an internal
+desktop application to consume some of these services.\
+As you can see, this is a typical scenario for Federation where we have
+both companies in different security domains or realms but they trust
+each other.</p>
+
+<p>\</p>
+
+<p>The services exposed by Fabrikam authenticate the users by means of X509
+certificates, so one certificate is used for the client(Contoso) and
+another for the service(Fabrikam).\
+Contoso has deployed the desktop application in almost 100 machines and
+therefore installing both certificates in each one is not a practical
+solution in this case.</p>
+
+<p>\</p>
+
+<p>\
+<img src="/images/legacy/Federation/Problem.gif" alt="" /></p>
+
+<p>\</p>
+
+<p>The Brokered Authentication pattern by means of security token services
+meets really well the requirements for this solution.\</p>
+
+<p><img src="/images/legacy/Federation/Solution.gif" alt="" /></p>
+
+<p>\</p>
+
+<p>The arrows in this figure only show the work flow path and not the real
+path of the interchanged messages (Pair of request and response
+messages).</p>
+
+<p>\</p>
+
+<p>​1. Contoso deploys a STS with both certificates and the desktop
+application can ask for a SAML token to this service using a
+UsernameToken, a Kerberos token, or other kind of client credential.\
+2. The STS in the Fabrikam&rsquo;s domain only accepts SAML tokens signed by a
+well-know Authority (The Contoso&rsquo;s STS in this case) and creates an
+equivalent SAML token signed by him.\
+3. The Fabrikam&rsquo;s services only accept SAML tokens signed by Fabrikam&rsquo;s
+STS.</p>
+
+<p>\</p>
+
+<p>With this solution, Fabrikam can start to accept request from
+other customers and the services will not notice the difference.\
+In addition, if the communication between the STS and the services in
+Fabrikam is protected by means of a Kerberos token instead of a SAML
+token, the\
+X509 certificates must be only deployed in the servers where both STS
+run.</p>
+
+<p>\</p>
+
+<hr />
+
+<p><strong>Implementation</strong></p>
+
+<p>\
+In order to implement this sample scenario, I used the SAML
+implementation for WSE. You can download the code for this project in
+the <a href="http://practices.gotdotnet.com/projects/saml">GDN workspace</a>.\
+The image above illustrates the turn-key scenario used to secure the
+communication between the different participants in the architecture.</p>
+
+<p>\</p>
+
+<p><img src="/images/legacy/Federation/Turnkey.gif" alt="" />\</p>
+
+<p>​1. WSE Policy file in the client application</p>
+
+<p>&lt;policies xmlns=&ldquo;<a href="http://schemas.microsoft.com/wse/2005/06/policy">http://schemas.microsoft.com/wse/2005/06/policy</a>&rdquo;></p>
+
+<p>  &lt;extensions></p>
+
+<p>    &lt;extension name=&ldquo;saml&rdquo;
+type=&ldquo;Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion.SamlPolicyAssertion,
+Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion&rdquo;/></p>
+
+<p>  &lt;/extensions></p>
+
+<p>\</p>
+
+<p>  &lt;policy name=&ldquo;PurchaseGoods&rdquo;></p>
+
+<p>    &lt;saml issuer=&ldquo;<a href="http://localhost/FabrikamSTS/SamlTokenIssuer.ashx">http://localhost/FabrikamSTS/SamlTokenIssuer.ashx</a>&rdquo;
+issuerPolicy=&ldquo;FabrikamSTS&rdquo; establishSecurityContext=&ldquo;true&rdquo;
+renewExpiredSecurityContext=&ldquo;true&rdquo; requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>      &lt;protection></p>
+
+<p>        &lt;request signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;response signatureOptions=&ldquo;IncludeAddressing,
+IncludeTimestamp, IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;fault signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo; /></p>
+
+<p>      &lt;/protection></p>
+
+<p>    &lt;/saml></p>
+
+<p>  &lt;/policy></p>
+
+<p>  &lt;policy name=&ldquo;FabrikamSTS&rdquo;></p>
+
+<p>    &lt;saml issuer=&ldquo;<a href="http://localhost/ContosoSTS/SamlTokenIssuer.ashx">http://localhost/ContosoSTS/SamlTokenIssuer.ashx</a>&rdquo;
+issuerPolicy=&ldquo;ContosoSTS&rdquo; establishSecurityContext=&ldquo;false&rdquo;
+renewExpiredSecurityContext=&ldquo;false&rdquo; requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>      &lt;protection></p>
+
+<p>        &lt;request signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;response signatureOptions=&ldquo;IncludeAddressing,
+IncludeTimestamp, IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;fault signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo; /></p>
+
+<p>      &lt;/protection></p>
+
+<p>    &lt;/saml></p>
+
+<p>  &lt;/policy></p>
+
+<p>  &lt;policy name=&ldquo;ContosoSTS&rdquo;></p>
+
+<p>    &lt;usernameForCertificateSecurity establishSecurityContext=&ldquo;true&rdquo;
+renewExpiredSecurityContext=&ldquo;true&rdquo; requireSignatureConfirmation=&ldquo;false&rdquo;
+messageProtectionOrder=&ldquo;SignBeforeEncryptAndEncryptSignature&rdquo;
+requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>      &lt;serviceToken></p>
+
+<p>        &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
+findValue=&ldquo;CN=ContosoSTS&rdquo; findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
+
+<p>      &lt;/serviceToken></p>
+
+<p>      &lt;protection></p>
+
+<p>        &lt;request signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo;
+/></p>
+
+<p>        &lt;response signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo;
+/></p>
+
+<p>        &lt;fault signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo;
+/></p>
+
+<p>      &lt;/protection></p>
+
+<p>    &lt;/usernameForCertificateSecurity></p>
+
+<p>  &lt;/policy></p>
+
+<p>&lt;/policies></p>
+
+<p>\</p>
+
+<p>The policy definition above contains three policies:</p>
+
+<p>\</p>
+
+<p>​1. PurchaseGoods: This policy is used to secure the communication
+between the client and the Fabrikam&rsquo;s service (PurchaseGoods service).
+As you can see, this service requires a SAML token created by the
+Fabrikam&rsquo;s STS. The address for that STS is specified in the attribute
+&ldquo;issuer&rdquo;.</p>
+
+<p>​2. FabrikamSTS: This policy is used to secure the communication between
+the client and the STS in the Fabrikam realm. The Fabrikam&rsquo;s STS
+requires a SAML token from Contoso </p>
+
+<p>​3. ContosoSTS: This policy is used to secure the communication between
+the client and the STS in the Contoso realm. In this case, to make the
+things simpler, I decided to use a UsernameForCertificate turn-key
+scenario although any of the available turn-key scenarios can be used
+here.</p>
+
+<p>\</p>
+
+<p>​2. WSE Policy file in the Contoso&rsquo;s STS</p>
+
+<p>\</p>
+
+<p>&lt;policies xmlns=&ldquo;<a href="http://schemas.microsoft.com/wse/2005/06/policy">http://schemas.microsoft.com/wse/2005/06/policy</a>&rdquo;></p>
+
+<p>  &lt;policy name=&ldquo;ContosoSTS&rdquo;></p>
+
+<p>    &lt;usernameForCertificateSecurity establishSecurityContext=&ldquo;true&rdquo;
+renewExpiredSecurityContext=&ldquo;true&rdquo;
+requireSignatureConfirmation=&ldquo;false"  
+messageProtectionOrder="SignBeforeEncryptAndEncryptSignature&rdquo;
+requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>      &lt;serviceToken></p>
+
+<p>        &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
+findValue=&ldquo;CN=ContosoSTS&rdquo; findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
+
+<p>      &lt;/serviceToken></p>
+
+<p>      &lt;protection></p>
+
+<p>        &lt;request signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo;
+/></p>
+
+<p>        &lt;response signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo;
+/></p>
+
+<p>        &lt;fault signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo;
+/></p>
+
+<p>      &lt;/protection></p>
+
+<p>    &lt;/usernameForCertificateSecurity></p>
+
+<p>  &lt;/policy></p>
+
+<p>&lt;/policies></p>
+
+<p>\</p>
+
+<p>​3. SAML configuration for the Contoso&rsquo;s STS</p>
+
+<p>\</p>
+
+<p>&lt;WseSaml></p>
+
+<p>  &lt;samlTokenIssuer allowCachingToken=&ldquo;true&rdquo; ttlInSeconds=&ldquo;300&rdquo;></p>
+
+<p>  &lt;!&mdash; the config for the saml token issuer, this is the only config we
+use. This token is used to sign the SAML token &mdash;></p>
+
+<p>    &lt;serviceTokens></p>
+
+<p>      &lt;!&mdash; SAML Authority certificate &mdash;></p>
+
+<p>      &lt;add
+uri=&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue/SAML">http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue/SAML</a>&rdquo;
+storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo; findValue=&ldquo;CN=ContosoSTS&rdquo;
+findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
+
+<p>      &lt;!&mdash; Fabrikam STS &mdash;></p>
+
+<p>      &lt;add uri=&ldquo;<a href="http://localhost/FabrikamSTS/SamlTokenIssuer.ashx">http://localhost/FabrikamSTS/SamlTokenIssuer.ashx</a>&rdquo;
+storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo; findValue=&ldquo;CN=FabrikamSTS&rdquo;
+findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
+
+<p>    &lt;/serviceTokens></p>
+
+<p>    &lt;policy name=&ldquo;ContosoSTS&rdquo;></p>
+
+<p>    &lt;/policy></p>
+
+<p>  &lt;/samlTokenIssuer></p>
+
+<p>&lt;/WseSaml></p>
+
+<p>\</p>
+
+<p>A quick description of the configuration above:</p>
+
+<p>\</p>
+
+<p>​a. allowCachingToken attribute: This attribute specifies whether the
+SAML token can be stored in a cache or not. Depending on this attribute,
+the STS will add or not a DoNotCacheCondition to the SAML token.</p>
+
+<p>​b. ttlInSeconds attribute: Lifetime in seconds for the SAML token</p>
+
+<p>​c. serviceTokens element: It specifies the location for the different
+X509 certificates required by the STS. The &ldquo;SAML authority certificate&rdquo;
+is used to sign the SAML token. (This signature is really important
+since the target service can trust or not in the SAML token depending on
+the certificate used to create it). The &ldquo;Fabrikam STS certificate&rdquo; is
+used to encrypt some sections in the SAML token, and thefore only the
+Fabrikam STS can decrypt those sections and use the token. In other
+words, it defines the X509 certificate for the target service.</p>
+
+<p>​d. policy element: The WSE policy used to secure the communication
+between the clients and the STS.</p>
+
+<p>\</p>
+
+<p>​4. WSE policy file in the Fabrikam&rsquo;s STS</p>
+
+<p>\</p>
+
+<p>&lt;policies></p>
+
+<p>  &lt;extensions></p>
+
+<p>    &lt;extension name=&ldquo;saml&rdquo;
+type=&ldquo;Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion.SamlPolicyAssertion,
+Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion&rdquo;/></p>
+
+<p>  &lt;/extensions></p>
+
+<p>  &lt;policy name=&ldquo;FabrikamSTS&rdquo;></p>
+
+<p>    &lt;saml issuer=&ldquo;<a href="http://localhost/ContosoSTS/SamlTokenIssuer.ashx">http://localhost/ContosoSTS/SamlTokenIssuer.ashx</a>&rdquo;
+issuerPolicy=&ldquo;issuerPolicy&rdquo; establishSecurityContext=&ldquo;false&rdquo;
+renewExpiredSecurityContext=&ldquo;false&rdquo; requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>      &lt;trustedTokenIssuers></p>
+
+<p>        &lt;add></p>
+
+<p>          &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
+findValue=&ldquo;CN=ContosoSTS&rdquo; findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
+
+<p>        &lt;/add></p>
+
+<p>      &lt;/trustedTokenIssuers></p>
+
+<p>      &lt;protection></p>
+
+<p>        &lt;request signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;response signatureOptions=&ldquo;IncludeAddressing,
+IncludeTimestamp, IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;fault signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo; /></p>
+
+<p>      &lt;/protection></p>
+
+<p>    &lt;/saml></p>
+
+<p>  &lt;/policy></p>
+
+<p>&lt;/policies></p>
+
+<p>\</p>
+
+<p>This STS only accepts SAML tokens created by the Contoso&rsquo;s STS
+(trustedTokenIssuers element in the policy definition). In other words,
+it only accepts SAML tokens signed by any of the issuers specified in
+the &ldquo;trustedTokenIssuers&rdquo; element.</p>
+
+<p>\</p>
+
+<p>​5. SAML configuration for the Fabrikam&rsquo;s STS</p>
+
+<p>\</p>
+
+<p>&lt;WseSaml></p>
+
+<p>  &lt;samlTokenIssuer allowCachingToken=&ldquo;true&rdquo; ttlInSeconds=&ldquo;300&rdquo; ></p>
+
+<p>  &lt;!&mdash; the config for the saml token issuer, this is the only config we
+use. This token is used to sign the SAML token &mdash;></p>
+
+<p>  &lt;serviceTokens></p>
+
+<p>    &lt;!&mdash; SAML Authority certificate. Certificate used to sign the token
+&mdash;></p>
+
+<p>    &lt;add
+uri=&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue/SAML">http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue/SAML</a>&rdquo;</p>
+
+<p>storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo; findValue=&ldquo;CN=FabrikamSTS&rdquo;
+findType=&ldquo;FindBySubjectDistinguishedName&rdquo;/></p>
+
+<p>    &lt;!&mdash; Fabrikam service. Certificate used to encrypt the token
+subject &mdash;></p>
+
+<p>    &lt;add uri=&ldquo;<a href="http://localhost/FabrikamServices/PurchaseGoods.asmx">http://localhost/FabrikamServices/PurchaseGoods.asmx</a>&rdquo;</p>
+
+<p>storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
+findValue=&ldquo;CN=FabrikamServices&rdquo;
+findType=&ldquo;FindBySubjectDistinguishedName&rdquo;/></p>
+
+<p>  &lt;/serviceTokens></p>
+
+<p>  &lt;policy name=&ldquo;FabrikamSTS&rdquo;>&lt;/policy></p>
+
+<p>  &lt;/samlTokenIssuer></p>
+
+<p>&lt;/WseSaml></p>
+
+<p>\</p>
+
+<p>As you can see, this configuration is similar to the configuration in
+the Contoso STS. The only difference is the configuration for the
+service tokens.</p>
+
+<p>\</p>
+
+<p>​6. WSE policy file in the Fabrikam&rsquo;s service</p>
+
+<p>\</p>
+
+<p>&lt;policies></p>
+
+<p>  &lt;extensions></p>
+
+<p>    &lt;extension name=&ldquo;saml&rdquo;
+type=&ldquo;Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion.SamlPolicyAssertion,
+Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion&rdquo;/></p>
+
+<p>  &lt;/extensions></p>
+
+<p>  &lt;policy name=&ldquo;FabrikamServices&rdquo;></p>
+
+<p>    &lt;saml issuer=&ldquo;<a href="http://localhost/FabrikamSTS/SamlTokenIssuer.ashx">http://localhost/FabrikamSTS/SamlTokenIssuer.ashx</a>&rdquo;
+issuerPolicy=&ldquo;issuerPolicy&rdquo; establishSecurityContext=&ldquo;true&rdquo;
+renewExpiredSecurityContext=&ldquo;true&rdquo; requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>      &lt;trustedTokenIssuers></p>
+
+<p>        &lt;add></p>
+
+<p>          &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
+findValue=&ldquo;CN=FabrikamSTS&rdquo; findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
+
+<p>        &lt;/add></p>
+
+<p>      &lt;/trustedTokenIssuers></p>
+
+<p>      &lt;protection></p>
+
+<p>        &lt;request signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;response signatureOptions=&ldquo;IncludeAddressing,
+IncludeTimestamp, IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;fault signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo; /></p>
+
+<p>      &lt;/protection></p>
+
+<p>    &lt;/saml></p>
+
+<p>   &lt;/policy></p>
+
+<p>&lt;/policies></p>
+
+<p>\</p>
+
+<p>Again, it is similar to the policy in the Fabrikam&rsquo;s STS but the
+configuration for the "trustedTokenIssuers" element changes.</p>
+
+<p>\</p>
+
+<p>Send me an email if are interested in the source code of this sample. </p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[WS-Polling implementation for WSE]]></title>
+    <link href="http://cibrax.me/blog/2006/01/24/436334/"/>
+    <updated>2006-01-24T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2006/01/24/436334</id>
+    <content type="html"><![CDATA[<p>I used some of free time last week to write a prototype of
+<a href="http://www.w3.org/Submission/ws-polling/">WS-Polling</a> for WSE 3.0. \
+Unfortunately, I couldn&rsquo;t finish the complete specification but it is
+enough to execute web services asynchronously.\
+If you haven&rsquo;t read anything about WS-Polling before, it is basically a
+specification to execute web services asynchronously and poll to the
+server later in order to get the response.\
+If you take a look to this specification, you probably will able to see
+three main parts:\
+\
+1. A mechanism to execute web services and store the response for later
+retrieval\
+2. Some headers to query information about the status of an execution\
+3. A mailbox implementation\
+\
+For the moment, I only implemented the first part and I&rsquo;m trying to
+finish the second one.\
+\</p>
+
+<h3>Implementation structure</h3>
+
+<p>The diagram below illustrates the classes used by this implementation. \
+\
+<img src="/images/legacy/Classes.gif" alt="" /> \
+\
+I defined a abstract class PollingService that declares a method to get
+messages. This class also uses an IMessageStore provider to store and
+retrieve the request and response messages for the concrete service. \
+The concrete service is a normal service that implements different
+business methods and inherits from the base class PollingService. e.g.
+MyHelloWorldService\
+The IMessageStore is an interface that declares methods to store and
+retrieve messages from an specific store such as Database, MSMQ or a
+file. \
+PollingClient and ConcreteProxy are both proxies to invoke methods in
+the Concrete service, but the last one was created by the tool
+WSEWsdl3.exe and it doesn&rsquo;t know how to invoke the service
+asynchronously.\
+I had to develop a custom PollingClient since the proxy created with
+WSEWsdl3.exe does not offer the following features:\
+\
+1. Access to the WS-Addressing headers. For this implementation, the
+client must change the wsa:ReplyTo header and get access to others
+headers\
+such as wsa:MessageID and wsa:To. \
+2. Make a one-way call. The proxy created by the tool waits for an
+answer from the service in most of the cases.</p>
+
+<h3>How this solution works</h3>
+
+<p><img src="/images/legacy/Sequence.gif" alt="" /></p>
+
+<p>​1. The client application wants to invoke a asynchronous method on the
+webservice so it creates a PollingClient instance and calls to the
+method &ldquo;InvokeService&rdquo;.\
+2. The PollingClient instance sets the value
+&ldquo;<a href="http://www.w3.org/2005/08/ws-polling/HoldResponse">http://www.w3.org/2005/08/ws-polling/HoldResponse</a>&rdquo; for the header
+wsa:ReplyTo and uses the WSE infrastructure to send the request message
+to the server.\
+3. The concrete service receives the request message and checks the
+value for the wsa:ReplyTo header. \
+If this value is &ldquo;<a href="http://www.w3.org/2005/08/ws-polling/HoldResponse">http://www.w3.org/2005/08/ws-polling/HoldResponse</a>&rdquo;, it
+executes the concrete method asynchronously, otherwise it executes the
+concrete method in the usual way.\
+4. If the concrete method was executed asynchronously, the service
+stores the request and response messages by means of the configured
+IStoreProvider. Otherwise, it returns the response message to the
+client.\
+5. The client application can ask later for the response message using
+the GetMessages method on the PollingClient instance. \
+(The GetMessages method will receive the wsa:MessageID for the original
+request message as parameter)</p>
+
+<h3>Some code</h3>
+
+<p>​1. Creating the Concrete service\</p>
+
+<p>[WebService(Namespace = &ldquo;<a href="http://tempuri.org/">http://tempuri.org/</a>&rdquo;)]\
+[WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]\
+[Policy(&ldquo;ServicePolicy&rdquo;)]\
+public class Service : WSEPolling.PollingService\
+{\
+\
+  public Service()\
+  {\
+\
+  }\
+\
+\
+  [SoapMethod(&ldquo;HelloWorld&rdquo;)]\
+  public string HelloWorld(string name)\
+  {\
+    return &ldquo;Hello World &rdquo; + name;\
+  }\
+\
+}\</p>
+
+<p>This class looks like a normal web service but it inherits from the base
+class PollingService.</p>
+
+<p>​2. Creating the client application\</p>
+
+<p>class Program\
+{\
+    static void Main(string[] args)\
+    {\
+      PollingClient client = new PollingClient(new
+Uri(&ldquo;<a href="http://localhost/WSEPollingService/Service.ashx">http://localhost/WSEPollingService/Service.ashx</a>&rdquo;));\
+\
+      client.SetPolicy(&ldquo;ClientPolicy&rdquo;); \
+\
+      string s = &ldquo;Test&rdquo;;\
+\
+      Uri id = client.InvokeService(&ldquo;HelloWorld&rdquo;, s,
+&ldquo;<a href="http://tempuri.org/">http://tempuri.org/</a>&rdquo;);\
+\
+      System.Threading.Thread.Sleep(1000);\
+\
+      WSEPolling.GetMessageRequest request = new
+WSEPolling.GetMessageRequest();\
+      request.MessageID = id.ToString();\
+\
+      //Gets the entire soap envelope\
+      SoapEnvelope response = client.GetMessage(request);\
+\
+      //Gets only the body of the soap envelope\
+      //string message = (string)client.GetMessageBody(request,
+typeof(string), &ldquo;<a href="http://tempuri.org/">http://tempuri.org/</a>&rdquo;);\
+\
+      string message = response.OuterXml;\
+\
+       Console.WriteLine(message);\
+    }\
+}</p>
+
+<p>In the code below, I created a PollingClient instance to invoke the
+&ldquo;HelloWorld&rdquo; service. The InvokeService method returns the wsa:MessageId
+value for the request message, which I keep in the variable &ldquo;id&rdquo;. \
+At the end, I retrieve the response message from the server passing the
+value of the variable &ldquo;id&rdquo; to the GetMessage method.\</p>
+
+<p>​3. The PollingService class</p>
+
+<p>public class PollingService : SoapService\
+{\
+  static IMessageStore _store;\
+\
+  static PollingService()\
+  {\
+    _store = new DatabaseMessageStore();\
+    _store.Init(null);\
+  }\
+\
+  [SoapMethod(WSPolling.Actions.GetMessage)]\
+  public virtual SoapEnvelope GetMessage(GetMessageRequest request)\
+  {\
+    SoapEnvelope envelope = _store.GetResponse(request);\
+\
+    RelatesTo relatesTo = new
+RelatesTo(RequestSoapContext.Current.Addressing.MessageID.Value);\
+    envelope.Context.Addressing.RelatesTo = relatesTo;\
+\
+    return envelope;\
+  }\
+\
+  protected override SoapMethodInvoker RouteRequest(SoapEnvelope
+request)\
+  {\
+    return new AsyncSoapMethodInvoker(this,
+base.RouteRequest(request));\
+  }\
+\
+  protected virtual void StoreResponse(SoapEnvelope response)\
+  {\
+    _store.StoreResponse (response); \
+  }\
+\
+  protected virtual void StoreRequest(SoapEnvelope request)\
+  {\
+     _store.StoreRequest(request);\
+  }\
+\
+  class AsyncSoapMethodInvoker : SoapMethodInvoker\
+  {\
+    private SoapMethodInvoker _invoker;\
+    private PollingService _service;\
+\
+    public AsyncSoapMethodInvoker(PollingService service,
+SoapMethodInvoker invoker)\
+    {\
+      this._invoker = invoker;\
+      this._service = service;\
+    }\
+\
+    public override SoapEnvelope Invoke(SoapEnvelope message)\
+    {\
+      if (message.Context.Addressing.Action !=
+WSPolling.Actions.GetMessage &amp;&amp;\
+        message.Context.Addressing.ReplyTo != null &amp;&amp;\
+        message.Context.Addressing.ReplyTo.Address.Value.ToString() ==
+WSPolling.HoldResponseURI)\
+      {\
+        this._service.StoreRequest(message);\
+        WaitCallback callBack = new WaitCallback(this.Invoke);\
+        ThreadPool.QueueUserWorkItem(callBack, message);\
+        return new SoapEnvelope();\
+      }\
+      else\
+      {\
+        SoapEnvelope response = _invoker.Invoke(message);\
+        return response;\
+      }\
+    }\
+\
+    public override bool OneWay\
+    {\
+      get { return _invoker.OneWay; }\
+    }\
+\
+    private void Invoke(object state)\
+    {\
+      SoapEnvelope request = (SoapEnvelope)state;\
+      SoapEnvelope response = _invoker.Invoke(request);\
+\
+      _service.StoreResponse(response);\
+    }\
+  }\
+}</p>
+
+<p>The RouteRequest is the key method in this implementation. \
+This method returns a SoapMethodInvoker instance, which knows how to
+call a specific method in the concrete service. (WSE provides a default
+implementation of this class)\
+In this case, I developed my own class AsyncSoapMethodInvoker, which
+calls to the SoapMethod synchronously or asynchronously depending on the
+value of wsa:ReplyTo header.\
+As you can see in the code, I used the Thread pool provided by .NET to
+execute the web method asynchronously.</p>
+
+<p>​4. The Database message store implementation</p>
+
+<p>class DatabaseMessageStore : IMessageStore\
+{\
+  private string _connectionString = null;\
+\
+  public void Init(XmlElement configuration)\
+  {\
+    ConnectionStringSettings settings =
+ConfigurationManager.ConnectionStrings[&ldquo;Messages&rdquo;];\
+\
+    if(settings == null)\
+      throw new ConfigurationErrorsException(&ldquo;The connection string
+&lsquo;Messages&rsquo; is not configured&rdquo;);\
+\
+    if(settings.ConnectionString == null)\
+      throw new ConfigurationErrorsException(&ldquo;Invalid value for the
+connection string &lsquo;Messages&rsquo;&rdquo;);\
+\
+    this._connectionString = settings.ConnectionString;\
+  }\
+\
+  public void StoreRequest(SoapEnvelope request)\
+  {\
+    using (SqlConnection connection = new
+SqlConnection(this._connectionString))\
+    {\
+      connection.Open();\
+      using (SqlCommand command = new SqlCommand(&ldquo;InsertMessage&rdquo;,
+connection))\
+      {\
+        command.CommandType = System.Data.CommandType.StoredProcedure;\
+        command.Parameters.Add(new SqlParameter(&ldquo;@MessageID&rdquo;,
+request.Context.Addressing.MessageID.Value.ToString()));\
+        command.Parameters.Add(new SqlParameter(&ldquo;@To&rdquo;,
+request.Context.Addressing.To.Value.ToString()));\
+\
+        command.ExecuteNonQuery();\
+      }\
+      connection.Close();\
+    }\
+  }\
+\
+  public void StoreResponse(SoapEnvelope response)\
+  {\
+    response.Context.Addressing.GetXml(response);\
+    using (SqlConnection connection = new
+SqlConnection(this._connectionString))\
+    {\
+      connection.Open();\
+      using (SqlCommand command = new SqlCommand(&ldquo;UpdateMessage&rdquo;,
+connection))\
+      {\
+        command.CommandType = System.Data.CommandType.StoredProcedure;\
+        command.Parameters.Add(new SqlParameter(&ldquo;@MessageID&rdquo;,
+response.Context.Addressing.RelatesTo.Value.ToString()));\
+        command.Parameters.Add(new SqlParameter(&ldquo;@Message&rdquo;,
+response.OuterXml));\
+        command.ExecuteNonQuery();\
+      }\
+      connection.Close();\
+    }\
+  }\
+\
+  public SoapEnvelope GetResponse(GetMessageRequest request)\
+  {\
+    SoapEnvelope response = new SoapEnvelope();\
+    using (SqlConnection connection = new
+SqlConnection(this._connectionString))\
+    {\
+      connection.Open();\
+      using (SqlCommand command = new SqlCommand(&ldquo;GetMessage&rdquo;,
+connection))\
+      {\
+        command.CommandType = System.Data.CommandType.StoredProcedure;\
+        command.Parameters.Add(new SqlParameter(&ldquo;@MessageID&rdquo;,
+request.MessageID.ToString()));\
+\
+        using (SqlDataReader reader =
+command.ExecuteReader(System.Data.CommandBehavior.CloseConnection))\
+        {\
+          if (reader.Read())\
+          {\
+            if (reader[&ldquo;Message&rdquo;] == DBNull.Value )\
+            {\
+              NoMessageAvailable noMessage = new
+NoMessageAvailable(Reason.ResponseNotReady);\
+              response.Context.Addressing.Action =
+WSPolling.Actions.NoMessageAvailable; \
+              response.SetBodyObject(noMessage);\
+            }\
+            else\
+            {\
+              string message = (string)reader[&ldquo;Message&rdquo;];\
+\
+              response.Load(new StringReader(message));\
+              response.Context.Addressing.RemoveXml(response);\
+            }\
+          }\
+          else\
+          {\
+            NoMessageAvailable noMessage = new
+NoMessageAvailable(Reason.NoMessageFound);\
+            response.Context.Addressing.Action =
+WSPolling.Actions.NoMessageAvailable; \
+            response.SetBodyObject(noMessage);\
+          }\
+\
+          reader.Close();\
+\
+        }\
+      }\
+\
+      connection.Close();\
+    }\
+\
+    return response;\
+  }\
+}</p>
+
+<p>This class is quite simple. It implements the interface IMessageStore
+and contains code to store and query messages from a SQL database. \
+\
+Well, this is all I have for the moment. You can download the code from
+the following <a href="/images/legacy/WSPolling.zip">location</a>.\
+This is a prototype and it should not be used in production
+environments.</p>
+]]></content>
+  </entry>
+  
+</feed>

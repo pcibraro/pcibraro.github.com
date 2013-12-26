@@ -1,0 +1,543 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Improve the performance of your services with Secure conversation - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="Secure Conversation is a feature designed to improve the performance of
+an application that needs to interchange more than one messages with a &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2006/02/21/438670">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Improve the Performance of Your Services With Secure Conversation</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-02-21T00:00:00-03:00" pubdate data-updated="true">Feb 21<span>st</span>, 2006</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Secure Conversation is a feature designed to improve the performance of
+an application that needs to interchange more than one messages with a
+service.</p>
+
+<p>When SC is enabled, the token negotiation and authentication happens
+once compared to other tokens where that negotiation is done for each
+request to the service.</p>
+
+<p>In the first negotiation, the client sends a &#8221;RequestSecurityToken&#8221;
+message to the service in order to ask for a session token. That message
+is part of the WS-Trust specification and it is protected (encrypted and
+signed) with a security token that will be the base token for the
+session token.</p>
+
+<p>After that, the service creates a new token called Secure context token
+(SCT), which contains a reference to the original token and a symmetric
+key to perform cryptographic operations like encrypt or sign messages.
+(Message confidentiality and integrity).</p>
+
+<p>WSE and WCF, both implement this feature and the service itself is
+responsible to emit the SCT. Therefore, the service is also a &ldquo;Security
+token service&rdquo; or STS.</p>
+
+<p>The service returns the SCT to the client application and keeps the
+state of the original token using different strategies (Cookies,
+in-memory stores, etc). This
+<a href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnwebsrv/html/sctinfarm.asp" title="article">article</a> 
+in the MSDN describes very well what are the different approaches that a
+STS can use to maintain the state of a session.</p>
+
+<p>The most import benefits of using a SCT to protect the communication
+between a client and service are:</p>
+
+<p> </p>
+
+<p>1. The service execution is three or four times faster than the same
+execution with other tokens.</p>
+
+<p>​2. It is valid for a short time but it can be automatically renewed. As
+consequence, the  client application does not need to keep the original
+token.</p>
+
+<p>   This is really important when the original token contains some
+sensitive information such an user name or password. (Username Token).</p>
+
+<p> </p>
+
+<p><strong>Secure conversation in WSE</strong></p>
+
+<p> </p>
+
+<p>Activating SC in WSE is really easy, it is just a flag in the policy
+configuration. All the policies for the turn-key scenarios support two
+attributes, &ldquo;establishSecurityContext&rdquo; to turn on the SC feature and
+renewExpiredSecurityContext to automatically renew the SCT when it
+expires (This attribute is helpful when storing the original token in
+the client is not a feasible solution).</p>
+
+<p> </p>
+
+<p>The sample below shows how to activate SC for a &ldquo;MutualCertificate&rdquo;
+turn-key scenario:</p>
+
+<p> </p>
+
+<p>&lt;mutualCertificate10Security <strong>establishSecurityContext=&ldquo;true&rdquo;</strong>
+<strong>renewExpiredSecurityContext=&ldquo;true&rdquo;</strong>></p>
+
+<p>  &lt;serviceToken></p>
+
+<p>    &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
+findValue=&ldquo;CN=WSE2QuickStartServer&rdquo;
+findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
+
+<p>  &lt;/serviceToken></p>
+
+<p>  &lt;protection></p>
+
+<p>    &lt;request signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>    &lt;response signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>    &lt;fault signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo; /></p>
+
+<p>  &lt;/protection></p>
+
+<p>&lt;/mutualCertificate10Security></p>
+
+<p> </p>
+
+<p>WSE supports two modes to mantain the state of the original security
+token for a particular session.</p>
+
+<ul>
+<li>Cookie mode, where the state is stored in a temporary cookie. This
+mode was designed to support web farm scenarios.</li>
+<li>In-Memory cache in the STS</li>
+</ul>
+
+
+<p> </p>
+
+<p>&lt;microsoft.web.services3></p>
+
+<p>  &lt;tokenIssuer></p>
+
+<p>    &lt;statefulSecurityContextToken enabled=&ldquo;false&rdquo; /></p>
+
+<p>  &lt;/tokenIssuer></p>
+
+<p>&lt;/microsoft.web.services3></p>
+
+<p> </p>
+
+<p>The default value for this setting is &ldquo;true&rdquo;, which enables the Cookie
+mode. The state for a kerberos token can not be maintained in a cookie
+and therefore it is the only turn-key scenario that doesn&rsquo;t support
+stateful SCT.</p>
+
+<p> </p>
+
+<p>The code below shows how to reuse a SCT from a client application.</p>
+
+<p> </p>
+
+<p>HelloWorldServiceWse serviceProxy = new HelloWorldServiceWse();</p>
+
+<p>UsernameToken usernameToken = new UsernameToken(&ldquo;user&rdquo;, &ldquo;password&rdquo;);</p>
+
+<p>serviceProxy.SetClientCredential(usernameToken);</p>
+
+<p>serviceProxy.SetPolicy(&ldquo;ClientPolicy&rdquo;);</p>
+
+<p>serviceProxy.HelloWorld();</p>
+
+<p>SecureConversationCorrelationState correlationState =
+serviceProxy.ResponseSoapContext.SessionState.Get&lt;SecureConversationCorrelationState>(&ldquo;&rdquo;);</p>
+
+<p>if (correlationState != null)</p>
+
+<p>{</p>
+
+<p>    SecurityContextToken sct = correlationState.Token as
+SecurityContextToken;</p>
+
+<p>    if (sct != null)</p>
+
+<p>    {</p>
+
+<p>        serviceProxy = new HelloWorldServiceWse();</p>
+
+<p>        serviceProxy.SetClientCredential(sct);</p>
+
+<p>        // Set the ClientPolicy onto the proxy</p>
+
+<p>        serviceProxy.SetPolicy(&ldquo;ClientPolicy&rdquo;);</p>
+
+<p>        serviceProxy.HelloWorld();</p>
+
+<p>        sct.Cancel();</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>   </p>
+
+<p><strong>Secure conversation in WCF</strong></p>
+
+<p> </p>
+
+<hr />
+
+<p>WCF turn on SC by default for all binding that support WS-Security
+(WsHttpBinding, NetTcpBinding, netMsmqBinding).</p>
+
+<p>The Custom binding also offers the possibility to enable SC depending on
+the value of the attribute &ldquo;authenticationMode&rdquo; (The value for this
+attribute must be &#8221;SecureConversation&#8221;). In addition, you can configure
+a binding that will be used to establish a communication with the STS by
+means of the element &ldquo;secureConversationBootstrap&rdquo;.</p>
+
+<p>WCF is completely different from WSE since it hides the SCT from the
+client application and automatically maintains a copy of this
+token at channel level (A channel is related to a contract). That is, it
+will reuse the SCT as long as the client application uses the same
+instance of the client channel.</p>
+
+<p>When the channel is closed in a normal fashion, a message is sent to the
+service to release the SCT.  If the channel closes abruptly, the SCT
+will eventually be released on the service after after a period of
+in-actively.</p>
+
+<p> </p>
+
+<p>The configuration below shows two equivalent bindings that use the SC
+feature:</p>
+
+<p> </p>
+
+<p>&lt;bindings></p>
+
+<p>  &lt;wsHttpBinding></p>
+
+<p>    &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>      &lt;security mode=&ldquo;Message&rdquo;></p>
+
+<p>        &lt;message clientCredentialType=&ldquo;Certificate&rdquo;
+establishSecurityContext=&ldquo;true&rdquo;/></p>
+
+<p>      &lt;/security></p>
+
+<p>    &lt;/binding></p>
+
+<p>  &lt;/wsHttpBinding></p>
+
+<p>  &lt;customBinding></p>
+
+<p>    &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>      &lt;security authenticationMode=&ldquo;SecureConversation&rdquo;</p>
+
+<p>            requireSecurityContextCancellation =&ldquo;false&rdquo;></p>
+
+<p>         &lt;secureConversationBootstrap
+authenticationMode=&ldquo;MutualCertificate&rdquo;></p>
+
+<p>         &lt;/secureConversationBootstrap></p>
+
+<p>      &lt;/security></p>
+
+<p>      &lt;httpTransport/></p>
+
+<p>    &lt;/binding></p>
+
+<p>   &lt;/customBinding></p>
+
+<p>&lt;/bindings></p>
+
+<p> </p>
+
+<hr />
+
+<hr />
+
+<p>The &ldquo;requireSecurityContextCancellation&rdquo; attribute specifies if the
+client application must send a &ldquo;shutdown&rdquo; message to the service after
+closing the client channel.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-02-21T00:00:00-03:00" pubdate data-updated="true">Feb 21<span>st</span>, 2006</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/wcf/'>WCF</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2006/02/21/438670/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2006/02/21/438670/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2006/02/14/438210/" title="Previous Post: Jason Hogg is blogging">&laquo; Jason Hogg is blogging</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2006/03/07/439763/" title="Next Post: Intellisense support for WCF configuration files - February CTP">Intellisense support for WCF configuration files - February CTP &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2006/02/21/438670/';
+        var disqus_url = 'http://cibrax.me/blog/2006/02/21/438670/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

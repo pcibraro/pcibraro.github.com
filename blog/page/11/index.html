@@ -1,0 +1,1332 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="I
+discussed
+a time ago how WIF supported a new WS-Trust 1.4 element, “ActAs”, and
+how that element could be used for authentication delegation.  The &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/page/11">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/04/06/actas-and-onbehalfof-support-in-wif/">ActAs and OnBehalfOf Support in WIF</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-04-06T00:00:00-03:00" pubdate data-updated="true">Apr 6<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/04/06/actas-and-onbehalfof-support-in-wif/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I
+<a href="http://weblogs.asp.net/cibrax/archive/2010/01/04/actas-in-ws-trust-1-4.aspx">discussed</a>
+a time ago how WIF supported a new WS-Trust 1.4 element, “ActAs”, and
+how that element could be used for authentication delegation.  The thing
+is that there is another feature in WS-Trust 1.4 that also becomes handy
+for this kind of scenario, and I did not mention in that last post,
+“OnBehalfOf”.</p>
+
+<p>Shiung Yong wrote an excellent summary about the difference of these two
+new features in this forum
+<a href="http://social.msdn.microsoft.com/Forums/en-US/Geneva/thread/78e3e93f-0e59-4236-a174-484212b66554">thread</a>.
+He basically commented the following,</p>
+
+<p><em>“An ActAs RST element indicates that the requestor wants a token that
+contains claims about two distinct entities: the requestor, and an
+external entity represented by the token in the ActAs element.</em></p>
+
+<p><em>An OnBehalfOf RST element indicates that the requestor wants a token
+that contains claims only about one entity: the external entity
+represented by the token in the OnBehalfOf element.</em></p>
+
+<p><em>In short, ActAs feature is typically used in scenarios that require
+composite delegation, where the final recipient of the issued token can
+inspect the entire delegation chain and see not just the client, but all
+intermediaries to perform access control, auditing and other related
+activities based on the whole identity delegation chain. The ActAs
+feature is commonly used in multi-tiered systems to authenticate and
+pass information about identities between the tiers without having to
+pass this information at the application/business logic layer.</em></p>
+
+<p><em>OnBehalfOf feature is used in scenarios where only the identity of the
+original client is important and is effectively the same as identity
+impersonation feature available in the Windows OS today. When the
+OnBehalfOf is used the final recipient of the issued token can only see
+claims about the original client, and the information about
+intermediaries is not preserved. One common pattern where OnBehalfOf
+feature is used is the proxy pattern where the client cannot access the
+STS directly but is instead communicating through a proxy gateway. The
+proxy gateway authenticates the caller and puts information about him
+into the OnBehalfOf element of the RST message that it then sends to the
+real STS for processing. The resulting token is going to contain only
+claims related to the client of the proxy, making the proxy completely
+transparent and not visible to the receiver of the issued token.”</em></p>
+
+<p>Going back to WIF, “ActAs” and “OnBehalfOf” are both supported as
+extensions methods in the WCF client channel.</p>
+
+<p>public static class ChannelFactoryOperations \
+{ \
+  public static T CreateChannelActingAs&lt;T>(this ChannelFactory&lt;T>
+factory, \
+    SecurityToken actAs); \
+  \
+  public static T CreateChannelOnBehalfOf&lt;T>(this ChannelFactory&lt;T>
+factory, \
+    SecurityToken onBehalfOf); \
+}</p>
+
+<p>Both methods receive the security token with the identity of the
+original caller.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/03/15/odata-to-the-rescue-exposing-the-eventlog-as-a-data-feed/">OData to the Rescue. Exposing the Eventlog as a Data Feed</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-03-15T00:00:00-03:00" pubdate data-updated="true">Mar 15<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/03/15/odata-to-the-rescue-exposing-the-eventlog-as-a-data-feed/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>In one of the project where I was working one, we used the <a href="http://msdn.microsoft.com/en-us/library/cc309212.aspx">Microsoft
+Enterprise Library Exception Application
+Block</a>
+integration with WCF for logging all the technical issues on the
+services/backend in Windows Event Log. This application block worked
+like a charm, all the errors were correctly logged on the Event Log
+without even needing to modify the service code. However, we also needed
+to provide a quick way to expose all those events to the different
+system users so they could get access to all the them remotely. In just
+a couple of minutes I came up with a simple solution based on ADO.NET
+Data Services. ADO.NET data services is very powerful in this sense, you
+only need to provide a IQueryable implementation, and that’s all. You
+get a RESTful service with rich query support for free.</p>
+
+<p>In this sample, I used Linq to Objects to get the latest entries from
+the Event Log, and I also filter the entries by the category used by the
+Application Block to avoid loading unnecessary entries in memory.</p>
+
+<p>public class LogDataSource \
+    { \
+        string source;</p>
+
+<p>        public LogDataSource(string source) \
+        { \
+            this.source = source; \
+        }</p>
+
+<p>        public LogDataSource() \
+        { \
+        }</p>
+
+<p>        public IQueryable&lt;LogEntry> LogEntries \
+        { \
+            get { return GetEntries().AsQueryable().OrderBy(e =>
+e.TimeGenerated); } \
+        }</p>
+
+<p>        private IEnumerable&lt;LogEntry> GetEntries() \
+        { \
+            var applicationLog =
+System.Diagnostics.EventLog.GetEventLogs().Where(e => e.Log ==
+&ldquo;Application&rdquo;) \
+                .FirstOrDefault();</p>
+
+<p>            var entries = new List&lt;LogEntry>();</p>
+
+<p>            if (applicationLog != null) \
+            { \
+                foreach (EventLogEntry entry in applicationLog.Entries)
+\
+                { \
+                    if (source == null || entry.Source.Equals(source,
+StringComparison.InvariantCultureIgnoreCase)) \
+                    { \
+                        entries.Add(new LogEntry \
+                        { \
+                            Category = entry.Category, \
+                            EventID = entry.InstanceId, \
+                            Message = entry.Message, \
+                            TimeGenerated = entry.TimeGenerated, \
+                            Source = entry.Source, \
+                        }); \
+                    } \
+                } \
+            }</p>
+
+<p>            return entries.OrderByDescending(e => e.TimeGenerated) \
+                        .Take(200); \
+        } \
+    }</p>
+
+<p>LogEntry is class I created for this service to expose an Event Log
+Entry.</p>
+
+<p>    [EntityPropertyMappingAttribute(&ldquo;Source&rdquo;, \
+        SyndicationItemProperty.Title, \
+        SyndicationTextContentKind.Plaintext, true)] \
+    [EntityPropertyMapping(&ldquo;Message&rdquo;, \
+        SyndicationItemProperty.Summary, \
+        SyndicationTextContentKind.Plaintext, true)] \
+    [EntityPropertyMapping(&ldquo;TimeGenerated&rdquo;, \
+        SyndicationItemProperty.Updated, \
+        SyndicationTextContentKind.Plaintext, true)] \
+    [DataServiceKey(&ldquo;EventID&rdquo;)] \
+    public class LogEntry \
+    { \
+        public long EventID \
+        { \
+            get; \
+            set; \
+        }</p>
+
+<p>        public string Category \
+        { \
+            get; \
+            set; \
+        }</p>
+
+<p>        public string Message \
+        { \
+            get; \
+            set; \
+        }</p>
+
+<p>        public DateTime TimeGenerated \
+        { \
+            get; \
+            set; \
+        }</p>
+
+<p>        public string Source \
+        { \
+            get; \
+            set; \
+        }</p>
+
+<p>    }</p>
+
+<p>As you can see, I used the new feature <a href="http://blogs.msdn.com/phaniraj/archive/2009/03/28/ado-net-data-services-friendly-feeds-mapping-edm-types-i.aspx">“Friendly
+feeds”</a>
+to map several properties in the entries with standard ATOM elements.
+The “DataServiceKey” is only necessary because I am using the Reflection
+Provider (the exposed IQueryable implementation is just Linq to Objects)
+rather than the default Entity Framework Provider.</p>
+
+<p>The data service implementation is also quite simple, just a couple of
+lines were needed to expose the data source created previously.</p>
+
+<p>public class LogDataService : DataService&lt;LogDataSource> \
+    { \
+        public static void InitializeService(IDataServiceConfiguration
+config) \
+        { \
+            config.SetEntitySetAccessRule(&ldquo;*&rdquo;,
+EntitySetRights.AllRead); \
+        }</p>
+
+<p>        protected override LogDataSource CreateDataSource() \
+        { \
+            string source =
+ConfigurationManager.AppSettings[&ldquo;EventLogSource&rdquo;]; \
+            if (source == null) \
+            { \
+                throw new ApplicationException(&ldquo;The EventLogSource
+appsetting is missing in the configuration file&rdquo;); \
+            }</p>
+
+<p>            return new LogDataSource(source); \
+        } \
+    }</p>
+
+<p>With this implementation in place, the final users not only get a feed
+with all the latest errors in the event log, but also support for
+performing queries against that data. This is one of the great things
+about ADO.NET Data services.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/02/18/a-good-way-to-handle-claim-based-security-in-restful-services/">A Good Way to Handle Claim Based Security in RESTful Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-02-18T00:00:00-03:00" pubdate data-updated="true">Feb 18<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/02/18/a-good-way-to-handle-claim-based-security-in-restful-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Dominick just
+<a href="http://www.leastprivilege.com/SecuringWCFDataServicesUsingWIF.aspx">blogged</a>
+what I think is one of the best ways to provide claim based security for
+RESTful services at the moment. The idea of using simple web tokens for
+RESTful services I’ve been in my head for a while, but I was not able to
+find enough the time to implement it. Fortunately, Dominick already did
+it for us, so it’s really great to have a sample with that.</p>
+
+<p>One piece that is still missing in this architecture is the possibility
+to run an in-house STS for issuing simple web tokens rather than using
+the ACL service available as part of Windows Azure AppFabric. It would
+be great if we could have some built-in support in WIF to issue simple
+web tokens, in other words, a built-in security handler for simple web
+tokens, and a RESTful endpoint for requesting those. </p>
+
+<p>The OAuth Wrap specification (the place where the simple web tokens are
+defined) also supports the typical ActAs scenario, where a client
+application can request a token on behalf of the logged user. This would
+be ideal for example, in a web application that want to consume a
+RESTful service on behalf of the logged user.    </p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/02/17/the-system-cannot-find-the-file-specified-error-in-the-wif-fam-module/">“the System Cannot Find the File Specified” Error in the WIF FAM Module</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-02-17T00:00:00-03:00" pubdate data-updated="true">Feb 17<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/02/17/the-system-cannot-find-the-file-specified-error-in-the-wif-fam-module/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>The Federation Authentication Module (FAM) shipped as part of WIF
+protects by the default the session cookies from being tampered with in
+passive scenarios using DPAPI. As I mentioned in the past, this
+technique simplifies a lot the initial deployment for the whole solution
+as nothing extra needs to configured, the automatically generated DPAPI
+key is used to protect the cookies, so this might be reason to have that
+as default protection mechanism in WSE, WCF and now WIF.</p>
+
+<p>However, this technique has some serious drawbacks from my point of view
+that makes it useless for real enterprise scenarios.</p>
+
+<p>If web application that relies on FAM for authenticating the users is
+hosted in IIS. The account running the IIS process needs to have a
+profile created in order to use DPAPI. A workaround for this is to log
+into the machine with that account to create the initial profile or run
+some script to do it automatically.</p>
+
+<p>DPAPI is not suitable for web farm scenarios, as the machine key is used
+to protect the cookies. If the cookie is protected with one key, the
+following requests must be sent to the same machine. A workaround for
+this could be to use sticky sessions, so all the user requests from the
+same machine are handled by the same machine on the farm.</p>
+
+<p>Fortunately, WIF already provides some built-in classes to replace this
+default mechanism by a protection mechanism based on RSA keys with X509
+certificates.</p>
+
+<p>The “SecuritySessionHandler” is the handler in WIF that is responsible
+for tracking the authentication sessions into a cookie. That handler
+receives by default some built-in classes that applies transformations
+to the cookie content, such as the DeflatCookieTransform and the
+ProtectedDataCookieTransform (for protecting the content with DPAPI).
+There are also two other CookieTransform derived classes that are not
+used at all, and becomes very handy to enable enterprise scenarios, the
+RSAEncryptionCookieTransform and RSASignatureCookieTransform classes.
+Both classes receives either a RSA key or X509 certificate that is used
+to encrypt or sign the cookie content.</p>
+
+<p>Therefore, you can put the following code in the global.asax file to
+replace the default cookie transformations by the ones that use a X509
+certificate.</p>
+
+<p>protected void Application_Start(object sender, EventArgs e) \
+        { \
+            FederatedAuthentication.ServiceConfigurationCreated += new
+EventHandler&lt;Microsoft.IdentityModel.Web.Configuration.ServiceConfigurationCreatedEventArgs>(FederatedAuthentication_ServiceConfigurationCreated);
+\
+            \
+        }</p>
+
+<p>        void FederatedAuthentication_ServiceConfigurationCreated(object
+sender,
+Microsoft.IdentityModel.Web.Configuration.ServiceConfigurationCreatedEventArgs
+e) \
+        { \
+            var cookieProtectionCertificate =
+CertificateUtil.GetCertificate(StoreName.My, \
+                StoreLocation.LocalMachine, &ldquo;CN=myTestCert&rdquo;); \
+             \
+            e.ServiceConfiguration.SecurityTokenHandlers.AddOrReplace( \
+                new SessionSecurityTokenHandler(new
+System.Collections.ObjectModel.ReadOnlyCollection&lt;CookieTransform> ( \
+                    new List&lt;CookieTransform> \
+                    { \
+                        new DeflateCookieTransform(), \
+                        new
+RsaEncryptionCookieTransform(cookieProtectionCertificate), \
+                        new
+RsaSignatureCookieTransform(cookieProtectionCertificate) \
+                    }) \
+                )); \
+        }</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/02/01/monitoring-your-wcf-services-with-appfabric/">Monitoring Your WCF Services With AppFabric</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-02-01T00:00:00-03:00" pubdate data-updated="true">Feb 1<span>st</span>, 2010</time>
+        
+         | <a href="/blog/2010/02/01/monitoring-your-wcf-services-with-appfabric/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Windows AppFabric (Previously known as Dublin) introduces a new built-in
+mechanism for monitoring the execution of the WCF services, all the
+events generated during the execution or the interaction with other
+services. While the message trace capabilities in WCF already provided
+some detail about the execution and the exchanged messages, it was a
+feature more suitable for troubleshooting and error diagnosis.   The
+performance counters did not help in this area either, as they provided
+live service usage statistics, which sometimes resulted very useful to
+determine possible bottlenecks.</p>
+
+<p>When this monitoring mechanism is enabled for IIS Hosted services, the
+AppFabric extension will capture different events during the execution
+of the services. The level of detail or number of events that you want
+to capture is something that can be adjusted through configuration.</p>
+
+<p>In order to configure monitoring for an existing WCF service, you need
+to add the following section to the web.config file,</p>
+
+<p>&lt;microsoft.applicationServer> \
+    &lt;monitoring> \
+      \
+      &lt;default enabled=&ldquo;true&rdquo;
+connectionStringName=&ldquo;DefaultApplicationServerExtensions&rdquo;
+monitoringLevel=&ldquo;Troubleshooting&rdquo; /> \
+    &lt;/monitoring> \
+&lt;/microsoft.applicationServer></p>
+
+<p>The connectionStringName attribute should contain a reference to an
+existing connection string in the ConnectionString section, and that’s
+the database used by AppFabric to store the monitoring events.</p>
+
+<p>The monitoringLevel attribute specifies the number of events you want to
+capture in a service execution. The possible values for this setting
+are,</p>
+
+<ul>
+<li>Off (monitoringLevel=&ldquo;Off”): No data is collected. It would be
+equivalent to have monitoring disabled.</li>
+<li>Errors only (monitoringLevel=&ldquo;ErrorsOnly”):  Only errors and
+warnings events are collected. This is very useful when you don’t
+want to incur into performance issues for collecting application
+events but you still want to know about any error may happen during
+the execution.</li>
+<li>Health Monitoring (monitoringLevel=HealthMonitoring): This is the
+default level and collects enough application events to show
+different metrics in the AppFabric dashboard.</li>
+<li>End To End Monitoring (monitoringLevel=&ldquo;EndToEndMonitoring”). It
+collects all the events from the Health Monitoring level, plus
+additional events to reconstruct the message flow. For example,
+Service A called Service B. You will get also events representing
+info about the Service B call if monitoring is enabled on Service A.</li>
+<li>Troubleshooting (monitoringLevel=&ldquo;Troubleshooting&rdquo;). This is the
+most verbose of all, so it is appropriate for troubleshooting an
+unhealthy application.</li>
+</ul>
+
+
+<p>All this monitoring infrastructure is layered on top of “Event Tracing
+for Windows (ETW)”, which provides a very efficient and optimized
+mechanism for capturing application events without affecting the
+application performance at all. In addition, this infrastructure is
+complemented with a windows service for collecting the events (A ETW
+listener basically), and providers for dumping all the information to
+different storages. This last part is totally extensible, and you can
+configure your own implementation by implementing the interface
+Microsoft.ApplicationServer.Monitoring.EventCollector.IBulkCopy in the
+Monitoring.ApplicationServer.Monitoring assembly. This interface looks
+quite simple to implement, and AppFabric ships with a default
+implementation for SQL Server.</p>
+
+<p>public interface IBulkCopy \
+{ \
+        int BatchSize { get; set; } \
+        DbConnection Connection { get; set; } \
+        string DestinationTableName { get; set; }</p>
+
+<p>        void WriteToServer(DataTable dataTable); \
+}</p>
+
+<p>The windows service for collecting the ETW events can be found under the
+folder,
+C:\Windows\System32\ApplicationServerExtensions\Microsoft.ApplicationServer.ServiceHost.exe,
+and it must be started in order to capture and dump the events in the
+configured IBulkCopy provider.</p>
+
+<p>In addition, if you want to correlate all the service calls within a
+single execution (For example, Service A calling Service B, and B
+calling C) under a unique global identifier, so you can group all the
+events under that identifier, there is a new &lt;endToEndTracing> element
+under the &lt;system.ServiceModel/diagnostics> section that you can use.</p>
+
+<p>&lt;system.ServiceModel> \
+  &lt;diagnostics etwProviderId=&ldquo;7d98f890-ff8d-4311-be4f-e679103ba7cf&rdquo;> \
+    &lt;endToEndTracing propagateActivity=&ldquo;true&rdquo; messageFlowTracing=&ldquo;true&rdquo;
+/> \
+  &lt;/diagnostics> \
+&lt;/system.ServiceModel></p>
+
+<p>For example, the following image shows two events that are correlated
+under the same E2EActivityId, which represents a service “HelloWorld”
+calling an operation in another “EchoService” service.</p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/EndToEndTracing_51E2E059.jpg"><img src="http://weblogs.asp.net/blogs/cibrax/EndToEndTracing_thumb_2D8DD60A.jpg" title="EndToEndTracing" alt="EndToEndTracing" /></a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/01/04/actas-in-ws-trust-1-4/">ActAs in WS-Trust 1.4</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-01-04T00:00:00-03:00" pubdate data-updated="true">Jan 4<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/01/04/actas-in-ws-trust-1-4/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>WS-Trust 1.4 introduced a new feature called as “ActAs” for addressing
+common scenarios where an application needs to call a service on behalf
+of the logged user or a service needs to call another service on behalf
+of the original caller. These are typical examples of what is usually
+resolved with the “<a href="http://www.soapatterns.org/trusted_subsystem.php">Trusted Subsystem”
+pattern</a>.</p>
+
+<p>“ActAs” is not more than a new element in the RST message for including
+additional information about the original caller when a token is
+negotiated with the STS for consuming the final service in the Relying
+Party (that means that a trust relationship already exists between the
+STS and the final service). That element usually takes the form of a
+token with identity claims, which are secured (encrypted/signed) and
+included together with the credentials of the client application that is
+negotiating the token with the STS.</p>
+
+<p>As this element is part of the WS-Trust specification, it only makes
+sense in scenarios where the client authentication is delegated to an
+STS. I already discussed this scenario several times in the past. The
+following message shows how this element is included in a RST message,</p>
+
+<p>&lt;trust:RequestSecurityToken
+xmlns:trust=&ldquo;<a href="http://docs.oasis-open.org/ws-sx/ws-trust/200512">http://docs.oasis-open.org/ws-sx/ws-trust/200512</a>&rdquo;>
+\
+  &lt;tr:ActAs
+xmlns:tr=&ldquo;<a href="http://docs.oasis-open.org/ws-sx/ws-trust/200802">http://docs.oasis-open.org/ws-sx/ws-trust/200802</a>&rdquo;>
+\
+    &lt;saml:Assertion MajorVersion=&ldquo;1&rdquo; MinorVersion=&ldquo;1&rdquo;
+AssertionID=&ldquo;_cf5f224e-4bae-4f2d-9800-248023ac0e4d&rdquo; Issuer=&ldquo;PassiveSTS&rdquo;
+IssueInstant=&ldquo;2010-01-04T15:20:14.506Z&rdquo;
+xmlns:saml=&ldquo;urn:oasis:names:tc:SAML:1.0:assertion&rdquo;> \
+      &lt;saml:Conditions NotBefore=&ldquo;2010-01-04T15:20:14.470Z&rdquo;
+NotOnOrAfter=&ldquo;2010-01-04T16:20:14.470Z&rdquo;>&lt;/saml:Conditions> \
+        &lt;saml:AttributeStatement> \
+          &lt;saml:Subject> \
+            &lt;saml:NameIdentifier
+Format=&ldquo;<a href="http://schemas.xmlsoap.org/claims/UPN%22%3Euid:0@stonehenge.com%3C/saml:NameIdentifier">uid:0@stonehenge.comhttp://schemas.xmlsoap.org/claims/UPN&#8221;>uid:0@stonehenge.com&lt;/saml:NameIdentifier</a>>
+\
+            &lt;saml:SubjectConfirmation> \
+             
+&lt;saml:ConfirmationMethod>urn:oasis:names:tc:SAML:1.0:cm:bearer&lt;/saml:ConfirmationMethod>
+\
+            &lt;/saml:SubjectConfirmation> \
+          &lt;/saml:Subject> \
+          &lt;saml:Attribute AttributeName=&#8221;role&rdquo;
+AttributeNamespace=&ldquo;<a href="http://microsoft">http://microsoft</a>&rdquo;> \
+            &lt;saml:AttributeValue>staff&lt;/saml:AttributeValue>\ \
+          &lt;/saml:Attribute> \
+        &lt;/saml:AttributeStatement> \
+        &lt;saml:AuthenticationStatement
+AuthenticationMethod=&ldquo;<a href="http://microsoft/geneva">http://microsoft/geneva</a>&rdquo;
+AuthenticationInstant=&ldquo;2010-01-04T15:20:14.481Z&rdquo;> \
+          &lt;saml:Subject> \
+            &lt;saml:NameIdentifier
+Format=&ldquo;<a href="http://schemas.xmlsoap.org/claims/UPN%22%3Euid:0@stonehenge.com%3C/saml:NameIdentifier">uid:0@stonehenge.comhttp://schemas.xmlsoap.org/claims/UPN&#8221;>uid:0@stonehenge.com&lt;/saml:NameIdentifier</a>>
+\
+            &lt;saml:SubjectConfirmation> \
+             
+&lt;saml:ConfirmationMethod>urn:oasis:names:tc:SAML:1.0:cm:bearer&lt;/saml:ConfirmationMethod>
+\
+            &lt;/saml:SubjectConfirmation> \
+          &lt;/saml:Subject> \
+        &lt;/saml:AuthenticationStatement> \
+        &lt;ds:Signature
+xmlns:ds=&rdquo;<a href="http://www.w3.org/2000/09/xmldsig">http://www.w3.org/2000/09/xmldsig</a>#&ldquo;>
+\
+        &lt;/ds:Signature> \
+      &lt;/saml:Assertion> \
+    &lt;/tr:ActAs> \
+ 
+&lt;trust:ComputedKeyAlgorithm><a href="http://docs.oasis-open.org/ws-sx/ws-trust/200512/CK/PSHA1&lt;/trust:ComputedKeyAlgorithm>&#8220;>http://docs.oasis-open.org/ws-sx/ws-trust/200512/CK/PSHA1&lt;/trust:ComputedKeyAlgorithm></a>
+\
+&lt;/trust:RequestSecurityToken></p>
+
+<p>If you still want to support an scenario like this when an STS is not
+involved for client authentication, the closer thing you can find is the
+client authentication through supporting tokens method. I described this
+scenario in this
+<a href="http://weblogs.asp.net/cibrax/archive/2008/01/22/authenticating-users-with-supporting-tokens-in-wcf.aspx">post</a>,
+and Dominick did a better job giving a <a href="http://www.leastprivilege.com/UserNameSupportingTokenInWCF.aspx">concrete
+implementation</a>
+in WCF that uses an Username Token as supporting token, a also a <a href="http://www.leastprivilege.com/UsingSAMLAsAClientCredentialTypeInWCFWithGeneva.aspx">SAML
+token</a>,
+which represents something very useful.</p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/WSTrust1_6E19D943.jpg"><img src="http://weblogs.asp.net/blogs/cibrax/WSTrust1_thumb_579714EF.jpg" title="WSTrust1" alt="WSTrust1" /></a></p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/WSTrust2_766D88CD.jpg"><img src="http://weblogs.asp.net/blogs/cibrax/WSTrust2_thumb_14D7C9B7.jpg" title="WSTrust2" alt="WSTrust2" /></a></p>
+
+<p>The images illustrate two scenarios where this new feature makes a lot
+of sense. Let’s discuss both of them more in detail.</p>
+
+<p>Scenario 1: A Service A calling a Service B</p>
+
+<p>In this scenario, we have a Service A that needs to make a call to an
+operation in the Service B. Both services are expecting an token issued
+by an STS that they trust (The example assumes that they both trust the
+same STS). This is how “ActAs” works in this scenario.</p>
+
+<p>​1. The client negotiates a SAML token with the STS for consuming the
+service A</p>
+
+<p>​2. The client invokes an operation in the Service A using the SAML
+token it got from the STS as client credentials.</p>
+
+<p>​3. Now, the Service A needs to invoke an operation in the Service B so
+it has to negotiate a new SAML token from the STS first. In order to do
+that, it includes the SAML token sent by the client as part of the ActAs
+element, and secures the message using any of the traditional
+WS-Security profiles. For example, Mutual Certificate, a client
+certificate for authenticating the client (Service A) and a service
+certificate for authenticating the service and protecting the messages.
+The STS issues a new token for consuming the service B using all the
+information received in the RST message.</p>
+
+<p>​4. The service A invokes an operation in the Service B using the SAML
+token it just got from the STS as client credentials.</p>
+
+<p>Scenario 2: A Web Application calling a Service</p>
+
+<p>In this scenario, the Web Application authenticates all its user through
+an STS that implements the WS-Trust passive profile. This means that the
+web application is a claim-aware application that receives the user
+identity as claims from a token sent by the STS (The user first
+authenticates in the STS, step 1). As the web application already has a
+token with the user claims, which is the token it received from the
+passive STS, it can include it as the ActAs element when it negotiates a
+SAML token from the Active STS (step 2). Once the application gets a
+SAML token from the Active STS, it can actually use it for consuming the
+service (step 3)</p>
+
+<p>Fortunately, WIF already includes support in the client API for
+negotiating a token with the ActAs element, and also support for parsing
+and getting access to that information in the STS implementation. 
+What’s more, the implementation of this new feature in WIF is totally
+interoperable with other Service stacks as well. This is something that
+have been proved in the Apache Stonehenge project by proving an example
+application that shows different interoperability scenarios with
+claim-based security with other service stacks like Sun Metro or WOS2.</p>
+
+<p> </p>
+
+<p> </p>
+
+<p>On the client side, WIF provides a couple of extensions methods in the
+WCF channel for including a token in the ActAs element.</p>
+
+<p>public static T CreateChannelActingAs&lt;T>(this ChannelFactory&lt;T>
+factory, SecurityToken actAs); \
+public static T CreateChannelActingAs&lt;T>(this ChannelFactory&lt;T>
+factory, EndpointAddress address, SecurityToken actAs); \
+public static T CreateChannelActingAs&lt;T>(this ChannelFactory&lt;T>
+factory, EndpointAddress address, Uri via, SecurityToken actAs);</p>
+
+<p>In case you are using a SAML token, you need to negotiate it out of band
+with the WSTrustChannel class or use the one that is available in the
+web application when passive authentication is used with an STS (and the
+setting saveBootstapTokens is enabled in the microsoft.IdentityModel
+section). The following code illustrates a sample that uses the SAML
+token available as part of the Bootstrap tokens in the IClaimsPrincipal
+instance attached to the current thread.</p>
+
+<p>SecurityToken callerToken = null;</p>
+
+<p>IClaimsPrincipal claimsPrincipal = Thread.CurrentPrincipal as
+IClaimsPrincipal; \
+ if (claimsPrincipal != null) \
+ { \
+   foreach (IClaimsIdentity claimsIdentity in
+claimsPrincipal.Identities) \
+   { \
+     if (claimsIdentity.BootstrapToken is SamlSecurityToken) \
+     { \
+       callerToken = claimsIdentity.BootstrapToken; \
+       break; \
+     } \
+  } \
+ }</p>
+
+<p>var channel = channelFactory.CreateChannelActingAs(callerToken);</p>
+
+<p>The STS implementation can get the ActAs element information from the
+RequestSecurityToken.ActAs property,</p>
+
+<p>if (request.ActAs != null) \
+{ \
+  IClaimsIdentity actAsIdentity = new ClaimsIdentity(); \
+  CopyClaims(request.ActAs.GetSubject().First(), actAsIdentity);</p>
+
+<p>  // Find the last delegate in the actAs identity \
+  IClaimsIdentity lastActingVia = actAsIdentity; \
+  while (lastActingVia.Actor != null) \
+  { \
+    lastActingVia = lastActingVia.Actor; \
+  }</p>
+
+<p>  // Put the caller&rsquo;s identity as the last delegate to the ActAs
+identity \
+  lastActingVia.Actor = outputIdentity;</p>
+
+<p>  // Return the actAsIdentity instead of the caller&rsquo;s identity in this
+case \
+  outputIdentity = actAsIdentity; \
+}</p>
+
+<p>The apache stonehenge application or the <a href="http://code.msdn.microsoft.com/FabrikamShipping">Fabrikam shipping
+sample</a> in codeplex are
+using this feature, so you might be interested in taking a look there.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/12/01/wif-support-for-w2k3/">WIF Support for W2k3</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-12-01T00:00:00-03:00" pubdate data-updated="true">Dec 1<span>st</span>, 2009</time>
+        
+         | <a href="/blog/2009/12/01/wif-support-for-w2k3/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>WIF will be finally supported in W2k3. This has represented a big
+barrier for the adoption of WIF in one of my customers for a while, but
+it looks like now I will able to use it after December :).  This is the
+official announcement made by the Geneva Team this weekend on their
+<a href="http://blogs.msdn.com/card/archive/2009/11/24/wif-support-for-windows-server-2003.aspx">blog</a>,</p>
+
+<p><em>“Windows Identity Foundation support for Windows Server 2003 SP2 is
+coming in December 2009. This package will be in English (en-US) and six
+other languages: German (de-DE), Spanish (es-ES), French (fr-FR),
+Italian (it-IT), Dutch (nl-NL), and Japanese (ja-JP). Stay tuned for
+further updates!”</em></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/10/18/wcf-extensibility-guide/">WCF Extensibility Guide</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-10-18T00:00:00-03:00" pubdate data-updated="true">Oct 18<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/10/18/wcf-extensibility-guide/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>The first chapter of the WCF extensibility guide that
+<a href="http://weblogs.asp.net/gsusx">Jesus</a> and I have been working on during
+the last few months went live in MSDN this weekend. You can find it
+here,
+<a href="http://msdn.microsoft.com/en-us/library/ee672186.aspx">http://msdn.microsoft.com/en-us/library/ee672186.aspx</a> </p>
+
+<p>The first chapter gives an overview of the channel layer, and some of
+the extensibility points you can find there to implement custom
+channels.</p>
+
+<p>Enjoy!!</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/09/14/scenarios-for-ws-passive-and-openid/">Scenarios for WS-Passive and OpenID</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-09-14T00:00:00-03:00" pubdate data-updated="true">Sep 14<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/09/14/scenarios-for-ws-passive-and-openid/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I was wondering these days what would be the point in using WS-Passive
+when there is another simple sign-on solution, OpenID, that works really
+well and it’s getting a great adoption in the community. I can not say
+the same about WS-Passive, I haven’t seen any concrete implementation
+yet (For instance, Microsoft is planning to release a first
+implementation as part of the WIF framework before the end of this
+year).</p>
+
+<p>However, I reached the conclusion that both technologies are prepared
+for addressing different scenarios. For me, OpenID is more suitable for
+community or social networking web sites that expect to have a great
+number of users, and can benefit from using the large user databases
+that some of the existing OpenID providers already have. This is also a
+great thing for the final user as he can reuse his public OpenID
+identifier to log into all these web sites. </p>
+
+<p>On the other hand, WS-Passive seems to work better for enterprise
+scenarios in companies that might have some sort of security
+infrastructure in place (Customer user databases, active directory,
+active STSs for services) and do not want to have third parties (other
+than the parties involved in the business) to participate in the
+business transactions or to share their user databases with these
+parties. This is closely related to one of the identity laws that Kim
+Cameron <a href="http://www.identityblog.com/stories/2004/12/09/thelaws.html">announced a time
+ago</a>. Law
+#3, “Justifiable Parties”, <em>Digital identity systems must be designed
+so the disclosure of identifying information is limited to parties
+having a necessary and justifiable place in a given identity
+relationship.</em></p>
+
+<p>This was one of the big failures in the adoption of Passport as
+Single-Sign-On technology. Some relying parties did not understand the
+purpose of having Microsoft (and Passport) involved in their business
+transactions.</p>
+
+<p>In addition, WS-Passive only specifies a way to interchange a security
+token with user claims between the involved parties (Client, STS and
+Relying Party), so it provides the flexibility of using any security
+token profile. The most common token profile used today is SAML, as it
+can be customized with custom assertions or claims specific to the
+business. OpenID also specifies a way to exchange custom data (other
+than <a href="http://openid.net/specs/openid-simple-registration-extension-1_0.html">Simple
+Registration</a>
+or SReg data) through the <a href="http://openid.net/specs/openid-attribute-exchange-1_0.html">“Attribute
+Exchange”</a>
+spec. However, it looks like many of the existing relying parties or
+identity providers do not support this spec as it is discussed
+<a href="http://dennisbloete.de/blog/on-openid-attribute-exchange/">here</a>.</p>
+
+<p>I am just guessing :). What do you think ?. \</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/09/08/client-configuration-in-wcf-4-0/">Client Configuration in WCF 4.0</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-09-08T00:00:00-03:00" pubdate data-updated="true">Sep 8<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/09/08/client-configuration-in-wcf-4-0/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As Dr Nick announced in this
+<a href="http://blogs.msdn.com/drnick/archive/2009/08/24/what-s-new-in-wcf-4-more-on-services-and-configuration.aspx">post</a>,
+WCF 4.0 will ship with a new feature to configure a client channel from
+a configuration source other than the traditional section in the
+application configuration file (I discussed a workaround for doing the
+same thing in WCF 3.0 a time ago in this
+<a href="http://weblogs.asp.net/cibrax/archive/2007/10/19/loading-the-wcf-configuration-from-different-files-on-the-client-side.aspx">post</a>)</p>
+
+<p>This will provide the flexibility to deploy some binaries with the
+client proxies together with an independent configuration file (which
+might be a resource file, a stand alone file included with your
+application or something you can download from an specific place), so
+the main configuration file does not need to be touched at all.</p>
+
+<p>A new channel factory “ConfigurationChannelFactory” is included as part
+of the System.ServiceModel.Configuration namespace to create channels
+from an alternative configuration source.</p>
+
+<p><strong>var fileMap = new ExeConfigurationFileMap(); \
+            fileMap.ExeConfigFilename = &ldquo;otherFile.config&rdquo;;</strong></p>
+
+<p><strong>var configuration =
+ConfigurationManager.OpenMappedExeConfiguration(fileMap,
+ConfigurationUserLevel.None);</strong></p>
+
+<p><strong>var factory = new
+ConfigurationChannelFactory&lt;IService1>(&ldquo;BasicHttpBinding_IService1&rdquo;,
+configuration, new
+EndpointAddress(&ldquo;</strong><a href="http://localhost:49187/Service1.svc"><strong>http://localhost:49187/Service1.svc</strong></a><strong>&rdquo;));</strong></p>
+
+<p>var client = factory.CreateChannel();</p>
+
+<p>var s = client.GetData(3);</p>
+
+<p>Console.WriteLine(s);</p>
+
+<p>The file “otherFile.config” is just a simple configuration file that
+contains the client definition and configuration for using the
+“IService1” service.</p>
+
+<p>&lt;configuration> \
+  \
+    &lt;system.serviceModel> \
+        &lt;bindings> \
+            &lt;basicHttpBinding> \
+              &lt;binding name=&ldquo;BasicHttpBinding_IService1&rdquo; > \
+                    &lt;security mode=&ldquo;None&rdquo;> \
+                    &lt;/security> \
+                &lt;/binding> \
+            &lt;/basicHttpBinding> \
+        &lt;/bindings> \
+        &lt;client> \
+            &lt;endpoint
+address=&ldquo;<a href="http://localhost:49187/Service1.svc">http://localhost:49187/Service1.svc</a>&rdquo;
+binding=&ldquo;basicHttpBinding&rdquo; \
+                bindingConfiguration=&ldquo;BasicHttpBinding_IService1&rdquo;
+contract=&ldquo;ServiceReference1.IService1&rdquo; \
+                name=&ldquo;BasicHttpBinding_IService1&rdquo; /> \
+        &lt;/client> \
+    &lt;/system.serviceModel> \
+&lt;/configuration></p>
+
+<p>All this code is based on the .NET 4.0 beta 1, so it might change in the
+final release.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/12/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/blog/page/10/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

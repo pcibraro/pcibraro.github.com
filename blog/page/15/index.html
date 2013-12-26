@@ -1,0 +1,1670 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="OpenID and OAuth are today excellent solutions for &ldquo;Single Sign On&rdquo;
+(SSO)  and &ldquo;Authorization Delegation&rdquo; respectively. They &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/page/15">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/02/10/some-thoughts-on-openid-and-oauth-for-desktop-clients/">Some Thoughts on OpenID and OAuth for Desktop Clients</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-02-10T00:00:00-03:00" pubdate data-updated="true">Feb 10<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/02/10/some-thoughts-on-openid-and-oauth-for-desktop-clients/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>OpenID and OAuth are today excellent solutions for &ldquo;Single Sign On&rdquo;
+(SSO)  and &ldquo;Authorization Delegation&rdquo; respectively. They are, however,
+based on Http Redirections and therefore, tied to passive clients or
+commonly called web browsers.</p>
+
+<p>An interesting research was made by google some time ago, it can be
+found
+<a href="http://sites.google.com/site/oauthgoog/UXFedLogin/desktopapps">here</a>.
+After reading that article, it looks like they could not get rid of a
+browser at all :(.</p>
+
+<p>If that does not work for you, another solution could be WS-Federation
+Active Profile. </p>
+
+<p>&ldquo;SSO&rdquo; is an inherent feature of WS-Federation, not doubt about it.</p>
+
+<p>&ldquo;Authorization Delegation&rdquo; can also be emulated with a combination of
+&ldquo;SSO&rdquo; and authorization claims. In this scenario, we always give our
+credentials to an identity provider we trust, there is no need to give
+away our credentials to any site or service involved in a transaction.
+The authorization claims also represent fine-granular permissions of
+what we are allowed to do on the service side, and again, they can
+provided by identity provider itself or a resource STS. I discussed this
+approach in my last post, <a href="http://weblogs.asp.net/cibrax/archive/2009/02/06/addressing-authorization-with-oauth-or-the-net-access-control-service.aspx">&ldquo;Addressing Authorization with OAuth or the
+.NET Access Control
+Service&rdquo;</a>,
+the resource STS in this case would be the ACS service.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/02/06/addressing-authorization-with-oauth-or-the-net-access-control-service/">Addressing Authorization With OAuth or the .NET Access Control Service</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-02-06T00:00:00-03:00" pubdate data-updated="true">Feb 6<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/02/06/addressing-authorization-with-oauth-or-the-net-access-control-service/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><strong>OAuth</strong></p>
+
+<p>As I mentioned in the post, <a href="http://weblogs.asp.net/cibrax/archive/2008/11/14/oauth-channel-for-wcf-restful-services.aspx">&ldquo;OAuth Channel for REST
+services&rdquo;</a>,
+OAuth allows a client application to obtain user consent (as access
+tokens) for executing operations over private resources on his behalf.
+Resources in this context represent anything from the user that the
+service provider make public through services, they could be for
+instance contacts, pictures or personal information to name a few.</p>
+
+<p>The access token that the consumer gets from the service provider
+represents in some way an Access Control List that maps directly with
+permissions granted by the user over his resources. For example, John
+provides read/write access to his contacts on Windows Live (Service
+provider) to a third party service (consumer).</p>
+
+<p>A previous direct trust relationship must exist between the consumer and
+the service provider in order to make all this happen, that relationship
+in OAuth also takes the form of a Request Token. If the consumer can not
+get a request token from the service provider, the user is not even
+redirected to this last one for negotiating the access token.</p>
+
+<p>As more service providers get involved in a simple scenario, more access
+tokens the consumer will have to negotiate. In addition, the user should
+have registered in each one of those service provider prior to use the
+consumer application, unless he was  lucky enough to have Open ID
+authentication in some of those services.</p>
+
+<p><img src="/images/legacy/OAuth1.jpg" alt="" /></p>
+
+<p><img src="/images/legacy/OAuth2.jpg" alt="" /></p>
+
+<p>In the image above, the user is authenticated by the service provider
+during the request token/access token exchange.</p>
+
+<p><strong>.NET Access Control Service</strong></p>
+
+<p>The Microsoft .NET Access Control Service was recently announced in the
+PDC as part of the Windows Azure platform. (It was formerly part of
+Biztalk services). Today, it is complemented by two other services, the
+Microsoft .NET Service Bus and Microsoft .NET Workflow Service.</p>
+
+<p>This service in addition to be a valid Secure Token Service (WS-Trust)
+that can participate in the identity metasystem, it is a claim
+transformer. It was conceived with the idea of mapping some input claims
+(Identity claims usually) into authorization claims that represent an
+ACL for the service running on the relying party.</p>
+
+<p>The SAML token containing these output claims would be equivalent to the
+access token in OAuth. </p>
+
+<p>As we saw in OAuth, a prior trust agreement must exist between the
+relying party and the .NET Access Control Service. In this case, A X509
+public key for the relying party must be registered on the .NET ACL
+service (for encrypting the SAML token), and the relying party must have
+a X509 public key coming from the .NET ACL for verifying the token
+signature. As part of this agreement, also some control rules for
+mapping claims must defined  in the .NET ACL service configuration (The
+.NET ACL will use the appliesTo header in the WS-Trust RST message to
+determine which rules have to be used).</p>
+
+<p>If we analyze now the scenario discussed before with OAuth, a single
+consumer and multiple service providers, the client always authenticates
+against the same identity provider, no matter the number of the service
+providers involved, which is a pretty good thing. OAuth depends on Open
+ID for getting the same effect.</p>
+
+<p>The picture below show the complete scenario with a single relying
+party,</p>
+
+<p> <img src="/images/legacy/ACL1.jpg" alt="" /></p>
+
+<p> </p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/02/05/ws-trust-profiles-and-cardspace/">WS-TRUST Profiles and Cardspace</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-02-05T00:00:00-03:00" pubdate data-updated="true">Feb 5<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/02/05/ws-trust-profiles-and-cardspace/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Geneva framework supports today the two WS-Trust profiles, Active and
+Passive.</p>
+
+<p>The active profile deals specially with applications that are able to
+make soap request to any WS-Trust endpoint. On other hand, the passive
+profile is for clients that are unable to emit proper SOAP (a web
+browser for instance) and therefore receive the name of &ldquo;passive
+requestors&rdquo;. This last one involves browser-based communication with
+several http redirects between the different parties (client, STS and
+relying party).</p>
+
+<p>Cardspace embedded in a web browser page however is not a Passive
+client. Once the user decides to be authenticated in a website with an
+information card, the Cardspace identity selector will negotiate and get
+the issue token from the identity provider using the active profile.
+Finally, the identity provider will pass the token to the browser using
+some Inter-Process communication, and the browser can later submit the
+token to the server using an standard http mechanism like a web post.</p>
+
+<p>As you can see, Carspace in a browser is actually an hybrid between
+Active and Passive.
+<a href="http://blogs.msdn.com/vbertocci/archive/2008/06/05/active-passive-and-passive-aggressive.aspx">Vittorio</a>
+has also discussed this scenario in the past, he called it
+&ldquo;Passive-Aggressive&rdquo;.</p>
+
+<p> </p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/02/04/security-token-handlers-in-geneva-framework/">Security Token Handlers in Geneva Framework</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-02-04T00:00:00-03:00" pubdate data-updated="true">Feb 4<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/02/04/security-token-handlers-in-geneva-framework/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>According to the Geneva documentation,</p>
+
+<p><em>&ldquo;SecurityTokenHandler defines an interface for plugging custom token
+handling functionality. Using the SecurityTokenHandler you can add
+functionality to serialize, de-serialize, authenticate and create and
+specific kind of token&rdquo;</em></p>
+
+<p>I can see dead people &hellip;.. :)</p>
+
+<p><img src="/images/legacy/Six.jpg" alt="Six" /></p>
+
+<p>Haven&rsquo;t we seen this before ? Oh, yes, I think we did. The token
+managers in WSE, they are pretty much the same thing. It looks like the
+Geneva team came up with a solution that worked well in the past with
+WSE. One token manager for each kind of token we want to consume in our
+application. If your app needs to consume a custom token or customize an
+existing one, just derive the SecurityTokenHandler base class or one of
+the existing SecurityTokenHandler implementations and override some of
+its methods with custom functionality. For instance, the Geneva
+Framework now comes with two built-in token handlers for Username
+tokens, a MembershipUsernameSecurityTokenHandler for validating users
+against a membership provider and a WindowsUsernameSecurityTokenHandler
+for doing the same against a windows account store.</p>
+
+<p>Most of the code we had in the past as part of authorization policies
+(IAuthorizationPolicy) for mapping claims or validating tokens in a
+UsernamePasswordValidator or X509CertificateValidator has now moved to
+token handlers in the Geneva framework.</p>
+
+<p>I like this way of extending a custom handler for supporting new kind of
+tokens, it is quite more straightforward to me than the model currently
+supported by WCF.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/02/04/buenos-aires-msdn-and-technet-briefing-2009/">Buenos Aires MSDN and Technet Briefing 2009</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-02-04T00:00:00-03:00" pubdate data-updated="true">Feb 4<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/02/04/buenos-aires-msdn-and-technet-briefing-2009/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I just got an email from <a href="http://blogs.msdn.com/masaez">Miguel Angel
+Saenz</a> confirming the date of the next
+biggest Microsoft event in Buenos Aires Argentina, &ldquo;MSDN briefing&rdquo;,
+which will take place on March 25th.</p>
+
+<p>They are now accepting proposals or suggestions for possible sessions in
+the event, or to give an specific name to event itself :).</p>
+
+<p>If you are interested in participating, check out <a href="http://www.puertadeenlace.net/">this
+website</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/02/02/some-thoughts-on-portable-sts-p-sts-and-geneva-cardspace/">Some Thoughts on Portable STS (P-STS) and Geneva Cardspace</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-02-02T00:00:00-03:00" pubdate data-updated="true">Feb 2<span>nd</span>, 2009</time>
+        
+         | <a href="/blog/2009/02/02/some-thoughts-on-portable-sts-p-sts-and-geneva-cardspace/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>The other day and friend of mine asked me about portable STS
+implementations, if I knew about any available solution that he could
+use on his company. That reminded me of a conversation I had like two
+years ago with another developer working on custom .NET CLR framework
+version for portable devices (like smartcards). As part of that project,
+his team was also working on a TCP/IP communication stack for the
+device, and a http handler for accepting raw WS-TRUST messages. One goal
+for that project was to have a P-STS that could be interoperable with
+WCF. The idea seemed very promising at time.</p>
+
+<p>So, what is a PSTS after all ?. In a few words, it is a service running
+on a portable device that exposes WS-TRUST endpoints and can issue
+security tokens of any kind (e.g, SAML tokens).</p>
+
+<p>Making a search today on
+<a href="http://www.google.com.ar/search?hl=en&amp;q=Portable+Security+Token+Service">google</a>
+will drop several P-STS products or solutions,  some of them also claim
+to be interoperable with WCF and Microsoft Cardspace V1.</p>
+
+<p>In terms of identity management, A P-STS really makes a great different
+over existing authentication mechanisms like username/password, X509
+certificates or any other kind of two-factor authentication device. Most
+of these authentication mechanisms are widely accepted and used today in
+applications within corporate environments or applications that requires
+off-line support. However, sometimes they lack of a truly identity
+support, which means that they do not represent the user identity at all
+in the context of those applications, they are just a way of identifying
+returning users, or they are hard to extend with additional user&rsquo;s
+identity claims.</p>
+
+<p>I can not deny that X509 certificates have demonstrated to be a very
+effective and secure way to authenticate users. In addition, X509
+certificates can be extended with some custom attributes, the space is
+limited, but at least there is a possibility. However, X509 certificates
+represent hard tokens, the claims stored on a certificate can not be
+changed once it has been issued. Therefore, they are a good solution as
+long as their information do not change frequently over a period of
+time.</p>
+
+<p>Issue tokens (e.g SAML tokens) on other hand are more dynamic and
+cheaper to create. They usually have a short expiration time, they can
+issued and used  on the fly, but what is more important, they can carry
+custom information or claims about the subject it has been issued for.</p>
+
+<p>Some good news is that the Geneva Cardspace team has also announced some
+support for roaming scenarios in Cardspace V2. There will be a way to
+store our identity cards on a device (or somewhere in the cloud), which
+will be great to combine with a P-STS, no need to export/import the
+cards anymore. This scenario was not possible in Cardspace V1, and <a href="http://blogs.msdn.com/vbertocci/archive/2008/01/27/on-the-idea-of-portable-sts-p-sts.aspx">here
+is the
+explanation</a>.
+According to what Rich Randall mentioned in the PDC talk &ldquo;BB44 Identity:
+Windows CardSpace &#8220;Geneva&rdquo; Under the Hood &ldquo;, the future Cardspace
+interface could look as follow,</p>
+
+<p> <img src="/images/legacy/Infocard.jpg" alt="" /></p>
+
+<p> </p>
+
+<p>As you can see, it will not be long until we have complete and portable
+identity solutions for roaming scenarios.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/01/28/claims-negotiation-between-a-consumer-sts-and-relying-party-in-wcf/">Claims Negotiation Between a Consumer, STS and Relying Party in WCF</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-01-28T00:00:00-03:00" pubdate data-updated="true">Jan 28<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/01/28/claims-negotiation-between-a-consumer-sts-and-relying-party-in-wcf/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>According to the WS-Trust specification, a service consumer has a way to
+negotiate or ask for specific claims to the STS. Those claims (or some
+of them) will be generally used by  the service implementation running
+on the relying party.</p>
+
+<p>They are negotiated through an &ldquo;claims&rdquo; element in the RST message,</p>
+
+<p>&lt;wst:RequestSecurityToken xmlns:wst=&ldquo;&hellip;&rdquo;></p>
+
+<p>        &lt;wst:TokenType>&hellip;&lt;/wst:TokenType></p>
+
+<p>        &lt;wst:RequestType>&hellip;&lt;/wst:RequestType></p>
+
+<p>        &hellip;</p>
+
+<p>        &lt;wsp:AppliesTo>&hellip;&lt;/wsp:AppliesTo></p>
+
+<p>        <strong>&lt;wst:Claims Dialect=&ldquo;&hellip;&rdquo;>&hellip;&lt;/wst:Claims></strong></p>
+
+<p>        &lt;wst:Entropy></p>
+
+<p>              &lt;wst:BinarySecret>&hellip;&lt;/wst:BinarySecret></p>
+
+<p>         &lt;/wst:Entropy></p>
+
+<p>        &lt;wst:Lifetime></p>
+
+<p>            &lt;wsu:Created>&hellip;&lt;/wsu:Created></p>
+
+<p>            &lt;wsu:Expires>&hellip;&lt;/wsu:Expires></p>
+
+<p>        &lt;/wst:Lifetime></p>
+
+<p>&lt;/wst:RequestSecurityToken></p>
+
+<p><em>The &ldquo;wst:claims&rdquo; is an optional element for requesting a specific set
+of claims. Typically, this element contains required and/or optional
+claim information identified in a service&rsquo;s policy.</em></p>
+
+<p>Based on these facts, we can elaborate some possible scenarios for
+claims negotiation between these three parties.</p>
+
+<p>​1. <strong>No negotiation at all</strong></p>
+
+<p>The STS might just ignore these claims requirements in the RST message
+and always returns a fixed claim set according to the consumer identity,
+or the service might not express what claims it expects at all. This
+scenario might be suitable for a local STS in small-sized or
+medium-sized organizations, where the IT department has a complete
+control over the client applications and services that interact with
+that STS. This kind of solution is easier to implement, and quite rigid
+too, a change in the claims required by the service will also require
+changes in the STS implementation. As you see, this solution does not
+scale at all for a high number of applications or relying party
+services.</p>
+
+<p>Many of the STS examples you will find today are implemented like this.</p>
+
+<p>​2. <strong>Negotiation based on the AppliesTo header</strong>.</p>
+
+<p>This solution present a subtle difference with the one discussed before,
+the claims vary according the relying party that will make use of them.
+The STS ignores the claims requirements in the RST messages and returns
+a claim set based on the received AppliesTo header. An existing
+agreement must exist between the STS and the relying party, which will
+include in addition to the key for encrypting the tokens, a number of
+expected claims.  Again, easy to implement, difficult to scale up.</p>
+
+<p>​3. <strong>Manual negotiation based on the &ldquo;Claims&rdquo; header</strong>.</p>
+
+<p>In this scenario, the consumer sends the expected claims in the &ldquo;claims&rdquo;
+header and the STS makes use of them for generating the resulting token.
+However, the negotiation of those claims between the consumer and the
+relying party is manual, a previous agreement must exist, the service
+does not express those requirements through metadata. This means that
+the claims are hard-coded during development in the client
+configuration.  If the service requires additional claims, only the
+client configuration will have to be changed, the STS does not have to
+be touched at all.</p>
+
+<p>If you are implementing a custom STS with the latest Microsoft Geneva
+bits, there is a property &ldquo;Claims&rdquo; in the RequestSecurityToken for
+getting access to these values.</p>
+
+<p>protected override IClaimsIdentity
+GetOutputClaimsIdentity(IClaimsPrincipal principal, RequestSecurityToken
+request, Scope scope)</p>
+
+<p>{</p>
+
+<p>    IClaimsIdentity outputIdentity = new ClaimsIdentity();</p>
+
+<p> </p>
+
+<p>    foreach (Claim claim in request.Claims)</p>
+
+<p>    {</p>
+
+<p>        //Do something&hellip;</p>
+
+<p> </p>
+
+<p>        outputIdentity.Claims.Add(&hellip;);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    return outputIdentity;</p>
+
+<p>}</p>
+
+<p>The client can specify those claims through configuration as well,</p>
+
+<p>&lt;wsFederationHttpBinding></p>
+
+<p>  &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>    &lt;security mode=&ldquo;Message&rdquo;></p>
+
+<p>      &lt;message
+issuedTokenType=&ldquo;<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>&rdquo;
+negotiateServiceCredential=&ldquo;false&rdquo;></p>
+
+<p>        &lt;claimTypeRequirements></p>
+
+<p>          &lt;add claimType
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress">http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress</a>&rdquo;/></p>
+
+<p>          &lt;add claimType
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName">http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName</a>&rdquo;/></p>
+
+<p>          &lt;add claimType
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname">http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname</a>&rdquo;
+isOptional =&ldquo;true&rdquo;/></p>
+
+<p>        &lt;/claimTypeRequirements></p>
+
+<p>        &lt;issuer>&lt;/issuer></p>
+
+<p>      &lt;/message></p>
+
+<p>    &lt;/security></p>
+
+<p>  &lt;/binding></p>
+
+<p>&lt;/wsFederationHttpBinding></p>
+
+<p>Once they are added to the binding configuration, WCF will automatically
+include them as part of the RST message to the STS.</p>
+
+<p>​4. <strong>Automatic negotiation based on the &ldquo;Claims&rdquo; header</strong>.</p>
+
+<p>This is by far the best solution we can find. The three parties
+automatically negotiates the claims at runtime,</p>
+
+<ol type="a">
+<li>The service exposes the claim requirements through metadata
+(WS-Policy)</li>
+</ol>
+
+
+<p>​II. The client acquires the service&rsquo;s policy and requirements using
+some mechanism that could be WS-MetatadaExchange.  Later,  the client
+includes some claim requirements into the RST message that will be send
+to the STS.</p>
+
+<p>​III. The STS extracts those requirements from the RST message, and
+then, it makes use of them for generating the resulting token.</p>
+
+<p>The Cardspace identity selector on the consumer side works like this. It
+first detects what claims are needed by the Relying Party, and then,
+displays all the possible cards (From different Identity providers) that
+satisfy those requirements to the user.</p>
+
+<p>Exposing the claim requirements on the relying party through WCF is
+equivalent to do it on the client side (same binding configuration),</p>
+
+<p>&lt;wsFederationHttpBinding></p>
+
+<p>  &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>    &lt;security mode=&ldquo;Message&rdquo;></p>
+
+<p>      &lt;message
+issuedTokenType=&ldquo;<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>&rdquo;></p>
+
+<p>        &lt;claimTypeRequirements></p>
+
+<p>          &lt;add claimType
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress">http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress</a>&rdquo;/></p>
+
+<p>          &lt;add claimType
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName">http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName</a>&rdquo;/></p>
+
+<p>          &lt;add claimType
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname">http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname</a>&rdquo;
+isOptional =&ldquo;true&rdquo;/></p>
+
+<p>        &lt;/claimTypeRequirements></p>
+
+<p>        &lt;issuer>&lt;/issuer></p>
+
+<p>      &lt;/message></p>
+
+<p>    &lt;/security></p>
+
+<p>  &lt;/binding></p>
+
+<p>&lt;/wsFederationHttpBinding></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/01/19/running-a-partial-ssl-website-in-asp-net-mvc/">Running a Partial SSL Website With ASP.NET MVC</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-01-19T00:00:00-03:00" pubdate data-updated="true">Jan 19<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/01/19/running-a-partial-ssl-website-in-asp-net-mvc/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><a href="http://www.pluralsight.com/community/blogs/keith/archive/2009/01/17/sslhelper-get-help-running-a-partial-ssl-website-in-asp-net.aspx">Keith
+Brown</a>
+has just released a helper class (Based on an <a href="http://www.leastprivilege.com/CommentView.aspx?guid=50a39e64-caab-4fbd-b8e1-2be06b2e6081">original
+implementation</a>
+made by Dominick Baier) with very useful methods for mixing Http and
+Https in a regular asp.net application. Before jumping in this post,
+make sure to read his post (And Dominick&rsquo;s) to understand all the
+problems you may have to deal with when implementing a partial SSL
+website.</p>
+
+<p>Running a partial SSL website in ASP.NET MVC is not much different,
+however, in MVC, we can leverage the existing and powerful routing
+mechanism to implement similar features.</p>
+
+<p><strong>Switching to SSL through an ASP.NET Module</strong></p>
+
+<p>This module  basically inspects the URL and does a redirect based on
+some configuration where you specify routes that should be SSL
+protected.</p>
+
+<p>public void ProcessRequest(HttpContext context)</p>
+
+<p>{</p>
+
+<p>    if(Authentication.IsSslRequired() &amp;&amp;
+context.Request.HttpMethod.Equals(&ldquo;get&rdquo;,
+StringComparison.OrdinalIgnoreCase))</p>
+
+<p>    {</p>
+
+<p>        var data = RouteTable.Routes.GetRouteData(new
+HttpContextWrapper(context));</p>
+
+<p>        if (data != null)</p>
+
+<p>        {</p>
+
+<p>            if (!context.Request.IsSecureConnection)</p>
+
+<p>            {</p>
+
+<p>                if(data.DataTokens[&ldquo;isSecure&rdquo;] != null &amp;&amp;
+(bool)data.DataTokens[&ldquo;isSecure&rdquo;])</p>
+
+<p>                {</p>
+
+<p>                    //Do redirect to https</p>
+
+<p>                    var secureUrl =
+context.Request.Url.ToString().ToSslUrl();</p>
+
+<p>                    context.Response.Redirect(secureUrl, true);</p>
+
+<p>                }</p>
+
+<p>            }</p>
+
+<p>            else</p>
+
+<p>            {</p>
+
+<p>                if (data.DataTokens[&ldquo;isSecure&rdquo;] == null ||
+!((bool)data.DataTokens[&ldquo;isSecure&rdquo;]))</p>
+
+<p>                {</p>
+
+<p>                    //Do redirect to http</p>
+
+<p>                    var unsecureUrl =
+context.Request.Url.ToString().ToUnsecureUrl();</p>
+
+<p>                    context.Response.Redirect(unsecureUrl, true);</p>
+
+<p>                }</p>
+
+<p>            }</p>
+
+<p>        }</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>As you can see in the code above, the module checks whether the page
+should be ssl protected using a custom data token (IsSecure) that was
+previously configured for the route, and afterwards, it redirects the
+request according to that setting. For instance, if the route requires
+to be the secure (IsSecure = true), and the request was actually made
+through http, the module will redirect the request to https.</p>
+
+<p>The absolute URLs are built using some extensions methods (ToSslUrl and
+ToUnsecureUrl) that I will show later in this post.</p>
+
+<p>Authentication.IsSslRequired is just an configuration setting that we
+can use to skip all these checks during development.</p>
+
+<p>public class Authentication</p>
+
+<p>{</p>
+
+<p>    public static bool IsSslRequired()</p>
+
+<p>    {</p>
+
+<p>        var setting = ConfigurationManager.AppSettings[&ldquo;RequireSSL&rdquo;];</p>
+
+<p>        if (setting != null)</p>
+
+<p>        {</p>
+
+<p>            return bool.Parse(setting);</p>
+
+<p>        }</p>
+
+<p> </p>
+
+<p>        return false;</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>&lt;appSettings></p>
+
+<p>  &lt;add key=&ldquo;RequireSSL&rdquo; value=&ldquo;True&rdquo;/></p>
+
+<p>&lt;/appSettings></p>
+
+<p>The code for setting the custom data token in the MVC route looks as
+follow,</p>
+
+<p>routes.MapRoute(</p>
+
+<p>    &ldquo;MyAccount/PasswordChange&rdquo;,</p>
+
+<p>    &ldquo;MyAccount/PasswordChange&rdquo;,</p>
+
+<p>    new { controller = &ldquo;Accounts&rdquo;, action = &ldquo;PasswordChange&rdquo; }</p>
+
+<p>).DataTokens = new RouteValueDictionary(new { isSecure = true });</p>
+
+<p>**** </p>
+
+<p><strong>Extension methods for generating absolute URLs</strong></p>
+
+<p>As I showed before in the ASP.NET Module, two extensions methods were
+used to generate absolute URLs. I just based their implementation on
+some code originally written by Troy Goode in this
+<a href="http://www.squaredroot.com/post/2008/06/MVC-and-SSL.aspx">post</a>. \</p>
+
+<p>/// &lt;summary></p>
+
+<p>/// Provides helper extensions for turning strings into fully-qualified
+and SSL-enabled Urls.</p>
+
+<p>/// &lt;/summary></p>
+
+<p>public static class UrlStringExtensions</p>
+
+<p>{</p>
+
+<p>    /// &lt;summary></p>
+
+<p>    /// Takes a relative or absolute url and returns the fully-qualified
+url path.</p>
+
+<p>    /// &lt;/summary></p>
+
+<p>    /// &lt;param name=&ldquo;text&rdquo;>The url to make fully-qualified. Ex:
+Home/About&lt;/param></p>
+
+<p>    /// &lt;returns>The absolute url plus protocol, server, &amp; port. Ex:
+<a href="http://localhost:1234/Home/About&lt;/returns>&#8220;>http://localhost:1234/Home/About&lt;/returns></a></p>
+
+<p>    public static string ToFullyQualifiedUrl( this string text )</p>
+
+<p>    {</p>
+
+<p>        var oldUrl = text;</p>
+
+<p>        var oldUrlArray = ( oldUrl.Contains( &ldquo;?&rdquo; ) ? oldUrl.Split( &lsquo;?&rsquo; )
+: new[]{ oldUrl, &ldquo;&rdquo; } );</p>
+
+<p> </p>
+
+<p>        var requestUri = HttpContext.Current.Request.Url;</p>
+
+<p>        var localPathAndQuery = requestUri.LocalPath + requestUri.Query;</p>
+
+<p>        var urlBase = requestUri.AbsoluteUri.Substring( 0,
+requestUri.AbsoluteUri.Length &ndash; localPathAndQuery.Length );</p>
+
+<p> </p>
+
+<p>        var newUrl = VirtualPathUtility.ToAbsolute( oldUrlArray[0] );</p>
+
+<p>        if( !string.IsNullOrEmpty( oldUrlArray[1] ) )</p>
+
+<p>            newUrl += &ldquo;?&rdquo; + oldUrlArray[1];</p>
+
+<p> </p>
+
+<p>        return urlBase + newUrl;</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    /// &lt;summary></p>
+
+<p>    /// Looks for Html links in the passed string and turns each
+relative or absolute url and returns the fully-qualified url path.</p>
+
+<p>    /// &lt;/summary></p>
+
+<p>    /// &lt;param name=&ldquo;text&rdquo;>The url to make fully-qualified. Ex: &lt;a
+href=&ldquo;Home/About&rdquo;>Blah&lt;/a>&lt;/param></p>
+
+<p>    /// &lt;returns>The absolute url plus protocol, server, &amp; port. Ex:
+&lt;a href=&ldquo;<a href="http://localhost:1234/Home/About">http://localhost:1234/Home/About</a>&rdquo;>Blah&lt;/a>&lt;/returns></p>
+
+<p>    public static string ToFullyQualifiedLink( this string text )</p>
+
+<p>    {</p>
+
+<p>        var regex = new Regex(</p>
+
+<p>           
+&ldquo;(?&lt;Before>&lt;a.*href=\&rdquo;)(?!http)(?&lt;Url>.*?)(?&lt;After>\&ldquo;.+>)&rdquo;,</p>
+
+<p>            RegexOptions.Multiline | RegexOptions.IgnoreCase</p>
+
+<p>            );</p>
+
+<p> </p>
+
+<p>        return regex.Replace( text, ( Match m ) =></p>
+
+<p>                                    m.Groups[&ldquo;Before&rdquo;].Value +</p>
+
+<p>                                    ToFullyQualifiedUrl(
+m.Groups[&ldquo;Url&rdquo;].Value ) +</p>
+
+<p>                                    m.Groups[&ldquo;After&rdquo;].Value</p>
+
+<p>            );</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    /// &lt;summary></p>
+
+<p>    /// Takes a relative or absolute url and returns the fully-qualified
+url path using the Https protocol.</p>
+
+<p>    /// &lt;/summary></p>
+
+<p>    /// &lt;param name=&ldquo;text&rdquo;>The url to make fully-qualified. Ex:
+Home/About&lt;/param></p>
+
+<p>    /// &lt;returns>The absolute url plus server, &amp; port using the Https
+protocol. Ex: <a href="https://localhost:1234/Home/About&lt;/returns>&#8220;>https://localhost:1234/Home/About&lt;/returns></a></p>
+
+<p>    public static string ToSslUrl( this string text )</p>
+
+<p>    {</p>
+
+<p>        if (IsSslRequired())</p>
+
+<p>        {</p>
+
+<p>            string absoluteUrl = null;</p>
+
+<p>            if (text.StartsWith(&ldquo;<a href="http://">http://</a>&rdquo;,
+StringComparison.OrdinalIgnoreCase) || text.StartsWith(&ldquo;<a href="https://">https://</a>&rdquo;,
+StringComparison.OrdinalIgnoreCase))</p>
+
+<p>                absoluteUrl = text;</p>
+
+<p>            else</p>
+
+<p>                absoluteUrl = ToFullyQualifiedUrl(text);</p>
+
+<p> </p>
+
+<p>            return absoluteUrl.Replace(&ldquo;<a href="http:">http:</a>&rdquo;, &ldquo;<a href="https:">https:</a>&rdquo;);</p>
+
+<p>        }</p>
+
+<p>        else</p>
+
+<p>        {</p>
+
+<p>            return text;</p>
+
+<p>        }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    /// &lt;summary></p>
+
+<p>    /// Takes a relative or absolute url and returns the fully-qualified
+url path using the Http protocol.</p>
+
+<p>    /// &lt;/summary></p>
+
+<p>    /// &lt;param name=&ldquo;text&rdquo;>The url to make fully-qualified. Ex:
+Home/About&lt;/param></p>
+
+<p>    /// &lt;returns>The absolute url plus server, &amp; port using the Http
+protocol. Ex: <a href="http://localhost:1234/Home/About&lt;/returns>&#8220;>http://localhost:1234/Home/About&lt;/returns></a></p>
+
+<p>    public static string ToUnsecureUrl(this string text)</p>
+
+<p>    {</p>
+
+<p>        string absoluteUrl = null;</p>
+
+<p>        if (text.StartsWith(&ldquo;<a href="http://">http://</a>&rdquo;,
+StringComparison.OrdinalIgnoreCase) || text.StartsWith(&ldquo;<a href="https://">https://</a>&rdquo;,
+StringComparison.OrdinalIgnoreCase))</p>
+
+<p>            absoluteUrl = text;</p>
+
+<p>        else</p>
+
+<p>            absoluteUrl = ToFullyQualifiedUrl(text);</p>
+
+<p> </p>
+
+<p>        return absoluteUrl.Replace(&ldquo;<a href="https:">https:</a>&rdquo;, &ldquo;<a href="http:">http:</a>&rdquo;);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    /// &lt;summary></p>
+
+<p>    /// Looks for Html links in the passed string and turns each
+relative or absolute url into a fully-qualified url path using the Https
+protocol.</p>
+
+<p>    /// &lt;/summary></p>
+
+<p>    /// &lt;param name=&ldquo;text&rdquo;>The url to make fully-qualified. Ex: &lt;a
+href=&ldquo;Home/About&rdquo;>Blah&lt;/a>&lt;/param></p>
+
+<p>    /// &lt;returns>The absolute url plus server, &amp; port using the Https
+protocol. Ex: &lt;a
+href=&ldquo;<a href="https://localhost:1234/Home/About">https://localhost:1234/Home/About</a>&rdquo;>Blah&lt;/a>&lt;/returns></p>
+
+<p>    public static string ToSslLink( this string text )</p>
+
+<p>    {</p>
+
+<p>        if (IsSslRequired())</p>
+
+<p>        {</p>
+
+<p>            return ToFullyQualifiedLink(text).Replace(&ldquo;<a href="http:">http:</a>&rdquo;,
+&ldquo;<a href="https:">https:</a>&rdquo;);</p>
+
+<p>        }</p>
+
+<p>        else</p>
+
+<p>        {</p>
+
+<p>            return ToFullyQualifiedLink(text);</p>
+
+<p>        }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    private static bool IsSslRequired()</p>
+
+<p>    {</p>
+
+<p>        return Authentication.IsSslRequired();</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>\
+They can be used from a view as well to generate links with complete
+Urls,</p>
+
+<p>&lt;a href=&lsquo;&lt;% =Url.Action(&ldquo;PasswordChange&rdquo;, &ldquo;Accounts&rdquo;).ToSslUrl()
+%>&rsquo;>Change your password&lt;/a></p>
+
+<p><strong>Gettting an absolute URL within a controller</strong></p>
+
+<p>For some scenarios, we might need to redirect the user from a secure
+route to a regular route or viceversa within a controller. In those
+cases, we should have a way to generate a complete URL from a controller
+method and used it later with a RedirectResult (This is also useful when
+you want to include a link to a web page in an email sent by your
+website).</p>
+
+<p>For instance, it would be very helpful to have something like this,</p>
+
+<p>return new RedirectResult(this.FullActionUrl&lt;MyController>(c =>
+c.SecureMethod(), &ldquo;https&rdquo;));</p>
+
+<p>Where &ldquo;FullActionUrl&rdquo; is an extension method for the Controller class.
+In addition to the controller method we want to use to get the absolute
+route (&ldquo;SecureMethod&rdquo;), we can also specify the scheme to be used with
+that route.</p>
+
+<p>The code for doing that is shown bellow (They are part of the .NETfx
+project,
+<a href="http://code.google.com/p/netfx/">http://code.google.com/p/netfx/</a>)</p>
+
+<p>/// &lt;summary></p>
+
+<p>/// Returns the full URL for performing an invocation to an action based</p>
+
+<p>/// on an expression representing an invocation to a controller method</p>
+
+<p>/// that may include arguments.</p>
+
+<p>/// &lt;/summary></p>
+
+<p>/// &lt;typeparam name=&ldquo;T&rdquo;>Type of the controller to call to. Can be
+omitted as it can be inferred from the action type.&lt;/typeparam></p>
+
+<p>/// &lt;param name=&ldquo;controller&rdquo;>The controller performing the
+call.&lt;/param></p>
+
+<p>/// &lt;param name=&ldquo;action&rdquo;>The action containing the call.&lt;/param></p>
+
+<p>public static string FullActionUrl&lt;T>(this Controller controller,
+Expression&lt;Action&lt;T>> action, string scheme)</p>
+
+<p>    where T : Controller</p>
+
+<p>{</p>
+
+<p>    string host = controller.HttpContext.Request.Url.Authority;</p>
+
+<p>    string virtualPath = ActionUrl(controller, action);</p>
+
+<p> </p>
+
+<p>    return string.Format(&ldquo;{0}://{1}{2}&rdquo;, scheme, host, virtualPath);</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>/// &lt;summary></p>
+
+<p>/// Returns the URL for performing an invokation to an action based</p>
+
+<p>/// on an expression representing an invocation to a controller method</p>
+
+<p>/// that may include arguments.</p>
+
+<p>/// &lt;/summary></p>
+
+<p>/// &lt;typeparam name=&ldquo;T&rdquo;>Type of the controller to call to. Can be
+omitted as it can be inferred from the action type.&lt;/typeparam></p>
+
+<p>/// &lt;param name=&ldquo;controller&rdquo;>The controller performing the
+call.&lt;/param></p>
+
+<p>/// &lt;param name=&ldquo;action&rdquo;>The action containing the call.&lt;/param></p>
+
+<p>public static string ActionUrl&lt;T>(this ControllerBase controller,
+Expression&lt;Action&lt;T>> action)</p>
+
+<p>    where T : Controller</p>
+
+<p>{</p>
+
+<p>    var call = ControllerExpression.GetMethodCall&lt;T>(action);</p>
+
+<p> </p>
+
+<p>    string actionName = call.Method.Name;</p>
+
+<p>    string controllerName =
+ControllerExpression.GetControllerName&lt;T>();</p>
+
+<p> </p>
+
+<p>    var values = LinkBuilder.BuildParameterValuesFromExpression(call);</p>
+
+<p>    values.Add(&ldquo;action&rdquo;, actionName);</p>
+
+<p>    values.Add(&ldquo;controller&rdquo;, controllerName);</p>
+
+<p> </p>
+
+<p>    var vpd =
+RouteTable.Routes.GetVirtualPath(controller.ControllerContext, values);</p>
+
+<p>    string target = null;</p>
+
+<p>    if (vpd != null)</p>
+
+<p>    {</p>
+
+<p>        target = vpd.VirtualPath;</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    return target;</p>
+
+<p>}</p>
+
+<p>The complete code is available to download from
+<a href="/images/legacy/MVC.SSL.zip">here</a>. </p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/01/08/describing-restful-applications/">Describing RESTful Applications</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-01-08T00:00:00-03:00" pubdate data-updated="true">Jan 8<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/01/08/describing-restful-applications/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>The other day I came across <a href="http://www.infoq.com/articles/subbu-allamaraju-rest">this interesting
+article</a> written by
+<a href="http://www.subbu.org/">Subbu Allamaraju</a>, where he discusses some of
+the aspects that drive the design of a pure and self-describing RESTful
+interface for a service (Or service contract in other words).</p>
+
+<p>He points out three main pieces that every service contract should have:</p>
+
+<p>​1. An uniform interface. An uniform interface is probably one the
+aspects that we best know about REST, or we may heard often when a REST
+service is described. This refers to the fact that each service exposes
+the same interface, which is a good thing for eliminating ad hoc
+messages and focusing primarily on an standard API that defines pieces
+of information that can be retrieved and manipulated. Instead of adding
+special function calls or interfaces to the architecture, new services
+add new pieces of information can be manipulated using standard
+requests. For instance, in Http RESTful services, this point involves
+using standard http verbs, headers and status codes.</p>
+
+<p>​2. Resource representations based on media types. This is quite
+interesting, what he proposes is to use a more specialized
+&ldquo;content-type&rdquo; for any of the xml schemas that a service may return. He
+confirms that generic media types such as &ldquo;application/xml&rdquo; are not
+enough to distinguish resource representations. We might want to know if
+the resource represents an account or a customer without making any
+assumptions about the resource&rsquo;s URI. In those cases, content types like
+&ldquo;application/vnd.bank.org.accounts+xml&rdquo; or
+&ldquo;application/vnd.bank.org.customers+xml&rdquo; would be more helpful and still
+being valid according to the spec  &ldquo;rfc3023, XML media types&rdquo;.</p>
+
+<p>200 OK \
+<strong>Content-Type: application/vnd.bank.org.account+xml</strong></p>
+
+<p>&lt;accounts xmlns=&ldquo;urn:org:bank:accounts&rdquo;> \
+    &lt;account> \
+        &lt;id>AZA12093&lt;/id>        \
+        &lt;balance currency=&ldquo;USD&rdquo;>993.95&lt;/balance> \
+    &lt;/account> \
+&lt;/accounts></p>
+
+<p>​3. Contextual links to resources. In addition to the resource
+representation, the client should also receive links representing what
+it can do next (Taking the form of a workflow). As Subbu concludes, this
+aspect decouples the client from the actual URIs of resources, and the
+client does not need to know the rest of the URIs until run-time.</p>
+
+<p>200 OK \
+Content-Type: application/vnd.bank.org.account+xml;charset=UTF-8</p>
+
+<p>&lt;accounts xmlns=&ldquo;urn:org:bank:accounts&rdquo;> \
+    &lt;account> \
+        &lt;id>AZA12093&lt;/id> \
+        <strong>&lt;link
+href=&ldquo;</strong><a href="http://bank.org/account/AZA12093"><strong>http://bank.org/account/AZA12093</strong></a><strong>&rdquo;
+rel=&ldquo;self&rdquo;/> \
+        &lt;link
+rel=&ldquo;</strong><a href="http://bank.org/rel/transfer"><strong>http://bank.org/rel/transfer</strong></a><strong>edit&rdquo;
+\
+              type=&ldquo;application/vnd.bank.org.transfer+xml&rdquo; \
+             
+href=&ldquo;</strong><a href="http://bank.org/transfers%22/"><strong>http://bank.org/transfers&#8221;/</strong></a><strong>>
+\
+        &lt;link
+rel=&rdquo;</strong><a href="http://bank.org/rel/customer"><strong>http://bank.org/rel/customer</strong></a><strong>&ldquo;
+\
+              type=&#8221;application/vnd.bank.org.customer+xml&rdquo; \
+             
+href=&ldquo;</strong><a href="http://bank.org/customer/7t676323a%22/"><strong>http://bank.org/customer/7t676323a&#8221;/</strong></a><strong>>
+\
+</strong>        &lt;balance currency=&#8221;USD&rdquo;>993.95&lt;/balance> \
+    &lt;/account> \
+    &hellip;..</p>
+
+<p>As you can see in the example above, the account representation contains
+links to itself (Self link) and other resources. The operations that can
+be performed over those resources are expressed by the &ldquo;rel&rdquo; attribute.</p>
+
+<p>Altough there is not built-in support in WCF to enforce these aspects
+automatically, it can be easily done in the service implementation using
+specific data contracts and the WebOperationContext. </p>
+
+<p>Setting up the content type before returning the service response:</p>
+
+<p>public Account GetAccount(string id)</p>
+
+<p>{</p>
+
+<p>  WebOperationContext.Current.OutgoingResponse.ContentType =
+&ldquo;application/vnd.bank.org.account+xml&rdquo;;</p>
+
+<p>  return repository.Accounts.Where(a => a.Id == id).FirstOrDefault();</p>
+
+<p>}</p>
+
+<p>A link can be modeled as a regular data contract:</p>
+
+<p>[DataContract(Name=&ldquo;link&rdquo;)]</p>
+
+<p>public class Link</p>
+
+<p>{</p>
+
+<p>   [DataMember(Name=&ldquo;href&rdquo;)]</p>
+
+<p>   public string Href { get; set; }</p>
+
+<p> </p>
+
+<p>   [DataMember(Name = &ldquo;rel&rdquo;)]</p>
+
+<p>   public string Rel { get; set; }</p>
+
+<p> </p>
+
+<p>   [DataMember(Name = &ldquo;type&rdquo;)]</p>
+
+<p>   public string Type { get; set; }</p>
+
+<p>}</p>
+
+<p>Read the <a href="http://www.infoq.com/articles/subbu-allamaraju-rest">article</a>
+for more information.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/12/23/sticky-notes-pluggin-for-visual-studio-2008/">Sticky Notes Plugin for Visual Studio 2008</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-12-23T00:00:00-03:00" pubdate data-updated="true">Dec 23<span>rd</span>, 2008</time>
+        
+         | <a href="/blog/2008/12/23/sticky-notes-pluggin-for-visual-studio-2008/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>My good friend <a href="http://www.clariusconsulting.net/blogs/pga/">Pablo
+Galiano</a> has released a
+pretty cool plug-in for Visual Studio 2008, <a href="http://stickynotes4code.com/">Sticky
+Notes</a>. In a few words, this extension
+allows you to attach <a href="http://stickynotes4code.com/Screenshots.aspx">sticky notes to your
+code</a>, which can be
+personal notes (Only visible to you) or team notes (visible to the
+entire team).</p>
+
+<p>Give it a try!!.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/16/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/blog/page/14/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

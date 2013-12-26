@@ -1,0 +1,573 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Streaming large content with WCF and deferred execution - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="I will use this post to discuss an scenario that you may run into while
+working with WCF, a service that returns a lot of objects (Or large
+data) to &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2008/06/10/streaming-large-content-with-wcf-and-deferred-execution">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Streaming Large Content With WCF and Deferred Execution</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-06-10T00:00:00-03:00" pubdate data-updated="true">Jun 10<span>th</span>, 2008</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>I will use this post to discuss an scenario that you may run into while
+working with WCF, a service that returns a lot of objects (Or large
+data) to the client applications. This scenario is not about
+transferring files, that is a completely different story, and I already
+discussed it some time ago in another post.</p>
+
+<p>The scalability of the service&rsquo;s host may be affected if the service is
+not well designed or configured. WCF will use large memory buffers to
+keep the complete message before it start sending that message through
+the wire.</p>
+
+<p>Using data contracts or XML serializable classes in this scenario does
+not scale well because the complete object graph has to be loaded in
+memory before the corresponding serializer (Data Contract serializer or
+Xml Serializer) transform it into an stream of bytes.</p>
+
+<p>In addition, if the service throttling settings are not configured
+carefully for that service, a large number of requests will practically
+consume all the available resources (If that happens, the server will
+stop processing additional requests and you may run into a OutOfMemory
+exception as well). For more information about Service Throttling, I
+recommend this <a href="http://kennyw.com/indigo/150">Kenny Wolf&rsquo;s post</a>.</p>
+
+<p>Before getting into the streaming solution, which looks very complex at
+first glance, you should consider refactoring your service&rsquo;s API to
+support data paging. If you use paging, the design of the final service
+will be simpler and you should not have any of the mentioned problems.
+What&rsquo;s more, streaming does not work well with message security, the
+default behavior for WCF is to buffer all messages when message security
+is set for the channel. In order to combine message security with
+streaming you should use the Chunking Channel.</p>
+
+<p>Data Paging design sample,</p>
+
+<p>[XmlRoot(&ldquo;Customer&rdquo;)]</p>
+
+<p>public class Customer</p>
+
+<p>{</p>
+
+<p>  public string FirstName { get; set; }</p>
+
+<p> </p>
+
+<p>  public string LastName { get; set; }</p>
+
+<p> </p>
+
+<p>  public string Address { get; set; }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>[XmlRoot(&ldquo;Customers&rdquo;)]</p>
+
+<p>public class Customers</p>
+
+<p>{</p>
+
+<p>    public Customer[] Customers { get; set; }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public interface ISampleService</p>
+
+<p>{</p>
+
+<p>  [OperationContract]</p>
+
+<p>  Customers GetAllCustomers(int page, int count, out int
+totalCustomers); </p>
+
+<p>}</p>
+
+<p>The client application will have to call that method as many times as it
+needs to retrieve all the customers. The service should have a limit in
+the number of customers it can return per call, otherwise, we will have
+the same problems if the client application asks for a large number of
+customers.</p>
+
+<p>Deferred execution is a cool feature introduced in .NET 2.0 for
+enumerations. Basically the enumeration does not happen until some
+calling code wants to examine the enumeration.</p>
+
+<p>Let&rsquo;s discuss now how deferred execution can be achieved in WCF with the
+help of the streaming model.</p>
+
+<p>​1. The first extensibility point that we will need for this solution is
+a custom BodyWriter class. A BodyWriter has the knowledge to serialize
+an entire object graph as xml into the body of a soap message. The class
+Message has an static method to create a new message from a  BodyWriter
+instance.</p>
+
+<p>public abstract class Message : &hellip;.</p>
+
+<p>{</p>
+
+<p>    public static Message CreateMessage(MessageVersion version, string
+action, BodyWriter body)</p>
+
+<p>}</p>
+
+<p>The &ldquo;BodyWriter&rdquo; class is an abstract and contains a single method to
+serialize the complete object graph into the soap body.</p>
+
+<p>public class CustomBodyWriter : BodyWriter</p>
+
+<p>  {</p>
+
+<p>    private IEnumerable&lt;Customer> customers;</p>
+
+<p> </p>
+
+<p>    public CustomBodyWriter(IEnumerable&lt;Customer> customers)</p>
+
+<p>      : base(false) // False should be passed here to avoid buffering
+the message</p>
+
+<p>    {</p>
+
+<p>      this.customers = customers;</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    protected override void
+OnWriteBodyContents(System.Xml.XmlDictionaryWriter writer)</p>
+
+<p>    {</p>
+
+<p>      XmlSerializer serializer = new XmlSerializer(typeof(Customer));</p>
+
+<p>      writer.WriteStartElement(&ldquo;customers&rdquo;);</p>
+
+<p>      foreach (Customer customer in customers)</p>
+
+<p>      {</p>
+
+<p>        serializer.Serialize(writer, customer);</p>
+
+<p>      }</p>
+
+<p>      writer.WriteEndElement();</p>
+
+<p>    }</p>
+
+<p>  }</p>
+
+<p>As you can see in the code above, our custom implementation of the
+&ldquo;OnWriteBodyContents&rdquo; receives an enumeration of objects that we want to
+serialize into the message. A &ldquo;false&rdquo; value is passed as argument in the
+constructor to the base class to specify that our custom implementation
+can not be buffered.</p>
+
+<p>​2. We will use deferred execution to retrieve all the customers from
+the database (The following code actually emulates that),</p>
+
+<p>public IEnumerable&lt;Customer> GetAllCustomersImpl()</p>
+
+<p>{</p>
+
+<p>   for(long i = 0; i &lt; 1000; i++) //All the customers should be read
+from the database</p>
+
+<p>   {</p>
+
+<p>      yield return new Customer { FirstName = &ldquo;Foo&rdquo;, LastName = &ldquo;Bar&rdquo;,
+Address = &ldquo;FooBar 123&rdquo; };</p>
+
+<p>   }</p>
+
+<p> </p>
+
+<p>   yield break;</p>
+
+<p>}</p>
+
+<p>What&rsquo;s it is important here is that we are not returning all the
+customer objects at the same time (we are returning one at time, so they
+are not loaded in memory) using the &ldquo;yield&rdquo; operator.</p>
+
+<p>​3. The service implementation returns a new message created from the
+custom &ldquo;CustomBodyWriter&rdquo; class.</p>
+
+<p>public class SampleService : ISampleService</p>
+
+<p>  {</p>
+
+<p>    #region ISampleService Members</p>
+
+<p> </p>
+
+<p>    public Message GetAllCustomers()</p>
+
+<p>    {</p>
+
+<p>      Message message = Message.CreateMessage(MessageVersion.Soap11,
+&ldquo;GetAllCustomers&rdquo;, new CustomBodyWriter(GetAllCustomersImpl()));</p>
+
+<p>      return message;</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    #endregion</p>
+
+<p>    </p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>The first two arguments of the CreateMessage method specifies the soap
+version and soap action for the response message.</p>
+
+<p>​4. The client application also reads one customer object at time from
+the response message,</p>
+
+<p>static IEnumerable&lt;Customer> GetAllCustomers(Message message)</p>
+
+<p>{</p>
+
+<p>  XmlReader reader = message.GetReaderAtBodyContents();</p>
+
+<p>  if (reader.LocalName != &ldquo;customers&rdquo;)</p>
+
+<p>  {</p>
+
+<p>     throw new Exception(&ldquo;The service returned an invalid message&rdquo;);</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  XmlSerializer serializer = new XmlSerializer(typeof(Customer));</p>
+
+<p>  reader.ReadStartElement(&ldquo;customers&rdquo;);</p>
+
+<p> </p>
+
+<p>  while(!reader.EOF &amp;&amp; reader.LocalName == &ldquo;Customer&rdquo;)</p>
+
+<p>  {</p>
+
+<p>     Customer customer = (Customer)serializer.Deserialize(reader);</p>
+
+<p>     yield return customer;</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  reader.ReadEndElement();</p>
+
+<p>}</p>
+
+<p>​5. Finally, the client and the service, both have to be configured to
+use an &ldquo;streamed&rdquo; as transfer mode. Otherwise, all the messages will be
+buffered in memory.</p>
+
+<p>&lt;basicHttpBinding></p>
+
+<p>   &lt;binding name=&ldquo;basic&rdquo; transferMode=&ldquo;StreamedResponse&rdquo;
+maxReceivedMessageSize=&ldquo;10000000&rdquo;></p>
+
+<p>      &lt;security mode=&ldquo;None&rdquo;>&lt;/security></p>
+
+<p>   &lt;/binding></p>
+
+<p>&lt;/basicHttpBinding></p>
+
+<p>The &ldquo;maxReceivedMessageSize&rdquo; setting is also important because it limits
+the amount of data that the service can return. You should adjust it to
+a value according to the amount of data you might return in the service
+implementation.</p>
+
+<p>You can download the complete sample from this
+<a href="/images/legacy/StreamingObjects.zip">location</a>.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-06-10T00:00:00-03:00" pubdate data-updated="true">Jun 10<span>th</span>, 2008</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/wcf/'>WCF</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2008/06/10/streaming-large-content-with-wcf-and-deferred-execution/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2008/06/10/streaming-large-content-with-wcf-and-deferred-execution/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2008/05/20/unit-tests-for-wcf-and-moq-part-ii/" title="Previous Post: Unit Tests for WCF (and Moq) Part II">&laquo; Unit Tests for WCF (and Moq) Part II</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2008/06/25/microsoft-technight-buenos-aires/" title="Next Post: Microsoft Technight - Buenos Aires">Microsoft Technight - Buenos Aires &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2008/06/10/streaming-large-content-with-wcf-and-deferred-execution/';
+        var disqus_url = 'http://cibrax.me/blog/2008/06/10/streaming-large-content-with-wcf-and-deferred-execution/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

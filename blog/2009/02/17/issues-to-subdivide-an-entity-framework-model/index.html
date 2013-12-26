@@ -1,0 +1,363 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Issues to subdivide an entity framework model - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="The other day, my team and I ran into some design issues while trying to
+split a big Entity Framework model into smaller pieces according to
+areas of &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2009/02/17/issues-to-subdivide-an-entity-framework-model">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Issues to Subdivide an Entity Framework Model</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-02-17T00:00:00-03:00" pubdate data-updated="true">Feb 17<span>th</span>, 2009</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>The other day, my team and I ran into some design issues while trying to
+split a big Entity Framework model into smaller pieces according to
+areas of functionality. At first glance, it seemed to be a common design
+problem, something easy to overcome, but it did not result that way. I
+could not find much information about people having the same issue
+either.</p>
+
+<p>In the system we are currently designing, we use modules or packages to
+group classes that belong to the same area of functionality. As you can
+guess, these modules do not represent more than a set of use cases or
+stories that are tightly coupled in design time.</p>
+
+<p>We also have, however, some classes that are common for all those
+modules, so we put them in a shared module. In few words, we have a
+entity model shaped like a star, being the shared module the center of
+the star, and the rest of the modules just leafs.</p>
+
+<p>The problem appeared when we tried to assign a different entity
+framework model to any of these modules for persisting the classes in a
+store. We could not find an easy way to reference the model with the
+shared entities from the rest of them, so we gave up after a while.</p>
+
+<p>A single model with all the entities was not an option for us, because
+it simple does not scale up. We took a similar approach in the past with
+another project, the result was a huge model full of entities and really
+hard to maintain. This solution also required having a extra service
+layer on top of the entity model to encapsulate functionality specific
+to each module, which made very difficult to have a rich domain model at
+first glance.</p>
+
+<p>After a search in several blogs, I came across this post &ldquo;<a href="http://blogs.msdn.com/adonet/archive/2008/11/25/working-with-large-models-in-entity-framework-part-2.aspx">Working with
+large models in entity
+framework</a>&rdquo;
+from the Ado team, where they discuss some possible techniques or
+workarounds for an scenario like this.</p>
+
+<p>They basically proposed the following solutions,</p>
+
+<p>​1. Reference one conceptual model (CSDL) from another. You create
+different models, and manually modify each CSDL to reference the model
+(CSDL) with the shared entities.</p>
+
+<p>The CSDL model supports a clause &ldquo;using&rdquo; for including types defined in
+another model, it is basically a simple way to reuse types. This sounds
+good, however, it lacks of design time experience, which makes this
+feature totally useless for the scenario we have (and really complicated
+to implement according to <a href="http://www.thedatafarm.com/blog/2008/11/27/CSDLsUsingConstructForBigModels.aspx">this
+post</a>
+written by Julie Lerman)</p>
+
+<p>​2. Duplicate metadata for the shared entities in each conceptual model
+(CSDL). Again, this approach sucks from a point of view of
+maintainability, typically you will have the same problems that you
+would see with duplicated code. One change in an shared entity will
+require changes in every model that reference it.</p>
+
+<p>​3. Expose foreign keys as scalar properties because you do not want to
+pull in all the shared entities into every Entity model. Not a good
+solution either, the shared entities get out of the unit of work or
+context (ObjectContext) generated by the designer. As result, you can
+not execute queries that require joins between the two contexts. Unless
+you include some helper methods to retrieve the shared entities using
+the scalar properties, you also lost the possibility of having a rich
+domain model.</p>
+
+<p>As you can see, we could not find any workaround that totally met our
+expectations, so we might stick to the solution #2 (Duplicating the
+entities). The solution #1 would be perfect with some design time
+support, I hope the ado team consider this for a future release.</p>
+
+<p>Do you have any thought or experience to share ?. I would be more than
+happy to hear your feedback regarding possible solutions for this
+scenario.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-02-17T00:00:00-03:00" pubdate data-updated="true">Feb 17<span>th</span>, 2009</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2009/02/17/issues-to-subdivide-an-entity-framework-model/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2009/02/17/issues-to-subdivide-an-entity-framework-model/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2009/02/10/upcoming-msdn-webcast-quot-geneva-cardspace-quot-for-latin-america/" title="Previous Post: Upcoming MSDN WebCast &quot;Geneva Cardspace&quot; for Latin America">&laquo; Upcoming MSDN WebCast &quot;Geneva Cardspace&quot; for Latin America</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2009/02/18/contract-projections-in-wcf-declarative-services/" title="Next Post: Contract Projections in WCF declarative services">Contract Projections in WCF declarative services &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2009/02/17/issues-to-subdivide-an-entity-framework-model/';
+        var disqus_url = 'http://cibrax.me/blog/2009/02/17/issues-to-subdivide-an-entity-framework-model/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

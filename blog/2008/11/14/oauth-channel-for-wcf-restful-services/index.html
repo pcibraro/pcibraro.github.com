@@ -1,0 +1,479 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>OAuth channel for WCF RESTful services - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="While OpenID and WS-Federation focus on delegating user identity (or a
+collection of identity claims), OAuth was designed to address a
+different and &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2008/11/14/oauth-channel-for-wcf-restful-services">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">OAuth Channel for WCF RESTful Services</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-11-14T00:00:00-03:00" pubdate data-updated="true">Nov 14<span>th</span>, 2008</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>While OpenID and WS-Federation focus on delegating user identity (or a
+collection of identity claims), OAuth was designed to address a
+different and complementary scenario, the delegation of user
+authorization. In few words, OAuth allows a client application to obtain
+user consent (as access tokens) for executing operations over private
+resources on his behalf.</p>
+
+<p>The analogy given by Eran Hammer Lahav in this post &ldquo;<a href="http://www.hueniverse.com/hueniverse/2007/09/explaining-oaut.html">Explaining
+OAuth</a>&rdquo;
+is very close to what the specification tries to address,</p>
+
+<p><em>&ldquo;Many luxury cars today come with a valet key. It is a special key you
+give the parking attendant and unlike your regular key, will not allow
+the car to drive more than a mile or two. Some valet keys will not open
+the trunk, while others will block access to your onboard cell phone
+address book. Regardless of what restrictions the valet key imposes, the
+idea is very clever. You give someone limited access to your car with a
+special key, while using another key to unlock everything else.&rdquo;</em></p>
+
+<p>Now, if we analyze the specification in more detail, we will see that
+the real purpose behind OAuth is to create a network of collaboration 
+between applications. It will not be necessary anymore to keep all our
+stuff just in a single place, we can have for instance our pictures in a
+website, our contacts in another place and a third application making
+use of them, all these applications collaborating together.</p>
+
+<p>If you want to know more about how OAuth works, you should read the
+following posts</p>
+
+<ul>
+<li><a href="http://www.hueniverse.com/hueniverse/2007/10/beginners-guide.html">&ldquo;Begginer&rsquo;s Guide to OAuth &ndash; Part
+I&rdquo;</a></li>
+<li><a href="http://www.hueniverse.com/hueniverse/2007/10/beginners-gui-1.html">&ldquo;Begginer&rsquo;s Guide to OAuth &ndash; Part II &ndash; Protocol
+Workflow&rdquo;</a></li>
+<li><a href="http://www.hueniverse.com/hueniverse/2008/10/beginners-guide.html">&ldquo;Begginer&rsquo;s Guide to OAuth &ndash; Part III &ndash; Security
+Architecture&rdquo;</a></li>
+</ul>
+
+
+<p>When I initially said that OpenID and OAuth complement each other, I
+meant that the user can first authenticated by an OpenID provider, and
+then redirected to the relying party to obtain his consent.
+(Authorization for consuming a private resource).</p>
+
+<p><a href="http://blog.bittercoder.com/">Alex Henderson (Aka Bittercoder)</a> has
+written a pretty good OAuth library in .NET for implementing an OAuth
+consumer and service provider. The library is available
+<a href="http://code.google.com/p/devdefined-tools/wiki/OAuth">here</a> under a MIT
+license (do wherever you want with it), and it is very easy to use. Alex
+has definitively made a very good work.</p>
+
+<p>My WCF channel implementation for OAuth mounts on top of his library and
+it basically transforms a OAuth token into a .NET security principal
+that can be used later within the service implementation. The channel is
+implemented as a RequestInterceptor, one of new features introduced in
+the REST WCF Starter Kit. This interceptor basically captures the
+request at channel level and performs all the validations required by
+OAuth. The following sample illustrates how the interceptors can be
+plugged into an existing service host (service.svc),</p>
+
+<p>&lt;%@ ServiceHost Language=&ldquo;C#&rdquo; Debug=&ldquo;true&rdquo;
+Service=&ldquo;ExampleOAuthChannel.FeedService&rdquo;
+Factory=&ldquo;ExampleOAuthChannel.AppServiceHostFactory&rdquo;%></p>
+
+<p>using System;\
+using System.ServiceModel;\
+using System.ServiceModel.Activation;\
+using Microsoft.ServiceModel.Web;</p>
+
+<p>namespace ExampleOAuthChannel \
+{\
+  class AppServiceHostFactory : ServiceHostFactory\
+  {\
+    protected override ServiceHost CreateServiceHost(Type serviceType,
+Uri[] baseAddresses)\
+    {\
+        WebServiceHost2 result = new WebServiceHost2(serviceType, true,
+baseAddresses);\
+        result.Interceptors.Add(new OAuthChannel.OAuthInterceptor(\
+   OAuthServicesLocator.Provider,
+OAuthServicesLocator.AccessTokenRepository));\
+        return result;\
+    }\
+  }\
+}</p>
+
+<p>OAuthServicesLocator.Provider and
+OAuthServiceLocator.AccessTokenRepository are just part of the OAuth
+implementation.</p>
+
+<p>The interaction (and all the messages interchanged) between the consumer
+and the provider was very well summarized by Alex in this post <a href="http://blog.bittercoder.com/PermaLink,guid,83488336-290d-4c4b-a314-14fe255e5b4e.aspx">&ldquo;OAuth
+for
+beginners&rdquo;</a></p>
+
+<p>The following code illustrates some of the functionality implemented in
+the OAuth interceptor,</p>
+
+<p>Message request = requestContext.RequestMessage;</p>
+
+<p>HttpRequestMessageProperty requestProperty =
+(HttpRequestMessageProperty)request.Properties[HttpRequestMessageProperty.Name];</p>
+
+<p> </p>
+
+<p>OAuthContext context = new
+OAuthContextBuilder().FromUri(requestProperty.Method,
+request.Headers.To);</p>
+
+<p> </p>
+
+<p>try</p>
+
+<p>{</p>
+
+<p>    _provider.AccessProtectedResourceRequest(context);</p>
+
+<p> </p>
+
+<p>    OAuthChannel.Models.AccessToken accessToken =
+_repository.GetToken(context.Token);</p>
+
+<p> </p>
+
+<p>    TokenPrincipal principal = new TokenPrincipal(</p>
+
+<p>        new GenericIdentity(accessToken.UserName, &ldquo;OAuth&rdquo;),</p>
+
+<p>        accessToken.Roles,</p>
+
+<p>        accessToken);</p>
+
+<p> </p>
+
+<p>    InitializeSecurityContext(request, principal);</p>
+
+<p>}</p>
+
+<p>catch (OAuthException authEx)</p>
+
+<p>{</p>
+
+<p>    XElement response = XElement.Load(new StringReader(&ldquo;&lt;?xml
+version=&#34;1.0\&rdquo; encoding=\&ldquo;utf-8\&rdquo;?>&lt;html
+xmlns=\&ldquo;<a href="http://www.w3.org/1999/xhtml\">http://www.w3.org/1999/xhtml\</a>&rdquo; version=\&ldquo;&ndash;//W3C//DTD XHTML
+2.0//EN\&rdquo; xml:lang=\&ldquo;en\&rdquo;
+xmlns:xsi=\&ldquo;<a href="http://www.w3.org/2001/XMLSchema-instance\">http://www.w3.org/2001/XMLSchema-instance\</a>&rdquo;
+xsi:schemaLocation=\&ldquo;<a href="http://www.w3.org/1999/xhtml">http://www.w3.org/1999/xhtml</a>
+<a href="http://www.w3.org/MarkUp/SCHEMA/xhtml2.xsd\">http://www.w3.org/MarkUp/SCHEMA/xhtml2.xsd\</a>&rdquo;>&lt;HEAD>&lt;TITLE>Request
+Error&lt;/TITLE>&lt;/HEAD>&lt;BODY>&lt;DIV id=\&ldquo;content\&rdquo;>&lt;P
+class=\&ldquo;heading1\&rdquo;>&lt;B>&ldquo; +
+HttpUtility.HtmlEncode(authEx.Report.ToString()) +
+&rdquo;&lt;/B>&lt;/P>&lt;/DIV>&lt;/BODY>&lt;/html>&ldquo;));</p>
+
+<p>    Message reply = Message.CreateMessage(MessageVersion.None, null,
+response);</p>
+
+<p>    HttpResponseMessageProperty responseProperty = new
+HttpResponseMessageProperty() { StatusCode = HttpStatusCode.Forbidden,
+StatusDescription = authEx.Report.ToString() };</p>
+
+<p>    responseProperty.Headers[HttpResponseHeader.ContentType] =
+&ldquo;text/html&rdquo;;</p>
+
+<p>    reply.Properties[HttpResponseMessageProperty.Name] =
+responseProperty;</p>
+
+<p>    requestContext.Reply(reply);</p>
+
+<p> </p>
+
+<p>    requestContext = null;</p>
+
+<p>}</p>
+
+<p>It basically validates the OAuth ticket using the library written by
+Alex and initializes a new principal containing the ticket identity. If
+the ticket can not be validated for some reason, it returns a friendly
+exception to the consumer.</p>
+
+<p>UPDATE: Alex has now include the channel as part of the OAuth Library.
+It is available under the following links,</p>
+
+<p><a href="http://devdefined-tools.googlecode.com/svn/trunk/projects/oauth/DevDefined.OAuth.Wcf/">http://devdefined-tools.googlecode.com/svn/trunk/projects/oauth/DevDefined.OAuth.Wcf/</a></p>
+
+<p><a href="http://devdefined-tools.googlecode.com/svn/trunk/projects/oauth/ExampleOAuthChannel/">http://devdefined-tools.googlecode.com/svn/trunk/projects/oauth/ExampleOAuthChannel/</a></p>
+
+<p>Coming next  &ldquo;Using the WCF OAuth channel with an ADO.NET service&rdquo; (The
+complete source code will be available as part of that post)</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-11-14T00:00:00-03:00" pubdate data-updated="true">Nov 14<span>th</span>, 2008</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/oauth/'>OAuth</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2008/11/14/oauth-channel-for-wcf-restful-services/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2008/11/14/oauth-channel-for-wcf-restful-services/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2008/11/06/routing-to-the-right-workflow-service-instance-through-uri-templates-rest-workflows-part-iii/" title="Previous Post: Routing to the right workflow service instance through URI templates (REST workflows part III)">&laquo; Routing to the right workflow service instance through URI templates (REST workflows part III)</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2008/11/14/using-the-wcf-oauth-channel-with-an-ado-net-service/" title="Next Post: Using the WCF OAuth channel with an ADO.NET service">Using the WCF OAuth channel with an ADO.NET service &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2008/11/14/oauth-channel-for-wcf-restful-services/';
+        var disqus_url = 'http://cibrax.me/blog/2008/11/14/oauth-channel-for-wcf-restful-services/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

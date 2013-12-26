@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: OSLO | Pablo Cibraro (Cibrax)]]></title>
+  <link href="http://cibrax.me/blog/categories/oslo/atom.xml" rel="self"/>
+  <link href="http://cibrax.me/"/>
+  <updated>2013-12-26T15:03:47-03:00</updated>
+  <id>http://cibrax.me/</id>
+  <author>
+    <name><![CDATA[Cibrax]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[“MUrl” and “MService”, two new DSLs for REST services]]></title>
+    <link href="http://cibrax.me/blog/2009/03/20/murl-and-mservice-two-new-dsls-for-rest-services/"/>
+    <updated>2009-03-20T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2009/03/20/murl-and-mservice-two-new-dsls-for-rest-services</id>
+    <content type="html"><![CDATA[<p>Doug Purdy and Chris Sells announced today in the mix the availability
+of two new DSLs for RESTful services. MUrl for defining RESTful clients,
+and MService for defining the service implementation.</p>
+
+<p>More information about MUrl can be found in the Doug’s blog,
+<a href="http://www.douglaspurdy.com/2009/03/20/murl-a-dsl-for-restful-clients/">http://www.douglaspurdy.com/2009/03/20/murl-a-dsl-for-restful-clients/</a>
+. An example is also available to download from the Oslo Dev Center,
+<a href="http://msdn.microsoft.com/en-us/oslo/default.aspx">http://msdn.microsoft.com/en-us/oslo/default.aspx</a></p>
+
+<p>MService, on the other hand, is a DSL for defining or creating RESTful
+services. Doug just posted new information about it,
+<a href="http://www.douglaspurdy.com/2009/03/20/mservice-a-dsl-for-restful-services/">http://www.douglaspurdy.com/2009/03/20/mservice-a-dsl-for-restful-services/</a></p>
+
+<p>The mix session where these new technologies were shown will be
+available soon at <a href="http://sessions.visitmix.com/MIX09/T11F">this
+location</a></p>
+
+<p>Enjoy.</p>
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,1977 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="Microsoft has recently released a WS-Federation sample based on the SAML
+implementation for WSE 3.0.\
+This sample adds some new cool features to the &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/page/23">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/06/14/WS-Federation-quickstart-for-WSE-3.0/">WS-Federation Quickstart for WSE 3.0</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-06-14T00:00:00-03:00" pubdate data-updated="true">Jun 14<span>th</span>, 2006</time>
+        
+         | <a href="/blog/2006/06/14/WS-Federation-quickstart-for-WSE-3.0/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Microsoft has recently released a WS-Federation sample based on the SAML
+implementation for WSE 3.0.\
+This sample adds some new cool features to the SAML implementation and
+shows a scenario similar to what I described a couple of months ago in
+this <a href="/cibrax/archive/2006/02/02/437180.aspx" title="post">post</a>.</p>
+
+<p>These are some of the features provided in this sample,</p>
+
+<p>​1. SAML token encryption based on a configuration setting. This setting
+basically allows encrypting the attributes\
+in the token using a secret key shared between the STS and the service.\
+2. SAML authorization assertions. In addition to the common attribute
+assertions, the SAML token now supports authorization assertions, which
+are useful to describe permissions over different resources (For
+example, the owner of this token is allowed to read the financial
+files). The quickstart also provides an WSE authorization assertion to
+enforce some of these permissions in the SAML token.\
+3. Custom SAML token managers. These token managers were specifically
+designed for this sample, but they are a good starting point if you want
+to know more about the different approaches to customize a SAML token
+manager.</p>
+
+<p>Download the sample from this
+<a href="http://www.microsoft.com/downloads/details.aspx?familyid=630ad3a5-05ca-4c24-a50a-9e7007323ec2&amp;displaylang=en" title="location">location</a> </p>
+
+<p>Enjoy it :)</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/05/14/446352/">New Work - New Life</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-05-14T00:00:00-03:00" pubdate data-updated="true">May 14<span>th</span>, 2006</time>
+        
+         | <a href="/blog/2006/05/14/446352/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>A month ago, a person from the Inter-American development bank offered
+me a job as .NET consultant in that bank.</p>
+
+<p>After thinking a while, I decided to accept his offer and travel to
+Washington DC to starting work there in a project to develop some web
+applications and provide consulting in .NET development.</p>
+
+<p>This decision was really hard for me since it implied two important
+things, working abroad in a completely different country and leaving a
+wonderful company, Lagash.</p>
+
+<p>The years I worked in Lagash were awesome, I had to chance to work with
+the Microsoft P&amp;P team in different projects like application blocks,
+application frameworks and quickstarts, which gave me a deep knowledge
+and experience with the .NET platform and I very grateful to the</p>
+
+<p>Lagash guys.</p>
+
+<p>I think it is the best company in Argentina to work in software
+development with Microsoft technologies and you always will find good
+challenges there.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/04/19/443402/">WSE and WCF Interop Sample</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-04-19T00:00:00-03:00" pubdate data-updated="true">Apr 19<span>th</span>, 2006</time>
+        
+         | <a href="/blog/2006/04/19/443402/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Yes, I know, <a href="http://blogs.msdn.com/mfussell/">Mark Fusell</a> has
+already demonstrated the interoperability between WSE and WCF many
+times. This is another example that shows a WSE client consuming a WCF
+service. The client and the service, both use a AnonymousForCertificate
+turn-key assertion.</p>
+
+<p>You can download it from this
+<a href="/images/legacy/WSEAndIndigo.zip" title="location">location</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/04/12/442679/">The &quot;Service Factory&quot; Project Is Out</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-04-12T00:00:00-03:00" pubdate data-updated="true">Apr 12<span>th</span>, 2006</time>
+        
+         | <a href="/blog/2006/04/12/442679/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Are you wondering yourself how to build service oriented applications
+using the best practices in the market ?. In that case, you should
+definitively take a look to this new project <a href="http://www.gotdotnet.com/codegallery/codegallery.aspx?id=6fde9247-53a8-4879-853d-500cd2d97a83" title="Web Service Software Factory">Web Service Software
+Factory</a> 
+from the Microsoft P&amp;P team. It was announced last week by Don Smith and
+Jason Hogg in the Microsoft Canadian Architecture Forum.</p>
+
+<p>\
+As a part of this project, I have been working with Jason in some code
+samples to show different security patterns for WCF (These patterns were
+previously published for WSE 3.0).\
+Other people in the development team are also working with GAT to give
+tooling support and automate common tasks involved in the development of
+SOA applications. (This part is really important since WCF or ASMX does
+not offer good tooling support for the moment).</p>
+
+<p>\
+These are some members of the project who are also blogging,</p>
+
+<ul>
+<li><a href="http://staff.southworks.net/blogs/matiaswoloski/archive/2006/04/06/ServiceBatWorkspace.aspx" title="Matias Woloski">Matias
+Woloski</a></li>
+<li><a href="http://blogs.thinktecture.com/cweyer/archive/2006/04/05/414452.aspx" title="Christian Weyer">Christian
+Weyer</a></li>
+<li><a href="http://blogs.msdn.com/thehoggblog/archive/2006/04/03/567323.aspx" title="Jason Hogg">Jason
+Hogg</a></li>
+<li><a href="http://www.edwardbakker.nl/PermaLink,guid,1c610c51-8d58-411f-a874-f6342c3db22e.aspx" title="Edward Bakker">Edward
+Bakker</a></li>
+<li><a href="http://blogs.msdn.com/donsmith/" title="Don Smith">Don Smith</a></li>
+</ul>
+
+
+<p>I will be posting more about this exciting project soon.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/04/04/441887/">MVP - Connected System Developer</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-04-04T00:00:00-03:00" pubdate data-updated="true">Apr 4<span>th</span>, 2006</time>
+        
+         | <a href="/blog/2006/04/04/441887/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I just received the confirmation email from the MVP Lead Ben Miller.
+Thank you Microsoft :&ndash;). \
+I also would like to give special thanks to <a href="http://www.thedatafarm.com/blog">Julie
+Lerman</a> and <a href="http://blogs.msdn.com/TheHoggBlog">Jason
+Hogg</a>, who have helped me a lot to
+obtain this award.\</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/03/31/441591/">Service Interface Factory</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-03-31T00:00:00-03:00" pubdate data-updated="true">Mar 31<span>st</span>, 2006</time>
+        
+         | <a href="/blog/2006/03/31/441591/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Last week I received some feedback from the web services guru <a href="http://blogs.thinktecture.com/cweyer">Christian
+Weyer</a> (By the way, a cool guy
+too) about my post <a href="/cibrax/archive/2006/02/06/437501.aspx" title="'">&ldquo;Proxy
+Factory&rdquo;</a>, so I decided to
+develop a complete and usable sample to show that concept.</p>
+
+<p>In that post, I described a way to separate the service interface from
+the service implementation doing something similar to what WCF does when
+it creates a channel for a specific interface.</p>
+
+<p>During this post, I will give a brief description about the main parts
+of this sample.</p>
+
+<p>First of all, I defined a service interface or contract for my service.
+I did not use my imagination at all and I decided to call this interface
+&ldquo;IHelloWorld&rdquo;.</p>
+
+<p>public interface IHelloWorld</p>
+
+<p>{</p>
+
+<p>  string HelloWorld(string message);</p>
+
+<p>}</p>
+
+<p>The client application uses that interface and the service factory to
+create a proxy for the service implementation without care about any
+details of this last one.</p>
+
+<p>class Program</p>
+
+<p>{</p>
+
+<p>  static void Main(string[] args)</p>
+
+<p>  {</p>
+
+<p>     //Default implementation</p>
+
+<p>     ServiceFactory&lt;IHelloWorld> factory = new
+ServiceFactory&lt;IHelloWorld>();</p>
+
+<p>     IHelloWorld service = factory.Create();</p>
+
+<p>     Console.WriteLine(service.HelloWorld(&ldquo;John Doe&rdquo;));</p>
+
+<p> </p>
+
+<p>     //Remote implementation</p>
+
+<p>     factory = new
+ServiceFactory&lt;IHelloWorld>(&ldquo;RemoteImplementation&rdquo;);</p>
+
+<p>     service = factory.Create();</p>
+
+<p>     Console.WriteLine(service.HelloWorld(&ldquo;John Doe&rdquo;));</p>
+
+<p>   }</p>
+
+<p>}</p>
+
+<p>The proxy for the service implementation perform the following steps</p>
+
+<ol>
+<li>Looks for the correct service implementation using the provided
+interface</li>
+<li>Creates an instance of the service implementation</li>
+<li>Invokes the right method on the service implementation</li>
+</ol>
+
+
+<p>For this sample, the proxy is quite simple and invokes the real service
+in the current machine, but more complex tasks could be performed, such
+as message interception or remote invocation. (WCF performs both things,
+it uses message interception to create a soap message and remote
+invocation to execute the service implementation in other machine).</p>
+
+<p>public class ServiceProxy : System.Runtime.Remoting.Proxies.RealProxy</p>
+
+<p>{</p>
+
+<p>  private Type type;</p>
+
+<p>  private string configurationName;</p>
+
+<p> </p>
+
+<p>  public ServiceProxy(string configurationName, Type type) : base(type)</p>
+
+<p>  {</p>
+
+<p>    this.type = type;</p>
+
+<p>    this.configurationName = configurationName;</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  public override System.Runtime.Remoting.Messaging.IMessage
+Invoke(System.Runtime.Remoting.Messaging.IMessage imsg)</p>
+
+<p>  {</p>
+
+<p>    Type implementationType = null;</p>
+
+<p>    string type = this.type.FullName;</p>
+
+<p>    foreach (ServiceInterfaceDefinition definition in
+ServiceInterfaceConfiguration.Current.Interfaces)</p>
+
+<p>    {</p>
+
+<p>      if ((this.configurationName == null || this.configurationName ==
+definition.Name) &amp;&amp; type == definition.Type)</p>
+
+<p>      {</p>
+
+<p>        implementationType = definition.ImplementationType;</p>
+
+<p>        break;</p>
+
+<p>      }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    if(implementationType == null)</p>
+
+<p>      throw new Exception(&ldquo;The implementation type can not be null&rdquo;);</p>
+
+<p> </p>
+
+<p>    object implementation =
+Activator.CreateInstance(implementationType);</p>
+
+<p>    ReturnMessage retmsg = null;</p>
+
+<p>    if (imsg is IMethodCallMessage)</p>
+
+<p>    {</p>
+
+<p>      IMethodCallMessage call = imsg as IMethodCallMessage;</p>
+
+<p>      object returnValue =
+implementationType.InvokeMember(call.MethodName,
+System.Reflection.BindingFlags.InvokeMethod,</p>
+
+<p>              null, implementation, call.Args);</p>
+
+<p>      retmsg = new ReturnMessage(returnValue, null, 0, null, call);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    return retmsg;</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p>The configuration for the client application contains two service
+implementations in this case, &ldquo;LocalImplementation&rdquo; for a component in
+the same application and &ldquo;RemoteImplementation&rdquo; for a web service proxy.</p>
+
+<p>&lt;serviceInterfaces></p>
+
+<p>  &lt;interfaces></p>
+
+<p>    &lt;add name=&ldquo;LocalImplementation&rdquo;</p>
+
+<p>        implementationType=&ldquo;ServiceInterfaces.Client.LocalHelloWorld,
+ServiceInterfaces.Client&rdquo;</p>
+
+<p>        type=&ldquo;ServiceInterfaces.IHelloWorld&rdquo;></p>
+
+<p>    &lt;/add></p>
+
+<p>    &lt;add name=&ldquo;RemoteImplementation&rdquo;</p>
+
+<p>         implementationType=&ldquo;ServiceInterfaces.Client.RemoteHelloWorld,
+ServiceInterfaces.Client&rdquo;</p>
+
+<p>         type=&ldquo;ServiceInterfaces.IHelloWorld&rdquo;></p>
+
+<p>    &lt;/add></p>
+
+<p>  &lt;/interfaces></p>
+
+<p>&lt;/serviceInterfaces></p>
+
+<p>The code below shows the service implementation configured as
+&ldquo;LocalImplementation&rdquo;.</p>
+
+<p>class LocalHelloWorld : IHelloWorld</p>
+
+<p>{</p>
+
+<p>  #region IHelloWorld Members</p>
+
+<p>  public string HelloWorld(string message)</p>
+
+<p>  {</p>
+
+<p>    return String.Format(&ldquo;Local Hello World : {0}&rdquo;, message);</p>
+
+<p>  }</p>
+
+<p>  #endregion</p>
+
+<p>}</p>
+
+<p>Download the complete sample from
+<a href="/images/legacy/ServiceFactory.zip" title="here ">here</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/03/29/WS_2D00_Compression-for-WCF/">WS-Compression for WCF</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-03-29T00:00:00-03:00" pubdate data-updated="true">Mar 29<span>th</span>, 2006</time>
+        
+         | <a href="/blog/2006/03/29/WS_2D00_Compression-for-WCF/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I have developed a new WS-Compression implementation for WCF.  This code
+is based on the <a href="http://weblogs.shockbyte.com.ar/rodolfof/archive/2006/02/07/4585.aspx" title="WSE 3.0 implementation">WSE 3.0
+implementation</a> 
+made by my partner <a href="http://weblogs.shockbyte.com.ar/rodolfof" title="Rodolfo Finochieti">Rodolfo
+Finochieti</a>.</p>
+
+<p> </p>
+
+<p>Some features provided by this implementation:</p>
+
+<p> </p>
+
+<ul>
+<li>Message body compression</li>
+<li>Different compression algorithms (GZIP, Deflate)</li>
+<li>Different compression levels</li>
+<li>Support to enable compression by means of configuration or code</li>
+</ul>
+
+
+<p> </p>
+
+<p>You can download it from
+<a href="/images/legacy/WSCompression.zip" title="here">here</a></p>
+
+<p>UPDATED: A new version for the WCF september RC is
+available <a href="/images/legacy/WCFCompression-RC1.zip">here</a></p>
+
+<p>Enjoy :)</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/03/27/441227/">Client-side Token Cache for WCF</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-03-27T00:00:00-03:00" pubdate data-updated="true">Mar 27<span>th</span>, 2006</time>
+        
+         | <a href="/blog/2006/03/27/441227/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>WCF by default maintains a cache for security tokens per channel
+instance (A channel is related to a contract). Therefore, it is not
+possible to reuse the same token for different channel instances.</p>
+
+<p>Consider the following sample, a client application that consumes
+different services using a SAML token.</p>
+
+<p> </p>
+
+<p>IHelloWorldChannel helloWorldService = factory.CreateChannel();</p>
+
+<p>string response = helloWorldService.HelloWorld(&ldquo;John Doe&rdquo;);</p>
+
+<p>Console.WriteLine(response);</p>
+
+<p>helloWorldService = factory.CreateChannel();</p>
+
+<p>response = helloWorldService.HelloWorld(&ldquo;John Doe 2&rdquo;);</p>
+
+<p>Console.WriteLine(response);</p>
+
+<p>factory = new ChannelFactory&lt;IAnotherChannel>(&ldquo;anotherService&rdquo;);</p>
+
+<p>helloWorldService = factory.CreateChannel();</p>
+
+<p>response = helloWorldService.HelloWorld(&ldquo;John Doe 3&rdquo;);</p>
+
+<p>Console.WriteLine(response);</p>
+
+<p> </p>
+
+<p>In this case, I used three different channel instances and therefore a
+different SAML token for each service. (Each channel made an addition
+call to the STS in order to ask for a SAML token).</p>
+
+<p>Fortunately, WCF provides a way to cache tokens outside the scope of a
+channel and reuse them later until they expire. </p>
+
+<p>During the course of this post, I will show the required steps to build
+a client-side token cache to reuse tokens obtained from a STS.  </p>
+
+<p> </p>
+
+<p>First of all, I created a custom ClientCredentials class in order to
+return a custom SecurityTokenManager class. The SecurityTokenManager
+class is a kind of entry point to modify the process involved in the
+creation of a security token.</p>
+
+<p> </p>
+
+<p>/// &lt;summary></p>
+
+<p>/// Custom implementation</p>
+
+<p>/// &lt;/summary></p>
+
+<p>class CustomClientCredentials : ClientCredentials</p>
+
+<p>{</p>
+
+<p>  public CustomClientCredentials()</p>
+
+<p>      : base()</p>
+
+<p>  {</p>
+
+<p>  }</p>
+
+<p>  protected CustomClientCredentials(ClientCredentials other)</p>
+
+<p>     : base(other)</p>
+
+<p>  {</p>
+
+<p>  }</p>
+
+<p>  protected override ClientCredentials CloneCore()</p>
+
+<p>  {</p>
+
+<p>    return new CustomClientCredentials(this);</p>
+
+<p>  }</p>
+
+<p>  /// &lt;summary></p>
+
+<p>  /// Returns a custom security token manager</p>
+
+<p>  /// &lt;/summary></p>
+
+<p>  /// &lt;returns>&lt;/returns></p>
+
+<p>  public override System.IdentityModel.Selectors.SecurityTokenManager
+CreateSecurityTokenManager()</p>
+
+<p>  {</p>
+
+<p>    return new CustomClientCredentialsSecurityTokenManager(this);</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>Secondly, I declared my own SecurityTokenManager.</p>
+
+<p> </p>
+
+<p>class CustomClientCredentialsSecurityTokenManager :
+ClientCredentialsSecurityTokenManager</p>
+
+<p>{</p>
+
+<p>  private static Dictionary&lt;Uri, CustomIssuedSecurityTokenProvider>
+providers = new Dictionary&lt;Uri, CustomIssuedSecurityTokenProvider>();</p>
+
+<p>  public CustomClientCredentialsSecurityTokenManager(ClientCredentials
+credentials)</p>
+
+<p>       : base(credentials)</p>
+
+<p>  {</p>
+
+<p>  }</p>
+
+<p>  /// &lt;summary></p>
+
+<p>  /// Returns a custom token provider when a issued token is required</p>
+
+<p>  /// &lt;/summary></p>
+
+<p>  public override System.IdentityModel.Selectors.SecurityTokenProvider
+CreateSecurityTokenProvider(System.IdentityModel.Selectors.SecurityTokenRequirement
+tokenRequirement)</p>
+
+<p>  {</p>
+
+<p>    if (this.IsIssuedSecurityTokenRequirement(tokenRequirement))</p>
+
+<p>    {</p>
+
+<p>      IssuedSecurityTokenProvider baseProvider =
+(IssuedSecurityTokenProvider)base.CreateSecurityTokenProvider(tokenRequirement);</p>
+
+<p>      CustomIssuedSecurityTokenProvider provider = new
+CustomIssuedSecurityTokenProvider(baseProvider);</p>
+
+<p>      return provider;</p>
+
+<p>    }</p>
+
+<p>    else</p>
+
+<p>    {</p>
+
+<p>      return base.CreateSecurityTokenProvider(tokenRequirement);</p>
+
+<p>    }</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>For this sample, I only want to cache issued tokens (Tokens obtained
+from a STS) and thefore I am using the IsIssuedSecurityTokenRequeriment
+method to determine if the channel is requesting an issued token or
+not. </p>
+
+<p> </p>
+
+<p>Lastly, I created a simple Cache helper and a custom token provider to
+reuse the issued tokens.</p>
+
+<p> </p>
+
+<p>/// &lt;summary></p>
+
+<p>/// Helper class used as cache for security tokens</p>
+
+<p>/// &lt;/summary></p>
+
+<p>class TokenCache</p>
+
+<p>{</p>
+
+<p>   private const int DefaultTimeout = 1000;</p>
+
+<p>   private static Dictionary&lt;Uri, SecurityToken> tokens = new
+Dictionary&lt;Uri, SecurityToken>();</p>
+
+<p>   private static ReaderWriterLock tokenLock = new ReaderWriterLock();</p>
+
+<p>   private TokenCache()</p>
+
+<p>   {</p>
+
+<p>   }</p>
+
+<p>   public static SecurityToken GetToken(Uri endpoint)</p>
+
+<p>   {</p>
+
+<p>     SecurityToken token = null;</p>
+
+<p>     tokenLock.AcquireReaderLock(DefaultTimeout);</p>
+
+<p>     try</p>
+
+<p>     {</p>
+
+<p>       tokens.TryGetValue(endpoint, out token);</p>
+
+<p>       return token;</p>
+
+<p>     }</p>
+
+<p>     finally</p>
+
+<p>     {</p>
+
+<p>       tokenLock.ReleaseReaderLock();</p>
+
+<p>     }</p>
+
+<p>   }</p>
+
+<p>   public static void AddToken(Uri endpoint, SecurityToken token)</p>
+
+<p>   {</p>
+
+<p>     tokenLock.AcquireWriterLock(DefaultTimeout);</p>
+
+<p>     try</p>
+
+<p>     {</p>
+
+<p>       if (tokens.ContainsKey(endpoint))</p>
+
+<p>         tokens.Remove(endpoint);</p>
+
+<p>         tokens.Add(endpoint, token);</p>
+
+<p>     }</p>
+
+<p>     finally</p>
+
+<p>     {</p>
+
+<p>       tokenLock.ReleaseWriterLock();</p>
+
+<p>     }</p>
+
+<p>   }</p>
+
+<p> }</p>
+
+<p> </p>
+
+<p> /// &lt;summary></p>
+
+<p> /// Custom token provider. This class keeps the tokens outside of the
+channel</p>
+
+<p> /// so they can be reused</p>
+
+<p> /// &lt;/summary></p>
+
+<p> class CustomIssuedSecurityTokenProvider : IssuedSecurityTokenProvider</p>
+
+<p> {</p>
+
+<p>   private IssuedSecurityTokenProvider innerProvider;</p>
+
+<p>   /// &lt;summary></p>
+
+<p>   /// Constructor</p>
+
+<p>   /// &lt;/summary></p>
+
+<p>   public CustomIssuedSecurityTokenProvider(IssuedSecurityTokenProvider
+innerProvider)</p>
+
+<p>            : base()</p>
+
+<p>   {</p>
+
+<p>      this.innerProvider = innerProvider;</p>
+
+<p>      this.CacheIssuedTokens = innerProvider.CacheIssuedTokens;</p>
+
+<p>      this.IdentityVerifier = innerProvider.IdentityVerifier;</p>
+
+<p>      this.IssuedTokenRenewalThresholdPercentage =
+innerProvider.IssuedTokenRenewalThresholdPercentage;</p>
+
+<p>      this.IssuerAddress = innerProvider.IssuerAddress;</p>
+
+<p>      this.IssuerBinding = innerProvider.IssuerBinding;</p>
+
+<p>      foreach (IEndpointBehavior behavior in
+innerProvider.IssuerChannelBehaviors)</p>
+
+<p>      {</p>
+
+<p>        this.IssuerChannelBehaviors.Add(behavior);</p>
+
+<p>      }</p>
+
+<p>      this.KeyEntropyMode = innerProvider.KeyEntropyMode;</p>
+
+<p>      this.MaxIssuedTokenCachingTime =
+innerProvider.MaxIssuedTokenCachingTime;</p>
+
+<p>      this.MessageSecurityVersion =
+innerProvider.MessageSecurityVersion;</p>
+
+<p>      this.SecurityAlgorithmSuite =
+innerProvider.SecurityAlgorithmSuite;</p>
+
+<p>      this.SecurityTokenSerializer =
+innerProvider.SecurityTokenSerializer;</p>
+
+<p>      this.TargetAddress = innerProvider.TargetAddress;</p>
+
+<p>      foreach (XmlElement parameter in
+innerProvider.TokenRequestParameters)</p>
+
+<p>      {</p>
+
+<p>        this.TokenRequestParameters.Add(parameter);</p>
+
+<p>      }</p>
+
+<p>      this.innerProvider.Open();</p>
+
+<p>    }                              </p>
+
+<p> </p>
+
+<p>   /// &lt;summary></p>
+
+<p>   /// Gets the security token</p>
+
+<p>   /// &lt;/summary></p>
+
+<p>   /// &lt;param name=&ldquo;timeout&rdquo;>&lt;/param></p>
+
+<p>   /// &lt;returns>&lt;/returns></p>
+
+<p>   protected override System.IdentityModel.Tokens.SecurityToken
+GetTokenCore(TimeSpan timeout)</p>
+
+<p>   {</p>
+
+<p>     SecurityToken securityToken = null;</p>
+
+<p>     if (this.CacheIssuedTokens)</p>
+
+<p>     {</p>
+
+<p>       securityToken =
+TokenCache.GetToken(this.innerProvider.IssuerAddress.Uri);</p>
+
+<p>       if (securityToken == null ||
+!IsServiceTokenTimeValid(securityToken))</p>
+
+<p>       {</p>
+
+<p>         securityToken = innerProvider.GetToken(timeout);</p>
+
+<p>         TokenCache.AddToken(this.innerProvider.IssuerAddress.Uri,
+securityToken);</p>
+
+<p>       }</p>
+
+<p>     }</p>
+
+<p>     else</p>
+
+<p>     {</p>
+
+<p>       securityToken = innerProvider.GetToken(timeout);</p>
+
+<p>     }</p>
+
+<p>     return securityToken;</p>
+
+<p>   }</p>
+
+<p> </p>
+
+<p>   /// &lt;summary></p>
+
+<p>   /// Checks the token expiration.</p>
+
+<p>   /// A more complex algorithm can be used here to determine whether
+the token is valid or not.</p>
+
+<p>   /// &lt;/summary></p>
+
+<p>   private bool IsServiceTokenTimeValid(SecurityToken serviceToken)</p>
+
+<p>   {</p>
+
+<p>     return (DateTime.UtcNow &lt;=
+serviceToken.ValidTo.ToUniversalTime());</p>
+
+<p>   }</p>
+
+<p> </p>
+
+<p>  \~CustomIssuedSecurityTokenProvider()</p>
+
+<p>  {</p>
+
+<p>    this.innerProvider.Close();</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>The provider is quite simple, it caches the tokens by IssuerAddress and
+checks the token expiration before returning it. When the token is
+expired, it gets a new token calling the inner token provider.</p>
+
+<p>In order to register the CustomClientCredentials class, the following
+configuration is required (Using the &ldquo;type&rdquo; attribute)</p>
+
+<p> </p>
+
+<p>&lt;behavior name=&ldquo;ServiceBehavior&rdquo;></p>
+
+<p>  &lt;clientCredentials type=&ldquo;CustomClientCredentials, MyAssembly&rdquo;></p>
+
+<p>  &lt;/clientCredentials></p>
+
+<p>&lt;/behavior></p>
+
+<p> </p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/03/15/440281/">Remote Pair Programming</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-03-15T00:00:00-03:00" pubdate data-updated="true">Mar 15<span>th</span>, 2006</time>
+        
+         | <a href="/blog/2006/03/15/440281/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As most of you know, Pair programming is one of practices included in
+Extreme Programming. It is a programming technique that provides
+line-of-sight-and-hearing learning.</p>
+
+<p>I have only applied this technique a few times in the past,  finding it
+very useful to learn both programming techniques and problem domain.</p>
+
+<p>During the last week I started to work with a very cool guy, Dustin, in
+an interesting project to build some proof-of-concept applications
+for his company. Dustin usually reads my blog and he decided to hire me
+as a kind of consultant or mentor to guide him in the building of those
+applications.</p>
+
+<p>The main problem in this case was the distance, I am currently living in
+Argentina and he is in USA. It was impossible to me to travel to USA
+this month so we decided to use a sort of &#8221;Remote Pair Programming&#8221;
+technique.  </p>
+
+<p>We have a meeting almost every day and he shares his screen with me
+using a tool called TighVNC (A great tool indeed, and it is open source
+too).</p>
+
+<p> <img src="/images/legacy/Pairing.JPG" alt="" /></p>
+
+<p>I can not say how useful it was, we are making a lot of progress and
+learning something new every day. I have just wanted to write this post
+in order to share this experience since I find it very rewarding.\
+\
+If you know about other tools to do something similar, please, post a
+comment.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/03/14/implementing-a-secure-token-service-with-wcf/">Implementing a Secure Token Service With WCF</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-03-14T00:00:00-03:00" pubdate data-updated="true">Mar 14<span>th</span>, 2006</time>
+        
+         | <a href="/blog/2006/03/14/implementing-a-secure-token-service-with-wcf/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I decided to write this post in order to show some necessary steps to
+build a Secure Token Service (STS) with the latest WCF CTP.</p>
+
+<p>There is a lot of messages in the newsgroups from people with problems
+to implement a solution like this, so they may find this article useful.</p>
+
+<p>The image below illustrates a generic architecture for an application
+that uses a brokered authentication with a STS.</p>
+
+<p> </p>
+
+<p> </p>
+
+<p> </p>
+
+<p> <img src="/images/legacy/ArchitectureWCFSTS.gif" alt="" /></p>
+
+<p> </p>
+
+<p>The client application is using a customBinding to secure the
+communication with the STS and a wsFederationHttpBinding to do that with
+the target service. In this case, the wsFederationHttpBinding includes
+the token obtained from the STS in the request message for the service.</p>
+
+<p>As you can see in the image, the following steps are performed in order
+to execute the final service:</p>
+
+<p> </p>
+
+<p>​1. The client application sends a RequestSecurityTokenMessage (RST) to
+the STS according to WS-Trust specification.</p>
+
+<p>​2. The STS receives a RST message, extract some information from it and
+creates a token. After that, it sends back a
+RequestSecurityTokenResponseMessage (RSTR) with the new token.</p>
+
+<p>​3. The client application sends a request message to the service and
+includes the token obtained from the STS.</p>
+
+<p>​4. The service executes the service and returns the response to the
+client application. The token is used to build the security claims for
+the authenticated user before calling the service method.</p>
+
+<p> </p>
+
+<p> </p>
+
+<p><strong>WCF configuration for the client application</strong></p>
+
+<p> </p>
+
+<p> </p>
+
+<p>&lt;system.serviceModel ></p>
+
+<p>        &lt;client></p>
+
+<p>            &lt;!&mdash; Endpoint configuration &mdash;></p>
+
+<p>            &lt;endpoint name=&ldquo;clientendpoint&rdquo;
+address=&ldquo;<a href="http://localhost/WCFSampleService/service.svc">http://localhost/WCFSampleService/service.svc</a>&rdquo;</p>
+
+<p>                binding=&ldquo;wsFederationHttpBinding&rdquo;</p>
+
+<p>                contract=&ldquo;IHelloWorld&rdquo;</p>
+
+<p>                behaviorConfiguration=&ldquo;ServiceBehavior&rdquo;</p>
+
+<p>                bindingConfiguration=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>                &lt;identity></p>
+
+<p>                    &lt;dns value=&ldquo;WCFQuickstartServer&rdquo;/></p>
+
+<p>                &lt;/identity></p>
+
+<p>            &lt;/endpoint></p>
+
+<p>        &lt;/client></p>
+
+<p> </p>
+
+<p>        &lt;bindings></p>
+
+<p> </p>
+
+<p>            &lt;!&mdash; Binding used to secure the communication with the STS
+&mdash;></p>
+
+<p>            &lt;customBinding></p>
+
+<p>                &lt;binding name=&ldquo;UsernameBinding&rdquo;></p>
+
+<p>                    &lt;security
+authenticationMode=&ldquo;UserNameForCertificate&rdquo;</p>
+
+<p>                            requireSecurityContextCancellation =&ldquo;false&rdquo;</p>
+
+<p>                            requireSignatureConfirmation=&ldquo;false&rdquo;</p>
+
+<p>                            messageProtectionOrder
+=&ldquo;SignBeforeEncryptAndEncryptSignature&rdquo;</p>
+
+<p>                            requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>                    &lt;/security></p>
+
+<p>                    &lt;httpTransport/></p>
+
+<p>                &lt;/binding></p>
+
+<p>            &lt;/customBinding></p>
+
+<p> </p>
+
+<p>            &lt;!&mdash; Binding used to secure the communication with the
+service &mdash;></p>
+
+<p>            &lt;wsFederationHttpBinding></p>
+
+<p>                &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>                    &lt;security mode=&ldquo;Message&rdquo;></p>
+
+<p>                        &lt;message
+issuedTokenType=&ldquo;<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>&rdquo;
+negotiateServiceCredential=&ldquo;false&rdquo;></p>
+
+<p>                            &lt;!&mdash; Uncomment this section to ask for
+specific claims to the STS</p>
+
+<p>                            &lt;claims></p>
+
+<p>                                &lt;add claimType 
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress">http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress</a>&rdquo;/></p>
+
+<p>                                &lt;add claimType 
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName">http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName</a>&rdquo;/></p>
+
+<p>                                &lt;add claimType 
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname">http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname</a>&rdquo;/></p>
+
+<p>                            &lt;/claims></p>
+
+<p>                            &mdash;></p>
+
+<p> </p>
+
+<p>                            &lt;!&mdash; Information related to the Secure
+token service &mdash;></p>
+
+<p>                            &lt;issuer
+address=&ldquo;<a href="http://localhost/WCFSecurityTokenService/service.svc">http://localhost/WCFSecurityTokenService/service.svc</a>&rdquo;
+bindingConfiguration=&ldquo;UsernameBinding&rdquo;</p>
+
+<p>                                binding=&ldquo;customBinding&rdquo;></p>
+
+<p>                                &lt;identity></p>
+
+<p>                                    &lt;dns value=&ldquo;WCFQuickstartServer&rdquo;/></p>
+
+<p>                                &lt;/identity></p>
+
+<p>                            &lt;/issuer></p>
+
+<p>                        &lt;/message></p>
+
+<p>                    &lt;/security></p>
+
+<p>                &lt;/binding></p>
+
+<p>            &lt;/wsFederationHttpBinding></p>
+
+<p>        &lt;/bindings></p>
+
+<p>        &lt;behaviors></p>
+
+<p>            &lt;!&mdash; Credentials configuration &mdash;></p>
+
+<p>            &lt;behavior name=&ldquo;ServiceBehavior&rdquo;></p>
+
+<p>                &lt;clientCredentials></p>
+
+<p>                    &lt;serviceCertificate></p>
+
+<p>                        &lt;defaultCertificate
+findValue=&ldquo;CN=WCFQuickstartServer&rdquo; storeLocation=&ldquo;LocalMachine&rdquo;
+storeName=&ldquo;My&rdquo; x509FindType=&ldquo;FindBySubjectDistinguishedName&rdquo;/></p>
+
+<p>                        &lt;authentication revocationMode=&ldquo;NoCheck&rdquo;
+certificateValidationMode=&ldquo;None&rdquo;>&lt;/authentication></p>
+
+<p>                    &lt;/serviceCertificate></p>
+
+<p>                &lt;/clientCredentials></p>
+
+<p>            &lt;/behavior></p>
+
+<p>        &lt;/behaviors></p>
+
+<p> &lt;/system.serviceModel></p>
+
+<p> </p>
+
+<p> </p>
+
+<hr />
+
+<p>Some notes about the configuration above:</p>
+
+<p> </p>
+
+<p>​1. The communication between the client and the STS is secured by a
+UsernameForCertificate binding. That is, the STS expects a UsernameToken
+as client token (Token used to authenticate the client)  and a
+X509Certificate as service token (Token used to encrypt and sign the
+message).</p>
+
+<p>​2. The &ldquo;issueTokenType&rdquo; attribute in the &ldquo;message&rdquo; element specifies
+the token type expected by the Service. The client application will
+include that value in the RST message and therefore the STS will know
+what kind of token it must create. If the STS does not support that kind
+of token, then it will return a fault message. For this sample, the
+client application is asking for a SAML token.</p>
+
+<p>​3. The &ldquo;negotiateServiceCredential&rdquo; attribute in the &ldquo;message&rdquo;
+element specifies if the client must interchange additional messages
+with the STS in order to negotiate the service certificate. I will give
+more information about this flag later in the next paragraphs.</p>
+
+<p>​4. The &ldquo;address&rdquo; attribute in the &ldquo;issuer&rdquo; element specifies the
+address of the STS. WCF also includes a default implementation of a
+InfoCard STS. In order to use that STS, you must configure the address
+<a href="http://schemas.microsoft.com/ws/2005/05/identity/issuer/self">http://schemas.microsoft.com/ws/2005/05/identity/issuer/self</a>.</p>
+
+<p>​5. The claims element is only valid for SAML tokens. It specifies what
+claims are expected in the token.</p>
+
+<p> </p>
+
+<p> </p>
+
+<p><strong>WCF configuration for the STS</strong></p>
+
+<p> </p>
+
+<p> </p>
+
+<p>&lt;system.serviceModel></p>
+
+<p>        &lt;services></p>
+
+<p>            &lt;service behaviorConfiguration=&ldquo;ServiceBehavior&rdquo;
+name=&ldquo;MySecureTokenService&rdquo;></p>
+
+<p>                &lt;endpoint binding=&ldquo;customBinding&rdquo; address=&ldquo;&rdquo;
+bindingConfiguration=&ldquo;ServiceBinding&rdquo;
+contract=&ldquo;IMySecureTokenService&rdquo;>&lt;/endpoint></p>
+
+<p>            &lt;/service></p>
+
+<p>        &lt;/services></p>
+
+<p>        &lt;bindings></p>
+
+<p>            &lt;customBinding></p>
+
+<p>                &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>                    &lt;security
+authenticationMode=&ldquo;UserNameForCertificate&rdquo;</p>
+
+<p>                            requireSecurityContextCancellation =&ldquo;false&rdquo;</p>
+
+<p>                            requireSignatureConfirmation=&ldquo;false&rdquo;</p>
+
+<p>                            messageProtectionOrder
+=&ldquo;SignBeforeEncryptAndEncryptSignature&rdquo;</p>
+
+<p>                            requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>                    &lt;/security></p>
+
+<p>                    &lt;httpTransport/></p>
+
+<p>                &lt;/binding></p>
+
+<p>            &lt;/customBinding></p>
+
+<p>        &lt;/bindings></p>
+
+<p>        &lt;behaviors></p>
+
+<p>            &lt;behavior name=&ldquo;ServiceBehavior&rdquo;
+returnUnknownExceptionsAsFaults=&ldquo;false&rdquo;></p>
+
+<p>                &lt;serviceCredentials></p>
+
+<p>                    &lt;serviceCertificate
+findValue=&ldquo;CN=WCFQuickstartServer&rdquo; storeLocation=&ldquo;LocalMachine&rdquo;
+storeName=&ldquo;My&rdquo; x509FindType=&ldquo;FindBySubjectDistinguishedName&rdquo;/></p>
+
+<p>                    &lt;/serviceCredentials></p>
+
+<p>            &lt;/behavior></p>
+
+<p>        &lt;/behaviors></p>
+
+<p> &lt;/system.serviceModel></p>
+
+<p> </p>
+
+<p> </p>
+
+<p>In this case, the STS implementation is in the class
+&ldquo;MySecureTokenService&rdquo; and it exposes the contract
+&ldquo;IMySecureTokenService&rdquo;.</p>
+
+<p>The binding configuration is similar to the configuration in the client.</p>
+
+<p> </p>
+
+<p> </p>
+
+<p><strong>WCF configuration for the Service</strong></p>
+
+<p> </p>
+
+<p> </p>
+
+<hr />
+
+<p>&lt;system.serviceModel></p>
+
+<p>        &lt;services></p>
+
+<p>            &lt;service</p>
+
+<p>                behaviorConfiguration=&ldquo;ServiceBehavior&rdquo;</p>
+
+<p>                name=&ldquo;SampleService.HelloWorldService&rdquo;></p>
+
+<p>                &lt;endpoint binding=&ldquo;wsFederationHttpBinding&rdquo;</p>
+
+<p>                    address=&ldquo;&rdquo;</p>
+
+<p>                    bindingConfiguration=&ldquo;ServiceBinding&rdquo;</p>
+
+<p>                    contract=&ldquo;SampleService.IHelloWorld&rdquo;/></p>
+
+<p>            &lt;/service></p>
+
+<p>        &lt;/services></p>
+
+<p>        &lt;bindings></p>
+
+<p>            &lt;wsFederationHttpBinding></p>
+
+<p>                &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>                    &lt;security mode=&ldquo;Message&rdquo;></p>
+
+<p>                        &lt;message
+issuedTokenType=&ldquo;<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>&rdquo;
+negotiateServiceCredential=&ldquo;false&rdquo;></p>
+
+<p>                            &lt;!&mdash;&lt;claims></p>
+
+<p>                                &lt;add
+claimType=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress">http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress</a>&rdquo;/></p>
+
+<p>                                &lt;add
+claimType=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName">http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName</a>&rdquo;/></p>
+
+<p>                                &lt;add
+claimType=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname">http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname</a>&rdquo;/></p>
+
+<p>                            &lt;/claims>&mdash;></p>
+
+<p>                            &lt;issuer
+address=&ldquo;<a href="http://localhost/SamlSecurityTokenService/SamlTokenIssuer.ashx">http://localhost/SamlSecurityTokenService/SamlTokenIssuer.ashx</a>&rdquo;
+bindingConfiguration=&ldquo;UsernameBinding&rdquo; binding=&ldquo;customBinding&rdquo;></p>
+
+<p>                                &lt;identity></p>
+
+<p>                                    &lt;dns value=&ldquo;WCFQuickstartServer&rdquo;/></p>
+
+<p>                                &lt;/identity></p>
+
+<p>                            &lt;/issuer></p>
+
+<p>                        &lt;/message></p>
+
+<p>                    &lt;/security></p>
+
+<p>                &lt;/binding></p>
+
+<p>            &lt;/wsFederationHttpBinding></p>
+
+<p>        &lt;/bindings></p>
+
+<p>        &lt;behaviors></p>
+
+<p>            &lt;behavior name=&ldquo;ServiceBehavior&rdquo;
+returnUnknownExceptionsAsFaults=&ldquo;false&rdquo;></p>
+
+<p>                &lt;serviceCredentials></p>
+
+<p>                    &lt;serviceCertificate
+findValue=&ldquo;CN=WCFQuickstartServer&rdquo; storeLocation=&ldquo;LocalMachine&rdquo;
+storeName=&ldquo;My&rdquo; x509FindType=&ldquo;FindBySubjectDistinguishedName&rdquo;/></p>
+
+<p>                &lt;/serviceCredentials></p>
+
+<p> </p>
+
+<p>            &lt;/behavior></p>
+
+<p>        &lt;/behaviors></p>
+
+<p> &lt;/system.serviceModel></p>
+
+<p> </p>
+
+<p> </p>
+
+<p>Again, the configuration of the wsFederationHttpBinding is identical to
+the configuration in the client application.</p>
+
+<p> </p>
+
+<p> </p>
+
+<p><strong>STS implementation</strong></p>
+
+<p> </p>
+
+<p> </p>
+
+<hr />
+
+<p>The contract for the STS is quite simple and looks as follows:</p>
+
+<p> </p>
+
+<p> </p>
+
+<p>[ServiceContract]</p>
+
+<p>public interface IMySecurityTokenService</p>
+
+<p>{</p>
+
+<p>    [OperationContract(Action =
+&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue">http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue</a>&rdquo;,</p>
+
+<p>                      ReplyAction =
+&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/02/trust/RSTR/Issue">http://schemas.xmlsoap.org/ws/2005/02/trust/RSTR/Issue</a>&rdquo;)]</p>
+
+<p>        Message IssueToken(Message rstMessage);</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p> </p>
+
+<p>It exposes one method &ldquo;IssueToken&rdquo; for the action
+&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue">http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue</a>&#8220; that is part of
+the WS-Trust specification.</p>
+
+<p> </p>
+
+<p> </p>
+
+<p>public class MySecureTokenService : IMySecurityTokenService</p>
+
+<p>{</p>
+
+<p>        public MySecureTokenService()</p>
+
+<p>        {</p>
+
+<p>        }</p>
+
+<p> </p>
+
+<p>        public Message IssueToken(Message rstMessage)</p>
+
+<p>        {</p>
+
+<p>            RequestSecurityToken rst =
+RequestSecurityToken.CreateFrom(rstMessage.GetReaderAtBodyContents());</p>
+
+<p> </p>
+
+<p>            SecurityToken issuedToken = null;</p>
+
+<p> </p>
+
+<p>            //Code to create the token goes here &hellip;&hellip;</p>
+
+<p> </p>
+
+<p>            // setup RSTR</p>
+
+<p>            RequestSecurityTokenResponse rstr = new
+RequestSecurityTokenResponse();</p>
+
+<p> </p>
+
+<p>            //attach security token to RSTR</p>
+
+<p>            rstr.RequestedSecurityToken = issuedToken;</p>
+
+<p>            rstr.TokenType = rst.TokenType;</p>
+
+<p> </p>
+
+<p>            // send RSTR</p>
+
+<p>            rstr.MakeReadOnly();</p>
+
+<p>            Message rstrMessage =
+Message.CreateMessage(rstMessage.Version,
+&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/02/trust/RSTR/Issue">http://schemas.xmlsoap.org/ws/2005/02/trust/RSTR/Issue</a>&rdquo;, rstr);</p>
+
+<p>            rstrMessage.Headers.RelatesTo =
+rstMessage.Headers.MessageId;</p>
+
+<p> </p>
+
+<p>            return rstrMessage;</p>
+
+<p>        }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p> </p>
+
+<p>The STS implementation receives a generic message containing the RST and
+creates a token using that information.\
+At the end, it returns a message containing the RSTR with the issued
+token. For this sample, I have omitted the code to build the token since
+you can create any token there (UsernameToken, SamlSecurityToken,
+etc)  depending on the value of the property &ldquo;rst.TokenType&rdquo;.</p>
+
+<p> </p>
+
+<p> </p>
+
+<p><strong>Avoiding the service credential negotiation</strong></p>
+
+<p> </p>
+
+<hr />
+
+<p>WCF provides a new feature to negotiate the service credentials for a
+service.</p>
+
+<p>When this feature is turned on, the client does not need to manually
+configure or specify the service credentials for the service. As a
+result, the client application interchanges an additional message with
+the service using a a protocol called SP-Nego.</p>
+
+<p>There is not any documentation or information around for that protocol,
+so it could be a problem if want to host your service in different
+platform like WSE. That is not a problem in WCF because the security
+bindings know how to interpret this message and create a response
+according to its content.</p>
+
+<p> </p>
+
+<p>There are two ways to disable this feature in WCF:</p>
+
+<p> </p>
+
+<p>1. Secure the communication with a customBinding since it does
+not provide this feature.</p>
+
+<p>​2. Turn off the attribute &ldquo;negotiateServiceCredential&rdquo; in the &ldquo;message&rdquo;
+element for the bindings wsFederationHttpBinding or wsHttpBinding.</p>
+
+<p> </p>
+
+<p>UPDATE: The STS implementation code is available in this post
+<a href="http://weblogs.asp.net/cibrax/archive/2006/09/08/SAML-_2D00_-STS-implementation-for-WCF.aspx">http://weblogs.asp.net/cibrax/archive/2006/09/08/SAML-_2D00_-STS-implementation-for-WCF.aspx</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/24/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/blog/page/22/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

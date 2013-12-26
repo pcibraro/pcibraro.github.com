@@ -1,0 +1,435 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Using Windows Azure Regions efficiently - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="Moving your application to the cloud might not be easy as it sounds. The
+typical sample we always see in documentation or demos about an ASP.NET &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2011/10/26/using-windows-azure-regions-efficiently">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Using Windows Azure Regions Efficiently</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-10-26T00:00:00-03:00" pubdate data-updated="true">Oct 26<span>th</span>, 2011</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Moving your application to the cloud might not be easy as it sounds. The
+typical sample we always see in documentation or demos about an ASP.NET
+application created from the Visual Studio template and deploy it in
+Azure as a package is definitely very far from reality. There are
+multiple factors that can affect the response time and availability of
+your applications in the cloud but you can not easily see until you
+embark on a real project. Application distribution and deployment is one
+of those factors, and the one we are going to discuss in this post.</p>
+
+<p>Windows Azure uses the idea of regions to manage the physical
+distribution of your applications and data. A region in a nutshell
+represents a Microsoft data center where you can deploy your application
+or part of it. Nowadays, you can find multiple regions spread across the
+globe in places such as North America, Europe and Asia.</p>
+
+<p>There is another abstraction layer on top of regions called &ldquo;Affinity
+Groups&rdquo;, which simply tells the Fabric controller to do its best to
+ensure groups of related services are deployed in close proximity
+whenever possible to ensure optimization for inter-app communication.
+For example, in a typical web application with a database,  you will
+want to deploy the web application as close as possible to the database
+server. </p>
+
+<p>Finally, another important concept you need to understand in this
+deployment model is the idea of “hosted service”. A hosted service
+basically represents an unit of deployment associated to a public DNS in
+the cloud. You deploy your applications in a hosted service, which is
+also tied to a region or affinity group. What Azure gives you is a
+public address for reaching that hosted service in the cloud, which is
+“[you app name].cloudapp.net” for applications hosted in the production
+environment and an auto generated guid for applications hosted in the
+staging environment. You can also think in a hosted service as a load
+balancer that forwards requests from that public address to one of the
+instances or VMs associated to it.</p>
+
+<p>Let’s discuss the aspects you need to consider for selecting the right
+regions for deploying your application.</p>
+
+<ul>
+<li>Network latency: reducing the network latency is very important as
+it will impact directly on the response time for your applications.
+You will want to have your users as close as possible physically
+from your applications and data. For example, if you have some
+potential users in the US and Europe, you will want to deploy two
+exact replicas from your application and data in the US and Europe
+data centers. As you might guess, this is not as easy as it sounds
+and there are a lot of challenges you need to address, how you can
+effectively redirect the users to the right region, or how you can
+synchronize your data across regions are typical questions or
+concerns you have to tackle first.</li>
+<li>Availability: you will want to have your applications available all
+the time. Many things can happen, but you need to understand that a
+region or data center might become offline and your application
+should be prepared to handle that scenario. Your applications and
+data should be replicated across multiple regions to not be affected
+when things like this occur.   </li>
+</ul>
+
+
+<p>Microsoft already offers a set of tools or technologies you can use to
+address these two aspects, so let’s discuss some of them in detail in
+the next paragraphs.</p>
+
+<h2>Windows Azure Traffic Manager</h2>
+
+<p>While this technology is still a CTP and not available for all public in
+general, it will provide several methods for distributing internet
+traffic among two or more hosted services in different Windows Azure
+datacenters. It is in essence a distributed DNS service that knows which
+Windows Azure Services are sitting behind the traffic manager URL and
+distributes requests based on different policies  or modes you can
+configure. It will initially support three modes, “Failover”,
+“Performance” and “Round-Robin”.</p>
+
+<p>In the “Failover” mode,  all the traffic is redirected to a single
+hosted service, unless it fails. If the redirection fails because the
+hosted service is not longer available,  it then directs the traffic to
+the hosted service configured as failover. For example, you can
+configure the South Central US region as a backup for the North Central
+US region and vice versa. If any of those regions go offline, the other
+one will take its place.</p>
+
+<p>In the “Performance” mode, all traffic is mapped to the hosted service
+“closest” to the client requesting it.  For example, this will direct
+users from the US to one of the US datacenters and European users will
+probably end up in one of the European datacenters.</p>
+
+<p>Finally, in the “Round-robin” mode, the traffic is distributed in a
+round robin fashion across several hosted services configured in the
+policy.</p>
+
+<p>As you can see, this tool only tackles the two aspects mentioned before
+from the point of view of traffic redirection. However, you also need to
+make sure the data is also consistently available in all the regions,
+and that’s something this tool won’t solve. For example, if the users
+are redirected from North US to Central US, you need to make sure the
+data they get access look the same.</p>
+
+<h2>Content Delivery Network (CDN)</h2>
+
+<p>You can imagine the Windows Azure Content Delivery Network as a huge
+http cache spread across the globe for content such as images, files,
+scripts, or static html to name a few. You can either configure CDN for
+a blob storage account or an http endpoint in your application (and
+endpoint with an url ending in “cdn”, for example xxx.cloudapp.net/cdn).
+All that content will be cached in the nodes that are part of the
+network using standard Http caching. The CDN will serve later the cached
+copy closest to the user requesting it, improving in this way the
+response time.</p>
+
+<p>There are today more than 18 locations or nodes globally (United States,
+Europe, Asia, Australia and South America) and this number keeps
+growing.</p>
+
+<h2>SQL Azure Data Sync</h2>
+
+<p>While the Azure Table Service already provides some built-in support for
+crash recovery based on the idea of partitions that are replicated
+across different nodes (in different sub regions, for example North US
+and Central US), a SQL Azure database is not prepared for that
+scenario.  If you also use something like the Traffic Manager to
+redirect users to the closest data center, you probably would want to
+have all the databases in the different regions in sync between them
+making all this process transparent to the user.</p>
+
+<p>If you want to support that scenario, the SQL Azure Data Sync is the
+tool that will help you in this matter. In a nutshell, SQL Azure Data
+Sync is a cloud-based data synchronization service built on the
+Microsoft Sync Framework technologies. It provides bi-directional data
+synchronization and data management capabilities allowing data to be
+easily shared across SQL Azure databases within multiple data centers.</p>
+
+<p>There are a few things you will have to configure in this tool</p>
+
+<ul>
+<li>The databases you want to keep in sync, and also the tables and
+columns in those databases</li>
+<li>The schedule or frequency for doing the synchronization.</li>
+<li>How you want to resolve any conflict that might occur during the
+synchronization.</li>
+</ul>
+
+
+<p>As you can see, the combination of this tool with the traffic manager
+will help you to keep applications and data in sync between different
+region for the most common scenarios.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-10-26T00:00:00-03:00" pubdate data-updated="true">Oct 26<span>th</span>, 2011</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2011/10/26/using-windows-azure-regions-efficiently/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2011/10/26/using-windows-azure-regions-efficiently/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2011/10/05/custom-domains-for-azure-hosted-services/" title="Previous Post: Custom domains for Azure Hosted Services">&laquo; Custom domains for Azure Hosted Services</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2011/11/03/initial-thoughts-on-the-windows-azure-accelerator-for-web-roles/" title="Next Post: Initial thoughts on the Windows Azure Accelerator for Web Roles">Initial thoughts on the Windows Azure Accelerator for Web Roles &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2011/10/26/using-windows-azure-regions-efficiently/';
+        var disqus_url = 'http://cibrax.me/blog/2011/10/26/using-windows-azure-regions-efficiently/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

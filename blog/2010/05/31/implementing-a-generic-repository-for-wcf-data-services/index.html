@@ -1,0 +1,615 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Implementing a generic repository for WCF data services - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="The repository implementation I am going to discuss here is not exactly
+what someone would call repository in terms of DDD, but it is an
+abstraction &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2010/05/31/implementing-a-generic-repository-for-wcf-data-services">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Implementing a Generic Repository for WCF Data Services</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-05-31T00:00:00-03:00" pubdate data-updated="true">May 31<span>st</span>, 2010</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>The repository implementation I am going to discuss here is not exactly
+what someone would call repository in terms of DDD, but it is an
+abstraction layer that becomes handy at the moment of unit testing the
+code around this repository. In other words, you can easily create a
+mock to replace the real repository implementation.</p>
+
+<p>The WCF Data Services update for .NET 3.5 introduced a nice feature to
+support two way data bindings, which is very helpful for developing WPF
+or Silverlight based application but also for implementing the
+repository I am going to talk about. As part of this feature, the WCF
+Data Services Client library introduced a new collection
+DataServiceCollection&lt;T> that implements INotifyPropertyChanged to
+notify the data context (DataServiceContext) about any change in the
+association links. This means that it is not longer necessary to
+manually set or remove the links in the data context when an item is
+added or removed from a collection.</p>
+
+<p>Before having this new collection, you basically used the following code
+to add a new item to a collection.</p>
+
+<p>Order order = new Order \
+{ \
+  Name = &ldquo;Foo&rdquo; \
+};</p>
+
+<p>OrderItem item = new OrderItem \
+{ \
+  Name = &ldquo;bar&rdquo;, \
+  UnitPrice = 10, \
+  Qty = 1 \
+};</p>
+
+<p>var context = new OrderContext(); \
+context.AddToOrders(order); \
+context.AddToOrderItems(item);</p>
+
+<p>context.SetLink(item, &ldquo;Order&rdquo;, order);</p>
+
+<p>context.SaveChanges();</p>
+
+<p>Now, thanks to this new collection, everything is much simpler and
+similar to what you have in other ORMs like Entity Framework or L2S.</p>
+
+<p>Order order = new Order \
+{ \
+  Name = &ldquo;Foo&rdquo; \
+};</p>
+
+<p>OrderItem item = new OrderItem \
+{ \
+  Name = &ldquo;bar&rdquo;, \
+  UnitPrice = 10, \
+  Qty = 1 \
+};</p>
+
+<p>order.Items.Add(item);</p>
+
+<p>var context = new OrderContext(); \
+context.AddToOrders(order);</p>
+
+<p>context.SaveChanges();</p>
+
+<p>In order to use this new feature, you first need to enable V2 in the
+data service, and then use some specific arguments in the datasvcutil
+tool (You can find more information about this new feature and how to
+use it in this
+<a href="http://blogs.msdn.com/b/astoriateam/archive/2009/09/01/introduction-to-data-binding-in-ctp2.aspx">post</a>).</p>
+
+<p>DataSvcUtil
+/uri:&ldquo;<a href="http://localhost:3655/MyDataService.svc/">http://localhost:3655/MyDataService.svc/</a>&rdquo;
+/out:Reference.cs /dataservicecollection /version:2.0</p>
+
+<p>Once you use those two arguments, the generated proxy classes will use
+DataServiceCollection&lt;T> rather than a simple ObjectCollection&lt;T>,
+which was the default collection in V1.</p>
+
+<p>There are some aspects that you need to know to use this feature
+correctly.</p>
+
+<p>​1. All the entities retrieved directly from the data context with a
+query track the changes and report those to the data context
+automatically.</p>
+
+<p>​2. A entity created with “new” does not track any change in the
+properties or associations. In order to enable change tracking in this
+entity, you need to do the following trick.</p>
+
+<p>public Order CreateOrder() \
+{ \
+  var collection = new DataServiceCollection&lt;Order>(this.context); \
+  var order = new Order();</p>
+
+<p>  collection.Add(order);</p>
+
+<p>  return order; \
+}</p>
+
+<p>You basically need to create a collection, and add the entity to that
+collection with the “Add” method to enable change tracking on that
+entity.</p>
+
+<p>​3. If you need to attach an existing entity (For example, if you
+created the entity with the “new” operator rather than retrieving it
+from the data context with a query) to a data context for tracking
+changes, you can use the “Load” method in the DataServiceCollection.</p>
+
+<p>var order = new Order \
+{ \
+  Id = 1 \
+};</p>
+
+<p>var collection = new DataServiceCollection&lt;Order>(this.context); \
+collection.Load(order);</p>
+
+<p>In this case, the order with Id = 1 must exist on the data source
+exposed by the Data service. Otherwise, you will get an error because
+the entity did not exist.</p>
+
+<p>These cool extensions methods discussed by Stuart Leeks in this
+<a href="http://blogs.msdn.com/b/stuartleeks/archive/2008/09/15/dataservicequery-t-expand.aspx">post</a>
+to replace all the magic strings in the “Expand” operation with
+Expression Trees represent another feature I am going to use to
+implement this generic repository.</p>
+
+<p>Thanks to these extension methods, you could replace the following query
+with magic strings by a piece of code that only uses expressions.</p>
+
+<p>Magic strings,</p>
+
+<p>var customers = dataContext.Customers \
+.Expand(&ldquo;Orders&rdquo;) \
+        .Expand(&ldquo;Orders/Items&rdquo;)</p>
+
+<p>Expressions,</p>
+
+<p>var customers = dataContext.Customers \
+.Expand(c => c.Orders.SubExpand(o => o.Items))</p>
+
+<p>That query basically returns all the customers with their orders and
+order items.</p>
+
+<p>Ok, now that we have the automatic change tracking support and the
+expression support for explicitly loading entity associations, we are
+ready to create the repository.</p>
+
+<p>The interface for this repository looks like this,</p>
+
+<p><del> {.code}
+public interface IRepository
+{
+  T Create<T>() where T : new();
+  void Update<T>(T entity);
+  void Delete<T>(T entity);
+  IQueryable<T> RetrieveAll<T>(params Expression&lt;Func&lt;T, object>>[] eagerProperties);
+  IQueryable<T> Retrieve<T>(Expression&lt;Func&lt;T, bool>> predicate,
+</del></p>
+
+<p><del> {.code}
+params Expression&lt;Func&lt;T, object>>[] eagerProperties);
+  void Attach<T>(T entity);
+  void SaveChanges();
+}
+</del></p>
+
+<p><a href="http://11011.net/software/vspaste"></a></p>
+
+<p>The Retrieve and RetrieveAll methods are used to execute queries against
+the data service context. While both methods receive an array of
+expressions to load associations explicitly, only the Retrieve method
+receives a predicate representing the “where” clause.</p>
+
+<p>The following code represents the final implementation of this
+repository.</p>
+
+<p>~~~~ {.code}
+public class DataServiceRepository: IRepository
+{
+  ResourceRepositoryContext context;</p>
+
+<p>  public DataServiceRepository()</p>
+
+<pre><code>  : this (new DataServiceContext())
+</code></pre>
+
+<p>  {
+  }</p>
+
+<p>  public DataServiceRepository(DataServiceContext context)
+  {</p>
+
+<pre><code>        this.context = context;
+</code></pre>
+
+<p>  }</p>
+
+<p>  private static string ResolveEntitySet(Type type)
+  {</p>
+
+<pre><code>var entitySetAttribute = (EntitySetAttribute)type
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {.code}
+.GetCustomAttributes(typeof(EntitySetAttribute), true).FirstOrDefault();</p>
+
+<p>   if (entitySetAttribute != null)</p>
+
+<pre><code>  return entitySetAttribute.EntitySet;
+</code></pre>
+
+<p>   return null;
+  }</p>
+
+<p>  public T Create<T>() where T : new()
+  {</p>
+
+<pre><code>var collection = new DataServiceCollection&lt;T&gt;(this.context);
+var entity = new T();
+
+collection.Add(entity);
+
+return entity;
+</code></pre>
+
+<p>  }</p>
+
+<p>  public void Update<T>(T entity)
+  {</p>
+
+<pre><code>this.context.UpdateObject(entity);
+</code></pre>
+
+<p>  }</p>
+
+<p>  public void Delete<T>(T entity)
+  {</p>
+
+<pre><code>this.context.DeleteObject(entity);
+</code></pre>
+
+<p>  }</p>
+
+<p>  public void Attach<T>(T entity)
+  {</p>
+
+<pre><code>var collection = new DataServiceCollection&lt;T&gt;(this.context);
+collection.Load(entity);
+</code></pre>
+
+<p>  }</p>
+
+<p>  public IQueryable<T> Retrieve<T>(Expression&lt;Func&lt;T, bool>> predicate,
+~~~~</p>
+
+<p>~~~~ {.code}
+  params Expression&lt;Func&lt;T, object>>[] eagerProperties)
+  {</p>
+
+<pre><code>var entitySet = ResolveEntitySet(typeof(T));
+var query = context.CreateQuery&lt;T&gt;(entitySet);
+
+foreach (var e in eagerProperties)
+{
+  query = query.Expand(e);
+}
+
+return query.Where(predicate);
+</code></pre>
+
+<p>  }</p>
+
+<p>  public IQueryable<T> RetrieveAll<T>(params Expression&lt;Func&lt;T, object>>[] eagerProperties)
+  {</p>
+
+<pre><code>var entitySet = ResolveEntitySet(typeof(T));
+var query = context.CreateQuery&lt;T&gt;(entitySet);
+
+foreach (var e in eagerProperties)
+{
+  query = query.Expand(e);
+}
+
+return query;
+</code></pre>
+
+<p>  }</p>
+
+<p>  public void SaveChanges()
+  {</p>
+
+<pre><code>this.context.SaveChanges(SaveChangesOptions.Batch);
+</code></pre>
+
+<p>  }</p>
+
+<p> }
+~~~~</p>
+
+<p><a href="http://11011.net/software/vspaste"></a></p>
+
+<p>For instance, you can use the following code to retrieve customers with
+First name equal to “John”, and all their orders in a single call.</p>
+
+<p>repository.Retrieve&lt;Customer>( \
+   c => c.FirstName == “John”, //Where \
+   c => c.Orders.SubExpand(o => o.Items));</p>
+
+<p>In case, you want to have some pre-defined queries that you are going to
+use across several places, you can put them in an specific class.</p>
+
+<p>public static class CustomerQueries \
+{ \
+  public static Expression&lt;Func&lt;Customer, bool>>
+LastNameEqualsTo(string lastName) \
+  { \
+    return c => c.LastName == lastName; \
+  } \
+}</p>
+
+<p>And then, use it with the repository.</p>
+
+<p>repository.Retrieve&lt;Customer>( \
+   CustomerQueries.LastNameEqualsTo(&ldquo;foo&rdquo;), \
+   c => c.Orders.SubExpand(o => o.Items));</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-05-31T00:00:00-03:00" pubdate data-updated="true">May 31<span>st</span>, 2010</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2010/05/31/implementing-a-generic-repository-for-wcf-data-services/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2010/05/31/implementing-a-generic-repository-for-wcf-data-services/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2010/05/17/enabling-service-availability-in-wcf-services/" title="Previous Post: Enabling Service Availability in WCF Services">&laquo; Enabling Service Availability in WCF Services</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2010/06/12/professional-wcf-4-0-windows-communication-foundation-with-net-4-0/" title="Next Post: Professional WCF 4.0: Windows Communication Foundation with .NET 4.0">Professional WCF 4.0: Windows Communication Foundation with .NET 4.0 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2010/05/31/implementing-a-generic-repository-for-wcf-data-services/';
+        var disqus_url = 'http://cibrax.me/blog/2010/05/31/implementing-a-generic-repository-for-wcf-data-services/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

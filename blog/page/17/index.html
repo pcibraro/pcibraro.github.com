@@ -1,0 +1,2109 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="Conditional puts is a technique generally used in a REST architecture to
+inform clients about possible conflicts when multiple updates are
+performed &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/page/17">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/11/05/conditional-puts-in-rest/">Conditional Puts in REST</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-11-05T00:00:00-03:00" pubdate data-updated="true">Nov 5<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/11/05/conditional-puts-in-rest/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Conditional puts is a technique generally used in a REST architecture to
+inform clients about possible conflicts when multiple updates are
+performed simultaneously over the same resource version. It basically
+works as fist-write / first-win approach, a client can only commit an
+operation only if the underline resource has not changed in the
+meanwhile, otherwise it may receive a http conflict error.</p>
+
+<p>As the &ldquo;<a href="http://weblogs.asp.net/cibrax/archive/2008/10/06/importance-of-conditional-gets-in-rest.aspx">conditional
+get</a>&rdquo;
+approach I discussed some weeks ago, conditional puts are also based on
+the use of the headers &ldquo;Last-Modified&rdquo; and &ldquo;Etag&rdquo; (the If-Not-Modified
+and If-None-Match request headers are their flip side). It is used
+nowadays for example by the &ldquo;<a href="http://en.wikipedia.org/wiki/ATOM">ATOM publishing
+protocol</a>&rdquo;, and there are some plans
+to support it in <a href="http://aws.amazon.com/s3/">Amazon S3</a>.</p>
+
+<p>Let&rsquo;s see how this approach works with a simple example of two clients
+(A and B) trying to update a resource R1.</p>
+
+<p>​1. Client A performs a GET over R1 (Version1). The response given by
+the REST service will include the resource representation and a header
+&ldquo;Etag&rdquo; with the resource version, &ldquo;1&rdquo; in this case (Last-Modified could
+also be used).</p>
+
+<p>​2. Client B performs a GET over R1 (Version1). It gets the same
+representation as the client A</p>
+
+<p>​3. Client B modifies R1 and invokes a PUT on the server. This
+invocation includes the modified version of the resource and a header
+&ldquo;If-None-Match&rdquo; with the current resource version (Version 1). As result
+of this modification, the server returns a Http OK and increments the
+resource version by one (Version 2).</p>
+
+<p>​4. Client A modifies R1 and try to invoke a PUT on the server. (This
+invocation also includes a &ldquo;If-None-Match&rdquo; header with the resource
+version &ldquo;Version 1&rdquo;). The service detects that the resource changed
+since the last get, so it throws a conflict error.</p>
+
+<p>If you want to know more about how to implement this technique with WCF,
+the new WCF REST Starter Kit includes a complete example &ldquo;ConditionPut&rdquo;
+that illustrates all the steps involved in the implementation of this
+scenario.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/11/04/adding-documentation-to-wcf-restful-services-with-the-rest-starter-kit/">Adding Documentation to WCF Restful Services With the REST Starter Kit</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-11-04T00:00:00-03:00" pubdate data-updated="true">Nov 4<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/11/04/adding-documentation-to-wcf-restful-services-with-the-rest-starter-kit/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Automatic documentation is another cool feature introduced in the WCF
+REST Starter kit. While documentation is an important aspect in the
+development process, unfortunately there is not an standard mode or
+guidance yet about how this should be done for REST services. This new
+feature comes to help a little in this aspect of the process.</p>
+
+<p>As part of the starter kit, the WCF team has created a new [WebHelp]
+attribute that can be used to annotate existing web operations with
+human-readable descriptions. The [WebHelp] attribute (as the WebCache
+attribute) is an operation behavior implementation that receives a
+simple string to describe the operation behavior. The operation
+arguments are automatically reflected and shown as part of the service
+documentation.</p>
+
+<p>[WebInvoke(UriTemplate = &ldquo;DoWork?json&rdquo;, ResponseFormat =
+WebMessageFormat.Json)]</p>
+
+<p>[WebHelp(Comment=&ldquo;This method returns a HTTP status code Conflict with a
+custom json error body&rdquo;)]</p>
+
+<p>[OperationContract]</p>
+
+<p> SampleResponseBody DoWorkJson(SampleRequestBody request)</p>
+
+<p>Now, the question is, once we have this attribute applied to all the web
+operations of an existing service, where is the documentation actually
+published ?. Well, this feature also requires the use of a new service
+host &ldquo;WebServiceHost2&rdquo; that comes with the starter kit, which among
+other things publishes a new endpoint &ldquo;/help&rdquo; for the service.
+Therefore, the final documentation for a service will be available at
+&ldquo;ServiceUri&rdquo; + &ldquo;/help&rdquo;. For example,
+<a href="http://localhost/MyService.svc/help">http://localhost/MyService.svc/help</a></p>
+
+<p><img src="/images/legacy/ServiceHelpSmall.jpg" alt="" /></p>
+
+<p> </p>
+
+<p>As you can see in the image above, an Atom feed is created and published
+in the /help endpoint. Each entry in the feed provides some
+documentation about any of the available web operations.</p>
+
+<p>The new service host can be configured in a existing service modifying
+the .svc file (If the service runs on IIS),</p>
+
+<p>&lt;%@ ServiceHost Language=&ldquo;C#&rdquo; Debug=&ldquo;true&rdquo; Service=&ldquo;Service.Service&rdquo;
+Factory=&ldquo;Microsoft.ServiceModel.Web.WebServiceHost2Factory&rdquo;%></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/11/03/using-sqlcache-dependencies-with-the-new-wcf-webcache-attribute-rest-starter-kit/">Using SqlCache Dependencies With the New WCF WebCache Attribute (REST Starter KIT)</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-11-03T00:00:00-03:00" pubdate data-updated="true">Nov 3<span>rd</span>, 2008</time>
+        
+         | <a href="/blog/2008/11/03/using-sqlcache-dependencies-with-the-new-wcf-webcache-attribute-rest-starter-kit/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Let&rsquo;s begin from a hypothetical example that we want to publish a simple
+product catalog as an ATOM feed. The product table schema in our
+database was initially designed as follows,</p>
+
+<p><img src="/images/legacy/OrdersTable.jpg" alt="" /></p>
+
+<p>The first step is to enable the SQL notification for the products
+database, that can be done with the following commands:</p>
+
+<p>​1. Enable cache notifications for the database: aspnet_regsql
+[Credentials] -ed -d [DatabaseName] . For example, aspnet_regsql -S
+.\SqlExpress -E -ed -d Northwind</p>
+
+<p>​2. Enable cache notifications for an specific table in that database:
+aspnet_regsql [Credentials] -et -d [DatabaseName] -t [TableName] . For
+example, aspnet_regsql -S .\SqlExpress -E -et -d Northwind  -t
+Products</p>
+
+<p>Once we have enabled the ASP.NET SQL notification for the table we want
+to use (Products in this example), the next step is to implement the
+service and configure it correctly to use the new WebCache behavior.</p>
+
+<p>The contract for the service is quite simple, it receives an optional
+categoryId attribute just in case we want to filter the products.</p>
+
+<p>[ServiceContract]</p>
+
+<p>public interface IProductCatalog</p>
+
+<p>{</p>
+
+<p>  [WebCache(Location = OutputCacheLocation.ServerAndClient,
+SqlDependency = &ldquo;myDatabase:Products&rdquo;, VaryByParam = &ldquo;categoryId&rdquo;)]</p>
+
+<p>  [WebGet(UriTemplate = &ldquo;?category={categoryId}&rdquo;)]</p>
+
+<p>  [OperationContract]</p>
+
+<p>  Atom10FeedFormatter GetProducts(int categoryId);</p>
+
+<p>}</p>
+
+<p>As you can see in the code above, I defined the new WebCache behavior as
+part of my operation contract. I also specified that I want to
+invalidate the ASP.NET cache entries when two of the following
+conditions are true,</p>
+
+<p>​1. Some change is introduced in the products table (The ASP.NET Sql
+Dependency)</p>
+
+<p>​2. A different categoryId argument is specified in query string.</p>
+
+<p>The caching preferences for this service are configured in the
+application web configuration file,</p>
+
+<p>&lt;connectionStrings></p>
+
+<p>  &lt;add name=&ldquo;myDatabase&rdquo; connectionString=&ldquo;Data
+source=.\SQLExpress;Initial
+Catalog=Northwind;Trusted_Connection=yes&rdquo;/></p>
+
+<p>&lt;/connectionStrings></p>
+
+<p>&lt;system.web></p>
+
+<p>  &lt;compilation debug=&ldquo;true&rdquo;>&lt;/compilation></p>
+
+<p>&lt;caching></p>
+
+<p>  &lt;sqlCacheDependency enabled=&ldquo;true&rdquo; pollTime=&ldquo;1000&rdquo; ></p>
+
+<p>    &lt;databases></p>
+
+<p>      &lt;add name=&ldquo;myDatabase&rdquo; connectionStringName=&ldquo;myDatabase&rdquo; /></p>
+
+<p>    &lt;/databases></p>
+
+<p>  &lt;/sqlCacheDependency></p>
+
+<p>&lt;/caching></p>
+
+<p>&lt;/system.web></p>
+
+<p>&lt;system.serviceModel></p>
+
+<p>    &lt;serviceHostingEnvironment aspNetCompatibilityEnabled=&ldquo;true&rdquo;/></p>
+
+<p>&lt;/system.serviceModel></p>
+
+<p>The ASP.NET compatibility mode is required in order to use this new
+caching mechanism in our REST service. The service implementation is
+quite normal, there was no need to add some extra code to support
+caching, which is something great thanks to the new WebCache behavior.</p>
+
+<p>[AspNetCompatibilityRequirements(RequirementsMode =
+AspNetCompatibilityRequirementsMode.Allowed)]</p>
+
+<p>public class ProductCatalog : IProductCatalog</p>
+
+<p>{</p>
+
+<p>    public Atom10FeedFormatter GetProducts(int categoryId)</p>
+
+<p>    {</p>
+
+<p>        var connectionString =
+ConfigurationManager.ConnectionStrings[&ldquo;myDatabase&rdquo;].ConnectionString;</p>
+
+<p> </p>
+
+<p>        var items = new List&lt;SyndicationItem>();</p>
+
+<p>        using (var connection = new SqlConnection(connectionString))</p>
+
+<p>        {</p>
+
+<p>            var command = new SqlCommand();</p>
+
+<p>            if (categoryId == 0)</p>
+
+<p>                command.CommandText = &ldquo;SELECT * FROM Products&rdquo;;</p>
+
+<p>            else</p>
+
+<p>            {</p>
+
+<p>                command.CommandText = &ldquo;SELECT * FROM Products WHERE
+CategoryId = @categoryId&rdquo;;</p>
+
+<p>                command.Parameters.Add(new SqlParameter(&ldquo;@categoryId&rdquo;,
+categoryId));</p>
+
+<p>            }</p>
+
+<p> </p>
+
+<p>            command.Connection = connection;</p>
+
+<p>            connection.Open();</p>
+
+<p> </p>
+
+<p>            using(var reader =
+command.ExecuteReader(CommandBehavior.CloseConnection))</p>
+
+<p>            {</p>
+
+<p>                while(reader.Read())</p>
+
+<p>                {</p>
+
+<p>                    items.Add(new SyndicationItem()</p>
+
+<p>                    {</p>
+
+<p>                        Id = String.Format(CultureInfo.InvariantCulture,
+&ldquo;<a href="http://products/">http://products/</a>{0}&rdquo;, (int)reader[&ldquo;ProductID&rdquo;]),</p>
+
+<p>                        Title = new
+TextSyndicationContent((string)reader[&ldquo;ProductName&rdquo;]),</p>
+
+<p>                        LastUpdatedTime = new DateTime(2008, 7, 1, 0, 0,
+0, DateTimeKind.Utc),</p>
+
+<p>                        Authors =</p>
+
+<p>                        {</p>
+
+<p>                            new SyndicationPerson()</p>
+
+<p>                            {</p>
+
+<p>                                Name = &ldquo;cibrax&rdquo;</p>
+
+<p>                            }</p>
+
+<p>                        },</p>
+
+<p>                        Content = new
+TextSyndicationContent(string.Format(&ldquo;Category Id {0} &ndash; Price {1}&rdquo;,</p>
+
+<p>                            (int)reader[&ldquo;CategoryId&rdquo;],
+(decimal)reader[&ldquo;UnitPrice&rdquo;]))</p>
+
+<p>                    });</p>
+
+<p>                }</p>
+
+<p>            }</p>
+
+<p>        }</p>
+
+<p> </p>
+
+<p>        var feed = new SyndicationFeed()</p>
+
+<p>        {</p>
+
+<p>            Id = &ldquo;<a href="http://Products">http://Products</a>&rdquo;,</p>
+
+<p>            Title = new TextSyndicationContent(&ldquo;Product catalog&rdquo;),</p>
+
+<p>            Items = items</p>
+
+<p>        };</p>
+
+<p> </p>
+
+<p>        WebOperationContext.Current.OutgoingResponse.ContentType =
+&ldquo;application/atom+xml&rdquo;;</p>
+
+<p>        return feed.GetAtom10Formatter();</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>If you are interested in knowing more details about the WebCache
+behavior implementation, my friend Jesus Rodriguez has written an
+<a href="http://weblogs.asp.net/gsusx/archive/2008/10/29/adding-caching-to-wcf-restful-services-using-the-rest-starter-kit.aspx">excellent
+post</a>
+some days ago.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/10/30/rest-and-workflow-services-play-well-together-part-ii/">REST and Workflow Services Play Well Together - Part II</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-10-30T00:00:00-03:00" pubdate data-updated="true">Oct 30<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/10/30/rest-and-workflow-services-play-well-together-part-ii/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>In my previous post <a href="http://weblogs.asp.net/cibrax/archive/2008/10/24/rest-and-workflow-services-play-well-together.aspx">&ldquo;REST and Workflow services play well
+together&rdquo;</a>,
+I mentioned that Http Cookies were one of the built-in mechanisms for
+transferring the workflow context across calls between the client and
+the service. While cookies work well for http services, from my point of
+view, simple Http Headers naturally fit better in a REST architecture.
+As consequence, I decided to extend the WCF channel stack to support a
+new a custom channel (Or custom binding) for transferring the workflow
+context as a http header.</p>
+
+<p>The configuration of this binding WebHttpContextBinding is quite
+straightforward, I just created a new binding &ldquo;WebHttpContextBinding&rdquo;
+that can easily configured for workflow service,</p>
+
+<p>&lt;services></p>
+
+<p>  &lt;service name=&ldquo;RestWorkflows.OrderWorkflow&rdquo;></p>
+
+<p>    &lt;endpoint address=&ldquo;&rdquo; behaviorConfiguration=&ldquo;MyServiceBehavior&rdquo;
+binding=&ldquo;webHttpContext&rdquo; bindingConfiguration=&ldquo;myServiceBinding&rdquo;
+contract=&ldquo;RestWorkflows.IOrderService&rdquo; /></p>
+
+<p>  &lt;/service></p>
+
+<p>&lt;/services></p>
+
+<p>&lt;bindings></p>
+
+<p>  &lt;webHttpContext></p>
+
+<p>    &lt;binding name=&ldquo;myServiceBinding&rdquo;>&lt;/binding></p>
+
+<p>  &lt;/webHttpContext></p>
+
+<p>&lt;/bindings></p>
+
+<p>&lt;behaviors></p>
+
+<p>  &lt;endpointBehaviors></p>
+
+<p>     &lt;behavior name=&ldquo;MyServiceBehavior&rdquo;></p>
+
+<p>       &lt;webHttp /></p>
+
+<p>     &lt;/behavior></p>
+
+<p>  &lt;/endpointBehaviors></p>
+
+<p>&lt;/behaviors></p>
+
+<p>&lt;extensions></p>
+
+<p>  &lt;bindingExtensions></p>
+
+<p>    &lt;add name=&ldquo;webHttpContext&rdquo;
+type=&ldquo;Microsoft.ServiceModel.Samples.WebHttpContextBindingCollectionElement,
+WebHttpContext, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null&rdquo;
+/></p>
+
+<p>  &lt;/bindingExtensions></p>
+
+<p>&lt;/extensions></p>
+
+<p>The result of using this binding will be a new Http Header WscContext
+(encoded as Base64) being transmitted between the client and the
+service,</p>
+
+<p>&lt;MessageLogTraceRecord Time=&ldquo;2008-10-29T14:22:59.5258021-02:00&rdquo;
+Source=&ldquo;TransportSend&rdquo;
+Type=&ldquo;System.ServiceModel.Channels.BodyWriterMessage&rdquo;
+xmlns=&ldquo;<a href="http://schemas.microsoft.com/2004/06/ServiceModel/Management/MessageTrace%22">http://schemas.microsoft.com/2004/06/ServiceModel/Management/MessageTrace&#8221;</a>>\
+   &lt;Addressing>\
+     &lt;Action>&lt;/Action>\
+   &lt;/Addressing>\
+   &lt;HttpResponse>\
+      &lt;StatusCode>Created&lt;/StatusCode>\
+      &lt;WebHeaders>     
+<strong>&lt;WscContext>77u/PENvbnRleHQgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwNi8wNS9jb250ZXh0Ij48UHJvcGVydHkgbmFtZT0iaW5zdGFuY2VJZCI+NDZkZGY3NTktMzdjNS00ZDZlLWI2ZTItNjVmMDNjMDVmYTAyPC9Qcm9wZXJ0eT48L0NvbnRleHQ+&lt;/WscContext>\
+</strong>       &lt;/WebHeaders>\
+    &lt;/HttpResponse>\
+    &lt;order
+xmlns=&rdquo;<a href="http://starbucks.example.org%22/">http://starbucks.example.org&#8221;</a>
+xmlns:i=&ldquo;<a href="http://www.w3.org/2001/XMLSchema-instance%22">http://www.w3.org/2001/XMLSchema-instance&#8221;</a>>\
+      &lt;cost>6&lt;/cost>\
+      &lt;drink>latte&lt;/drink>\
+      &lt;next
+xmlns:a=&rdquo;<a href="http://example.org/state-machine%22">http://example.org/state-machine&#8221;</a>>\
+         &lt;a:next></p>
+
+<p>         
+&lt;a:rel><a href="http://starbucks.example.org/payment">http://starbucks.example.org/payment</a>&lt;/a:rel>\
+           &lt;a:type>application/xml&lt;/a:type>\
+          
+&lt;a:uri><a href="http://localhost:8000/payment/order/0b756654-161b-43d0-912f-4236552dc337">http://localhost:8000/payment/order/0b756654-161b-43d0-912f-4236552dc337</a>&lt;/a:uri>\
+         &lt;/a:next>\
+         &lt;a:next>\
+            
+&lt;a:rel><a href="http://starbucks.example/order/update">http://starbucks.example/order/update</a>&lt;/a:rel>\
+             &lt;a:type>application/xml&lt;/a:type>\
+            
+&lt;a:uri><a href="http://localhost:8000/order/0b756654-161b-43d0-912f-4236552dc337">http://localhost:8000/order/0b756654-161b-43d0-912f-4236552dc337</a>&lt;/a:uri>\
+         &lt;/a:next>\
+       &lt;/next>\
+     &lt;/order>\
+&lt;/MessageLogTraceRecord></p>
+
+<p>&lt;MessageLogTraceRecord Time=&ldquo;2008-10-29T14:22:59.5726021-02:00&rdquo;
+Source=&ldquo;TransportReceive&rdquo;
+Type=&ldquo;System.ServiceModel.Channels.BufferedMessage&rdquo;
+xmlns=&ldquo;<a href="http://schemas.microsoft.com/2004/06/ServiceModel/Management/MessageTrace%22">http://schemas.microsoft.com/2004/06/ServiceModel/Management/MessageTrace&#8221;</a>>\
+   &lt;HttpRequest>\
+      &lt;Method>PUT&lt;/Method>\
+       &lt;QueryString>&lt;/QueryString>\
+       &lt;WebHeaders>\
+     
+<strong>&lt;WscContext>77u/PENvbnRleHQgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwNi8wNS9jb250ZXh0Ij48UHJvcGVydHkgbmFtZT0iaW5zdGFuY2VJZCI+NDZkZGY3NTktMzdjNS00ZDZlLWI2ZTItNjVmMDNjMDVmYTAyPC9Qcm9wZXJ0eT48L0NvbnRleHQ+&lt;/WscContext>\
+</strong>        &lt;Content-Length>566&lt;/Content-Length>\
+        &lt;Content-Type>application/xml&lt;/Content-Type>\
+        &lt;Expect>100-continue&lt;/Expect>\
+         &lt;Host>localhost:8000&lt;/Host>\
+      &lt;/WebHeaders>\
+    &lt;/HttpRequest>\
+    &lt;order
+xmlns=&rdquo;<a href="http://starbucks.example.org%22/">http://starbucks.example.org&#8221;</a>
+xmlns:i=&ldquo;<a href="http://www.w3.org/2001/XMLSchema-instance%22">http://www.w3.org/2001/XMLSchema-instance&#8221;</a>>\
+          &lt;cost>6&lt;/cost>\
+          &lt;drink>cappuchino&lt;/drink>\
+          &lt;next
+xmlns:a=&rdquo;<a href="http://example.org/state-machine%22">http://example.org/state-machine&#8221;</a>>\
+            &lt;a:next>\
+             
+&lt;a:rel><a href="http://starbucks.example.org/payment">http://starbucks.example.org/payment</a>&lt;/a:rel>\
+              &lt;a:type>application/xml&lt;/a:type>\
+             
+&lt;a:uri><a href="http://localhost:8000/payment/order/0b756654-161b-43d0-912f-4236552dc337">http://localhost:8000/payment/order/0b756654-161b-43d0-912f-4236552dc337</a>&lt;/a:uri>\
+             &lt;/a:next>\
+             &lt;a:next>\
+              
+&lt;a:rel><a href="http://starbucks.example/order/update">http://starbucks.example/order/update</a>&lt;/a:rel>\
+               &lt;a:type>application/xml&lt;/a:type>\
+              
+&lt;a:uri><a href="http://localhost:8000/order/0b756654-161b-43d0-912f-4236552dc337">http://localhost:8000/order/0b756654-161b-43d0-912f-4236552dc337</a>&lt;/a:uri>\
+             &lt;/a:next>\
+           &lt;/next>\
+       &lt;/order>\
+&lt;/MessageLogTraceRecord></p>
+
+<p>The code for the custom binding is available to download from <a href="/images/legacy/RestWorkflowsII.zip">this
+location</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/10/24/rest-and-workflow-services-play-well-together/">REST and Workflow Services Play Well Together</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-10-24T00:00:00-03:00" pubdate data-updated="true">Oct 24<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/10/24/rest-and-workflow-services-play-well-together/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>REST is not just about CRUD interfaces for your services, a complete
+long-running workflow can be modeled through the basic verbs as well. As
+my friend <a href="http://weblogs.asp.net/gsusx/archive/2008/10/03/new-rest-quot-must-read-quot-papers.aspx">Jesus
+mentioned</a>,
+the article &ldquo;<a href="http://www.infoq.com/articles/webber-rest-workflow">How to get a cup of
+coffee</a>&rdquo; represents
+an excellent source about this topic.</p>
+
+<p>The example I will show here is based on that article, during the course
+of this post I will try to illustrate all the steps required to
+implement a workflow as the one mentioned there using WF services.
+Unfortunately, no examples exist (or at least I could not find any)
+about how to configure the WCF web model to use the new WF services, so
+I decided to create a new one from scratch.</p>
+
+<p>This example only illustrates the workflow from the customer point of
+view, he can place an order, pay it and wait for his drink. He can also
+modify the order in the middle before it is paid.</p>
+
+<p> <img src="/images/legacy/OrderWorkflow.jpg" alt="" /></p>
+
+<p>The interface for our REST service will looks like this:</p>
+
+<p>[ServiceContract]</p>
+
+<p>public interface IOrderService</p>
+
+<p>{</p>
+
+<p>  [OperationContract]</p>
+
+<p>  [WebInvoke(Method=&ldquo;POST&rdquo;, UriTemplate=&ldquo;order&rdquo;)]</p>
+
+<p>  Order PlaceOrder(Order order);</p>
+
+<p> </p>
+
+<p>  [OperationContract]</p>
+
+<p>  [WebInvoke(Method = &ldquo;PUT&rdquo;, UriTemplate = &ldquo;order/{id}&rdquo;)]</p>
+
+<p>  Order UpdateOrder(string id, Order order);</p>
+
+<p> </p>
+
+<p>  [OperationContract]</p>
+
+<p>  [WebInvoke(Method=&ldquo;PUT&rdquo;, UriTemplate=&ldquo;payment/order/{id}&rdquo;)]</p>
+
+<p>  void PayOrder(string id, Payment payment);</p>
+
+<p>}</p>
+
+<p>Only three operations available, each one maps exactly with one
+ReceiveActivity in the workflow. For instance, the receive activity
+OnOrderPlaced waits for a client call to the PlaceOrder operation and
+then moves the workflow to the next state, which is &ldquo;OrderPlaced&rdquo; in
+this case. While the workflow is in the state &ldquo;OrderPlaced&rdquo;, only the
+operations UpdateOrder and PayOrder can be executed by the client (If he
+try to execute PlaceOrder again, it will receive a 404 http error, &ldquo;Not
+found&rdquo;).</p>
+
+<p><img src="/images/legacy/OnOrderPlaced.jpg" alt="" /></p>
+
+<p>The OnOrderPlacedCode is an simple code activity that contains the
+actual operation implementation. I used a code activity for a sake of
+simplicity, a custom activity for creating the order could also be used
+there.</p>
+
+<p>The code for this activity is quite simple, most of it is hard-coded,</p>
+
+<p>private void OnOrderPlacedCode_ExecuteCode(object sender, EventArgs e)</p>
+
+<p>{</p>
+
+<p>  currentOrder = new Order();</p>
+
+<p>  currentOrder.OrderId = Guid.NewGuid().ToString();</p>
+
+<p>  currentOrder.Cost = (receivedOrder.Drink == &ldquo;latte&rdquo;) ? 6 : 10;</p>
+
+<p>  currentOrder.Drink = receivedOrder.Drink;</p>
+
+<p>  currentOrder.Next = new Next[] {</p>
+
+<p>      new Next</p>
+
+<p>      {</p>
+
+<p>         Rel = &ldquo;<a href="http://starbucks.example.org/payment">http://starbucks.example.org/payment</a>&rdquo;,</p>
+
+<p>         Uri = &ldquo;<a href="http://localhost:8000/payment/order/">http://localhost:8000/payment/order/</a>&rdquo; +
+currentOrder.OrderId.ToString(),</p>
+
+<p>      },</p>
+
+<p>      new Next</p>
+
+<p>      {</p>
+
+<p>         Rel = &ldquo;<a href="http://starbucks.example/order/update">http://starbucks.example/order/update</a>&rdquo;,</p>
+
+<p>         Uri = &ldquo;<a href="http://localhost:8000/order/">http://localhost:8000/order/</a>&rdquo; +
+currentOrder.OrderId.ToString()</p>
+
+<p>      }};</p>
+
+<p> </p>
+
+<p>  //Persist the order in some place&hellip;..</p>
+
+<p> </p>
+
+<p>  WebOperationContext.Current.OutgoingResponse.StatusCode =
+System.Net.HttpStatusCode.Created;</p>
+
+<p>}</p>
+
+<p>currentOrder contains the instance of the order that will be returned by
+the service operation whereas receivedOrder is the order sent by the
+client application. This was map to the operation signature in the
+receive activity,</p>
+
+<p> <img src="/images/legacy/ReceiveOrderSettings.jpg" alt="" /></p>
+
+<p>Once the workflow is ready to be used, all we need is to configure the
+service host so the client application can start consuming the
+operations. At this point, we will face three issues:</p>
+
+<p>​1. If you want to host a WF service, a WorkflowServiceHost class has to
+be used in the host program. Therefore, we will not have all the
+automatic infrastructure configuration provided by WebServiceHost, all
+the configuration must be done manually. It would be great to have here
+a combination of both service hosts.</p>
+
+<p>​2. There is not a context binding for WebHttpBinding, only
+BasicHttpContextBinding, NetTcpContextBinding and WsHttpContextBinding
+are supported. We will have to use a custom binding.</p>
+
+<p>​3. A cookie must be used to transfer the context information between
+the client and the service, it would much better to have support for
+http headers here. According to this <a href="http://weblogs.asp.net/gsusx/archive/2008/06/27/combining-durable-messaging-and-workflow-services-building-a-custom-context-channel.aspx">post written by
+Jesus</a>,
+this should not be complex to do.</p>
+
+<p>&lt;system.serviceModel></p>
+
+<p>  &lt;serviceHostingEnvironment aspNetCompatibilityEnabled=&ldquo;true&rdquo; /></p>
+
+<p>  &lt;services></p>
+
+<p>    &lt;service name=&ldquo;RestWorkflows.OrderWorkflow&rdquo;></p>
+
+<p>     &lt;endpoint address=&ldquo;&rdquo; behaviorConfiguration=&ldquo;MyServiceBehavior&rdquo;
+binding=&ldquo;customBinding&rdquo; bindingConfiguration=&ldquo;myServiceBinding&rdquo;
+contract=&ldquo;RestWorkflows.IOrderService&rdquo; /></p>
+
+<p>  &lt;/service></p>
+
+<p>&lt;/services></p>
+
+<p>&lt;bindings></p>
+
+<p>&lt;customBinding></p>
+
+<p>  &lt;binding name=&ldquo;myServiceBinding&rdquo;></p>
+
+<p>  &lt;webMessageEncoding>&lt;/webMessageEncoding></p>
+
+<p>  &lt;context contextExchangeMechanism=&ldquo;HttpCookie&rdquo;
+protectionLevel=&ldquo;None&rdquo;/></p>
+
+<p>  &lt;httpTransport manualAddressing=&ldquo;true&rdquo;/></p>
+
+<p>  &lt;/binding></p>
+
+<p>&lt;/customBinding></p>
+
+<p>&lt;/bindings></p>
+
+<p>&lt;behaviors></p>
+
+<p>&lt;endpointBehaviors></p>
+
+<p>  &lt;behavior name=&ldquo;MyServiceBehavior&rdquo;></p>
+
+<p>    &lt;webHttp /></p>
+
+<p>  &lt;/behavior></p>
+
+<p>&lt;/endpointBehaviors></p>
+
+<p>&lt;/behaviors></p>
+
+<p>&lt;/system.serviceModel></p>
+
+<p>The code for the client application looks also quite simple, you only
+have to remember to include the cookie with the context between calls,
+otherwise WF will try to create a new instance of the workflow resulting
+in a bad request error.</p>
+
+<p>//Lets create a new order</p>
+
+<p>Order order = new Order { Drink = &ldquo;latte&rdquo; };</p>
+
+<p> </p>
+
+<p>HttpWebRequest createOrderRequest = CreateRequest(new
+Uri(&ldquo;<a href="http://localhost:8000/order">http://localhost:8000/order</a>&rdquo;), &ldquo;POST&rdquo;, null, order);</p>
+
+<p>string context =
+GetContext((HttpWebResponse)createOrderRequest.GetResponse());</p>
+
+<p>order = Execute&lt;Order>(createOrderRequest.GetResponse());</p>
+
+<p> </p>
+
+<p>Console.WriteLine(&ldquo;Order Cost {0}&rdquo;, order.Cost);</p>
+
+<p>foreach (Next next in order.Next)</p>
+
+<p>{</p>
+
+<p>  Console.WriteLine(&ldquo;Possible next step {0}&rdquo;, next.Uri);</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>//Lets update the existing order&hellip;.</p>
+
+<p>order.Drink = &ldquo;cappuchino&rdquo;;</p>
+
+<p> </p>
+
+<p>Uri updateOrderUri = new Uri(order.Next.Where(n => n.Rel ==
+&ldquo;<a href="http://starbucks.example/order/update">http://starbucks.example/order/update</a>&rdquo;).Single().Uri);</p>
+
+<p>HttpWebRequest updateOrderRequest = CreateRequest(updateOrderUri, &ldquo;PUT&rdquo;,
+context, order);</p>
+
+<p>Order updatedOrder = Execute&lt;Order>(updateOrderRequest.GetResponse());</p>
+
+<p> </p>
+
+<p>Console.WriteLine(&ldquo;Order Cost {0}&rdquo;, updatedOrder.Cost);</p>
+
+<p>foreach (Next next in updatedOrder.Next)</p>
+
+<p>{</p>
+
+<p>  Console.WriteLine(&ldquo;Possible next step {0}&rdquo;, next.Uri);</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>//Lets have our drink&hellip;</p>
+
+<p>Payment payment = new Payment { Name = &ldquo;John Doe&rdquo;, CardNumber =
+&ldquo;1234567&rdquo;, Expires = &ldquo;06/08&rdquo;, Amount =
+updatedOrder.Cost.GetValueOrDefault() };</p>
+
+<p> </p>
+
+<p>Uri payOrderUri = new Uri(order.Next.Where(n => n.Rel ==
+&ldquo;<a href="http://starbucks.example.org/payment">http://starbucks.example.org/payment</a>&rdquo;).Single().Uri);</p>
+
+<p>HttpWebRequest payOrderRequest = CreateRequest(payOrderUri, &ldquo;PUT&rdquo;,
+context, payment);</p>
+
+<p> </p>
+
+<p>int statusCode = Execute(payOrderRequest.GetResponse());</p>
+
+<p> </p>
+
+<p>if (statusCode == 201)</p>
+
+<p>  Console.WriteLine(&ldquo;Here is your drink!!!&rdquo;);</p>
+
+<p>else</p>
+
+<p>  Console.WriteLine(&ldquo;Sorry, there was some error while trying to process
+the payment&rdquo;);</p>
+
+<p>As you can see in the code above, I used some helper methods to execute
+the operations and retrieve the response/context information. These
+methods only represent a few lines of code,</p>
+
+<p>static HttpWebRequest CreateRequest(Uri address, string method, string
+context, object contract)</p>
+
+<p>{</p>
+
+<p>  HttpWebRequest webRequest =
+(HttpWebRequest)WebRequest.Create(address);</p>
+
+<p>  webRequest.ContentType = &ldquo;application/xml&rdquo;;</p>
+
+<p>  webRequest.Timeout = 30000;</p>
+
+<p>  webRequest.Method = method;</p>
+
+<p>  webRequest.CookieContainer = new CookieContainer();</p>
+
+<p> </p>
+
+<p>  if (context != null)</p>
+
+<p>  {</p>
+
+<p>    Cookie cookie = new Cookie(&ldquo;WscContext&rdquo;, context,
+address.PathAndQuery, address.Authority);</p>
+
+<p>    webRequest.CookieContainer.Add(cookie);</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  DataContractSerializer serializer = new
+DataContractSerializer(contract.GetType());</p>
+
+<p>  using (Stream stream = webRequest.GetRequestStream())</p>
+
+<p>  {</p>
+
+<p>    serializer.WriteObject(stream, contract);</p>
+
+<p>    stream.Flush();</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  return webRequest;</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>static string GetContext(HttpWebResponse response)</p>
+
+<p>{</p>
+
+<p>  if (response.Cookies[&ldquo;WscContext&rdquo;] != null)</p>
+
+<p>  {</p>
+
+<p>    return response.Cookies[&ldquo;WscContext&rdquo;].Value;</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  return null;</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>static T Execute&lt;T>(WebResponse response)</p>
+
+<p>{</p>
+
+<p>  DataContractSerializer serializer = new
+DataContractSerializer(typeof(T));</p>
+
+<p>  using (Stream stream = response.GetResponseStream())</p>
+
+<p>  {</p>
+
+<p>    return (T)serializer.ReadObject(stream);   </p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p>The complete solution is available to download from
+<a href="/images/legacy/RestWorkflows.zip">here</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/10/06/importance-of-conditional-gets-in-rest/">Conditional Gets in REST</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-10-06T00:00:00-03:00" pubdate data-updated="true">Oct 6<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/10/06/importance-of-conditional-gets-in-rest/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>According to the Http specification, any Http GET request should be
+idempotent and safe. In this context, these principles have the
+following meaning:</p>
+
+<p>Idempotence: One or more calls with identical requests should return the
+same resource representation (As long as the resource has not changed on
+the server between calls).</p>
+
+<p>Safety:  The only action produced by a GET request is to retrieve a
+resource representation, no side-effects should be evident on the
+service side after executing the request. An example that violates this
+principle could be a GET request that also updates some info in the
+resource.</p>
+
+<p>As long as these principles are applied correctly by a service
+implementation, the client will have more available mechanisms to cache
+the resource representation on its side. This has a very positive
+meaning from a scalability view point, which represents a better use of
+the network bandwidth and an optimization in the utilization of server
+resources.</p>
+
+<p>Those caching mechanisms are based on what is commonly called Http
+conditional gets. An Http conditional get involves the use of two
+special headers generated by the service, ETag and Last-Modified.</p>
+
+<p>An Etag represents an opaque value that only the server knows how to
+recreate, it could represent anything, but it is usually a hash
+representing the resource version (it can be generated hashing the whole
+representation content or just some parts of it, like the timestamp). On
+the other hand, the Last-Modified headers represents a datetime that the
+service can use to determine whether the resource has changed since the
+last time it was served. The following example illustrates the
+request/response messages interchanged by the client/service for a
+service that returns information about customers</p>
+
+<p>First request, the client does not have anything on the cache.</p>
+
+<p>GET <a href="http://foo/customers/1">http://foo/customers/1</a></p>
+
+<p>Host foo\
+Accept */*\
+Accept-Language en-us,en;q=0.5\
+Accept-Encoding gzip,deflate\
+Accept-Charset ISO-8859-1,utf-8;q=0.7,*;q=0.7\
+Connection close\
+Referer <a href="http://foo/">http://foo/</a>\
+Pragma no-cache\
+Cache-Control no-cache</p>
+
+<p>Response:</p>
+
+<p>Connection close\
+Date Thu, 02 Oct 2008 14:46:57 GMT\
+Server Microsoft-IIS/6.0\
+X-Powered-By ASP.NET\
+X-AspNet-Version 2.0.50727\
+Content-Encoding gzip\
+Content-Length 1212\
+Expires Sat, 01 Nov 2008 14:46:57 GMT\
+<strong>Last-Modified Mon, 29 Sep 2008 15:40:27 GMT\
+Etag a9331828c517ac5d97f93b3cfdbcc9bc</strong>\
+Content-Type text/xml</p>
+
+<p>The next time the client sends a new request for the same customer, some
+extra information will be included in the request headers,</p>
+
+<p>GET <a href="http://foo/customers/1">http://foo/customers/1</a></p>
+
+<p>Host foo\
+Accept */*\
+Accept-Language en-us,en;q=0.5\
+Accept-Encoding gzip,deflate\
+Accept-Charset ISO-8859-1,utf-8;q=0.7,*;q=0.7\
+Connection close\
+Referer foo\
+<strong>If-Modified-Since Mon, 29 Sep 2008 15:40:27 GMT\
+If-None-Match a9331828c517ac5d97f93b3cfdbcc9bc\
+</strong></p>
+
+<p>With these two new headers, the service can now determine whether it has
+to serve the resource representation again or the client can use the
+cached version. If the resource has not changed according to the values
+in those headers (If-Modified-Since for Last-Modified and If-None-Match
+for Etag), the service can return an Http status code &ldquo;304 Not
+Modified&rdquo;, which instructs the client to use the cached version.</p>
+
+<p>This approach is widely used nowadays by syndication, RSS or Atom, that
+usually use the Last-Modified/If-Modified-Since to determine which items
+they have to send to the client.</p>
+
+<p>Since I am a WCF fan, I will also include here some code snippets to get
+the value in those headers and return a &ldquo;304&rdquo; http status code,</p>
+
+<p>Code to get those values:</p>
+
+<p>if
+(WebOperationContext.IncomingRequest.Headers[HttpRequestHeader.IfNoneMatch]
+!= null)</p>
+
+<p>{</p>
+
+<p>  // Do something with etag&hellip;</p>
+
+<p>}</p>
+
+<p>else if
+(WebOperationContext.IncomingRequest.Headers[HttpRequestHeader.IfModifiedSince]
+!= null)</p>
+
+<p>{</p>
+
+<p>  var date =
+DateTime.Parse(context.IncomingRequest.Headers[HttpRequestHeader.IfModifiedSince]);</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>Code to set those values:</p>
+
+<p> </p>
+
+<p>WebOperationContext.OutgoingResponse.LastModified = // sets the last
+modified;</p>
+
+<p>WebOperationContext.OutgoingResponse.ETag = // sets the Etag</p>
+
+<p>Code to return an Http 304 status code:</p>
+
+<p>WebOperationContext.OutgoingResponse.StatusCode =
+HttpStatusCode.NotModified;</p>
+
+<p>WebOperationContext.OutgoingResponse.SuppressEntityBody = true;</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/09/12/codecamp-buenos-aires-2008/">Codecamp Buenos Aires 2008</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-09-12T00:00:00-03:00" pubdate data-updated="true">Sep 12<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/09/12/codecamp-buenos-aires-2008/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>The next Microsoft Codecamp will take place in Buenos Aires on Saturday,
+October 4th.</p>
+
+<p>The agenda looks very promising, be sure to register if you want to
+attend! (The complete agenda is available in the <a href="http://blogs.msdn.com/masaez/">Miguel Saenz&rsquo;s
+blog</a> , almost 10 sessions in parallel,
+WOW)</p>
+
+<p>I will be presenting an introductory session about the ASP.NET MVC
+framework and another a little more interesting about building RESTfull
+services with WCF. </p>
+
+<p>I hope to see there !!. Thanks</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/09/01/implementing-an-identity-provider-and-relying-party-with-zermatt-and-asp-net-mvc/">Implementing an Identity Provider and Relying Party With Zermatt and ASP.NET MVC</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-09-01T00:00:00-03:00" pubdate data-updated="true">Sep 1<span>st</span>, 2008</time>
+        
+         | <a href="/blog/2008/09/01/implementing-an-identity-provider-and-relying-party-with-zermatt-and-asp-net-mvc/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Zermatt is the framework recently released by Microsoft to develop
+claim-aware applications. You can find some announcements
+<a href="http://blogs.msdn.com/vbertocci/archive/2008/07/09/announcing-the-beta-release-of-zermatt-developer-identity-framework.aspx">here</a>
+and
+<a href="http://www.leastprivilege.com/TryQuotZermattquotAndGiveFeedback.aspx">here</a>.</p>
+
+<p>This framework supports the WS-Federation active and passive profiles.
+This last one was initially designed with an unique purpose in mind,
+allow the integration of &ldquo;dumb clients&rdquo; into the <a href="http://en.wikipedia.org/wiki/Identity_Metasystem">identity
+metasystem</a>. As &ldquo;dumb
+clients&rdquo;, I am talking about clients like web browsers that do not have
+the ability to handle cryptographic material.</p>
+
+<p>All the magic is done through some consecutive Http redirects, and today
+we will see how develop an identity provider and a relying party web
+(with ASP.NET MVC) that are involved in the whole process.</p>
+
+<p>The identity provider is based on the quickstart that is automatically
+generated in Visual Studio when you create a new MVC web application.
+This quickstart uses FormsAuthentication to authenticate the application
+users and also provides an Account controller (that internally uses
+ASP.NET Membership) to manage all those users. In order to integrate
+Zermatt in this application, I added a new controller STSController that
+knows to process messages for getting issue tokens with the user&rsquo;s
+claims.</p>
+
+<p><img src="/images/legacy/Zermatt-MVC.gif" alt="" /></p>
+
+<p>For the relying party, Zermatt provides some web controls to
+authenticate the user against the identity provider using the passive
+profile. Unfortunately, for the simple fact that ASP.NET MVC does not
+support controls with view state, we can not use them here. As
+workaround, I created a couple of extensions methods that generate the
+Urls for sending the corresponding messages to the identity provider
+(Login and Logout).</p>
+
+<p>public static class LoginUrlExtensions</p>
+
+<p>{</p>
+
+<p>   public static string LoginUrl(this UrlHelper helper, string
+actionName, string controllerName, string stsUrl)</p>
+
+<p>   {</p>
+
+<p>       string host =
+helper.ViewContext.HttpContext.Request.Url.Authority;</p>
+
+<p>       string schema =
+helper.ViewContext.HttpContext.Request.Url.Scheme;</p>
+
+<p> </p>
+
+<p>       string realm = string.Format(&ldquo;{0}://{1}&rdquo;, schema, host);</p>
+
+<p>       string reply = helper.Action(actionName,
+controllerName).Substring(1);</p>
+
+<p> </p>
+
+<p>       return
+string.Format(&ldquo;{0}?wa=wsignin1.0&amp;wtrealm={1}&amp;wreply={2}&amp;wctx=rm=0&amp;id=FederatedPassiveSignIn1&amp;wct={3}&rdquo;,</p>
+
+<p>          stsUrl, realm, reply, XmlConvert.ToString(DateTime.Now));</p>
+
+<p>   }</p>
+
+<p> </p>
+
+<p>   public static string LogoutUrl(this UrlHelper helper, string
+actionName, string controllerName, string stsUrl)</p>
+
+<p>   {</p>
+
+<p>       string host =
+helper.ViewContext.HttpContext.Request.Url.Authority;</p>
+
+<p>       string schema =
+helper.ViewContext.HttpContext.Request.Url.Scheme;</p>
+
+<p> </p>
+
+<p>       string realm = string.Format(&ldquo;{0}://{1}&rdquo;, schema, host);</p>
+
+<p>       string reply = string.Format(&ldquo;{0}{1}&rdquo;, realm,
+helper.Action(actionName, controllerName));</p>
+
+<p> </p>
+
+<p>       return string.Format(&ldquo;{0}?wa=wsignout1.0&amp;wreply={1}&rdquo;, stsUrl,
+reply);</p>
+
+<p>   }</p>
+
+<p>}</p>
+
+<p>The &ldquo;actionName&rdquo; and &ldquo;controllerName&rdquo; are just used to generate the
+reply address where the user must be redirect after being authenticated
+in the identity provider. These extension methods can be used in the
+view as follow,</p>
+
+<p>&lt;a href=&ldquo;&lt;%=Url.LoginUrl(&#8220;Login&rdquo;, &ldquo;Home&rdquo;,
+&ldquo;localhost://STS&rdquo;)%>&ldquo;>Login&lt;/a></p>
+
+<p>We also need a method in the relying party to parse the RRST message and
+generate a cookie with the user credentials and claims.</p>
+
+<p> </p>
+
+<p>public interface IFederatedAuthentication</p>
+
+<p>{</p>
+
+<p>   IClaimsPrincipal Authenticate();</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public class FederatedAuthentication : IFederatedAuthentication</p>
+
+<p>{</p>
+
+<p>     private string logoutUrl;</p>
+
+<p> </p>
+
+<p>     public FederatedAuthentication(string logoutUrl)</p>
+
+<p>     {</p>
+
+<p>         this.logoutUrl = logoutUrl;</p>
+
+<p>     }</p>
+
+<p> </p>
+
+<p>     public IClaimsPrincipal Authenticate()</p>
+
+<p>     {</p>
+
+<p>         string securityTokenXml =
+FederatedAuthenticationModule.Current.GetXmlTokenFromPassiveSignInResponse(System.Web.HttpContext.Current.Request,
+null);</p>
+
+<p> </p>
+
+<p>         FederatedAuthenticationModule current =
+FederatedAuthenticationModule.Current;</p>
+
+<p> </p>
+
+<p>         SecurityToken token = null;</p>
+
+<p>         IClaimsPrincipal authContext =
+current.AuthenticateUser(securityTokenXml, out token);</p>
+
+<p> </p>
+
+<p>         TicketGenerationContext context = new
+TicketGenerationContext(authContext, false, logoutUrl,
+typeof(SignInControl).Name);</p>
+
+<p>         current.IssueTicket(context);</p>
+
+<p> </p>
+
+<p>         return authContext;</p>
+
+<p>     }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>As you can see in the code above, the Zermatt module
+(FederatedAuthenticationModule) that parses the response message is tied
+to the Request object, something that we do not have direct access from
+a MVC controller (Well, it is bad practice if we want to test our code).
+That&rsquo;s the reason I decided to put all that code in a pluggin that can
+be injected later in the controller.</p>
+
+<p>The complete solution is available to download from <a href="/images/legacy/MVC.Zermatt.zip">this
+location</a>. Any feedback
+would be great!!. Enjoy!!.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/08/21/dependency-injection-made-easy-for-the-asp-net-mvc/">Dependency Injection Made Easy for the ASP.NET MVC</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-08-21T00:00:00-03:00" pubdate data-updated="true">Aug 21<span>st</span>, 2008</time>
+        
+         | <a href="/blog/2008/08/21/dependency-injection-made-easy-for-the-asp-net-mvc/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I decided to write this post to show how cool is Autofac for doing
+dependency injection in the ASP.NET MVC framework. Autofac, for me the
+Moq stepbrother  in the dependency injection arena because of its
+very-easy-to-use fluent interface and nice support of lambda
+expressions, comes with a built-in ASP.NET module to automatically
+intercept the creation of the controllers and pass the required
+dependencies to them, the only thing a programmer has to do is to
+provide instances of those dependencies or expressions to build them.</p>
+
+<p>Well, it is time to see Autofac in action with a practical example. If
+you have the chance to use the MVC preview 4, you may notice that it
+comes with a new controller &ldquo;Account&rdquo; to manage the website membership.
+This controller receives two dependencies in the constructor,</p>
+
+<p>public AccountController(IFormsAuthentication formsAuth,
+MembershipProvider provider)</p>
+
+<p>{</p>
+
+<p>  FormsAuth = formsAuth ?? new FormsAuthenticationWrapper();</p>
+
+<p>  Provider = provider ?? Membership.Provider;</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public IFormsAuthentication FormsAuth</p>
+
+<p>{</p>
+
+<p>  get;</p>
+
+<p>  private set;</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public MembershipProvider Provider</p>
+
+<p>{</p>
+
+<p>  get;</p>
+
+<p>  private set;</p>
+
+<p>}</p>
+
+<p>If those dependencies are not provided, it creates a default
+implementation of &ldquo;FormsAuthenticationWrapper&rdquo; and use the Membership
+singleton instance. Ok, let&rsquo;s make some minor changes to this controller
+so we always assume that those instances must be provided by the caller
+code (It will be actually responsibility of the DI container).</p>
+
+<p>public AccountController(IFormsAuthentication formsAuth,
+MembershipProvider provider)</p>
+
+<p>{</p>
+
+<p>  FormsAuth = formsAuth;</p>
+
+<p>  Provider = provider;</p>
+
+<p>}</p>
+
+<p>We now have to initialize a container to instruct Autofac about how to
+initialize or get instances of those classes. This can be done in the
+global.asax file,</p>
+
+<p>static IContainerProvider containerProvider;</p>
+
+<p> </p>
+
+<p>protected void Application_Start()</p>
+
+<p>{</p>
+
+<p>   RegisterRoutes(RouteTable.Routes);</p>
+
+<p> </p>
+
+<p>   var builder = new ContainerBuilder();</p>
+
+<p> </p>
+
+<p>   // Automatically register all controllers in the current assembly.</p>
+
+<p>   builder.RegisterModule(new
+AutofacControllerModule(Assembly.GetExecutingAssembly()));</p>
+
+<p> </p>
+
+<p>   builder.Register&lt;MembershipProvider>(container =>
+Membership.Provider).ExternallyOwned();</p>
+
+<p>  
+builder.Register&lt;FormsAuthenticationWrapper>().As&lt;IFormsAuthentication>().FactoryScoped();</p>
+
+<p> </p>
+
+<p>   containerProvider = new ContainerProvider(builder.Build());</p>
+
+<p> </p>
+
+<p>   // Hook MVC factory.</p>
+
+<p>   ControllerBuilder.Current.SetControllerFactory(new
+AutofacControllerFactory(containerProvider));</p>
+
+<p>}</p>
+
+<p>There are some lines in the code above that deserve special attention,
+so let&rsquo;s discuss them in details:</p>
+
+<ol>
+<li></li>
+</ol>
+
+
+<p>// Automatically register all controllers in the current assembly.</p>
+
+<p>builder.RegisterModule(new
+AutofacControllerModule(Assembly.GetExecutingAssembly()));</p>
+
+<p>This line basically discovers and registers all the controllers within
+the current assembly (The website itself) into the DI container.</p>
+
+<ol>
+<li></li>
+</ol>
+
+
+<p>builder.Register&lt;MembershipProvider>(container =>
+Membership.Provider).ExternallyOwned();</p>
+
+<p>builder.Register&lt;FormsAuthenticationWrapper>().As&lt;IFormsAuthentication>().FactoryScoped();</p>
+
+<p>The dependencies are registered in the container builder (The one that
+later knows how to create instances of the dependencies). The Register
+method optionally receives an lambda expression that will be used later
+to create or get the dependency instance, it could be considered a sort
+of lazy class construction. The container can also be used in the
+expressions to resolve other dependencies, for example,</p>
+
+<p>builder.Register&lt;MessagingService>(c => new
+MessagingService(c.Resolve&lt;IMessageRepository>).As&lt;IMessagingService>();</p>
+
+<p>Another important aspect in the initialization is the scope, which
+basically controls the dependency lifetime. In the code above I used two
+scopes, ExternallyOwned (The instance is managed by the application) and
+FactoryScoped (A new instance is created for every dependency
+resolution, very useful for instances that must be used and disposed
+just after, like the DataContext in Linq to SQL). Other possible scopes
+could be ContainerScoped (An instance per container) or Singleton (An
+instance shared between all containers).</p>
+
+<ol>
+<li></li>
+</ol>
+
+
+<p>containerProvider = new ContainerProvider(builder.Build());</p>
+
+<p> </p>
+
+<p>// Hook MVC factory.</p>
+
+<p>ControllerBuilder.Current.SetControllerFactory(new
+AutofacControllerFactory(containerProvider));</p>
+
+<p>The container provider is created, and the controller factory
+implementation provided by Autofac is set for the current application.</p>
+
+<p>As you can see, most of the plumbing code is already provided by
+Autofac, just a couple of lines were needed to start using DI in the MVC
+framework.</p>
+
+<p>The code sample is available to <a href="/images/legacy/MvcDI.zip">download
+here</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/08/01/combining-jquery-validation-with-asp-net-mvc/">Combining JQuery Validation With ASP.NET MVC</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-08-01T00:00:00-03:00" pubdate data-updated="true">Aug 1<span>st</span>, 2008</time>
+        
+         | <a href="/blog/2008/08/01/combining-jquery-validation-with-asp-net-mvc/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>One of the most nicest things about JQuery &ndash; in addition to the powerful
+mechanism it provides to manipulate the HTML DOM &ndash; is the great number
+of very useful plugins available out there.</p>
+
+<p><a href="http://bassistance.de/jquery-plugins/jquery-plugin-validation/">JQuery
+Validation</a>
+is one of my favorites, and today we will see how this plugin can be
+used with the MVC framework to validate all the inputs in a form before
+it is submitted to the controller.</p>
+
+<p>This plugin supports the concept of &ldquo;validation rule&rdquo;, a validation that
+has to be performed to an input field. For instance, &ldquo;The field is
+required&rdquo;, &ldquo;The field should have at least N characters&rdquo;, or &ldquo;This field
+has to be a valid email&rdquo;, many of them are the same you can find in the
+ASP.NET validators. (These validators do not work with the MVC framework
+because they are tied to the ASP.NET Viewstate). Of course, new rules
+can also be created for performing custom validations specific to an
+application, some examples of this are also available in the <a href="http://bassistance.de/jquery-plugins/jquery-plugin-validation/">plugin&rsquo;s
+website</a>.</p>
+
+<p>A rule can be applied to an input field in two ways:</p>
+
+<p>​1. Declarative, the rule is specified in the input field by means of
+the class attribute:</p>
+
+<p>&lt;input name=&ldquo;email&rdquo; id=&ldquo;email&rdquo; maxlength=&ldquo;60&rdquo; class=&ldquo;required email&rdquo;
+type=&ldquo;text&rdquo;/></p>
+
+<p>As you can see, two rules were specified in the class attribute,
+&ldquo;Required&rdquo; and &ldquo;Email&rdquo;, which means that two validations have to be
+performed for this field. Many rules can be applied to the same field,
+they only have to be separated by an space.</p>
+
+<p>​2. Imperative in code, the rule is specified in an script:</p>
+
+<p>&lt;script type=&ldquo;text/javascript&rdquo;></p>
+
+<p>\$(document).ready(function(){</p>
+
+<p>  \$(&ldquo;#form-sign-up&rdquo;).validate( {</p>
+
+<p>    rules: {</p>
+
+<p>      email: {</p>
+
+<p>        required: true,</p>
+
+<p>        email: true</p>
+
+<p>    },</p>
+
+<p>    messages: {</p>
+
+<p>      email: {</p>
+
+<p>        required: &ldquo;Please provide an email&rdquo;,</p>
+
+<p>        email: &ldquo;Please provide a valid email&rdquo;</p>
+
+<p>     } });</p>
+
+<p>});</p>
+
+<p>&lt;/script></p>
+
+<p>The validation was attached to the input field &ldquo;email&rdquo; in the form
+&ldquo;form-sign-up&rdquo;. The message displayed when a validation fails for an
+specific field can also be customized using the &ldquo;messages&rdquo; section in
+the script. (This is optional, the plugin already comes with a set of
+pre-defined error messages)</p>
+
+<p>And finally, one of the most interesting validation rules you can find
+there is &ldquo;remote&rdquo;, which performs a remote validation using an Ajax
+endpoint. At this point we can use an MVC controller method to perform
+an specific validation, for instance to see if a login name is still
+available to be used.</p>
+
+<p>&lt;script type=&ldquo;text/javascript&rdquo;></p>
+
+<p>\$(document).ready(function(){</p>
+
+<p>\$(&ldquo;#form-sign-up&rdquo;).validate( {</p>
+
+<p>  rules: {</p>
+
+<p>    login: {</p>
+
+<p>      required: true,</p>
+
+<p>      remote: &lsquo;&lt;%=Url.Action(&ldquo;IsLoginAvailable&rdquo;, &ldquo;Accounts&rdquo;) %>&rsquo;</p>
+
+<p>   }</p>
+
+<p>  },</p>
+
+<p>  messages: {</p>
+
+<p>    login: {</p>
+
+<p>     required: &ldquo;Please provide an alias&rdquo;,</p>
+
+<p>     remote: jQuery.format(&ldquo;{0} is already in use&rdquo;)</p>
+
+<p>   }</p>
+
+<p>  } });</p>
+
+<p>});</p>
+
+<p>&lt;/script></p>
+
+<p>The only requirement for the controller is that it must be return Json
+with the result of the validation. This can be easily done with MVC,</p>
+
+<p>public JsonResult IsLoginAvailable(string login)</p>
+
+<p>{</p>
+
+<p>    //TODO: Do the validation</p>
+
+<p>    JsonResult result = new JsonResult();</p>
+
+<p>    if (login == &ldquo;cibrax&rdquo;)</p>
+
+<p>      result.Data = false;</p>
+
+<p>    else</p>
+
+<p>      result.Data = true;</p>
+
+<p> </p>
+
+<p>    return result;</p>
+
+<p>}</p>
+
+<p>In the example above, if &ldquo;cibrax&rdquo; is entered as login name, the
+validation will fail and the user will see an error message.</p>
+
+<p><img src="/images/legacy/MVC_Validation.jpg" alt="" /></p>
+
+<p>The styles for the error messages can also be customized with the
+following rules,</p>
+
+<p>label.error {</p>
+
+<p>display: block;</p>
+
+<p>color: red;</p>
+
+<p>font-style: italic;</p>
+
+<p>font-weight: normal;</p>
+
+<p>}</p>
+
+<p>input.error {</p>
+
+<p>border: 2px solid red;</p>
+
+<p>}</p>
+
+<p>td.field input.error, td.field select.error, tr.errorRow td.field
+input,tr.errorRow td.field select {</p>
+
+<p>border: 2px solid red;</p>
+
+<p>background-color: #FFFFD5;</p>
+
+<p>margin: 0px;</p>
+
+<p>color: red;</p>
+
+<p>}</p>
+
+<p>As we have discussed here, JQuery validation is a great tool that we all
+should consider at the moment to validate data in the ASP.NET MVC
+framework.</p>
+
+<p>A complete example with different validations can be <a href="/images/legacy/Mvc.Validation.zip">downloaded from
+this location</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/18/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/blog/page/16/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,815 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Running a partial SSL website with ASP.NET MVC - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="Keith
+Brown
+has just released a helper class (Based on an original
+implementation
+made by Dominick Baier) with very useful methods for mixing Http &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2009/01/19/running-a-partial-ssl-website-in-asp-net-mvc">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Running a Partial SSL Website With ASP.NET MVC</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-01-19T00:00:00-03:00" pubdate data-updated="true">Jan 19<span>th</span>, 2009</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p><a href="http://www.pluralsight.com/community/blogs/keith/archive/2009/01/17/sslhelper-get-help-running-a-partial-ssl-website-in-asp-net.aspx">Keith
+Brown</a>
+has just released a helper class (Based on an <a href="http://www.leastprivilege.com/CommentView.aspx?guid=50a39e64-caab-4fbd-b8e1-2be06b2e6081">original
+implementation</a>
+made by Dominick Baier) with very useful methods for mixing Http and
+Https in a regular asp.net application. Before jumping in this post,
+make sure to read his post (And Dominick&rsquo;s) to understand all the
+problems you may have to deal with when implementing a partial SSL
+website.</p>
+
+<p>Running a partial SSL website in ASP.NET MVC is not much different,
+however, in MVC, we can leverage the existing and powerful routing
+mechanism to implement similar features.</p>
+
+<p><strong>Switching to SSL through an ASP.NET Module</strong></p>
+
+<p>This module  basically inspects the URL and does a redirect based on
+some configuration where you specify routes that should be SSL
+protected.</p>
+
+<p>public void ProcessRequest(HttpContext context)</p>
+
+<p>{</p>
+
+<p>    if(Authentication.IsSslRequired() &amp;&amp;
+context.Request.HttpMethod.Equals(&ldquo;get&rdquo;,
+StringComparison.OrdinalIgnoreCase))</p>
+
+<p>    {</p>
+
+<p>        var data = RouteTable.Routes.GetRouteData(new
+HttpContextWrapper(context));</p>
+
+<p>        if (data != null)</p>
+
+<p>        {</p>
+
+<p>            if (!context.Request.IsSecureConnection)</p>
+
+<p>            {</p>
+
+<p>                if(data.DataTokens[&ldquo;isSecure&rdquo;] != null &amp;&amp;
+(bool)data.DataTokens[&ldquo;isSecure&rdquo;])</p>
+
+<p>                {</p>
+
+<p>                    //Do redirect to https</p>
+
+<p>                    var secureUrl =
+context.Request.Url.ToString().ToSslUrl();</p>
+
+<p>                    context.Response.Redirect(secureUrl, true);</p>
+
+<p>                }</p>
+
+<p>            }</p>
+
+<p>            else</p>
+
+<p>            {</p>
+
+<p>                if (data.DataTokens[&ldquo;isSecure&rdquo;] == null ||
+!((bool)data.DataTokens[&ldquo;isSecure&rdquo;]))</p>
+
+<p>                {</p>
+
+<p>                    //Do redirect to http</p>
+
+<p>                    var unsecureUrl =
+context.Request.Url.ToString().ToUnsecureUrl();</p>
+
+<p>                    context.Response.Redirect(unsecureUrl, true);</p>
+
+<p>                }</p>
+
+<p>            }</p>
+
+<p>        }</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>As you can see in the code above, the module checks whether the page
+should be ssl protected using a custom data token (IsSecure) that was
+previously configured for the route, and afterwards, it redirects the
+request according to that setting. For instance, if the route requires
+to be the secure (IsSecure = true), and the request was actually made
+through http, the module will redirect the request to https.</p>
+
+<p>The absolute URLs are built using some extensions methods (ToSslUrl and
+ToUnsecureUrl) that I will show later in this post.</p>
+
+<p>Authentication.IsSslRequired is just an configuration setting that we
+can use to skip all these checks during development.</p>
+
+<p>public class Authentication</p>
+
+<p>{</p>
+
+<p>    public static bool IsSslRequired()</p>
+
+<p>    {</p>
+
+<p>        var setting = ConfigurationManager.AppSettings[&ldquo;RequireSSL&rdquo;];</p>
+
+<p>        if (setting != null)</p>
+
+<p>        {</p>
+
+<p>            return bool.Parse(setting);</p>
+
+<p>        }</p>
+
+<p> </p>
+
+<p>        return false;</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>&lt;appSettings></p>
+
+<p>  &lt;add key=&ldquo;RequireSSL&rdquo; value=&ldquo;True&rdquo;/></p>
+
+<p>&lt;/appSettings></p>
+
+<p>The code for setting the custom data token in the MVC route looks as
+follow,</p>
+
+<p>routes.MapRoute(</p>
+
+<p>    &ldquo;MyAccount/PasswordChange&rdquo;,</p>
+
+<p>    &ldquo;MyAccount/PasswordChange&rdquo;,</p>
+
+<p>    new { controller = &ldquo;Accounts&rdquo;, action = &ldquo;PasswordChange&rdquo; }</p>
+
+<p>).DataTokens = new RouteValueDictionary(new { isSecure = true });</p>
+
+<p>**** </p>
+
+<p><strong>Extension methods for generating absolute URLs</strong></p>
+
+<p>As I showed before in the ASP.NET Module, two extensions methods were
+used to generate absolute URLs. I just based their implementation on
+some code originally written by Troy Goode in this
+<a href="http://www.squaredroot.com/post/2008/06/MVC-and-SSL.aspx">post</a>. \</p>
+
+<p>/// &lt;summary></p>
+
+<p>/// Provides helper extensions for turning strings into fully-qualified
+and SSL-enabled Urls.</p>
+
+<p>/// &lt;/summary></p>
+
+<p>public static class UrlStringExtensions</p>
+
+<p>{</p>
+
+<p>    /// &lt;summary></p>
+
+<p>    /// Takes a relative or absolute url and returns the fully-qualified
+url path.</p>
+
+<p>    /// &lt;/summary></p>
+
+<p>    /// &lt;param name=&ldquo;text&rdquo;>The url to make fully-qualified. Ex:
+Home/About&lt;/param></p>
+
+<p>    /// &lt;returns>The absolute url plus protocol, server, &amp; port. Ex:
+<a href="http://localhost:1234/Home/About&lt;/returns>&#8220;>http://localhost:1234/Home/About&lt;/returns></a></p>
+
+<p>    public static string ToFullyQualifiedUrl( this string text )</p>
+
+<p>    {</p>
+
+<p>        var oldUrl = text;</p>
+
+<p>        var oldUrlArray = ( oldUrl.Contains( &ldquo;?&rdquo; ) ? oldUrl.Split( &lsquo;?&rsquo; )
+: new[]{ oldUrl, &ldquo;&rdquo; } );</p>
+
+<p> </p>
+
+<p>        var requestUri = HttpContext.Current.Request.Url;</p>
+
+<p>        var localPathAndQuery = requestUri.LocalPath + requestUri.Query;</p>
+
+<p>        var urlBase = requestUri.AbsoluteUri.Substring( 0,
+requestUri.AbsoluteUri.Length &ndash; localPathAndQuery.Length );</p>
+
+<p> </p>
+
+<p>        var newUrl = VirtualPathUtility.ToAbsolute( oldUrlArray[0] );</p>
+
+<p>        if( !string.IsNullOrEmpty( oldUrlArray[1] ) )</p>
+
+<p>            newUrl += &ldquo;?&rdquo; + oldUrlArray[1];</p>
+
+<p> </p>
+
+<p>        return urlBase + newUrl;</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    /// &lt;summary></p>
+
+<p>    /// Looks for Html links in the passed string and turns each
+relative or absolute url and returns the fully-qualified url path.</p>
+
+<p>    /// &lt;/summary></p>
+
+<p>    /// &lt;param name=&ldquo;text&rdquo;>The url to make fully-qualified. Ex: &lt;a
+href=&ldquo;Home/About&rdquo;>Blah&lt;/a>&lt;/param></p>
+
+<p>    /// &lt;returns>The absolute url plus protocol, server, &amp; port. Ex:
+&lt;a href=&ldquo;<a href="http://localhost:1234/Home/About">http://localhost:1234/Home/About</a>&rdquo;>Blah&lt;/a>&lt;/returns></p>
+
+<p>    public static string ToFullyQualifiedLink( this string text )</p>
+
+<p>    {</p>
+
+<p>        var regex = new Regex(</p>
+
+<p>           
+&ldquo;(?&lt;Before>&lt;a.*href=\&rdquo;)(?!http)(?&lt;Url>.*?)(?&lt;After>\&ldquo;.+>)&rdquo;,</p>
+
+<p>            RegexOptions.Multiline | RegexOptions.IgnoreCase</p>
+
+<p>            );</p>
+
+<p> </p>
+
+<p>        return regex.Replace( text, ( Match m ) =></p>
+
+<p>                                    m.Groups[&ldquo;Before&rdquo;].Value +</p>
+
+<p>                                    ToFullyQualifiedUrl(
+m.Groups[&ldquo;Url&rdquo;].Value ) +</p>
+
+<p>                                    m.Groups[&ldquo;After&rdquo;].Value</p>
+
+<p>            );</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    /// &lt;summary></p>
+
+<p>    /// Takes a relative or absolute url and returns the fully-qualified
+url path using the Https protocol.</p>
+
+<p>    /// &lt;/summary></p>
+
+<p>    /// &lt;param name=&ldquo;text&rdquo;>The url to make fully-qualified. Ex:
+Home/About&lt;/param></p>
+
+<p>    /// &lt;returns>The absolute url plus server, &amp; port using the Https
+protocol. Ex: <a href="https://localhost:1234/Home/About&lt;/returns>&#8220;>https://localhost:1234/Home/About&lt;/returns></a></p>
+
+<p>    public static string ToSslUrl( this string text )</p>
+
+<p>    {</p>
+
+<p>        if (IsSslRequired())</p>
+
+<p>        {</p>
+
+<p>            string absoluteUrl = null;</p>
+
+<p>            if (text.StartsWith(&ldquo;<a href="http://">http://</a>&rdquo;,
+StringComparison.OrdinalIgnoreCase) || text.StartsWith(&ldquo;<a href="https://">https://</a>&rdquo;,
+StringComparison.OrdinalIgnoreCase))</p>
+
+<p>                absoluteUrl = text;</p>
+
+<p>            else</p>
+
+<p>                absoluteUrl = ToFullyQualifiedUrl(text);</p>
+
+<p> </p>
+
+<p>            return absoluteUrl.Replace(&ldquo;<a href="http:">http:</a>&rdquo;, &ldquo;<a href="https:">https:</a>&rdquo;);</p>
+
+<p>        }</p>
+
+<p>        else</p>
+
+<p>        {</p>
+
+<p>            return text;</p>
+
+<p>        }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    /// &lt;summary></p>
+
+<p>    /// Takes a relative or absolute url and returns the fully-qualified
+url path using the Http protocol.</p>
+
+<p>    /// &lt;/summary></p>
+
+<p>    /// &lt;param name=&ldquo;text&rdquo;>The url to make fully-qualified. Ex:
+Home/About&lt;/param></p>
+
+<p>    /// &lt;returns>The absolute url plus server, &amp; port using the Http
+protocol. Ex: <a href="http://localhost:1234/Home/About&lt;/returns>&#8220;>http://localhost:1234/Home/About&lt;/returns></a></p>
+
+<p>    public static string ToUnsecureUrl(this string text)</p>
+
+<p>    {</p>
+
+<p>        string absoluteUrl = null;</p>
+
+<p>        if (text.StartsWith(&ldquo;<a href="http://">http://</a>&rdquo;,
+StringComparison.OrdinalIgnoreCase) || text.StartsWith(&ldquo;<a href="https://">https://</a>&rdquo;,
+StringComparison.OrdinalIgnoreCase))</p>
+
+<p>            absoluteUrl = text;</p>
+
+<p>        else</p>
+
+<p>            absoluteUrl = ToFullyQualifiedUrl(text);</p>
+
+<p> </p>
+
+<p>        return absoluteUrl.Replace(&ldquo;<a href="https:">https:</a>&rdquo;, &ldquo;<a href="http:">http:</a>&rdquo;);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    /// &lt;summary></p>
+
+<p>    /// Looks for Html links in the passed string and turns each
+relative or absolute url into a fully-qualified url path using the Https
+protocol.</p>
+
+<p>    /// &lt;/summary></p>
+
+<p>    /// &lt;param name=&ldquo;text&rdquo;>The url to make fully-qualified. Ex: &lt;a
+href=&ldquo;Home/About&rdquo;>Blah&lt;/a>&lt;/param></p>
+
+<p>    /// &lt;returns>The absolute url plus server, &amp; port using the Https
+protocol. Ex: &lt;a
+href=&ldquo;<a href="https://localhost:1234/Home/About">https://localhost:1234/Home/About</a>&rdquo;>Blah&lt;/a>&lt;/returns></p>
+
+<p>    public static string ToSslLink( this string text )</p>
+
+<p>    {</p>
+
+<p>        if (IsSslRequired())</p>
+
+<p>        {</p>
+
+<p>            return ToFullyQualifiedLink(text).Replace(&ldquo;<a href="http:">http:</a>&rdquo;,
+&ldquo;<a href="https:">https:</a>&rdquo;);</p>
+
+<p>        }</p>
+
+<p>        else</p>
+
+<p>        {</p>
+
+<p>            return ToFullyQualifiedLink(text);</p>
+
+<p>        }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    private static bool IsSslRequired()</p>
+
+<p>    {</p>
+
+<p>        return Authentication.IsSslRequired();</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>\
+They can be used from a view as well to generate links with complete
+Urls,</p>
+
+<p>&lt;a href=&lsquo;&lt;% =Url.Action(&ldquo;PasswordChange&rdquo;, &ldquo;Accounts&rdquo;).ToSslUrl()
+%>&rsquo;>Change your password&lt;/a></p>
+
+<p><strong>Gettting an absolute URL within a controller</strong></p>
+
+<p>For some scenarios, we might need to redirect the user from a secure
+route to a regular route or viceversa within a controller. In those
+cases, we should have a way to generate a complete URL from a controller
+method and used it later with a RedirectResult (This is also useful when
+you want to include a link to a web page in an email sent by your
+website).</p>
+
+<p>For instance, it would be very helpful to have something like this,</p>
+
+<p>return new RedirectResult(this.FullActionUrl&lt;MyController>(c =>
+c.SecureMethod(), &ldquo;https&rdquo;));</p>
+
+<p>Where &ldquo;FullActionUrl&rdquo; is an extension method for the Controller class.
+In addition to the controller method we want to use to get the absolute
+route (&ldquo;SecureMethod&rdquo;), we can also specify the scheme to be used with
+that route.</p>
+
+<p>The code for doing that is shown bellow (They are part of the .NETfx
+project,
+<a href="http://code.google.com/p/netfx/">http://code.google.com/p/netfx/</a>)</p>
+
+<p>/// &lt;summary></p>
+
+<p>/// Returns the full URL for performing an invocation to an action based</p>
+
+<p>/// on an expression representing an invocation to a controller method</p>
+
+<p>/// that may include arguments.</p>
+
+<p>/// &lt;/summary></p>
+
+<p>/// &lt;typeparam name=&ldquo;T&rdquo;>Type of the controller to call to. Can be
+omitted as it can be inferred from the action type.&lt;/typeparam></p>
+
+<p>/// &lt;param name=&ldquo;controller&rdquo;>The controller performing the
+call.&lt;/param></p>
+
+<p>/// &lt;param name=&ldquo;action&rdquo;>The action containing the call.&lt;/param></p>
+
+<p>public static string FullActionUrl&lt;T>(this Controller controller,
+Expression&lt;Action&lt;T>> action, string scheme)</p>
+
+<p>    where T : Controller</p>
+
+<p>{</p>
+
+<p>    string host = controller.HttpContext.Request.Url.Authority;</p>
+
+<p>    string virtualPath = ActionUrl(controller, action);</p>
+
+<p> </p>
+
+<p>    return string.Format(&ldquo;{0}://{1}{2}&rdquo;, scheme, host, virtualPath);</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>/// &lt;summary></p>
+
+<p>/// Returns the URL for performing an invokation to an action based</p>
+
+<p>/// on an expression representing an invocation to a controller method</p>
+
+<p>/// that may include arguments.</p>
+
+<p>/// &lt;/summary></p>
+
+<p>/// &lt;typeparam name=&ldquo;T&rdquo;>Type of the controller to call to. Can be
+omitted as it can be inferred from the action type.&lt;/typeparam></p>
+
+<p>/// &lt;param name=&ldquo;controller&rdquo;>The controller performing the
+call.&lt;/param></p>
+
+<p>/// &lt;param name=&ldquo;action&rdquo;>The action containing the call.&lt;/param></p>
+
+<p>public static string ActionUrl&lt;T>(this ControllerBase controller,
+Expression&lt;Action&lt;T>> action)</p>
+
+<p>    where T : Controller</p>
+
+<p>{</p>
+
+<p>    var call = ControllerExpression.GetMethodCall&lt;T>(action);</p>
+
+<p> </p>
+
+<p>    string actionName = call.Method.Name;</p>
+
+<p>    string controllerName =
+ControllerExpression.GetControllerName&lt;T>();</p>
+
+<p> </p>
+
+<p>    var values = LinkBuilder.BuildParameterValuesFromExpression(call);</p>
+
+<p>    values.Add(&ldquo;action&rdquo;, actionName);</p>
+
+<p>    values.Add(&ldquo;controller&rdquo;, controllerName);</p>
+
+<p> </p>
+
+<p>    var vpd =
+RouteTable.Routes.GetVirtualPath(controller.ControllerContext, values);</p>
+
+<p>    string target = null;</p>
+
+<p>    if (vpd != null)</p>
+
+<p>    {</p>
+
+<p>        target = vpd.VirtualPath;</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    return target;</p>
+
+<p>}</p>
+
+<p>The complete code is available to download from
+<a href="/images/legacy/MVC.SSL.zip">here</a>. </p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-01-19T00:00:00-03:00" pubdate data-updated="true">Jan 19<span>th</span>, 2009</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/asp-dot-net/'>ASP.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2009/01/19/running-a-partial-ssl-website-in-asp-net-mvc/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2009/01/19/running-a-partial-ssl-website-in-asp-net-mvc/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2009/01/08/describing-restful-applications/" title="Previous Post: Describing RESTful applications">&laquo; Describing RESTful applications</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2009/01/28/claims-negotiation-between-a-consumer-sts-and-relying-party-in-wcf/" title="Next Post: Claims negotiation between a consumer, STS and Relying Party in WCF">Claims negotiation between a consumer, STS and Relying Party in WCF &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2009/01/19/running-a-partial-ssl-website-in-asp-net-mvc/';
+        var disqus_url = 'http://cibrax.me/blog/2009/01/19/running-a-partial-ssl-website-in-asp-net-mvc/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

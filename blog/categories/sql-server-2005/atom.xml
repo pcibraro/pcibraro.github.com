@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: SQL-Server-2005 | Pablo Cibraro (Cibrax)]]></title>
+  <link href="http://cibrax.me/blog/categories/sql-server-2005/atom.xml" rel="self"/>
+  <link href="http://cibrax.me/"/>
+  <updated>2013-12-26T15:03:47-03:00</updated>
+  <id>http://cibrax.me/</id>
+  <author>
+    <name><![CDATA[Cibrax]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[HTTP Endpoints in SQL Server 2005]]></title>
+    <link href="http://cibrax.me/blog/2005/04/22/403868/"/>
+    <updated>2005-04-22T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2005/04/22/403868</id>
+    <content type="html"><![CDATA[<p>SQL Server 2005 ( Codenamed &ldquo;Yukon&rdquo; )  provides a new interesting
+feature to execute stores procedures or Transact-SQL statements through
+web services published in the server, without need to use IIS.\
+This new feature exposes Http endpoints using the Http Api provided in
+Windows XP SP2 and Windows 2003.\
+These endpoints are published in a specific URI, and they listen for
+incoming soap requests, so they facilitate interoperability because any
+application, which talks soap, can communicate with SQL server without
+requiring additional sql libraries or MDAC.</p>
+
+<p>The syntax to create an endpoint is quite simple, and looks like this:</p>
+
+<p>CREATE ENDPOINT MyEndpoint\
+STATE = STARTED\
+AS HTTP (\
+  AUTHENTICATION = (INTEGRATED),\
+  PATH = &lsquo;/sql/myendpoint&rsquo;,\
+  PORTS = (CLEAR) )\
+FOR SOAP (\
+  BATCHES = ENABLED,\
+  WSDL = DEFAULT\
+)\</p>
+
+<p>In this case I created a new endpoint called MyEndpoint, which listen
+for Transact-SQL statements on <a href="http://localhost/sql/myendpoint.">http://localhost/sql/myendpoint.</a> You can
+test it browsing to <a href="http://localhost/sql/myendpoint?wsdl.%0AThis">http://localhost/sql/myendpoint?wsdl.
+This</a> sentence supports additional parameters, all of them are very well
+described in the SQL online help.\</p>
+
+<p>This sample shows how to execute a Transact-SQL statement from a simple
+java script.</p>
+
+<p>function SendBatchRequest( strServerName, strUrlPath, strQuery )\
+{\
+   var objXmlHttp = null;\
+   var strRequest = &ldquo;&rdquo;;\
+\
+   objXmlHttp = new ActiveXObject( &ldquo;microsoft.xmlhttp&rdquo; );\
+   objXmlHttp.open( &ldquo;POST&rdquo;, &ldquo;<a href="http://">http://</a>&rdquo; + strServerName + strUrlPath,
+false );\
+   objXmlHttp.setrequestheader( &ldquo;Content-Type&rdquo;, &ldquo;text/xml&rdquo; );\
+   objXmlHttp.setRequestHeader( &ldquo;Host&rdquo;, strServerName );\
+\
+   strRequest = &ldquo;&lt;SOAP-ENV:Envelope\
+                           xmlns:SOAP-ENV=&lsquo;<a href="http://schemas.xmlsoap.org/soap/envelope/">http://schemas.xmlsoap.org/soap/envelope/</a>&rsquo;\
+                           xmlns:sql=&lsquo;<a href="http://schemas.microsoft.com/sqlserver/2004/SOAP">http://schemas.microsoft.com/sqlserver/2004/SOAP</a>&rsquo;>\
+                              &lt;SOAP-ENV:Body>\
+                                 &lt;sql:sqlbatch>\
+                                    &lt;sql:BatchCommands>&rdquo; + strQuery +
+&ldquo;&lt;/sql:BatchCommands>\
+                                 &lt;/sql:sqlbatch>\
+                              &lt;/SOAP-ENV:Body>\
+                        &lt;/SOAP-ENV:Envelope>&rdquo;;\
+\
+   objXmlHttp.send( strRequest );\
+\
+   if( objXmlHttp.status == 200 )\
+      return objXmlHttp.responseXML.xml;\
+   else\
+      return &ldquo;&rdquo;;\
+}\
+\
+var response = SendBatchRequest( &lsquo;localhost&rsquo;, &lsquo;/sql/myendpoint&rsquo;, &lsquo;Select
+* from sys.http_endpoints&rsquo; );\</p>
+
+<p>Actually, I&rsquo;m writing a .NET managed data provider to consume these web
+services, so I&rsquo;ll be blogging a lot more about this topic soon.</p>
+]]></content>
+  </entry>
+  
+</feed>

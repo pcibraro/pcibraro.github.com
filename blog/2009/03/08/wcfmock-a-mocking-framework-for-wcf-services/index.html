@@ -1,0 +1,574 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>WCFMock, a mocking framework for WCF services - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="WCFMock, a mocking framework for WCF services. Not a very original name,
+but it was the first one that came out to my mind :). If you have been &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2009/03/08/wcfmock-a-mocking-framework-for-wcf-services">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">WCFMock, a Mocking Framework for WCF Services</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-03-08T00:00:00-03:00" pubdate data-updated="true">Mar 8<span>th</span>, 2009</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>WCFMock, a mocking framework for WCF services. Not a very original name,
+but it was the first one that came out to my mind :). If you have been
+following my blog for a while, you might notice that I discussed
+different approaches in the past to unit test WCF services,
+<a href="http://weblogs.asp.net/cibrax/archive/2008/05/16/unit-tests-for-wcf.aspx">here</a>
+and
+<a href="http://weblogs.asp.net/cibrax/archive/2008/12/11/testing-wcf-rest-services.aspx">here</a>.
+One of the major pains that you will find today for unit testing WCF
+services is the static operation context (OperationContext and
+WebOperationContext). If you service implementation relies on that
+context for doing something, you will have a hard time trying to test
+that functionality.</p>
+
+<p>For instance, it is very common in WCF REST services to use the context
+to set or get http status codes. With the current WCF bits, how can you
+do to unit test those services ?. The answer is WCFMock, a set of useful
+classes that will help you to remove all the explicit dependencies with
+the operation context, and still provide a good way to mock them from
+unit tests.</p>
+
+<p>Let&rsquo;s see how WCFMock works in practice with a very simple example,</p>
+
+<p>​1. You have a WCF REST service that returns a RSS feed with a catalog
+of products</p>
+
+<p>[ServiceContract]</p>
+
+<p>public interface IProductCatalog</p>
+
+<p>{</p>
+
+<p>    [WebGet(UriTemplate = &ldquo;?category={category}&rdquo;)]</p>
+
+<p>    [OperationContract]</p>
+
+<p>    Atom10FeedFormatter GetProducts(string category);</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public Atom10FeedFormatter GetProducts(string category)</p>
+
+<p>{</p>
+
+<p>    var items = new List&lt;SyndicationItem>();</p>
+
+<p>    foreach(var product in repository.GetProducts(category))</p>
+
+<p>    {</p>
+
+<p>        items.Add(new SyndicationItem()</p>
+
+<p>        {</p>
+
+<p>            Id = String.Format(CultureInfo.InvariantCulture,
+&ldquo;<a href="http://products/">http://products/</a>{0}&rdquo;, product.Id),</p>
+
+<p>            Title = new TextSyndicationContent(product.Name),</p>
+
+<p>            LastUpdatedTime = new DateTime(2008, 7, 1, 0, 0, 0,
+DateTimeKind.Utc),</p>
+
+<p>            Authors =</p>
+
+<p>            {</p>
+
+<p>                new SyndicationPerson()</p>
+
+<p>                {</p>
+
+<p>                    Name = &ldquo;cibrax&rdquo;</p>
+
+<p>                }</p>
+
+<p>            },</p>
+
+<p>            Content = new TextSyndicationContent(string.Format(&ldquo;Category
+Id {0} &ndash; Price {1}&rdquo;,</p>
+
+<p>                product.Category, product.UnitPrice))</p>
+
+<p>        });</p>
+
+<p>    }</p>
+
+<p>    var feed = new SyndicationFeed()</p>
+
+<p>    {</p>
+
+<p>        Id = &ldquo;<a href="http://Products">http://Products</a>&rdquo;,</p>
+
+<p>        Title = new TextSyndicationContent(&ldquo;Product catalog&rdquo;),</p>
+
+<p>        Items = items</p>
+
+<p>    };</p>
+
+<p>    WebOperationContext.Current.OutgoingResponse.ContentType =
+&ldquo;application/atom+xml&rdquo;;</p>
+
+<p>    return feed.GetAtom10Formatter();</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p> </p>
+
+<p>This service implementation only relies on the WebOperationContext to
+set up the response content type, that is being done in the following
+line,</p>
+
+<p> </p>
+
+<p>WebOperationContext.Current.OutgoingResponse.ContentType =
+&ldquo;application/atom+xml&rdquo;;</p>
+
+<p> </p>
+
+<p>​2. You have now to find a way to get rid of that dependency so we can
+unit test that method. Here is where WCFMock comes to the rescue. The
+first thing you have to do is to define a new alias on top of your
+class,</p>
+
+<p>using WebOperationContext =
+System.ServiceModel.Web.MockedWebOperationContext;</p>
+
+<p>Optionally, you can wrap that sentence with a conditional compilation
+directive</p>
+
+<p>#if DEBUG</p>
+
+<p>using WebOperationContext =
+System.ServiceModel.Web.MockedWebOperationContext;</p>
+
+<p>#endif</p>
+
+<p>This is useful for instance, if you want to use the mocked version in
+development, and always the WCF version in production. That&rsquo;s all, you
+do not need to touch your existing service implementation at all, once
+you defined that alias, the service is ready to be tested.</p>
+
+<p>​3. For testing the service, I will use Moq, a pretty good mock
+framework created by my friend <a href="http://weblogs.asp.net/cazzu">Cazzu</a>.</p>
+
+<p>[TestClass]</p>
+
+<p>public class UnitTests</p>
+
+<p>{</p>
+
+<p>    [TestMethod]</p>
+
+<p>    public void ShouldGetProductsFeed()</p>
+
+<p>    {</p>
+
+<p>        ProductCatalog catalog = new ProductCatalog(</p>
+
+<p>            new InMemoryProductRepository(</p>
+
+<p>                new List&lt;Product>{</p>
+
+<p>                new Product { Id = &ldquo;1&rdquo;, Category = &ldquo;foo&rdquo;, Name = &ldquo;Foo1&rdquo;,
+UnitPrice = 1 },</p>
+
+<p>                new Product { Id = &ldquo;2&rdquo;, Category = &ldquo;bar&rdquo;, Name = &ldquo;bar2&rdquo;,
+UnitPrice = 2 }</p>
+
+<p>            }));</p>
+
+<p>        Mock&lt;IWebOperationContext> mockContext = new
+Mock&lt;IWebOperationContext> { DefaultValue = DefaultValue.Mock };</p>
+
+<p>        IEnumerable&lt;SyndicationItem> items;</p>
+
+<p>        <strong>using (new MockedWebOperationContext(mockContext.Object))</strong></p>
+
+<p><strong>        {</strong></p>
+
+<p><strong>            var formatter = catalog.GetProducts(&ldquo;foo&rdquo;);</strong></p>
+
+<p><strong>            items = formatter.Feed.Items;</strong></p>
+
+<p><strong>        }</strong></p>
+
+<p>        mockContext.VerifySet(c => c.OutgoingResponse.ContentType,
+&ldquo;application/atom+xml&rdquo;);</p>
+
+<p>        Assert.AreEqual(1, items.Count());</p>
+
+<p>        Assert.IsTrue(items.Any(i => i.Id == &ldquo;<a href="http://products/1">http://products/1</a>&rdquo; &amp;&amp;
+i.Title.Text == &ldquo;Foo1&rdquo;));</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>Two pieces of code deserves some special attention, the code for
+creating the mocked WebOperationContext and the code required for
+verifying the expectations.</p>
+
+<p>using (new MockedWebOperationContext(mockContext.Object))</p>
+
+<p>{</p>
+
+<p>    var formatter = catalog.GetProducts(&ldquo;foo&rdquo;);</p>
+
+<p>    items = formatter.Feed.Items;</p>
+
+<p>}</p>
+
+<p>That will insert the mockContext object in the Thread Local Storage so
+it can be accessed later in the service implementation.  </p>
+
+<p>The test also verifies that the ContentType header was set with the
+correct value in the operation,</p>
+
+<p>mockContext.VerifySet(c => c.OutgoingResponse.ContentType,
+&ldquo;application/atom+xml&rdquo;);</p>
+
+<p>As you can see, all the magic is done by the MockedWebOperationContext
+(There is also a MockedOperationContext to replace the
+OperationContext). The implementation of this class is quite simple,</p>
+
+<p>public class MockedWebOperationContext : IDisposable</p>
+
+<p>{</p>
+
+<p>    [ThreadStatic]</p>
+
+<p>    private static IWebOperationContext currentContext;</p>
+
+<p>    public MockedWebOperationContext(IWebOperationContext context)</p>
+
+<p>    {</p>
+
+<p>        currentContext = context;</p>
+
+<p>    }</p>
+
+<p>    public static IWebOperationContext Current</p>
+
+<p>    {</p>
+
+<p>        get</p>
+
+<p>        {</p>
+
+<p>            if (currentContext == null)</p>
+
+<p>            {</p>
+
+<p>                return new
+WebOperationContextWrapper(WebOperationContext.Current);</p>
+
+<p>            }</p>
+
+<p>            return currentContext;</p>
+
+<p>        }</p>
+
+<p>    }</p>
+
+<p>    public void Dispose()</p>
+
+<p>    {</p>
+
+<p>        currentContext = null;</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>The Current property of this class first tries to get an
+IWebOperationContext from the thread local storage (That could be set by
+the unit tests), and if none is available, it returns a wrapper to the
+original WCF context. As you can see, the overhead introduced by the
+class is minimal, it just a quick search in the TLS.</p>
+
+<p>The project is now available to download from Codeplex at this location,
+<a href="http://wcfmock.codeplex.com/">http://wcfmock.codeplex.com/</a></p>
+
+<p>Enjoy.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-03-08T00:00:00-03:00" pubdate data-updated="true">Mar 8<span>th</span>, 2009</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/unit-testing/'>Unit-Testing</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2009/03/08/wcfmock-a-mocking-framework-for-wcf-services/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2009/03/08/wcfmock-a-mocking-framework-for-wcf-services/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2009/03/06/brokered-authentication-for-rest-active-clients-with-saml/" title="Previous Post: Brokered authentication for REST active clients with SAML">&laquo; Brokered authentication for REST active clients with SAML</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2009/03/11/code-generation-with-t4-an-entities-to-dto-example/" title="Next Post: Code generation with T4, Entities to DTOs example">Code generation with T4, Entities to DTOs example &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2009/03/08/wcfmock-a-mocking-framework-for-wcf-services/';
+        var disqus_url = 'http://cibrax.me/blog/2009/03/08/wcfmock-a-mocking-framework-for-wcf-services/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

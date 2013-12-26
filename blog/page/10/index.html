@@ -1,0 +1,2422 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="A common requirement that we received from some customers while we were
+in the early design stages of SO-Aware was the ability of tracking
+static &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/page/10">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/08/04/visualizing-service-dependencies-in-so-aware/">Visualizing Service Dependencies in SO-Aware</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-08-04T00:00:00-03:00" pubdate data-updated="true">Aug 4<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/08/04/visualizing-service-dependencies-in-so-aware/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>A common requirement that we received from some customers while we were
+in the early design stages of SO-Aware was the ability of tracking
+static dependencies between services. For instance, Service A calls
+Service B and Service B calls Service X. This feature is not only useful
+for documentation but also for helping administrators to determine which
+services are going to affected with a change in one of the existing
+service. (In that example, a change in the service X would affect
+Service A and B).</p>
+
+<p>A service dependency is represented in the repository as a
+“ServiceDependency” resource, which contains two simple properties
+“ServiceVersion” and “DependantServiceVersion”. Therefore, creating a
+new service dependency with the OData API is quite straightforward, and
+it’s illustrated in the code above</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+   1: var serviceDependency = new ServiceDependency
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+   2: {
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+   3:     ServiceVersion = serviceA,
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+   4:     DependantServiceVersion = serviceB,
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+   5: }
+</del></p>
+
+<p>That code is creating a new Dependency resource that represents a
+dependency between service B and service A (Service B is using Service
+A).</p>
+
+<p>As the OData feed might not be the right thing for visualizing the
+dependencies between services, we have also added a nice dependency tree
+as part of the web portal to visualize those. So, when you visualize the
+dependencies for the service A for instance, you will see something like
+this.</p>
+
+<p><img src="http://tellagostudios.com/blogEntries/dependencies/Depedencies.png" alt="" /></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/08/03/service-testing-in-so-aware/">Service Testing in SO-Aware</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-08-03T00:00:00-03:00" pubdate data-updated="true">Aug 3<span>rd</span>, 2010</time>
+        
+         | <a href="/blog/2010/08/03/service-testing-in-so-aware/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Service testing is another interesting feature that you will find in
+SO-Aware. Having a tool for testing a service in the repository is very
+important for the following reasons,</p>
+
+<ul>
+<li>You can make sure the service up and running (The service deployment
+and configuration was done correctly).</li>
+<li>The service is responding to the different requests generated by the
+tests.</li>
+<li>You can have a better idea of the service availability over the time</li>
+</ul>
+
+
+<p>As SO-Aware is mostly oriented to WCF services, and also supports
+artifacts like bindings and behaviors, makes this tool very appealing
+for testing secure services or services with specific bindings elements
+(like net.tcp services for instance) that are really hard to test with
+other existing tools in the market.</p>
+
+<p>The testing tool in SO-Aware supports two models, On-Demand testing and
+Scheduled testing. In the On-Demand testing model, you basically want to
+test the service at any moment with an specific message to make sure the
+service is working or for reproducing an issue, but you don’t want to
+save that test for being executed later. The Scheduling testing model is
+the opposite, you want to save the test so it can be executed for the
+test scheduler service and have results about the service health over
+the time.</p>
+
+<p>A test and the associated results are also exposed as OData resources in
+the repository, so you can manage the different tests or query results
+using simple http requests.</p>
+
+<p>As all the service artifacts (endpoints, contract, operations, schemas)
+are also stored in the repository, the definition of a new test is quite
+straightforward, you only need to specify which service version you want
+to test, the operation and provide a request sample message (which can
+also be automatically inferred from the schema associated to the
+operation request message in soap services). </p>
+
+<p>The code below creates a new service using the client API.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+   1: var customersService = repository.ServiceVersions
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+   2:     .Expand(&ldquo;Soap/Endpoints/Contract/Operations&rdquo;)
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+   3:     .Where(s => s.Service.Name == &ldquo;Customers&rdquo; &amp;&amp;
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+   4:                 s.MajorVersion == 1 &amp;&amp; s.MinorVersion == 0)
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+   5:     .FirstOrDefault();
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+   6: 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+   7: var endpoint = customersService.Soap.Endpoints.First();
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+   8: var operation = endpoint.Contract.Operations.First(o => o.Name == &ldquo;GetCustomer&rdquo;);
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+   9: 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  10: var testManager = new TestManager(RepositoryUri);
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  11: 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  12: var sampleMessage = testManager.CreateExampleStringMessageForOperation(customersService.Id,
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  13:     endpoint.Name, operation.Name);
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  14: 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  15: test = new Test
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  16: {
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  17:     Name = &ldquo;GetCustomer&rdquo;,
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  18:     UsesWindowsAuthentication = true,
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  19:     Username = &ldquo;TEST&rdquo;,
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  20:     Password = &ldquo;password&rdquo;,
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  21:     SchedulingTime = 1,
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  22:     SchedulingUnit = &ldquo;MINUTE&rdquo;,
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  23:     RequestMessage = sampleMessage
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  24: };
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  25: 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  26: repository.AddToTests(test);
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  27: repository.SetLink(test, &ldquo;Operation&rdquo;, operation);
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  28: repository.SetLink(test, &ldquo;Endpoint&rdquo;, endpoint);
+</del></p>
+
+<p>As you can see, the code for creating a new test for a SOAP service is
+quite straightforward (Testing of REST services is also supported). Only
+the endpoint and operation that are going to be tested needs to
+specified. In that example, I am using an endpoint configured with
+Windows Authentication, so I am passing the credentials in the test
+definition as WCF does not support Username/Password credentials as a
+behavior. Otherwise, the test definition could also receive a behavior
+with the client credentials (A behavior with the certificate definition
+for instance).</p>
+
+<p>The TestManager is an utility class that can be used for multiple
+purposes in the definition of a new test, or also for executing an
+existing test. The TestManager.CreateExampleStringMessageForOperation
+returns an string representing an xml message inferred from the
+operation message schemas.</p>
+
+<p>Once the test definition is stored in the repository, it’s going to
+start being executed by the Test scheduler according to the scheduling
+options for that test (SchedulingTime and SchedulingUnit properties in
+the test definition). You can execute the test at any time with an two
+specific Http Endpoint that SO-Aware publishes for executing tests.</p>
+
+<p>“Testing.svc/Tests/{testId}” for executing an individual test with a
+simple http get (The response represents the test results)</p>
+
+<p>“Testing.svc/TestGroups/{groupName}” for executing an set of tests with
+a simple http get. You can associate a group to the test when this is
+one is created.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+   1: WebClient client = new WebClient();
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+   2: client.Credentials = CredentialCache.DefaultCredentials;
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+   3: var response = client.DownloadString(&ldquo;<a href="http://localhost/SOAware/Testing.svc/Tests/">http://localhost/SOAware/Testing.svc/Tests/</a>&rdquo; + test.Id.ToString());
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+   4: 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+   5: Console.WriteLine(response);
+</del></p>
+
+<p>Only one line of code is required for executing a test (an http get), so
+this becomes handy for integrating the tests as part of a build process
+too.</p>
+
+<p>The test results are also available as a resource in the repository, so
+you can query for specific test using the traditional OData query
+options. The example above illustrates how the most recent test
+execution result can be got for an specific test.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+   1: var testResult = repository.TestInstances.Where(t => t.Test.Id == test.Id).Last();
+</del></p>
+
+<p>You can always browse the tests and the results in SO-Aware portal for
+getting a more user friendly representation, and see some statistics
+about the test executions.</p>
+
+<p><img src="http://tellagostudios.com/blogEntries/testing/TestResults.png" alt="" /></p>
+
+<p>The sample code is available at this
+<a href="http://tellagostudios.com/blogEntries/testing/ServiceTesting.zip">location</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/07/30/wcf-configuration-simplification-with-so-aware/">WCF Configuration Simplification With SO-Aware</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-07-30T00:00:00-03:00" pubdate data-updated="true">Jul 30<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/07/30/wcf-configuration-simplification-with-so-aware/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As I discussed in the previous post, everything in
+<a href="http://tellagostudios.com/products/so-aware%E2%84%A2">SO-Aware</a> is
+exposed as resources via OData. You can simply take a look at this by
+browsing at the main feed of the service repository.</p>
+
+<p><img src="http://tellagostudios.com/blogEntries/configuration/RepositoryFeed.png" alt="" /></p>
+
+<p>This means that we can import a new service into the repository and
+configure it with the correct bindings and behaviors a simple set of
+http requests. In SO-Aware you will able to find three different kind of
+services, SOAP services, REST services, and OData services. And although
+an OData service is in essence a REST service, we made a distinction for
+the simple fact that an OData service exposes metadata that we can use
+to import the service automatically into the repository. We are doing
+the same thing with a SOAP service, as you don’t need to manually create
+the different endpoints, contracts or operations that a SOAP service
+exposes. All that information is automatically inferred from the service
+WSDL, so when you specify either the WSDL url or the WSDL content (the
+whole xml chunk), the repository parses the WSDL, and decomposes the
+WSDL into different entities that are finally associated to the service.
+Therefore, importing a new SOAP or OData service into the repository is
+quite trivial, you only need to provide the metadata url. REST services
+on the other hand requires some more work, as all the resources or http
+operations with the corresponding media types must be created manually
+and imported in the repository using either the SO-Aware portal or the
+OData api (We have plans to import this automatically from the help feed
+in the WCF 4.0 REST services or the WCF services that use the Help
+attribute in the REST Starter kit).</p>
+
+<p>It’s always very useful for the enterprise to have a catalog of services
+and available operations into the repository for documentation purposes,
+and also for testing and monitoring.</p>
+
+<p>The following code illustrates how a new SOAP service can be imported
+into the repository using the OData api (The example uses a WCF Data
+service generated proxy).</p>
+
+<p><strong>Importing a service from an existing WSDL</strong></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   1: var repository = new ResourceRepositoryContext(RepositoryUri);
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   2: 
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   3: var service = new Service
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   4: {
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   5:   Name = &ldquo;Customers&rdquo;,
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   6:   Namespace = &ldquo;<a href="http://soaware/demo">http://soaware/demo</a>&rdquo;,
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   7:   Style = &ldquo;SOAP&rdquo;
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   8: };
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   9: 
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+  10: repository.AddToServices(service);
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+  11: 
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+  12: var serviceDescription = new SoapDescription
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+  13: {
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+  14:   MetadataURI = &ldquo;<a href="http://localhost:8080/?wsdl">http://localhost:8080/?wsdl</a>&rdquo;
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+  15: };
+</del></p>
+
+<p><strong>Associate the WSDL to an specific service version</strong></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   1: var serviceVersion = new ServiceVersion
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   2: {
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   3:   MajorVersion = 1,
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   4:   MinorVersion = 0,
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   5: };
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   6: 
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   7: repository.AddToServiceVersions(serviceVersion);
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   8: 
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   9: repository.SetLink(serviceVersion, &ldquo;Soap&rdquo;, serviceDescription);
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+  10: repository.SetLink(serviceVersion, &ldquo;Service&rdquo;, service);
+</del></p>
+
+<p> </p>
+
+<p>The code above is creating a new version (1.0) for the service, and
+associating the WSDL and all the inferred entities (endpoint, contracts,
+operations and schemas) to that version.</p>
+
+<p><strong>Associate a WCF binding to the imported endpoints</strong></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   1: var endpoint = serviceDescription.Endpoints.First();
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   2: var binding = repository.Bindings.Where(b => b.Name == &ldquo;kerberos&rdquo;).First();
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   3: 
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   4: repository.SetLink(endpoint, &ldquo;Binding&rdquo;, binding);
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   5: 
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   6: repository.SaveChanges(SaveChangesOptions.Batch);
+</del></p>
+
+<p> </p>
+
+<p><strong>Configuring the service host</strong></p>
+
+<p>As you can see, we are getting an existing binding “kerberos” from the
+repository for using message security with kerberos (SO-Aware already
+ships with a bundle of pre-configured bindings for supporting different
+scenarios), and associating that binding to the imported endpoint.
+Therefore, next time you restart the service host for that service, it
+will start using the selected binding for that endpoint.</p>
+
+<p>Ok, so far we have imported a service into the repository. As next step,
+something you can do is to configure and specific service host that we
+provide for automatically get the service configuration from the
+repository (in the example above, the new endpoint configuration with
+the “kerberos” binding)</p>
+
+<p>In order to do that, you need to use a custom service host
+“Tellago.ServiceModel.Governance.ConfigurableServiceHost” or the custom
+service host factory
+“Tellago.ServiceModel.Governance.ConfigurableServiceHostFactory” in you
+case you are hosting WCF in IIS.</p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   1: ServiceHost host = new ConfigurableServiceHost(typeof(Customers),
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   2: new Uri(&ldquo;<a href="http://localhost:8080">http://localhost:8080</a>&rdquo;));
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   3: 
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   4: host.Open();
+</del></p>
+
+<p> </p>
+
+<p>This “ConfigurableServiceHost” uses an specific configuration section to
+know how to map the service type “Customers” to the service version in
+the repository.</p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   1: <serviceRepository url="http://localhost/SoAware/ServiceRepository.svc">
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   2:   <services>
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   3:     <service name="ref:Customers(1.0)" type="CustomerService.Customers, CustomerService"/>
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   4:   </services>
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   5: </serviceRepository>
+</del></p>
+
+<p> </p>
+
+<p>The prefix “ref:” tells the host to look for that service into the
+repository. This is when you want to download the complete service
+configuration and all the associated endpoints from the repository.
+However, this service host also supports another syntax in the
+configuration section for downloading only specific bindings or
+behaviors.</p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   1: <serviceRepository url="http://localhost/SoAware/ServiceRepository.svc">
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   2:   <services>
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   3:     <service name="CustomerService.Customers">
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   4:       <endpoint name="Customers_WindowsAuthentication" binding="ws2007HttpBinding" bindingConfiguration="ref:kerberos"  contract="CustomerService.ICustomers"/>
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   5:       <endpoint address="mex" binding="mexHttpBinding" contract="IMetadataExchange" />
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   6:     </service>
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   7:   </services>
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   8:  </services>
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   9: </serviceRepository>
+</del></p>
+
+<p> </p>
+
+<p>The example above only tells the configurable host to download the
+“kerberos” binding from the repository, and not the rest of the service
+configuration.</p>
+
+<p><strong>Configuring the client application</strong></p>
+
+<p>The configuration on the client side is also very trivial. We provide a
+class for automatically configuring a proxy,
+“Tellago.ServiceModel.Governance.ServiceConfiguration.ConfigurableProxyFactory”,
+or a class
+“Tellago.ServiceModel.Governance.ServiceConfiguration.ConfigurationResolver”
+for resolving individual WCF configuration objects like endpoints,
+bindings or behaviors that you want to inject in your existing proxy.</p>
+
+<p>The following code illustrates how the ConfigurableProxyFactory can be
+used to invoke the service without having a single line of
+configuration.</p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   1: class Program
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   2: {
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   3:   static Uri RepositoryUri = new Uri(&ldquo;<a href="http://localhost/SOAware/ServiceRepository.svc">http://localhost/SOAware/ServiceRepository.svc</a>&rdquo;);
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   4: 
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   5:   static void Main(string[] args)
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   6:   {
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   7:     var factory = new ConfigurableProxyFactory<ICustomers>(RepositoryUri, &ldquo;Customers(1.0)&rdquo;);
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   8:     var proxy = factory.CreateProxy();
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+   9: 
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+  10:     try
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+  11:     {
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+  12:       var customer = proxy.GetCustomer(1);
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+  13: 
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+  14:       Console.WriteLine(&ldquo;Customer received {0}&rdquo;, customer.FistName);
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+  15:     }
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+  16:     finally
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+  17:     {
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+  18:       factory.Dispose();
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+  19:     }
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+  20:   }
+</del></p>
+
+<p><del> {style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: white; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+  21: }
+</del></p>
+
+<p>As can see, everything was inferred from the configuration in the
+repository, even the endpoint address and the configured binding.</p>
+
+<p>Download the sample code from this
+<a href="http://tellagostudios.com/blogEntries/configuration/centralizedConfiguration.zip">location</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/07/28/so-aware-is-here-a-restful-service-repository/">SO-Aware Is Here. A RESTful Service Repository</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-07-28T00:00:00-03:00" pubdate data-updated="true">Jul 28<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/07/28/so-aware-is-here-a-restful-service-repository/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I am very proud to announce today the release of our product in <a href="http://tellagostudios.com">Tellago
+Studios</a>,
+<a href="http://tellagostudios.com/products/so-aware%E2%84%A2">SO-Aware</a>, a
+RESTful service repository based on OData.  The main difference between
+SO-Aware and other existing products is that everything is exposed as
+resources via OData feeds that can be retrieved or manipulated with
+standard http verbs like POST, PUT, GET or DELETE (All this is
+implemented with WCF data services).</p>
+
+<p>To give a good example of what you can do in SO-Aware, all the
+integration tests that you define for your services are also exposed as
+http resources, so you can execute a test and get the results with a
+simple http request, making the integration with any existing build
+management system or testing framework very simple.</p>
+
+<p>In addition, SO-Aware is closely integrated with WCF by giving access to
+resources like Binding or Behaviors that you can associate to your
+existing services for having a centralized configuration repository, and
+making service testing much easier too. In this sense, SO-Aware provides
+an specialized API for configuring WCF clients or services from the
+central repository with just a few lines of code that removes completely
+most of the common deployment pains with configuration files.</p>
+
+<p>You can find a more detailed description of the product and its features
+<a href="http://tellagostudios.com/products/so-aware%E2%84%A2">here</a>.</p>
+
+<p>I will be discussing many of the cool features that you can find in
+SO-Aware in the next posts, so stay tuned.     </p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/06/25/specifying-mime-types-for-content-in-wcf-data-services/">Specifying Mime Types for Content in WCF Data Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-06-25T00:00:00-03:00" pubdate data-updated="true">Jun 25<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/06/25/specifying-mime-types-for-content-in-wcf-data-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>WCF Data Services provides an specific operator “\$value” for retrieving
+the underline value of any of the properties in exposed resources. Let’s
+say you have a resource “Configuration” that exposes a field “Xml” whose
+content should be treated as a mime type “text/xml”. When you execute a
+query like this to retrieve the value of that field,
+“myService.svc/Configurations(1)/Xml/\$value”, what you get is the
+content of that field but expressed as plain text (text/plain). This
+happens because the default behavior for WCF Data Services is to return
+most of the primitive types as “text/plain” and some others like byte
+arrays as “application/octet-stream”. So, how do you change that default
+behavior to retrieve property content with other mime types ?. Here is
+where the MimeTypeAttribute can be used to change that behavior.</p>
+
+<p>The MimeTypeAttribute can actually only be used with the
+ReflectionProvider, which is the default provider for exposing objects
+that are not EF entities. If you want to change the mime type for the EF
+Provider, you need to modify the underline CSDL model (This is the part
+that is not well documented, and I only found some incomplete references
+in some forums).</p>
+
+<p>For the reflection provider, the attribute must be specified at class
+level,</p>
+
+<p>[MimeType(&ldquo;Xml&rdquo;, &ldquo;text/xml&rdquo;)] \
+public class Configuration \
+{ \
+  public string Xml { get; set; } \
+}</p>
+
+<p>For the EF provider, a few additional changes are required in the CSDL
+model. Edit the CSDL by opening the EDM model in Xml view, and adding a
+reference to this namespace
+&ldquo;xmlns:m1=&rdquo;<a href="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">http://schemas.microsoft.com/ado/2007/08/dataservices/metadata</a>&ldquo;&rdquo;
+in the &lt;edmx:ConceptualModels> node  of the CSDL section in the EDMX
+file. Right after that, locate the entity that you want to modify and
+add the MimeType definition in the property.</p>
+
+<p>&lt;EntityType Name=&ldquo;Configuration&rdquo;> \
+          &lt;Property Name=&ldquo;Xml&rdquo; m1:MimeType=&ldquo;text/xml&rdquo; Type=&ldquo;String&rdquo;
+MaxLength=&ldquo;Max&rdquo; Unicode=&ldquo;true&rdquo; FixedLength=&ldquo;false&rdquo; /></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/06/12/professional-wcf-4-0-windows-communication-foundation-with-net-4-0/">Professional WCF 4.0: Windows Communication Foundation With .NET 4.0</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-06-12T00:00:00-03:00" pubdate data-updated="true">Jun 12<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/06/12/professional-wcf-4-0-windows-communication-foundation-with-net-4-0/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>The book in which I been working on since last year finally went to the
+light this week. It has been the result of hard work between me and
+three other Connected Systems MVP, my friend <a href="http://weblogs.asp.net/fabio/">Fabio
+Cozzolino</a>, <a href="http://geekswithblogs.net/claeyskurt/Default.aspx">Kurt
+Claeys</a> and Johann
+Grabner. If you are interested in learning the new features in WCF 4.0,
+but also WCF in general and how to apply it in real world scenarios,
+this book is for you. I dedicated three chapters of this book to one of
+my favorites topics, Security, from the basics to more complicated
+scenarios with Claim-Based security and Federated authentication using
+WCF services with Windows Identity Foundation. You can find more
+information about the book and the table of contents in the Wrox web
+site
+<a href="http://www.wrox.com/WileyCDA/WroxTitle/Professional-WCF-4-Windows-Communication-Foundation-with-NET-4.productCd-0470563141,descCd-tableOfContents.html">here</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/05/31/implementing-a-generic-repository-for-wcf-data-services/">Implementing a Generic Repository for WCF Data Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-05-31T00:00:00-03:00" pubdate data-updated="true">May 31<span>st</span>, 2010</time>
+        
+         | <a href="/blog/2010/05/31/implementing-a-generic-repository-for-wcf-data-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>The repository implementation I am going to discuss here is not exactly
+what someone would call repository in terms of DDD, but it is an
+abstraction layer that becomes handy at the moment of unit testing the
+code around this repository. In other words, you can easily create a
+mock to replace the real repository implementation.</p>
+
+<p>The WCF Data Services update for .NET 3.5 introduced a nice feature to
+support two way data bindings, which is very helpful for developing WPF
+or Silverlight based application but also for implementing the
+repository I am going to talk about. As part of this feature, the WCF
+Data Services Client library introduced a new collection
+DataServiceCollection&lt;T> that implements INotifyPropertyChanged to
+notify the data context (DataServiceContext) about any change in the
+association links. This means that it is not longer necessary to
+manually set or remove the links in the data context when an item is
+added or removed from a collection.</p>
+
+<p>Before having this new collection, you basically used the following code
+to add a new item to a collection.</p>
+
+<p>Order order = new Order \
+{ \
+  Name = &ldquo;Foo&rdquo; \
+};</p>
+
+<p>OrderItem item = new OrderItem \
+{ \
+  Name = &ldquo;bar&rdquo;, \
+  UnitPrice = 10, \
+  Qty = 1 \
+};</p>
+
+<p>var context = new OrderContext(); \
+context.AddToOrders(order); \
+context.AddToOrderItems(item);</p>
+
+<p>context.SetLink(item, &ldquo;Order&rdquo;, order);</p>
+
+<p>context.SaveChanges();</p>
+
+<p>Now, thanks to this new collection, everything is much simpler and
+similar to what you have in other ORMs like Entity Framework or L2S.</p>
+
+<p>Order order = new Order \
+{ \
+  Name = &ldquo;Foo&rdquo; \
+};</p>
+
+<p>OrderItem item = new OrderItem \
+{ \
+  Name = &ldquo;bar&rdquo;, \
+  UnitPrice = 10, \
+  Qty = 1 \
+};</p>
+
+<p>order.Items.Add(item);</p>
+
+<p>var context = new OrderContext(); \
+context.AddToOrders(order);</p>
+
+<p>context.SaveChanges();</p>
+
+<p>In order to use this new feature, you first need to enable V2 in the
+data service, and then use some specific arguments in the datasvcutil
+tool (You can find more information about this new feature and how to
+use it in this
+<a href="http://blogs.msdn.com/b/astoriateam/archive/2009/09/01/introduction-to-data-binding-in-ctp2.aspx">post</a>).</p>
+
+<p>DataSvcUtil
+/uri:&ldquo;<a href="http://localhost:3655/MyDataService.svc/">http://localhost:3655/MyDataService.svc/</a>&rdquo;
+/out:Reference.cs /dataservicecollection /version:2.0</p>
+
+<p>Once you use those two arguments, the generated proxy classes will use
+DataServiceCollection&lt;T> rather than a simple ObjectCollection&lt;T>,
+which was the default collection in V1.</p>
+
+<p>There are some aspects that you need to know to use this feature
+correctly.</p>
+
+<p>​1. All the entities retrieved directly from the data context with a
+query track the changes and report those to the data context
+automatically.</p>
+
+<p>​2. A entity created with “new” does not track any change in the
+properties or associations. In order to enable change tracking in this
+entity, you need to do the following trick.</p>
+
+<p>public Order CreateOrder() \
+{ \
+  var collection = new DataServiceCollection&lt;Order>(this.context); \
+  var order = new Order();</p>
+
+<p>  collection.Add(order);</p>
+
+<p>  return order; \
+}</p>
+
+<p>You basically need to create a collection, and add the entity to that
+collection with the “Add” method to enable change tracking on that
+entity.</p>
+
+<p>​3. If you need to attach an existing entity (For example, if you
+created the entity with the “new” operator rather than retrieving it
+from the data context with a query) to a data context for tracking
+changes, you can use the “Load” method in the DataServiceCollection.</p>
+
+<p>var order = new Order \
+{ \
+  Id = 1 \
+};</p>
+
+<p>var collection = new DataServiceCollection&lt;Order>(this.context); \
+collection.Load(order);</p>
+
+<p>In this case, the order with Id = 1 must exist on the data source
+exposed by the Data service. Otherwise, you will get an error because
+the entity did not exist.</p>
+
+<p>These cool extensions methods discussed by Stuart Leeks in this
+<a href="http://blogs.msdn.com/b/stuartleeks/archive/2008/09/15/dataservicequery-t-expand.aspx">post</a>
+to replace all the magic strings in the “Expand” operation with
+Expression Trees represent another feature I am going to use to
+implement this generic repository.</p>
+
+<p>Thanks to these extension methods, you could replace the following query
+with magic strings by a piece of code that only uses expressions.</p>
+
+<p>Magic strings,</p>
+
+<p>var customers = dataContext.Customers \
+.Expand(&ldquo;Orders&rdquo;) \
+        .Expand(&ldquo;Orders/Items&rdquo;)</p>
+
+<p>Expressions,</p>
+
+<p>var customers = dataContext.Customers \
+.Expand(c => c.Orders.SubExpand(o => o.Items))</p>
+
+<p>That query basically returns all the customers with their orders and
+order items.</p>
+
+<p>Ok, now that we have the automatic change tracking support and the
+expression support for explicitly loading entity associations, we are
+ready to create the repository.</p>
+
+<p>The interface for this repository looks like this,</p>
+
+<p><del> {.code}
+public interface IRepository
+{
+  T Create<T>() where T : new();
+  void Update<T>(T entity);
+  void Delete<T>(T entity);
+  IQueryable<T> RetrieveAll<T>(params Expression&lt;Func&lt;T, object>>[] eagerProperties);
+  IQueryable<T> Retrieve<T>(Expression&lt;Func&lt;T, bool>> predicate,
+</del></p>
+
+<p><del> {.code}
+params Expression&lt;Func&lt;T, object>>[] eagerProperties);
+  void Attach<T>(T entity);
+  void SaveChanges();
+}
+</del></p>
+
+<p><a href="http://11011.net/software/vspaste"></a></p>
+
+<p>The Retrieve and RetrieveAll methods are used to execute queries against
+the data service context. While both methods receive an array of
+expressions to load associations explicitly, only the Retrieve method
+receives a predicate representing the “where” clause.</p>
+
+<p>The following code represents the final implementation of this
+repository.</p>
+
+<p>~~~~ {.code}
+public class DataServiceRepository: IRepository
+{
+  ResourceRepositoryContext context;</p>
+
+<p>  public DataServiceRepository()</p>
+
+<pre><code>  : this (new DataServiceContext())
+</code></pre>
+
+<p>  {
+  }</p>
+
+<p>  public DataServiceRepository(DataServiceContext context)
+  {</p>
+
+<pre><code>        this.context = context;
+</code></pre>
+
+<p>  }</p>
+
+<p>  private static string ResolveEntitySet(Type type)
+  {</p>
+
+<pre><code>var entitySetAttribute = (EntitySetAttribute)type
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {.code}
+.GetCustomAttributes(typeof(EntitySetAttribute), true).FirstOrDefault();</p>
+
+<p>   if (entitySetAttribute != null)</p>
+
+<pre><code>  return entitySetAttribute.EntitySet;
+</code></pre>
+
+<p>   return null;
+  }</p>
+
+<p>  public T Create<T>() where T : new()
+  {</p>
+
+<pre><code>var collection = new DataServiceCollection&lt;T&gt;(this.context);
+var entity = new T();
+
+collection.Add(entity);
+
+return entity;
+</code></pre>
+
+<p>  }</p>
+
+<p>  public void Update<T>(T entity)
+  {</p>
+
+<pre><code>this.context.UpdateObject(entity);
+</code></pre>
+
+<p>  }</p>
+
+<p>  public void Delete<T>(T entity)
+  {</p>
+
+<pre><code>this.context.DeleteObject(entity);
+</code></pre>
+
+<p>  }</p>
+
+<p>  public void Attach<T>(T entity)
+  {</p>
+
+<pre><code>var collection = new DataServiceCollection&lt;T&gt;(this.context);
+collection.Load(entity);
+</code></pre>
+
+<p>  }</p>
+
+<p>  public IQueryable<T> Retrieve<T>(Expression&lt;Func&lt;T, bool>> predicate,
+~~~~</p>
+
+<p>~~~~ {.code}
+  params Expression&lt;Func&lt;T, object>>[] eagerProperties)
+  {</p>
+
+<pre><code>var entitySet = ResolveEntitySet(typeof(T));
+var query = context.CreateQuery&lt;T&gt;(entitySet);
+
+foreach (var e in eagerProperties)
+{
+  query = query.Expand(e);
+}
+
+return query.Where(predicate);
+</code></pre>
+
+<p>  }</p>
+
+<p>  public IQueryable<T> RetrieveAll<T>(params Expression&lt;Func&lt;T, object>>[] eagerProperties)
+  {</p>
+
+<pre><code>var entitySet = ResolveEntitySet(typeof(T));
+var query = context.CreateQuery&lt;T&gt;(entitySet);
+
+foreach (var e in eagerProperties)
+{
+  query = query.Expand(e);
+}
+
+return query;
+</code></pre>
+
+<p>  }</p>
+
+<p>  public void SaveChanges()
+  {</p>
+
+<pre><code>this.context.SaveChanges(SaveChangesOptions.Batch);
+</code></pre>
+
+<p>  }</p>
+
+<p> }
+~~~~</p>
+
+<p><a href="http://11011.net/software/vspaste"></a></p>
+
+<p>For instance, you can use the following code to retrieve customers with
+First name equal to “John”, and all their orders in a single call.</p>
+
+<p>repository.Retrieve&lt;Customer>( \
+   c => c.FirstName == “John”, //Where \
+   c => c.Orders.SubExpand(o => o.Items));</p>
+
+<p>In case, you want to have some pre-defined queries that you are going to
+use across several places, you can put them in an specific class.</p>
+
+<p>public static class CustomerQueries \
+{ \
+  public static Expression&lt;Func&lt;Customer, bool>>
+LastNameEqualsTo(string lastName) \
+  { \
+    return c => c.LastName == lastName; \
+  } \
+}</p>
+
+<p>And then, use it with the repository.</p>
+
+<p>repository.Retrieve&lt;Customer>( \
+   CustomerQueries.LastNameEqualsTo(&ldquo;foo&rdquo;), \
+   c => c.Orders.SubExpand(o => o.Items));</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/05/17/enabling-service-availability-in-wcf-services/">Enabling Service Availability in WCF Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-05-17T00:00:00-03:00" pubdate data-updated="true">May 17<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/05/17/enabling-service-availability-in-wcf-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>It is very important for the enterprise to know which services are
+operational at any given point. There are many factors that can affect
+the availability of the services, some of them are external like a
+database not responding or any dependant service not working. However,
+in some cases, you only want to know whether a service is up or down, so
+a simple heart-beat mechanism with “Ping” messages would do the trick.
+Unfortunately, WCF does not provide a built-in mechanism to support this
+functionality, and you probably don’t to implement a “Ping” operation in
+any service that you have out there. For solving this in a generic way,
+there is a WCF extensibility point that comes to help us, the “Operation
+Invokers”. In a nutshell, an operation invoker is the class responsible
+invoking the service method with a set of parameters and generate the
+output parameters with the return value.</p>
+
+<p>What I am going to do here is to implement a custom operation invoker
+that intercepts any call to the service, and detects whether a “Ping”
+header was attached to the message. If the “Ping” header is detected,
+the operation invoker returns a new header to tell the client that the
+service is alive, and the real operation execution is omitted. In that
+way, we have a simple heart beat mechanism based on the messages that
+include a &ldquo;Ping” header, so the client application can determine at any
+point whether the service is up or down.</p>
+
+<p>My operation invoker wraps the default implementation attached by
+default to any operation by WCF.</p>
+
+<p>~~~~ {.code}
+internal class PingOperationInvoker : IOperationInvoker
+{
+  IOperationInvoker innerInvoker;
+  object[] outputs = null;
+  object returnValue = null;</p>
+
+<p>  public const string PingHeaderName = &ldquo;Ping&rdquo;;
+  public const string PingHeaderNamespace = &ldquo;<a href="http://tellago.serviceModel">http://tellago.serviceModel</a>&rdquo;;</p>
+
+<p>  public PingOperationInvoker(IOperationInvoker innerInvoker, OperationDescription description)
+  {</p>
+
+<pre><code>this.innerInvoker = innerInvoker;
+outputs = description.SyncMethod.GetParameters()
+      .Where(p =&gt; p.IsOut)
+      .Select(p =&gt; DefaultForType(p.ParameterType)).ToArray();
+
+var returnValue = DefaultForType(description.SyncMethod.ReturnType);
+</code></pre>
+
+<p>  }</p>
+
+<p>  private static object DefaultForType(Type targetType)
+  {</p>
+
+<pre><code>return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
+</code></pre>
+
+<p>  }</p>
+
+<p>  public object Invoke(object instance, object[] inputs, out object[] outputs)
+  {</p>
+
+<pre><code>object returnValue;
+
+if (Invoke(out returnValue, out outputs))
+{
+  return returnValue;
+}
+else
+{
+  return this.innerInvoker.Invoke(instance, inputs, out outputs);
+}
+</code></pre>
+
+<p>  }</p>
+
+<p>  private bool Invoke(out object returnValue, out object[] outputs)
+  {</p>
+
+<pre><code>object untypedProperty = null;
+if (OperationContext.Current
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {.code}
+.IncomingMessageProperties.TryGetValue(HttpRequestMessageProperty.Name, out untypedProperty))</p>
+
+<pre><code>{
+  var httpRequestProperty = untypedProperty as HttpRequestMessageProperty;
+  if (httpRequestProperty != null)
+  {
+    if (httpRequestProperty.Headers[PingHeaderName] != null)
+    {
+      outputs = this.outputs;
+
+      if (OperationContext.Current
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {.code}
+.IncomingMessageProperties.TryGetValue(HttpRequestMessageProperty.Name, out untypedProperty))</p>
+
+<pre><code>      {
+         var httpResponseProperty = untypedProperty as HttpResponseMessageProperty;
+
+         httpResponseProperty.Headers.Add(PingHeaderName, "Ok");
+      }
+
+      returnValue = this.returnValue;
+
+      return true;
+   }
+}
+</code></pre>
+
+<p>   }</p>
+
+<p>   var headers = OperationContext.Current.IncomingMessageHeaders;
+   if (headers.FindHeader(PingHeaderName, PingHeaderNamespace) > -1)
+   {</p>
+
+<pre><code> outputs = this.outputs;
+
+ MessageHeader&lt;string&gt; header = new MessageHeader&lt;string&gt;("Ok");
+ var untyped = header.GetUntypedHeader(PingHeaderName, PingHeaderNamespace);
+
+ OperationContext.Current.OutgoingMessageHeaders.Add(untyped);
+
+ returnValue = this.returnValue;
+
+ return true;
+</code></pre>
+
+<p>   }</p>
+
+<p>   returnValue = null;
+   outputs = null;</p>
+
+<p>   return false;
+ }
+}
+~~~~</p>
+
+<p><a href="http://11011.net/software/vspaste"></a></p>
+
+<p>The implementation above looks for the “Ping” header either in the Http
+Request or the Soap message. \
+The next step is to implement a behavior for attaching this operation
+invoker to the services we want to monitor.</p>
+
+<p>~~~~ {.code}
+[AttributeUsage(AttributeTargets.Method
+  | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+ public class PingBehavior : Attribute, IServiceBehavior, IOperationBehavior
+ {
+   public void AddBindingParameters(ServiceDescription serviceDescription,</p>
+
+<pre><code>   ServiceHostBase serviceHostBase, Collection&lt;ServiceEndpoint&gt; endpoints, 
+   BindingParameterCollection bindingParameters)
+</code></pre>
+
+<p>   {
+   }</p>
+
+<p>   public void ApplyDispatchBehavior(ServiceDescription serviceDescription,</p>
+
+<pre><code>    ServiceHostBase serviceHostBase)
+</code></pre>
+
+<p>   {
+   }</p>
+
+<p>   public void Validate(ServiceDescription serviceDescription,</p>
+
+<pre><code>    ServiceHostBase serviceHostBase)
+</code></pre>
+
+<p>   {</p>
+
+<pre><code> foreach (var endpoint in serviceDescription.Endpoints)
+ {
+   foreach (var operation in endpoint.Contract.Operations)
+   {
+     if (operation.Behaviors.Find&lt;PingBehavior&gt;() == null)
+          operation.Behaviors.Add(this);
+   }
+ }
+</code></pre>
+
+<p>   }</p>
+
+<p>   public void AddBindingParameters(OperationDescription operationDescription,</p>
+
+<pre><code>    BindingParameterCollection bindingParameters)
+</code></pre>
+
+<p>   {
+   }</p>
+
+<p>   public void ApplyClientBehavior(OperationDescription operationDescription,</p>
+
+<pre><code>      ClientOperation clientOperation)
+</code></pre>
+
+<p>   {
+   }</p>
+
+<p>   public void ApplyDispatchBehavior(OperationDescription operationDescription,</p>
+
+<pre><code>    DispatchOperation dispatchOperation)
+</code></pre>
+
+<p>   {</p>
+
+<pre><code>  dispatchOperation.Invoker = 
+      new PingOperationInvoker(dispatchOperation.Invoker, operationDescription);
+</code></pre>
+
+<p>   }</p>
+
+<p>   public void Validate(OperationDescription operationDescription)
+   {</p>
+
+<p>   }
+ }
+~~~~</p>
+
+<p>As an operation invoker can only be added in an “operation behavior”, a
+trick I learned in the past is that you can implement a service behavior
+as well and use the “Validate” method to inject it in all the
+operations, so the final configuration is much easier and cleaner. You
+only need to decorate the service with a simple attribute to enable the
+“Ping” functionality.</p>
+
+<p>~~~~ {.code}
+[PingBehavior]
+public class HelloWorldService : IHelloWorld
+{
+  public string Hello(string name)
+  {</p>
+
+<pre><code>return "Hello " + name;
+</code></pre>
+
+<p>  }
+}
+~~~~</p>
+
+<p><a href="http://11011.net/software/vspaste"></a></p>
+
+<p>On the other hand, the client application needs to send a dummy message
+with a “Ping” header to detect whether the service is available or not.
+In order to simplify this task, I created a extension method in the WCF
+client channel to do this work.</p>
+
+<p>~~~~ {.code}
+public static class ClientChannelExtensions
+{
+  const string PingNamespace = &ldquo;<a href="http://tellago.serviceModel">http://tellago.serviceModel</a>&rdquo;;
+  const string PingName = &ldquo;Ping&rdquo;;</p>
+
+<p>  public static bool IsAvailable<TChannel>(this IClientChannel channel,</p>
+
+<pre><code>   Action&lt;TChannel&gt; operation)
+</code></pre>
+
+<p>  {</p>
+
+<pre><code>try
+{
+  using (OperationContextScope scope = new OperationContextScope(channel))
+  {
+    MessageHeader&lt;string&gt; header = new MessageHeader&lt;string&gt;(PingName);
+    var untyped = header.GetUntypedHeader(PingName, PingNamespace);
+    OperationContext.Current.OutgoingMessageHeaders.Add(untyped);
+
+    try
+    {
+      operation((TChannel)channel);
+      var headers = OperationContext.Current.IncomingMessageHeaders;
+      if (headers.Any(h =&gt; h.Name == PingName &amp;&amp; h.Namespace == PingNamespace))
+      {
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
+    catch (CommunicationException)
+    {
+      return false;
+    }
+   }
+ }
+ catch (Exception)
+ {
+   return false;
+ }
+</code></pre>
+
+<p>   }
+  }
+~~~~</p>
+
+<p><a href="http://11011.net/software/vspaste"></a></p>
+
+<p>This extension method basically adds a “Ping” header to the request
+message, executes the operation passed as argument (Action&lt;TChannel>
+operation), and looks for the corresponding “Ping” header in the
+response to see the results.</p>
+
+<p>The client application can use this extension with a single line of
+code,</p>
+
+<p><del> {.code}
+var client = new ServiceReference.HelloWorldClient();
+var isAvailable = client.InnerChannel.IsAvailable<IHelloWorld>(&copy; => c.Hello(null));
+</del></p>
+
+<p><a href="http://11011.net/software/vspaste"></a></p>
+
+<p>The “isAvailable” variable will tell the client application whether the
+service is available or not.</p>
+
+<p>You can download the complete implementation from this
+<a href="/images/legacy/Ping.zip">location</a>.</p>
+
+<p> </p>
+
+<p><a href="http://11011.net/software/vspaste"> </a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/05/11/getting-wcf-bindings-and-behaviors-from-any-config-source/">Getting WCF Bindings and Behaviors From Any Config Source</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-05-11T00:00:00-03:00" pubdate data-updated="true">May 11<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/05/11/getting-wcf-bindings-and-behaviors-from-any-config-source/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>The need of loading WCF bindings or behaviors from different sources
+such as files in a disk or databases is a common requirement when
+dealing with configuration either on the client side or the service
+side.</p>
+
+<p>The traditional way to accomplish this in WCF is loading everything from
+the standard configuration section (serviceModel section) or creating
+all the bindings and behaviors by hand in code. However, there is a
+solution in the middle that becomes handy when more flexibility is
+needed. This solution involves getting the configuration from any place,
+and use that configuration to automatically configure any existing
+binding or behavior instance created with code. </p>
+
+<p>In order to configure a binding instance
+(System.ServiceModel.Channels.Binding) that you later inject in any
+endpoint on the client channel or the service host, you first need to
+get a binding configuration section from any configuration file (you can
+generate a temp file on the fly if you are using any other source for
+storing the configuration).</p>
+
+<p> </p>
+
+<p><del> {.code}
+private BindingsSection GetBindingsSection(string path)
+{
+  System.Configuration.Configuration config =
+</del></p>
+
+<p>~~~~ {.code}
+System.Configuration.ConfigurationManager.OpenMappedExeConfiguration(</p>
+
+<pre><code>new System.Configuration.ExeConfigurationFileMap() { ExeConfigFilename = path },
+  System.Configuration.ConfigurationUserLevel.None);
+</code></pre>
+
+<p>  var serviceModel = ServiceModelSectionGroup.GetSectionGroup(config);
+  return serviceModel.Bindings;
+}
+~~~~</p>
+
+<p><a href="http://11011.net/software/vspaste"></a></p>
+
+<p> </p>
+
+<p>The BindingsSection contains a list of all the configured bindings in
+the serviceModel configuration section, so you can iterate through all
+the configured binding that get the one you need (You don’t need to have
+a complete serviceModel section, a section with the bindings only
+works).</p>
+
+<p> </p>
+
+<p>~~~~ {.code}
+public Binding ResolveBinding(string name)
+{
+  BindingsSection section = GetBindingsSection(path);</p>
+
+<p>  foreach (var bindingCollection in section.BindingCollections)
+  {</p>
+
+<pre><code>if (bindingCollection.ConfiguredBindings.Count &gt; 0 
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {.code}
+&amp;&amp; bindingCollection.ConfiguredBindings[0].Name == name)</p>
+
+<pre><code>{
+  var bindingElement = bindingCollection.ConfiguredBindings[0];
+  var binding = (Binding)Activator.CreateInstance(bindingCollection.BindingType);
+  binding.Name = bindingElement.Name;
+  bindingElement.ApplyConfiguration(binding);
+
+  return binding;
+}
+</code></pre>
+
+<p>  }</p>
+
+<p>  return null;
+}
+~~~~</p>
+
+<p><a href="http://11011.net/software/vspaste"></a></p>
+
+<p> </p>
+
+<p>The code above does just that, and also instantiates and configures the
+Binding object (System.ServiceModel.Channels.Binding) you are looking
+for. As you can see, the binding configuration element contains a method
+“ApplyConfiguration” that receives the binding instance that needs to be
+configured.</p>
+
+<p>A similar thing can be done for instance with the “Endpoint” behaviors.
+You first get the BehaviorsSection, and then, the behavior you want to
+use.</p>
+
+<p> </p>
+
+<p><del> {.code}
+private BehaviorsSection GetBehaviorsSection(string path)
+{
+  System.Configuration.Configuration config =
+</del></p>
+
+<p>~~~~ {.code}
+System.Configuration.ConfigurationManager.OpenMappedExeConfiguration(</p>
+
+<pre><code>   new System.Configuration.ExeConfigurationFileMap() { ExeConfigFilename = path },
+      System.Configuration.ConfigurationUserLevel.None);
+</code></pre>
+
+<p>  var serviceModel = ServiceModelSectionGroup.GetSectionGroup(config);
+  return serviceModel.Behaviors;</p>
+
+<p>}
+~~~~</p>
+
+<p>~~~~ {.code}
+public List<IEndpointBehavior> ResolveEndpointBehavior(string name)
+{
+  BehaviorsSection section = GetBehaviorsSection(path);
+  List<IEndpointBehavior> endpointBehaviors = new List<IEndpointBehavior>();</p>
+
+<p>  if (section.EndpointBehaviors.Count > 0
+~~~~</p>
+
+<p>~~~~ {.code}
+&amp;&amp; section.EndpointBehaviors[0].Name == name)
+  {</p>
+
+<pre><code>var behaviorCollectionElement = section.EndpointBehaviors[0];
+
+foreach (BehaviorExtensionElement behaviorExtension in behaviorCollectionElement)
+{
+  object extension = behaviorExtension.GetType().InvokeMember("CreateBehavior",
+        BindingFlags.InvokeMethod | BindingFlags.NonPublic | BindingFlags.Instance,
+        null, behaviorExtension, null);
+
+  endpointBehaviors.Add((IEndpointBehavior)extension);
+}
+</code></pre>
+
+<p>   return endpointBehaviors;
+ }</p>
+
+<p> return null;
+}
+~~~~</p>
+
+<p><a href="http://11011.net/software/vspaste"></a></p>
+
+<p> </p>
+
+<p>In this case, the code for creating the behavior instance is more
+tricky. First of all, a behavior in the configuration section actually
+represents a set of “IEndpoint” behaviors, and the behavior element you
+get from the configuration does not have any public method to configure
+an existing behavior instance. This last one only contains a protected
+method “CreateBehavior” that you can use for that purpose.</p>
+
+<p>Once you get this code implemented, a client channel can be easily
+configured as follows</p>
+
+<p> </p>
+
+<p>~~~~ {.code}
+var binding = resolver.ResolveBinding(&ldquo;MyBinding&rdquo;);
+var behaviors = resolver.ResolveEndpointBehavior(&ldquo;MyBehavior&rdquo;);</p>
+
+<p>SampleServiceClient client = new SampleServiceClient(binding,</p>
+
+<pre><code>   new EndpointAddress(new Uri("http://localhost:13749/SampleService.svc"),
+   new DnsEndpointIdentity("localhost")));
+</code></pre>
+
+<p>foreach (var behavior in behaviors)
+{
+   if(client.Endpoint.Behaviors.Contains(behavior.GetType()))
+   {</p>
+
+<pre><code> client.Endpoint.Behaviors.Remove(behavior.GetType());
+</code></pre>
+
+<p>   }
+   client.Endpoint.Behaviors.Add(behavior);
+}
+~~~~</p>
+
+<p> </p>
+
+<p>The code above assumes that a configuration file (in any place) with a
+binding “MyBinding” and a behavior “MyBehavior” exists. That file can
+look like this,</p>
+
+<p> </p>
+
+<p>~~~~ {.code}
+&lt;system.serviceModel>
+   <bindings></p>
+
+<pre><code> &lt;basicHttpBinding&gt;
+   &lt;binding name="MyBinding"&gt;
+     &lt;security mode="Transport"&gt;&lt;/security&gt;
+   &lt;/binding&gt;
+ &lt;/basicHttpBinding&gt;
+</code></pre>
+
+<p>   </bindings>
+   <behaviors></p>
+
+<pre><code> &lt;endpointBehaviors&gt;
+   &lt;behavior name="MyBehavior"&gt;
+     &lt;clientCredentials&gt;
+       &lt;windows/&gt;
+     &lt;/clientCredentials&gt;
+   &lt;/behavior&gt;
+ &lt;/endpointBehaviors&gt;
+</code></pre>
+
+<p>   </behaviors>
+ &lt;/system.serviceModel>
+~~~~</p>
+
+<p><a href="http://11011.net/software/vspaste"></a></p>
+
+<p> </p>
+
+<p>The same thing can be done of course in the service host if you want to
+manually configure the bindings and behaviors.</p>
+
+<p><a href="http://11011.net/software/vspaste"></a> </p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/04/15/integrating-wif-with-wcf-data-services/">Integrating WIF With WCF Data Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-04-15T00:00:00-03:00" pubdate data-updated="true">Apr 15<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/04/15/integrating-wif-with-wcf-data-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>A time ago I
+<a href="http://weblogs.asp.net/cibrax/archive/2009/03.aspx">discussed</a> how a
+custom REST Starter kit interceptor could be used to parse a SAML token
+in the Http Authorization header and wrap that into a ClaimsPrincipal
+that the WCF services could use. The thing is that code was initially
+created for Geneva framework, so it got deprecated quickly. I recently
+needed that piece of code for one of projects where I am currently
+working on so I decided to update it for WIF. As this interceptor can be
+injected in any host for WCF REST services, also represents an excellent
+solution for integrating claim-based security into WCF Data Services
+(previously known as ADO.NET Data Services).</p>
+
+<p>The interceptor basically expects a SAML token in the Authorization
+header. If a token is found, it is parsed and a new ClaimsPrincipal is
+initialized and injected in the WCF authorization context.</p>
+
+<p>public class SamlAuthenticationInterceptor : RequestInterceptor \
+{ \
+  SecurityTokenHandlerCollection handlers;</p>
+
+<p>  public SamlAuthenticationInterceptor() \
+    : base(false) \
+  { \
+    this.handlers =
+FederatedAuthentication.ServiceConfiguration.SecurityTokenHandlers; \
+  }</p>
+
+<p>  public override void ProcessRequest(ref RequestContext requestContext)
+\
+  { \
+    SecurityToken token =
+ExtractCredentials(requestContext.RequestMessage);</p>
+
+<p>    if (token != null) \
+    { \
+      ClaimsIdentityCollection claims = handlers.ValidateToken(token);</p>
+
+<p>      var principal = new ClaimsPrincipal(claims); \
+      InitializeSecurityContext(requestContext.RequestMessage,
+principal); \
+    } \
+    else \
+    { \
+      DenyAccess(ref requestContext); \
+    } \
+  }</p>
+
+<p>  private void DenyAccess(ref RequestContext requestContext) \
+  { \
+    Message reply = Message.CreateMessage(MessageVersion.None, null); \
+    HttpResponseMessageProperty responseProperty = new
+HttpResponseMessageProperty() { StatusCode = HttpStatusCode.Unauthorized
+};</p>
+
+<p>    responseProperty.Headers.Add(&ldquo;WWW-Authenticate&rdquo;, \
+          String.Format(&ldquo;Basic realm=\&rdquo;{0}\&ldquo;&rdquo;, &ldquo;&rdquo;));</p>
+
+<p>    reply.Properties[HttpResponseMessageProperty.Name] =
+responseProperty; \
+    requestContext.Reply(reply);</p>
+
+<p>    requestContext = null; \
+  }</p>
+
+<p>  private SecurityToken ExtractCredentials(Message requestMessage) \
+  { \
+    HttpRequestMessageProperty request = (HttpRequestMessageProperty) 
+requestMessage.Properties[HttpRequestMessageProperty.Name];</p>
+
+<p>    string authHeader = request.Headers[&ldquo;Authorization&rdquo;];</p>
+
+<p>    if (authHeader != null &amp;&amp; authHeader.Contains(&ldquo;&lt;saml&rdquo;)) \
+    { \
+      XmlTextReader xmlReader = new XmlTextReader(new
+StringReader(authHeader));</p>
+
+<p>      var col =
+SecurityTokenHandlerCollection.CreateDefaultSecurityTokenHandlerCollection();
+\
+      SecurityToken token = col.ReadToken(xmlReader); \
+                                 \
+      return token; \
+    }</p>
+
+<p>    return null; \
+  }</p>
+
+<p>  private void InitializeSecurityContext(Message request, IPrincipal
+principal) \
+  { \
+    List&lt;IAuthorizationPolicy> policies = new
+List&lt;IAuthorizationPolicy>(); \
+    policies.Add(new PrincipalAuthorizationPolicy(principal)); \
+    ServiceSecurityContext securityContext = new
+ServiceSecurityContext(policies.AsReadOnly());</p>
+
+<p>    if (request.Properties.Security != null) \
+    { \
+      request.Properties.Security.ServiceSecurityContext =
+securityContext; \
+    } \
+    else \
+    { \
+      request.Properties.Security = new SecurityMessageProperty() {
+ServiceSecurityContext = securityContext }; \
+     } \
+   }</p>
+
+<p>   class PrincipalAuthorizationPolicy : IAuthorizationPolicy \
+   { \
+     string id = Guid.NewGuid().ToString(); \
+     IPrincipal user;</p>
+
+<p>     public PrincipalAuthorizationPolicy(IPrincipal user) \
+     { \
+       this.user = user; \
+     }</p>
+
+<p>     public ClaimSet Issuer \
+     { \
+       get { return ClaimSet.System; } \
+     }</p>
+
+<p>     public string Id \
+     { \
+       get { return this.id; } \
+     }</p>
+
+<p>     public bool Evaluate(EvaluationContext evaluationContext, ref
+object state) \
+     { \
+       evaluationContext.AddClaimSet(this, new
+DefaultClaimSet(System.IdentityModel.Claims.Claim.CreateNameClaim(user.Identity.Name)));
+\
+       evaluationContext.Properties[&ldquo;Identities&rdquo;] = new
+List&lt;IIdentity>(new IIdentity[] { user.Identity }); \
+       evaluationContext.Properties[&ldquo;Principal&rdquo;] = user; \
+       return true; \
+     } \
+   } \</p>
+
+<p>A WCF Data Service, as any other WCF Service, contains a service host
+where this interceptor can be injected. The following code illustrates
+how that can be done in the “svc” file.</p>
+
+<p>&lt;%@ ServiceHost Language=&ldquo;C#&rdquo; Debug=&ldquo;true&rdquo;
+Service=&ldquo;ContactsDataService&rdquo; \
+                Factory=&ldquo;AppServiceHostFactory&rdquo; %></p>
+
+<p>using System; \
+ using System.ServiceModel; \
+ using System.ServiceModel.Activation; \
+ using Microsoft.ServiceModel.Web;</p>
+
+<p>class AppServiceHostFactory : ServiceHostFactory \
+ { \
+   protected override ServiceHost CreateServiceHost(Type serviceType,
+Uri[] baseAddresses) \
+  { \
+    WebServiceHost2 result = new WebServiceHost2(serviceType, true,
+baseAddresses);</p>
+
+<p>    result.Interceptors.Add(new SamlAuthenticationInterceptor()); \
+            \
+    return result; \
+  } \
+}</p>
+
+<p>WCF Data Services includes an specific WCF host of out the box
+(DataServiceHost). However, the service is not affected at all if you
+replace it with a custom one as I am doing in the code above
+(WebServiceHost2 is part of the REST Starter kit).</p>
+
+<p>Finally, the client application needs to pass the SAML token somehow to
+the data service. In case you are using any Http client library for
+consuming the data service, that’s easy to do, you only need to include
+the SAML token as part of the “Authorization” header. If you are using
+the auto-generated data service proxy, a little piece of code is needed
+to inject a SAML token into the DataServiceContext instance. That class
+provides an event “SendingRequest” that any client application can
+leverage to include custom code that modified the Http request before it
+is sent to the service. So, you can easily create an extension method
+for the DataServiceContext that negotiates the SAML token with an
+existing STS, and adds that token as part of the “Authorization” header.</p>
+
+<p>public static class DataServiceContextExtensions \
+ {     </p>
+
+<p>  public static void ConfigureFederatedCredentials(this
+DataServiceContext context, string baseStsAddress, string realm) \
+  { \
+    string address = string.Format(STSAddressFormat, baseStsAddress,
+realm); \
+             \
+    string token = NegotiateSecurityToken(address); \
+    context.SendingRequest += (source, args) => \
+    { \
+      args.RequestHeaders.Add(&ldquo;Authorization&rdquo;, token); \
+    }; \
+  }</p>
+
+<p>private string NegotiateSecurityToken(string address) \
+ { \
+ }</p>
+
+<p>}</p>
+
+<p>I left the NegociateSecurityToken method empty for this extension as it
+depends pretty much on how you are negotiating tokens from an existing
+STS. In case you want to end-to-end REST solution that involves an Http
+endpoint for the STS, you should definitely take a look at the
+<a href="http://startersts.codeplex.com/">Thinktecture starter STS project</a> in
+codeplex.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/11/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/blog/page/9/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

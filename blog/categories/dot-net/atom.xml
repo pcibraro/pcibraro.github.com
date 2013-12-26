@@ -1,0 +1,1044 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: .NET | Pablo Cibraro (Cibrax)]]></title>
+  <link href="http://cibrax.me/blog/categories/dot-net/atom.xml" rel="self"/>
+  <link href="http://cibrax.me/"/>
+  <updated>2013-12-26T15:03:47-03:00</updated>
+  <id>http://cibrax.me/</id>
+  <author>
+    <name><![CDATA[Cibrax]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Using the Katana Authentication handlers with NancyFx]]></title>
+    <link href="http://cibrax.me/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/"/>
+    <updated>2013-07-29T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx</id>
+    <content type="html"><![CDATA[<p>Once you write an OWIN Middleware service, it can be reused everywhere
+as long as OWIN is supported. In my <a href="http://weblogs.asp.net/cibrax/archive/2013/07/26/writing-an-authenticationhandler-for-katana.aspx">last
+post</a>,
+I discussed how you could write an Authentication Handler in Katana for
+Hawk (HMAC Authentication). Good news is NancyFx can be run as an OWIN
+handler, so you can use many of existing middleware services, including
+the ones that are ship with Katana.</p>
+
+<p>Running NancyFx as a OWIN handler is pretty straightforward, and
+discussed in detail as part of the NancyFx documentation
+<a href="https://github.com/NancyFx/Nancy/wiki/Hosting-nancy-with-owin">here</a>.
+After run the steps described there and you have the application
+working, only a few more steps are required to register the additional
+middleware services.</p>
+
+<p>The example bellow shows how the Startup class is modified to include
+Hawk authentication.</p>
+
+<p>```csharp
+public class Startup
+{</p>
+
+<pre><code>public void Configuration(IAppBuilder app)
+{
+    app.UseHawkAuthentication(new HawkAuthenticationOptions
+    {
+        Credentials = (id) =&gt;
+        {
+            return new HawkCredential
+            {
+                Id = "dh37fgj492je",
+                Key = "werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn",
+                Algorithm = "hmacsha256",
+                User = "steve"
+            };
+        }
+    });
+
+    app.UseNancy();
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>This code registers the Hawk Authentication Handler on top of the OWIN
+pipeline, so it will try to authenticate the calls before the request
+messages are passed over to NancyFx.</p>
+
+<p>The authentication handlers in Katana set the user principal in the OWIN
+environment using the key “server.User”. The following code shows how
+you can get that principal in a NancyFx module,</p>
+
+<p>```csharp
+public class HomeModule : NancyModule
+{
+  public HomeModule()
+  {</p>
+
+<pre><code>Get["/"] = x =&gt;
+{
+  var env = (IDictionary&lt;string, object&gt;)Context.Items[NancyOwinHost.RequestEnvironmentKey];
+
+  if (!env.ContainsKey("server.User") || env["server.User"] == null)
+  {
+      return HttpStatusCode.Unauthorized;
+  }
+
+  var identity = (ClaimsPrincipal)env["server.User"];
+
+  return "Hello " + identity.Identity.Name; 
+};
+</code></pre>
+
+<p>}
+```</p>
+
+<p><code>csharp
+}
+</code></p>
+
+<p>Thanks to OWIN, you don’t know any details of how these cross cutting
+concerns can be implemented in every possible web application framework.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Writing an AuthenticationHandler for Katana]]></title>
+    <link href="http://cibrax.me/blog/2013/07/26/writing-an-authenticationhandler-for-katana/"/>
+    <updated>2013-07-26T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2013/07/26/writing-an-authenticationhandler-for-katana</id>
+    <content type="html"><![CDATA[<p>As I discussed in my previous
+<a href="http://weblogs.asp.net/cibrax/archive/2013/07/22/getting-started-with-owin-and-katana.aspx">post</a>,
+Katana is pretty much organized in middleware services.  One of those
+middleware services is authentication, which provides some built-in
+implementations for existing OAuth providers such as Facebook, Twitter,
+Google or Microsoft, and also an implementation for Forms authentication
+with cookies.  All those implementations are currently distributed as
+Nuget packages under the name of Microsoft.Owin.Security.*, where the
+last part identifies the name of the implementation (e.g.
+Microsoft.Owin.Security.Twitter).</p>
+
+<p>Microsoft.Owin.Security is also the core project where you can find the
+base classes for writing a new authentication handler, and the ones that
+all the these implementations use.</p>
+
+<p>At first glance, the core class that you will use to create a new
+authentication handler is
+Microsoft.Owin.Security.Infrastructure.AuthenticationHandler&lt;T>, where
+T is class that derives from AuthenticationOptions and contains all the
+properties for initializing the handler.</p>
+
+<p>AuthenticationHandler&lt;T> derives from
+Microsoft.Owin.Security.Infrastructure.AuthenticationHandler, which
+provides the following definition.</p>
+
+<p>```csharp
+public abstract class AuthenticationHandler
+{
+   protected OwinRequest Request;
+   protected OwinResponse Response;</p>
+
+<p>   protected AuthenticationHandler();</p>
+
+<p>   protected virtual Task ApplyResponseChallenge();</p>
+
+<p>   protected virtual Task ApplyResponseCore();</p>
+
+<p>   protected virtual Task ApplyResponseGrant();</p>
+
+<p>   protected abstract Task<AuthenticationTicket> AuthenticateCore();
+}
+```</p>
+
+<p>This class basically provides access to the current request/response
+OWIN messages, and also a few methods that can be overridden as part of
+the implementation.</p>
+
+<ul>
+<li>ApplyResponseChallenge: This method can be overridden to send a
+authentication challenge when a middleware service in the upper
+layer denies the execution (e.g 401 status code). For example, this
+can be useful for basic authentication.</li>
+<li>ApplyResponseCore: This method by default calls
+ApplyResponseChallenge and ApplyResponseGrant. It can be changed to
+make some additional processing of the Response message.</li>
+<li>ApplyResponseGrant: This method is only useful for authentication
+methods that needs to implement sign-in/sign-out concerns such as
+OAuth or Forms authentication. You won’t be using this for some
+authentication options such as basic or hmac authentication.</li>
+<li>AuthenticateCore: This is the more important method, and the one
+where all the main implementation of the authentication handler
+lives. The AuthenticationTicket will contain the identity of the
+authenticated user or null if the user couldn’t be authenticated.</li>
+</ul>
+
+
+<p>The AuthenticationOptions base class only contains the following
+structure,</p>
+
+<p>```csharp
+public abstract class AuthenticationOptions
+{
+  protected AuthenticationOptions(string authenticationType);</p>
+
+<p>  public AuthenticationMode AuthenticationMode { get; set; }</p>
+
+<p>  public string AuthenticationType { get; set; }</p>
+
+<p>  public AuthenticationDescription Description { get; set; }
+}
+```</p>
+
+<ul>
+<li>AuthenticationMode. It’s an enumeration with two possible values
+Active/Passive. It basically identifies the http flow for the
+authentication implementation. Some authentication methods like
+Basic or HMac are Active, so it can be used directly against the
+current request without requiring additional http redirections. Some
+other methods like OAuth or Forms are not, so those have to
+identified as Passive. This setting will affect the authentication
+middleware behaves, so you have to set the correct value for it.</li>
+<li>AuthenticatinType. It represents the authentication scheme. For
+example, Basic.</li>
+<li>AuthenticationDescription. It can be used to provide more
+information about the authentication method.</li>
+</ul>
+
+
+<p>Only these two classes are used so far to create a new authentication
+handler. However, you will also need a another class that acts as a
+factory, and it is used to inject the handler into the OWIN pipeline.
+That class is
+Microsoft.Owin.Security.Infrastructure.AuthenticationMiddleware.</p>
+
+<p>```csharp
+public abstract class AuthenticationMiddleware<TOptions> : OwinMiddleware where TOptions : Microsoft.Owin.Security.AuthenticationOptions
+{
+  public AuthenticationMiddleware(OwinMiddleware next, TOptions options);</p>
+
+<p>  public TOptions Options { get; set; }</p>
+
+<p>  protected abstract AuthenticationHandler<TOptions> CreateHandler();
+}
+```</p>
+
+<p>This class basically receives the Options that must be passed to the
+AuthenticationHandler, and also contains a method CreateHandler where
+the handler is actually created.</p>
+
+<p>I will use the rest of this post to describe the implementation of a
+handler for doing HMac authentication using Hawk.</p>
+
+<p>The first step in the implementation is to create a custom
+AuthenticationOptions class.</p>
+
+<p>```csharp
+public class HawkAuthenticationOptions : AuthenticationOptions
+{
+  public const string Scheme = &ldquo;Hawk&rdquo;;</p>
+
+<p>  public HawkAuthenticationOptions()</p>
+
+<pre><code>   : base(Scheme)
+</code></pre>
+
+<p>  {
+   }</p>
+
+<p>  public Func&lt;string, HawkCredential> Credentials { get; set; }
+}
+```</p>
+
+<p>The Credentials property is a callback that the authentication handler
+implementation will use to resolve the user/key to verify the HMAC
+received in the authorization header. In a Basic Authentication
+implementation, you could potentially have a callback or a reference to
+a repository to verify the username and password received in the
+authorization header. I am also passing “Hawk” as part of the
+constructor to set the authentication scheme associated to the handler.</p>
+
+<p>The next step is to implement the AuthenticationHandler.</p>
+
+<p>```csharp
+public class HawkAuthenticationHandler : AuthenticationHandler<HawkAuthenticationOptions>
+{
+  private readonly ILogger logger;</p>
+
+<p>  public HawkAuthenticationHandler(ILogger logger)
+  {</p>
+
+<pre><code>  this.logger = logger;
+</code></pre>
+
+<p>  }</p>
+
+<p>  protected override Task<AuthenticationTicket> AuthenticateCore()
+  {</p>
+
+<pre><code> AuthenticationHeaderValue authorization = null;
+
+ if (Request.GetHeader("authorization") != null)
+ {
+     authorization = AuthenticationHeaderValue.Parse(Request.GetHeader("authorization"));
+  }
+
+ if (authorization != null &amp;&amp;
+      !string.Equals(authorization.Scheme, HawkAuthenticationOptions.Scheme))
+ {
+      this.logger.WriteInformation(string.Format("Authorization skipped. Schema found {0}",
+           authorization.Scheme));
+
+      return Task.FromResult(EmptyTicket());
+  }
+
+  if (authorization == null ||
+     string.IsNullOrWhiteSpace(authorization.Scheme))
+  {
+      this.logger.WriteWarning("Authorization header not found");
+
+      return Task.FromResult(EmptyTicket());
+  }
+  else
+  {
+      if (string.IsNullOrWhiteSpace(authorization.Parameter))
+      {
+          this.logger.WriteWarning("Invalid header format");
+
+          return Task.FromResult(EmptyTicket());
+      }
+
+     if (string.IsNullOrWhiteSpace(Request.Host))
+     {
+          this.logger.WriteWarning("Missing Host header");
+
+          return Task.FromResult(EmptyTicket());
+      }
+
+      try
+      {
+          var principal = Hawk.Authenticate(authorization.Parameter,
+               Request.Host,
+               Request.Method,
+               Request.Uri,
+               this.Options.Credentials);
+
+          var identity = (ClaimsIdentity)((ClaimsPrincipal)principal).Identity;
+          var ticket = new AuthenticationTicket(identity, (AuthenticationExtra)null);
+
+          return Task.FromResult(ticket);
+       }
+       catch (SecurityException ex)
+       {
+            this.logger.WriteWarning(ex.Message);
+
+            return Task.FromResult(EmptyTicket());
+       }
+    }
+}
+
+protected override Task ApplyResponseChallenge()
+{
+     if (Response.StatusCode != 401)
+     {
+          return Task.FromResult&lt;object&gt;(null);
+      }
+
+     var ts = Hawk.ConvertToUnixTimestamp(DateTime.Now).ToString();
+     var challenge = string.Format("ts=\"{0}\" ntp=\"{1}\"",
+            ts, "pool.ntp.org");
+
+     Response.AddHeader("WWW-Authenticate", HawkAuthenticationOptions.Scheme + " " + challenge);
+
+    return Task.FromResult&lt;object&gt;(null);
+ }
+
+ private static AuthenticationTicket EmptyTicket()
+ {
+     return new AuthenticationTicket(null, (AuthenticationExtra)null);
+  }
+</code></pre>
+
+<p> }
+```</p>
+
+<p>The implementation is Active, so only overrides the AuthenticationCore
+and ApplyResponseChallenge methods. The AuthenticationCore
+implementation tries to locate a Authorization Header with a format that
+follows the Hawk specification to authenticate the call. If an
+Authorization header is not found or it can not be parsed, an
+AuthenticationTicket instance with an empty identity is returned.
+Otherwise, the identity is set in the ticket and returned as part of the
+task. This implementation also uses the logging facilities provided by
+Katana.</p>
+
+<p>The last step is to implement the AuthenticationMiddleware class.</p>
+
+<p>```csharp
+public class HawkAuthenticationMiddleware : AuthenticationMiddleware<HawkAuthenticationOptions>
+{</p>
+
+<pre><code>private readonly ILogger logger;
+
+public HawkAuthenticationMiddleware(
+    OwinMiddleware next,
+    IAppBuilder app,
+    HawkAuthenticationOptions options) : base(next, options)
+{
+     this.logger = app.CreateLogger&lt;HawkAuthenticationHandler&gt;();
+ }
+
+ protected override AuthenticationHandler&lt;HawkAuthenticationOptions&gt; CreateHandler()
+ {
+     return new HawkAuthenticationHandler(this.logger);
+ }
+</code></pre>
+
+<p> }
+```</p>
+
+<p>This implementation only overrides the CreateHandler method to return a
+new HawkAuthenticationHandler instance. As that instance relies on the
+Katana logger, the logger instance is first created from the IAppBuilder
+instance injected in the constructor.</p>
+
+<p>Once you have the AuthenticationMiddleware implementation completed, you
+will want to inject it in the OWIN pipeline to use it in an existing
+application. An extension method can be provided to make this task
+easier for the developer.</p>
+
+<p>```csharp
+public static class HawkAuthenticationExtensions
+{</p>
+
+<pre><code>public static IAppBuilder UseHawkAuthentication(this IAppBuilder app, HawkAuthenticationOptions options)
+{
+    app.Use(typeof(HawkAuthenticationMiddleware), app, options);
+    app.UseStageMarkerAuthenticate();
+    return app;
+ }
+</code></pre>
+
+<p> }
+```</p>
+
+<p>The following example shows how this extension is used to register the
+HawkAuthenticationMiddleware service in an application that uses Web API
+with OWIN</p>
+
+<p>```csharp
+public class Startup
+{</p>
+
+<pre><code> public void Configuration(IAppBuilder app)
+ {
+     app.SetLoggerFactory(new ConsoleLoggerFactory());
+
+     var config = new HttpConfiguration();
+     config.Routes.MapHttpRoute("Default", "api/{controller}");
+
+     app.UseHawkAuthentication(new HawkAuthenticationOptions
+     {
+         Credentials = (id) =&gt;
+         {
+             return new HawkCredential
+             {
+                 Id = "dh37fgj492je",
+                 Key = "werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn",
+                 Algorithm = "hmacsha256",
+                 User = "steve"
+             };
+          }
+     });
+
+    app.UseWebApi(config);
+
+ }
+</code></pre>
+
+<p> }
+```</p>
+
+<p>All the code provided as part of this example for Hawk can be found in
+the <a href="https://github.com/pcibraro/hawknet">HawkNet github project</a>.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Getting started with Owin and Katana]]></title>
+    <link href="http://cibrax.me/blog/2013/07/22/getting-started-with-owin-and-katana/"/>
+    <updated>2013-07-22T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2013/07/22/getting-started-with-owin-and-katana</id>
+    <content type="html"><![CDATA[<h2>Introduction</h2>
+
+<p>The .NET ecosystem offers today a lot of alternatives for developing web
+applications. You can either use any of the frameworks supported by
+Microsoft with ASP.NET such as Forms, MVC or Web API, or any other open
+source alternative like FubuMVC, ServiceStack, NancyFx or OpenRasta to
+name a few. From an architecture standpoint, all these frameworks have
+three main layers in common (in spite of the difference with the
+implementation details), hosting, middleware, and application.</p>
+
+<p>The hosting layer is responsible for managing the underline process,
+where the http connections are established and managed, and also to
+materialize those connections into request/response objects that are
+sent to the upper layers. For example, the hosting layer could be
+ASP.NET running in IIS, or it could also be a console application that
+uses the http listener directly.</p>
+
+<p>The middleware layer provides common infrastructure services, which runs
+at low level in the http stack, such as security, caching, or any other
+concern that can be handled at this level.</p>
+
+<p>The application layer is where the applications or services are
+implemented using the features available in the framework.</p>
+
+<p>However, the distinction between the middleware and application layers
+is not always clear, which causes that many of the middleware services
+end up being implemented in the application layer. For example, you
+could implement middleware services for security in ASP.NET MVC using
+filters, which rely on features specific to the application level in
+that framework. This make almost impossible to reuse all these services
+across all the available frameworks, so you will find different
+implementations of the same services for the different frameworks. To
+give an example, basic authentication is something that could be
+implemented as middleware service and reused, but today is implemented
+differently in each framework.</p>
+
+<p>Someone would suggest that a ASP.NET Http Module could be a good option
+for implementing a middleware service, but that’s not necessarily true
+as it would only work when the hosting layer uses ASP.NET.</p>
+
+<p>This exact problem is what <a href="http://owin.org/spec/owin-1.0.0.html">OWIN
+specification</a> tries to address by
+providing a common abstraction for any http-aware service or application
+with minimal dependencies on existing frameworks or implementations.  At
+very core level, OWIN defines a handler, which is represented as an
+application delegate,</p>
+
+<p>using AppFunc = Func&lt; \
+        IDictionary&lt;string, object>, // Environment \
+        Task>; // Done</p>
+
+<p>The idea is to represent the three layers discussed above as a set of
+handlers using the “chain of responsibility” pattern. The environment
+argument is a dictionary that the different handlers use to exchange
+values, and the next handler in the chain is represented with the task
+argument. Having said that, the first handler in the chain would be
+responsible for the hosting layer, and it should populate the
+environment with keys that describe the received http request message,
+such as scheme, port, request path, headers, etc. All those common
+headers are discussed as part of the specification.</p>
+
+<p>Katana is a Microsoft implementation of the OWIN specification, which
+includes handlers for the hosting and middleware layers. It’s an open
+source project, which can be found in this
+<a href="http://katanaproject.codeplex.com/SourceControl/latest">location</a>. All
+the investment that Microsoft has done so far for ASP.NET in the
+different application frameworks (i.e. MVC or Web API), it’s now being
+refactored as OWIN handlers that can be reused across different
+application frameworks. For example, cookie authentication or even OAuth
+are being implemented as middleware services that can be reused not only
+by ASP.NET web apps but also for other application frameworks in the
+open source world.</p>
+
+<p>The application layer is also implemented as another OWIN handler, which
+is responsible for setting up all the infrastructure required to handle
+the request/response at the application level. You will find application
+handlers for ASP.NET MVC, ASP.NET Web API, SignalR, or NancyFx to give
+an example. </p>
+
+<h2>Gettting Started with OWIN and Katana</h2>
+
+<p>The easiest way to get started with OWIN is to use the assembly
+distributed as nuget package. You will find a single nuget package for
+this called “OWIN”. This assembly only contains an interface
+IAppBuilder, which can be used to configure all the handlers that you
+want to use in your web application. This is a very low level interface
+that you won’t have to implement yourself if you use Katana.</p>
+
+<p>In addition to the “OWIN” assembly, you will find two additional nuget
+packages</p>
+
+<ul>
+<li>Owin.Extensions: Provides a set of very useful extensions methods
+for the IAppBuilder interface that you can use to configure the
+handlers.</li>
+<li>Owin.Types: Provides a set of wrappers to represent the environment
+dictionary as a typed object representing the request and response
+messages.</li>
+</ul>
+
+
+<p>You can implement your first OWIN handler using these three packages
+(You will not able to run it without the hosting handlers provided by
+Katana).</p>
+
+<p>```csharp
+public class MyMiddleware
+{
+  Func&lt;IDictionary&lt;string, object>, Task> next;</p>
+
+<p>  public MyMiddleware(Func&lt;IDictionary&lt;string, object>, Task> next)
+  {</p>
+
+<pre><code>this.next = next;
+</code></pre>
+
+<p>  }</p>
+
+<p>  public Task Invoke(IDictionary&lt;string, object> env)
+  {</p>
+
+<pre><code>var headers = (IDictionary&lt;string, string[]&gt;)env["owin.RequestHeaders"];
+
+var url = string.Format("{0}://{1}{2}{3}",
+            (string)env["owin.RequestScheme"],
+            headers["host"].First(),
+            (string)env["owin.RequestPathBase"],
+            (string)env["owin.RequestPath"]);
+
+if ((string)env["owin.RequestQueryString"] != "")
+  url += "?" + (string)env["owin.RequestQueryString"];
+
+Console.WriteLine("The received URL is {0}", url);
+
+return this.next(env);
+</code></pre>
+
+<p>  }
+}
+```</p>
+
+<p>This is a low level handler that sends the request url to the console.
+As you can see, it relies on some existing properties in the
+environment, which should have been set by Katana in the hosting layer.
+The handler also receives the next handler to call in the chain as part
+of the constructor.</p>
+
+<p>The entry point in any Katana application must be a class that receives
+the IAppBuilder interface as argument to configure all the handlers, as
+it is shown below,</p>
+
+<p>```csharp
+ public class Startup
+ {</p>
+
+<pre><code>public void Configuration(IAppBuilder app)
+{
+   app.UseType&lt;MyMiddleware&gt;();       
+}
+</code></pre>
+
+<p> }
+```</p>
+
+<p>UseType is one the extension methods provided by “Owin.Extensions” to
+configure a new handler in the pipeline. You can also other extension
+methods to define a handler on the fly using delegates as this one,</p>
+
+<p>```csharp
+app.UseHandlerAsync(async (req, res) =>
+{</p>
+
+<pre><code>res.ContentType = "text/plain";
+await res.WriteAsync("Hello World");
+</code></pre>
+
+<p>});
+```</p>
+
+<p>There is one more nuget package that you will find useful to create OWIN
+handlers, which is “Microsoft.Owin”. This is a package provided as part
+of Katana (It’s still a pre-release), which extends the Owin Request and
+Response classes with more properties and methods, and also helper
+methods to deal with these classes.</p>
+
+<h2>Hosting an application with Katana</h2>
+
+<p>Katana provides three options to host a web application.</p>
+
+<p>​1. OwinHost.exe. It’s a command tool that you can use to run the
+application. You can use multiple command arguments to specify the
+assembly with the entry point for configuring the IAppBuilder or other
+configuration settings such as the port number or tracing. This is tool
+is available as part of the nuget package “OwinHost”.</p>
+
+<p>​2. .NET application. There is a WebApp class that you can use to
+self-host a web application in any regular .NET application such as
+console app or a windows service. This class is available as part of the
+“Microsoft.Owin.Hosting” assembly.</p>
+
+<p><code>csharp
+using (WebApp.Start&lt;Startup&gt;(new StartOptions { Port = 5000 }))
+{
+   Console.WriteLine("Press Enter to quit.");
+   Console.ReadKey();
+}
+</code></p>
+
+<p>You need to pass the startup entry as argument to the static method
+“Start”.</p>
+
+<p>​3. ASP.NET. You need to reference the nuget package
+“Microsoft.Owin.Hosting.SystemWeb” (Pre-Release) from your web
+application project, and include the Startup class in that project as
+well.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Pushing ETW events through SignalR]]></title>
+    <link href="http://cibrax.me/blog/2013/06/03/pushing-etw-events-through-signalr/"/>
+    <updated>2013-06-03T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2013/06/03/pushing-etw-events-through-signalr</id>
+    <content type="html"><![CDATA[<p>ETW or Event Tracing for Windows is a very efficient pub/sub built-in
+mechanism that runs in Kernel Mode for doing event tracing. That implies
+there is just a little overhead in using this feature compared to other
+traditional tracing solutions that are I/O bound and drop the traces in
+different storages like files or databases for example. As it is a
+built-in mechanism in Windows, many of the operating systems services
+and components make good use of it. You can not only troubleshoot your
+application but also many of the OS components involved in the execution
+of that application.</p>
+
+<p>In ETW, you have applications publishing events in queues (or providers)
+and other applications consuming events from those queues in real-time
+through ETW sessions. When an event is published in a provider, it goes
+nowhere unless there is session collecting events on that queue. (The
+events are not persisted).</p>
+
+<p>The adoption of ETW in .NET application was pretty low as it was very
+hard to configure and use. However, things might change now that .NET
+4.5 supports a new EventSource class for publishing events easily in any
+.NET application. Another way to publish events in the past was to use
+.NET diagnostics infrastructure with the trace listener for ETW,
+“EventProviderTraceListener”.</p>
+
+<p>About this last one, it can be easily configured and associated to a
+trace source as it is shown bellow,</p>
+
+<p>```csharp
+&lt;system.diagnostics>
+  <sources></p>
+
+<pre><code>&lt;source name="MyConsoleApp" switchValue="Verbose"&gt;
+  &lt;listeners&gt;
+    &lt;add name="ETWListener" type="System.Diagnostics.Eventing.EventProviderTraceListener, System.Core, Version=3.5.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"
+           initializeData="13D5F7EF-9404-47ea-AF13-85484F09F2A7" /&gt;
+  &lt;/listeners&gt;
+&lt;/source&gt;
+</code></pre>
+
+<p>  </sources></p>
+
+<p>  <trace autoflush="true"/>
+&lt;/system.diagnostics>
+```</p>
+
+<p>The trace listener is associated to a GUID through the initializeData
+attribute. That identifier is used by ETW and associated to the
+provider, so it’s the one you will use to collect the events in a
+session.</p>
+
+<p>Once the listener is configured, you can start publishing events in that
+provider through a the trace source.</p>
+
+<p>```csharp
+TraceSource myTraceSource = new TraceSource(&ldquo;MyConsoleApp&rdquo;);</p>
+
+<p>myTraceSource.TraceEvent(TraceEventType.Error, 1, &ldquo;Tracing Error Message.&rdquo;);
+myTraceSource.TraceEvent(TraceEventType.Warning, 2, &ldquo;Tracing Warning Message.&rdquo;);
+myTraceSource.TraceEvent(TraceEventType.Information, 3, &ldquo;Tracing Information.&rdquo;);
+myTraceSource.TraceEvent(TraceEventType.Verbose, 4, &ldquo;Tracing Verbose Message.&rdquo;);
+myTraceSource.TraceEvent(TraceEventType.Critical, 5, &ldquo;Tracing Critical Message.&rdquo;);</p>
+
+<p>myTraceSource.Close();
+```</p>
+
+<p>Listening for those events in a ETW session is a different story. The
+standard procedure is to use a set of tools for starting an ETW session
+and dump the events into a binary file with a proprietary format (these
+are “etl” files), that can be imported in the event log viewer or an
+specific tool for this kind of file. You also have a tool for converting
+“etl” files to more user readable formats like xml or cvs. However, you
+can also use the ETW unmanaged API to start a new session and subscribe
+to the events as it was done with the <a href="http://archive.msdn.microsoft.com/EventTraceWatcher">EventTraceWatcher
+implementation</a> in
+this sample.</p>
+
+<p>```csharp
+var providerId = new Guid(&ldquo;13D5F7EF-9404-47ea-AF13-85484F09F2A7&rdquo;);</p>
+
+<p>using (EventTraceWatcher watcher = new EventTraceWatcher(&ldquo;MySession&rdquo;, providerId))
+{
+  watcher.EventArrived += delegate(object sender, EventArrivedEventArgs e)
+  {</p>
+
+<pre><code>if (e.Error != null)
+{
+  Console.Error.WriteLine(e.Error);
+  Environment.Exit(-1);
+}
+
+// Dump properties (key/value)
+foreach (var p in e.Properties)
+{
+  Console.WriteLine("Event", "\t" + p.Key + " -- " + p.Value);
+
+};
+
+// Start listening
+watcher.Start();
+
+Console.WriteLine("Listening...Press &lt;Enter&gt; to exit");
+Console.ReadLine();
+</code></pre>
+
+<p>}
+```</p>
+
+<p>You use the EventTraceWatcher to subscribe to events generated by an ETW
+provider, which are received as part of an event. What’s really
+interesting about this code is that it runs out of process. You could be
+collecting the events in a completely different application in the same
+host and doing whatever you want with those events like persisting them
+in a database for example. The performance of the application generating
+the events would not be affected at all.</p>
+
+<p>Now, imagine that you have a service running in one of your servers,
+which can be used to start a new ETW session and publish those events
+via SignalR. In that way, you can connect with a browser to the SignalR
+hub created by that service and get the events realtime, which
+represents an interesting way to see what’s going on your server at a
+given time.</p>
+
+<p>You can do an slight change to the code using the EventTraceWatcher to
+publish the events to a SignalR hub as it is shown bellow,</p>
+
+<p>```csharp
+class Program
+{</p>
+
+<pre><code>static void Main(string[] args)
+{
+    string url = "http://localhost:8080";
+
+    using (WebApplication.Start&lt;Startup&gt;(url))
+    {
+        Console.WriteLine("Server running on {0}", url);
+
+        var hubConnection = new HubConnection("http://localhost:8080/");
+        var serverHub = hubConnection.CreateHubProxy("EventsHub");
+        hubConnection.Start().Wait();
+
+        var providerId = new Guid("13D5F7EF-9404-47ea-AF13-85484F09F2A7");
+
+        using (EventTraceWatcher watcher = new EventTraceWatcher("MySession", providerId))
+        {
+            watcher.EventArrived += delegate(object sender, EventArrivedEventArgs e)
+            {
+                if (e.Error != null)
+                {
+                    Console.Error.WriteLine(e.Error);
+                    Environment.Exit(-1);
+                }
+
+                // Dump properties (key/value)
+                foreach (var p in e.Properties)
+                {
+                    serverHub.Invoke("PushEvent", "\t" + p.Key + " -- " + p.Value).Wait();
+                }
+            };
+
+            // Start listening
+            watcher.Start();
+
+            Console.WriteLine("Listening...Press &lt;Enter&gt; to exit");
+            Console.ReadLine();
+        }
+
+        Console.ReadLine();
+    }
+}
+</code></pre>
+
+<p>}</p>
+
+<p>class Startup
+{</p>
+
+<pre><code>public void Configuration(IAppBuilder app)
+{
+    // Turn cross domain on 
+    var config = new HubConfiguration { EnableCrossDomain = true };
+
+    // This will map out to http://localhost:8080/signalr by default
+    app.MapHubs(config);
+}
+</code></pre>
+
+<p>}</p>
+
+<p>public class EventsHub : Hub
+{</p>
+
+<pre><code>public void PushEvent(string message)
+{
+    Console.WriteLine("Event: " + message);
+
+    Clients.All.PushEvent(message);
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>This uses SignalR hosted in a console application with OWIN, so it could
+be literally moved to a windows service as well. Every time an event is
+captured from the ETW session, it is published in the SignalR hub.</p>
+
+<p>On the other side, you can also use SignalR to subscribe to the same hub
+and receive the generated messages at real time.</p>
+
+<p>```html</p>
+
+<script type="text/javascript">
+    $(function () {
+        var messages = $('#messages');
+
+        var connection = $.hubConnection('http://localhost:8080');
+        connection.start()
+            .done(function () {
+                console.log("Connected, transport = " + connection.transport.name);
+            })
+            .fail(function () { console.log('Could not connect'); });
+
+        var proxy = connection.createHubProxy('EventsHub');
+
+        proxy.on('PushEvent', function (message) {
+            messages.append(message + "<br>");
+        });
+    });
+</script>
+
+
+<p>```</p>
+
+<p>The code is available at Github,
+<a href="https://github.com/pcibraro/RealtimeTracing">https://github.com/pcibraro/RealtimeTracing</a></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[IP Throttling in ASP.NET Web API]]></title>
+    <link href="http://cibrax.me/blog/2013/05/22/ip-throttling-in-asp-net-web-api/"/>
+    <updated>2013-05-22T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2013/05/22/ip-throttling-in-asp-net-web-api</id>
+    <content type="html"><![CDATA[<p>Some Web APIs use the client IP address to enforce Service Level
+Agreements such as limit the number of calls in a period of time. The
+client IP address can be used as a replacement for an authentication key
+sometimes when a previous registration of client applications is not
+required.</p>
+
+<p>This is relatively simple to implement in a message handler,</p>
+
+<p>```csharp
+public class IPThrottlingMessageHandler : DelegatingHandler
+{
+  IIPRepository repository;
+  int maxRequestsHour;</p>
+
+<p>  public IPThrottlingMessageHandler(IIPRepository repository, int maxRequestsHour = 150)</p>
+
+<pre><code>        : base()
+</code></pre>
+
+<p>  {</p>
+
+<pre><code>this.repository = repository;
+this.maxRequestsHour = maxRequestsHour;
+</code></pre>
+
+<p>   }</p>
+
+<p>   public IPThrottlingMessageHandler(HttpMessageHandler inner, IIPRepository repository, int maxRequestsHour = 150)</p>
+
+<pre><code>        : base(inner)
+</code></pre>
+
+<p>  {</p>
+
+<pre><code> this.repository = repository;
+ this.maxRequestsHour = maxRequestsHour;
+</code></pre>
+
+<p>   }</p>
+
+<p>   protected override System.Threading.Tasks.Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, System.Threading.CancellationToken cancellationToken)
+  {</p>
+
+<pre><code> var ip = GetClientIp(request);
+
+  if (ip == null)
+  {
+     return ToResponse(request, HttpStatusCode.Forbidden, "The client ip couldn't be found");
+   }
+
+   if(this.repository.Increment(DateTime.Now.Hour, ip) &gt; this.maxRequestsHour)
+   {
+      return ToResponse(request, HttpStatusCode.Forbidden, "Quota exceeded");
+    }
+
+   return base.SendAsync(request, cancellationToken);
+</code></pre>
+
+<p>  }</p>
+
+<p>  private string GetClientIp(HttpRequestMessage request)
+  {</p>
+
+<pre><code> if (request.Properties.ContainsKey("MS_HttpContext"))
+ {
+    return ((HttpContextWrapper)request.Properties["MS_HttpContext"]).Request.UserHostAddress;
+  }
+ else if (request.Properties.ContainsKey(RemoteEndpointMessageProperty.Name))
+ {
+    RemoteEndpointMessageProperty prop;
+    prop = (RemoteEndpointMessageProperty)request.Properties[RemoteEndpointMessageProperty.Name];
+    return prop.Address;
+  }
+  else
+  {
+      return null;
+   }
+</code></pre>
+
+<p>   }</p>
+
+<p>   private static Task<HttpResponseMessage> ToResponse(HttpRequestMessage request, HttpStatusCode code, string message)
+   {</p>
+
+<pre><code>   var tsc = new TaskCompletionSource&lt;HttpResponseMessage&gt;();
+
+   var response = request.CreateResponse(code);
+   response.ReasonPhrase = message;
+   response.Content = new StringContent(message);
+
+   tsc.SetResult(response);
+
+    return tsc.Task;
+}
+</code></pre>
+
+<p> }
+```</p>
+
+<p>This handler uses a repository to store the number of calls with a given
+IP in one hour. If the number of requests per hour exceeds the quota, an
+error response is returned to the client.</p>
+]]></content>
+  </entry>
+  
+</feed>

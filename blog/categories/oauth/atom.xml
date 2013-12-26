@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: OAuth | Pablo Cibraro (Cibrax)]]></title>
+  <link href="http://cibrax.me/blog/categories/oauth/atom.xml" rel="self"/>
+  <link href="http://cibrax.me/"/>
+  <updated>2013-12-26T15:03:47-03:00</updated>
+  <id>http://cibrax.me/</id>
+  <author>
+    <name><![CDATA[Cibrax]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Some thoughts on OpenID and OAuth for Desktop clients]]></title>
+    <link href="http://cibrax.me/blog/2009/02/10/some-thoughts-on-openid-and-oauth-for-desktop-clients/"/>
+    <updated>2009-02-10T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2009/02/10/some-thoughts-on-openid-and-oauth-for-desktop-clients</id>
+    <content type="html"><![CDATA[<p>OpenID and OAuth are today excellent solutions for &ldquo;Single Sign On&rdquo;
+(SSO)  and &ldquo;Authorization Delegation&rdquo; respectively. They are, however,
+based on Http Redirections and therefore, tied to passive clients or
+commonly called web browsers.</p>
+
+<p>An interesting research was made by google some time ago, it can be
+found
+<a href="http://sites.google.com/site/oauthgoog/UXFedLogin/desktopapps">here</a>.
+After reading that article, it looks like they could not get rid of a
+browser at all :(.</p>
+
+<p>If that does not work for you, another solution could be WS-Federation
+Active Profile. </p>
+
+<p>&ldquo;SSO&rdquo; is an inherent feature of WS-Federation, not doubt about it.</p>
+
+<p>&ldquo;Authorization Delegation&rdquo; can also be emulated with a combination of
+&ldquo;SSO&rdquo; and authorization claims. In this scenario, we always give our
+credentials to an identity provider we trust, there is no need to give
+away our credentials to any site or service involved in a transaction.
+The authorization claims also represent fine-granular permissions of
+what we are allowed to do on the service side, and again, they can
+provided by identity provider itself or a resource STS. I discussed this
+approach in my last post, <a href="http://weblogs.asp.net/cibrax/archive/2009/02/06/addressing-authorization-with-oauth-or-the-net-access-control-service.aspx">&ldquo;Addressing Authorization with OAuth or the
+.NET Access Control
+Service&rdquo;</a>,
+the resource STS in this case would be the ACS service.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[OAuth channel for WCF RESTful services]]></title>
+    <link href="http://cibrax.me/blog/2008/11/14/oauth-channel-for-wcf-restful-services/"/>
+    <updated>2008-11-14T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2008/11/14/oauth-channel-for-wcf-restful-services</id>
+    <content type="html"><![CDATA[<p>While OpenID and WS-Federation focus on delegating user identity (or a
+collection of identity claims), OAuth was designed to address a
+different and complementary scenario, the delegation of user
+authorization. In few words, OAuth allows a client application to obtain
+user consent (as access tokens) for executing operations over private
+resources on his behalf.</p>
+
+<p>The analogy given by Eran Hammer Lahav in this post &ldquo;<a href="http://www.hueniverse.com/hueniverse/2007/09/explaining-oaut.html">Explaining
+OAuth</a>&rdquo;
+is very close to what the specification tries to address,</p>
+
+<p><em>&ldquo;Many luxury cars today come with a valet key. It is a special key you
+give the parking attendant and unlike your regular key, will not allow
+the car to drive more than a mile or two. Some valet keys will not open
+the trunk, while others will block access to your onboard cell phone
+address book. Regardless of what restrictions the valet key imposes, the
+idea is very clever. You give someone limited access to your car with a
+special key, while using another key to unlock everything else.&rdquo;</em></p>
+
+<p>Now, if we analyze the specification in more detail, we will see that
+the real purpose behind OAuth is to create a network of collaboration 
+between applications. It will not be necessary anymore to keep all our
+stuff just in a single place, we can have for instance our pictures in a
+website, our contacts in another place and a third application making
+use of them, all these applications collaborating together.</p>
+
+<p>If you want to know more about how OAuth works, you should read the
+following posts</p>
+
+<ul>
+<li><a href="http://www.hueniverse.com/hueniverse/2007/10/beginners-guide.html">&ldquo;Begginer&rsquo;s Guide to OAuth &ndash; Part
+I&rdquo;</a></li>
+<li><a href="http://www.hueniverse.com/hueniverse/2007/10/beginners-gui-1.html">&ldquo;Begginer&rsquo;s Guide to OAuth &ndash; Part II &ndash; Protocol
+Workflow&rdquo;</a></li>
+<li><a href="http://www.hueniverse.com/hueniverse/2008/10/beginners-guide.html">&ldquo;Begginer&rsquo;s Guide to OAuth &ndash; Part III &ndash; Security
+Architecture&rdquo;</a></li>
+</ul>
+
+
+<p>When I initially said that OpenID and OAuth complement each other, I
+meant that the user can first authenticated by an OpenID provider, and
+then redirected to the relying party to obtain his consent.
+(Authorization for consuming a private resource).</p>
+
+<p><a href="http://blog.bittercoder.com/">Alex Henderson (Aka Bittercoder)</a> has
+written a pretty good OAuth library in .NET for implementing an OAuth
+consumer and service provider. The library is available
+<a href="http://code.google.com/p/devdefined-tools/wiki/OAuth">here</a> under a MIT
+license (do wherever you want with it), and it is very easy to use. Alex
+has definitively made a very good work.</p>
+
+<p>My WCF channel implementation for OAuth mounts on top of his library and
+it basically transforms a OAuth token into a .NET security principal
+that can be used later within the service implementation. The channel is
+implemented as a RequestInterceptor, one of new features introduced in
+the REST WCF Starter Kit. This interceptor basically captures the
+request at channel level and performs all the validations required by
+OAuth. The following sample illustrates how the interceptors can be
+plugged into an existing service host (service.svc),</p>
+
+<p>&lt;%@ ServiceHost Language=&ldquo;C#&rdquo; Debug=&ldquo;true&rdquo;
+Service=&ldquo;ExampleOAuthChannel.FeedService&rdquo;
+Factory=&ldquo;ExampleOAuthChannel.AppServiceHostFactory&rdquo;%></p>
+
+<p>using System;\
+using System.ServiceModel;\
+using System.ServiceModel.Activation;\
+using Microsoft.ServiceModel.Web;</p>
+
+<p>namespace ExampleOAuthChannel \
+{\
+  class AppServiceHostFactory : ServiceHostFactory\
+  {\
+    protected override ServiceHost CreateServiceHost(Type serviceType,
+Uri[] baseAddresses)\
+    {\
+        WebServiceHost2 result = new WebServiceHost2(serviceType, true,
+baseAddresses);\
+        result.Interceptors.Add(new OAuthChannel.OAuthInterceptor(\
+   OAuthServicesLocator.Provider,
+OAuthServicesLocator.AccessTokenRepository));\
+        return result;\
+    }\
+  }\
+}</p>
+
+<p>OAuthServicesLocator.Provider and
+OAuthServiceLocator.AccessTokenRepository are just part of the OAuth
+implementation.</p>
+
+<p>The interaction (and all the messages interchanged) between the consumer
+and the provider was very well summarized by Alex in this post <a href="http://blog.bittercoder.com/PermaLink,guid,83488336-290d-4c4b-a314-14fe255e5b4e.aspx">&ldquo;OAuth
+for
+beginners&rdquo;</a></p>
+
+<p>The following code illustrates some of the functionality implemented in
+the OAuth interceptor,</p>
+
+<p>Message request = requestContext.RequestMessage;</p>
+
+<p>HttpRequestMessageProperty requestProperty =
+(HttpRequestMessageProperty)request.Properties[HttpRequestMessageProperty.Name];</p>
+
+<p> </p>
+
+<p>OAuthContext context = new
+OAuthContextBuilder().FromUri(requestProperty.Method,
+request.Headers.To);</p>
+
+<p> </p>
+
+<p>try</p>
+
+<p>{</p>
+
+<p>    _provider.AccessProtectedResourceRequest(context);</p>
+
+<p> </p>
+
+<p>    OAuthChannel.Models.AccessToken accessToken =
+_repository.GetToken(context.Token);</p>
+
+<p> </p>
+
+<p>    TokenPrincipal principal = new TokenPrincipal(</p>
+
+<p>        new GenericIdentity(accessToken.UserName, &ldquo;OAuth&rdquo;),</p>
+
+<p>        accessToken.Roles,</p>
+
+<p>        accessToken);</p>
+
+<p> </p>
+
+<p>    InitializeSecurityContext(request, principal);</p>
+
+<p>}</p>
+
+<p>catch (OAuthException authEx)</p>
+
+<p>{</p>
+
+<p>    XElement response = XElement.Load(new StringReader(&ldquo;&lt;?xml
+version=\"1.0\&rdquo; encoding=\&ldquo;utf-8\&rdquo;?>&lt;html
+xmlns=\&ldquo;<a href="http://www.w3.org/1999/xhtml\">http://www.w3.org/1999/xhtml\</a>&rdquo; version=\&ldquo;&ndash;//W3C//DTD XHTML
+2.0//EN\&rdquo; xml:lang=\&ldquo;en\&rdquo;
+xmlns:xsi=\&ldquo;<a href="http://www.w3.org/2001/XMLSchema-instance\">http://www.w3.org/2001/XMLSchema-instance\</a>&rdquo;
+xsi:schemaLocation=\&ldquo;<a href="http://www.w3.org/1999/xhtml">http://www.w3.org/1999/xhtml</a>
+<a href="http://www.w3.org/MarkUp/SCHEMA/xhtml2.xsd\">http://www.w3.org/MarkUp/SCHEMA/xhtml2.xsd\</a>&rdquo;>&lt;HEAD>&lt;TITLE>Request
+Error&lt;/TITLE>&lt;/HEAD>&lt;BODY>&lt;DIV id=\&ldquo;content\&rdquo;>&lt;P
+class=\&ldquo;heading1\&rdquo;>&lt;B>&ldquo; +
+HttpUtility.HtmlEncode(authEx.Report.ToString()) +
+&rdquo;&lt;/B>&lt;/P>&lt;/DIV>&lt;/BODY>&lt;/html>&ldquo;));</p>
+
+<p>    Message reply = Message.CreateMessage(MessageVersion.None, null,
+response);</p>
+
+<p>    HttpResponseMessageProperty responseProperty = new
+HttpResponseMessageProperty() { StatusCode = HttpStatusCode.Forbidden,
+StatusDescription = authEx.Report.ToString() };</p>
+
+<p>    responseProperty.Headers[HttpResponseHeader.ContentType] =
+&ldquo;text/html&rdquo;;</p>
+
+<p>    reply.Properties[HttpResponseMessageProperty.Name] =
+responseProperty;</p>
+
+<p>    requestContext.Reply(reply);</p>
+
+<p> </p>
+
+<p>    requestContext = null;</p>
+
+<p>}</p>
+
+<p>It basically validates the OAuth ticket using the library written by
+Alex and initializes a new principal containing the ticket identity. If
+the ticket can not be validated for some reason, it returns a friendly
+exception to the consumer.</p>
+
+<p>UPDATE: Alex has now include the channel as part of the OAuth Library.
+It is available under the following links,</p>
+
+<p><a href="http://devdefined-tools.googlecode.com/svn/trunk/projects/oauth/DevDefined.OAuth.Wcf/">http://devdefined-tools.googlecode.com/svn/trunk/projects/oauth/DevDefined.OAuth.Wcf/</a></p>
+
+<p><a href="http://devdefined-tools.googlecode.com/svn/trunk/projects/oauth/ExampleOAuthChannel/">http://devdefined-tools.googlecode.com/svn/trunk/projects/oauth/ExampleOAuthChannel/</a></p>
+
+<p>Coming next  &ldquo;Using the WCF OAuth channel with an ADO.NET service&rdquo; (The
+complete source code will be available as part of that post)</p>
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,500 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Claims negotiation between a consumer, STS and Relying Party in WCF - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="According to the WS-Trust specification, a service consumer has a way to
+negotiate or ask for specific claims to the STS. Those claims (or some
+of &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2009/01/28/claims-negotiation-between-a-consumer-sts-and-relying-party-in-wcf">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Claims Negotiation Between a Consumer, STS and Relying Party in WCF</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-01-28T00:00:00-03:00" pubdate data-updated="true">Jan 28<span>th</span>, 2009</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>According to the WS-Trust specification, a service consumer has a way to
+negotiate or ask for specific claims to the STS. Those claims (or some
+of them) will be generally used by  the service implementation running
+on the relying party.</p>
+
+<p>They are negotiated through an &ldquo;claims&rdquo; element in the RST message,</p>
+
+<p>&lt;wst:RequestSecurityToken xmlns:wst=&ldquo;&hellip;&rdquo;></p>
+
+<p>        &lt;wst:TokenType>&hellip;&lt;/wst:TokenType></p>
+
+<p>        &lt;wst:RequestType>&hellip;&lt;/wst:RequestType></p>
+
+<p>        &hellip;</p>
+
+<p>        &lt;wsp:AppliesTo>&hellip;&lt;/wsp:AppliesTo></p>
+
+<p>        <strong>&lt;wst:Claims Dialect=&ldquo;&hellip;&rdquo;>&hellip;&lt;/wst:Claims></strong></p>
+
+<p>        &lt;wst:Entropy></p>
+
+<p>              &lt;wst:BinarySecret>&hellip;&lt;/wst:BinarySecret></p>
+
+<p>         &lt;/wst:Entropy></p>
+
+<p>        &lt;wst:Lifetime></p>
+
+<p>            &lt;wsu:Created>&hellip;&lt;/wsu:Created></p>
+
+<p>            &lt;wsu:Expires>&hellip;&lt;/wsu:Expires></p>
+
+<p>        &lt;/wst:Lifetime></p>
+
+<p>&lt;/wst:RequestSecurityToken></p>
+
+<p><em>The &ldquo;wst:claims&rdquo; is an optional element for requesting a specific set
+of claims. Typically, this element contains required and/or optional
+claim information identified in a service&rsquo;s policy.</em></p>
+
+<p>Based on these facts, we can elaborate some possible scenarios for
+claims negotiation between these three parties.</p>
+
+<p>​1. <strong>No negotiation at all</strong></p>
+
+<p>The STS might just ignore these claims requirements in the RST message
+and always returns a fixed claim set according to the consumer identity,
+or the service might not express what claims it expects at all. This
+scenario might be suitable for a local STS in small-sized or
+medium-sized organizations, where the IT department has a complete
+control over the client applications and services that interact with
+that STS. This kind of solution is easier to implement, and quite rigid
+too, a change in the claims required by the service will also require
+changes in the STS implementation. As you see, this solution does not
+scale at all for a high number of applications or relying party
+services.</p>
+
+<p>Many of the STS examples you will find today are implemented like this.</p>
+
+<p>​2. <strong>Negotiation based on the AppliesTo header</strong>.</p>
+
+<p>This solution present a subtle difference with the one discussed before,
+the claims vary according the relying party that will make use of them.
+The STS ignores the claims requirements in the RST messages and returns
+a claim set based on the received AppliesTo header. An existing
+agreement must exist between the STS and the relying party, which will
+include in addition to the key for encrypting the tokens, a number of
+expected claims.  Again, easy to implement, difficult to scale up.</p>
+
+<p>​3. <strong>Manual negotiation based on the &ldquo;Claims&rdquo; header</strong>.</p>
+
+<p>In this scenario, the consumer sends the expected claims in the &ldquo;claims&rdquo;
+header and the STS makes use of them for generating the resulting token.
+However, the negotiation of those claims between the consumer and the
+relying party is manual, a previous agreement must exist, the service
+does not express those requirements through metadata. This means that
+the claims are hard-coded during development in the client
+configuration.  If the service requires additional claims, only the
+client configuration will have to be changed, the STS does not have to
+be touched at all.</p>
+
+<p>If you are implementing a custom STS with the latest Microsoft Geneva
+bits, there is a property &ldquo;Claims&rdquo; in the RequestSecurityToken for
+getting access to these values.</p>
+
+<p>protected override IClaimsIdentity
+GetOutputClaimsIdentity(IClaimsPrincipal principal, RequestSecurityToken
+request, Scope scope)</p>
+
+<p>{</p>
+
+<p>    IClaimsIdentity outputIdentity = new ClaimsIdentity();</p>
+
+<p> </p>
+
+<p>    foreach (Claim claim in request.Claims)</p>
+
+<p>    {</p>
+
+<p>        //Do something&hellip;</p>
+
+<p> </p>
+
+<p>        outputIdentity.Claims.Add(&hellip;);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    return outputIdentity;</p>
+
+<p>}</p>
+
+<p>The client can specify those claims through configuration as well,</p>
+
+<p>&lt;wsFederationHttpBinding></p>
+
+<p>  &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>    &lt;security mode=&ldquo;Message&rdquo;></p>
+
+<p>      &lt;message
+issuedTokenType=&ldquo;<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>&rdquo;
+negotiateServiceCredential=&ldquo;false&rdquo;></p>
+
+<p>        &lt;claimTypeRequirements></p>
+
+<p>          &lt;add claimType
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress">http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress</a>&rdquo;/></p>
+
+<p>          &lt;add claimType
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName">http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName</a>&rdquo;/></p>
+
+<p>          &lt;add claimType
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname">http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname</a>&rdquo;
+isOptional =&ldquo;true&rdquo;/></p>
+
+<p>        &lt;/claimTypeRequirements></p>
+
+<p>        &lt;issuer>&lt;/issuer></p>
+
+<p>      &lt;/message></p>
+
+<p>    &lt;/security></p>
+
+<p>  &lt;/binding></p>
+
+<p>&lt;/wsFederationHttpBinding></p>
+
+<p>Once they are added to the binding configuration, WCF will automatically
+include them as part of the RST message to the STS.</p>
+
+<p>​4. <strong>Automatic negotiation based on the &ldquo;Claims&rdquo; header</strong>.</p>
+
+<p>This is by far the best solution we can find. The three parties
+automatically negotiates the claims at runtime,</p>
+
+<ol type="a">
+<li>The service exposes the claim requirements through metadata
+(WS-Policy)</li>
+</ol>
+
+
+<p>​II. The client acquires the service&rsquo;s policy and requirements using
+some mechanism that could be WS-MetatadaExchange.  Later,  the client
+includes some claim requirements into the RST message that will be send
+to the STS.</p>
+
+<p>​III. The STS extracts those requirements from the RST message, and
+then, it makes use of them for generating the resulting token.</p>
+
+<p>The Cardspace identity selector on the consumer side works like this. It
+first detects what claims are needed by the Relying Party, and then,
+displays all the possible cards (From different Identity providers) that
+satisfy those requirements to the user.</p>
+
+<p>Exposing the claim requirements on the relying party through WCF is
+equivalent to do it on the client side (same binding configuration),</p>
+
+<p>&lt;wsFederationHttpBinding></p>
+
+<p>  &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>    &lt;security mode=&ldquo;Message&rdquo;></p>
+
+<p>      &lt;message
+issuedTokenType=&ldquo;<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>&rdquo;></p>
+
+<p>        &lt;claimTypeRequirements></p>
+
+<p>          &lt;add claimType
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress">http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress</a>&rdquo;/></p>
+
+<p>          &lt;add claimType
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName">http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName</a>&rdquo;/></p>
+
+<p>          &lt;add claimType
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname">http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname</a>&rdquo;
+isOptional =&ldquo;true&rdquo;/></p>
+
+<p>        &lt;/claimTypeRequirements></p>
+
+<p>        &lt;issuer>&lt;/issuer></p>
+
+<p>      &lt;/message></p>
+
+<p>    &lt;/security></p>
+
+<p>  &lt;/binding></p>
+
+<p>&lt;/wsFederationHttpBinding></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-01-28T00:00:00-03:00" pubdate data-updated="true">Jan 28<span>th</span>, 2009</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/federation/'>Federation</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2009/01/28/claims-negotiation-between-a-consumer-sts-and-relying-party-in-wcf/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2009/01/28/claims-negotiation-between-a-consumer-sts-and-relying-party-in-wcf/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2009/01/19/running-a-partial-ssl-website-in-asp-net-mvc/" title="Previous Post: Running a partial SSL website with ASP.NET MVC">&laquo; Running a partial SSL website with ASP.NET MVC</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2009/02/02/some-thoughts-on-portable-sts-p-sts-and-geneva-cardspace/" title="Next Post: Some thoughts on Portable STS (P-STS) and Geneva Cardspace">Some thoughts on Portable STS (P-STS) and Geneva Cardspace &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2009/01/28/claims-negotiation-between-a-consumer-sts-and-relying-party-in-wcf/';
+        var disqus_url = 'http://cibrax.me/blog/2009/01/28/claims-negotiation-between-a-consumer-sts-and-relying-party-in-wcf/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

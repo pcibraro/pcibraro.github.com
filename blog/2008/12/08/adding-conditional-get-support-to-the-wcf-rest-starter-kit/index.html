@@ -1,0 +1,468 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Adding Conditional Get Support to the WCF REST Starter kit - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="Some weeks
+ago,
+I discussed how important &ldquo;Conditional Get&rdquo; can be for some scenarios,
+specially when we want to make a better use of the &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2008/12/08/adding-conditional-get-support-to-the-wcf-rest-starter-kit">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Adding Conditional Get Support to the WCF REST Starter Kit</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-12-08T00:00:00-03:00" pubdate data-updated="true">Dec 8<span>th</span>, 2008</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p><a href="http://weblogs.asp.net/cibrax/archive/2008/10/06/importance-of-conditional-gets-in-rest.aspx">Some weeks
+ago</a>,
+I discussed how important &ldquo;Conditional Get&rdquo; can be for some scenarios,
+specially when we want to make a better use of the network traffic.</p>
+
+<p>The WCF REST Starter kit introduced a new extension &ldquo;WebCache&rdquo;,
+implemented as an operation behavior, to automatically add caching
+support to any &ldquo;Get&rdquo; operation in a service contract. Using this new
+feature is a simple as annotating an existing service operation with a
+&ldquo;WebCache&rdquo; attribute, as it is shown below:</p>
+
+<p>[WebCache(CacheProfileName = &ldquo;CacheFor1Min&rdquo;)]</p>
+
+<p>[WebGet(UriTemplate = &ldquo;customer/{id}&rdquo;)]</p>
+
+<p>[OperationContract]</p>
+
+<p>public Customer GetCustomer(string id)</p>
+
+<p>The underline implementation of this new behavior relies on the existing
+ASP.NET web cache. For more details about this new feature, Jesus
+Rodriguez has written a very <a href="http://weblogs.asp.net/gsusx/">good summary
+here</a>. I also mentioned how to enable Sql
+dependencies with this feature <a href="http://weblogs.asp.net/cibrax/archive/2008/11/03/using-sqlcache-dependencies-with-the-new-wcf-webcache-attribute-rest-starter-kit.aspx">in this
+post.</a></p>
+
+<p>Unfortunately, this implementation does not support Conditional Get out
+of the box, which means that the client always receive a complete
+response, no matter if the response was served directly from the cache
+or not. For instance, if one operation returns a feed with one hundred
+items, and the client application does not have a way to specify when
+was the last time it got access to that feed, it will have to download
+the complete feed all the times.</p>
+
+<p>Although the ASP.NET does provide support for conditional gets through
+the public methods &ldquo;SetLastModified&rdquo; (for date times) and &ldquo;SetETag&rdquo; (for
+entity representations), the web cache behavior does not make use of
+them.</p>
+
+<p>If we just modified the Web cache behavior to include the following line
+at the end, the additional LastModified header will be included in the
+response</p>
+
+<p>if (!string.IsNullOrEmpty(cacheProfile.VaryByCustom))</p>
+
+<p>{</p>
+
+<p>   
+HttpContext.Current.Response.Cache.SetVaryByCustom(cacheProfile.VaryByCustom);</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p><strong>HttpContext.Current.Response.Cache.SetLastModified(DateTime.Now);
+//Line Added for Conditional Get support</strong></p>
+
+<p>It is a simple as that. After enabling some trace to the service, we
+will see</p>
+
+<p>Server ASP.NET Development Server/9.0.0.0\
+Date Mon, 08 Dec 2008 15:41:54 GMT\
+X-AspNet-Version 2.0.50727\
+Cache-Control public, max-age=44\
+Expires Mon, 08 Dec 2008 15:42:42 GMT\
+<strong>Last-Modified Mon, 08 Dec 2008 15:41:43 GMT\
+</strong>Vary *\
+Content-Type application/xml; charset=utf-8\
+Content-Length 195\
+Connection Close</p>
+
+<p>However, setting DateTime.Now for every operation is not efficient for
+every scenario because it will be tied to the item lifetime in the
+cache. For instance, if our service operation is returning a feed, we
+might want to use the feed&rsquo;s last update time.</p>
+
+<p>It will be much better if have a configurable way to set up this date
+for every entry in the cache. For that reason, I came up with a solution
+based on a simple strategy pattern through a pluggeable interface
+&ldquo;ILastModified&rdquo;,</p>
+
+<p>public interface ILastModified</p>
+
+<p>{</p>
+
+<p>    DateTime? GetLastModifiedForOutput(object[] outputs, object
+returnValue);</p>
+
+<p>}</p>
+
+<p>The method &ldquo;GetLastModifiedForOutput&rdquo; basically determines the
+&ldquo;LastModified&rdquo; date for the given outputs parameters and return value of
+the service operation. Given this simple interface, we could have
+default implementations for feeds or the current date time.</p>
+
+<p>public class SyndicationLastModified : ILastModified</p>
+
+<p>{</p>
+
+<p>    public DateTime? GetLastModifiedForOutput(object[] outputs, object
+returnValue)</p>
+
+<p>    {</p>
+
+<p>        if(returnValue is SyndicationFeedFormatter)</p>
+
+<p>        {</p>
+
+<p>            var formatter = (SyndicationFeedFormatter)returnValue;</p>
+
+<p>            return formatter.Feed.LastUpdatedTime.UtcDateTime;</p>
+
+<p>        }</p>
+
+<p> </p>
+
+<p>        return null;</p>
+
+<p> </p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public class CurrentDateLastModified : ILastModified</p>
+
+<p>{</p>
+
+<p>    public DateTime? GetLastModifiedForOutput(object[] outputs, object
+returnValue)</p>
+
+<p>    {</p>
+
+<p>        return DateTime.Now;</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>And finally configure these classes as part of the WebCache attribute.</p>
+
+<p>[WebCache(CacheProfileName = &ldquo;CacheFor1Min&rdquo;,
+<strong>LastModifiedType=typeof(CurrentDateLastModified)</strong>)]</p>
+
+<p>[WebGet(UriTemplate = &ldquo;customer/{id}&rdquo;)]</p>
+
+<p>[OperationContract]</p>
+
+<p>public Customer GetCustomer(string id)</p>
+
+<p>{</p>
+
+<p>    if (id == &ldquo;foo&rdquo;)</p>
+
+<p>        return new Customer { Id = id, FullName = &ldquo;John Foo&rdquo; };</p>
+
+<p>    else if (id == &ldquo;bar&rdquo;)</p>
+
+<p>        return new Customer { Id = id, FullName = &ldquo;John Bar&rdquo; };</p>
+
+<p> </p>
+
+<p>    return new Customer { Id = id, FullName = &ldquo;Unknow&rdquo; };</p>
+
+<p>}</p>
+
+<p>If no LastModifiedType is specified as argument for the &ldquo;WebCache&rdquo;
+attribute, the default behavior is used,  resulting in a complete
+response message served to the client all the times. Otherwise, the
+server will evaluate the &ldquo;If-Modified-Since&rdquo; header first to know if the
+valid response for that request should be &ldquo;serving all the content&rdquo; vs
+returning a &ldquo;Http 304 &ndash; Not Modified&rdquo; status code.</p>
+
+<p><a href="/images/legacy/WebCache.zip">The sample code is available
+here</a></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-12-08T00:00:00-03:00" pubdate data-updated="true">Dec 8<span>th</span>, 2008</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/rest/'>REST</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2008/12/08/adding-conditional-get-support-to-the-wcf-rest-starter-kit/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2008/12/08/adding-conditional-get-support-to-the-wcf-rest-starter-kit/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2008/12/05/dynamic-content-type-a-nice-to-have-feature-for-the-rest-starter-kit/" title="Previous Post: Dynamic Content Type - A nice to have feature for the WCF REST Starter Kit">&laquo; Dynamic Content Type - A nice to have feature for the WCF REST Starter Kit</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2008/12/11/some-issues-added-in-codeplex-for-the-wcf-rest-starter-kit/" title="Next Post: Some issues added in codeplex for the WCF REST Starter kit">Some issues added in codeplex for the WCF REST Starter kit &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2008/12/08/adding-conditional-get-support-to-the-wcf-rest-starter-kit/';
+        var disqus_url = 'http://cibrax.me/blog/2008/12/08/adding-conditional-get-support-to-the-wcf-rest-starter-kit/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

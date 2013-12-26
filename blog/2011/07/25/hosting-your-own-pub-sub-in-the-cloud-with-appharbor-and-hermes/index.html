@@ -1,0 +1,399 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Hosting your own Pub/Sub in the cloud with AppHarbor and Hermes - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="As you might read in my latest post, Hermes is one our new pet projects
+in Tellago for doing Pub/Sub over http. The idea is simple, but still
+very &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2011/07/25/hosting-your-own-pub-sub-in-the-cloud-with-appharbor-and-hermes">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Hosting Your Own Pub/Sub in the Cloud With AppHarbor and Hermes</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-07-25T00:00:00-03:00" pubdate data-updated="true">Jul 25<span>th</span>, 2011</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>As you might read in my latest post, Hermes is one our new pet projects
+in Tellago for doing Pub/Sub over http. The idea is simple, but still
+very useful for integration scenarios in the enterprise. The fact that
+Hermes is all based on Http and uses one of the most famous open source
+initiatives for NoSQL databases like MongoDB, makes this project very
+appealing for the cloud as well. Many of the cloud platforms already
+provide MongoDB as a service that you can use in your applications
+hosted in the cloud.</p>
+
+<p>AppHarbor is probably one of the best “PaaS” solutions for running .NET
+applications in the cloud. The marketing slogan for this platform is
+“Azure done right”, so you can take your own conclusions
+<img src="http://weblogs.asp.net/blogs/cibrax/wlEmoticon-smile_34496852.png" alt="Smile" />.
+AppHabor not only let us running any regular .NET application in the
+cloud, but also offers MongoDB as an addon that you can configure in
+your deployment, so it makes a good use case for running Hermes in the
+cloud.</p>
+
+<p>The Hermes’s source code that you get from the <a href="https://github.com/TellagoDevLabs/Hermes">GitHub
+repository</a> uses by default
+NuGet for resolving all the external dependencies, which <a href="http://blog.dantup.com/2011/05/vote-for-native-nuget-support-on-appharbor-to-save-your-repositories-from-the-bloatmonster">is not
+something currently supported in
+AppHarbor</a>,
+so the first thing you need to do is to prepare the visual studio
+solution and all the projects to reference the binaries from a local
+folder (let’s say “libs”). The only project that you should deploy to
+the cloud is RestService, which represents the host for the REST
+services that you might want to use for publishing or subscribing
+messages to/from Hermes.</p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/Hermes_Cloud_3A903EE0.png"><img src="http://weblogs.asp.net/blogs/cibrax/Hermes_Cloud_thumb_4B2839CE.png" title="Hermes_Cloud" alt="Hermes_Cloud" /></a></p>
+
+<p>The line you need to comment out in the RestService project file for not
+using NuGet to resolve the external dependencies,</p>
+
+<p>&lt;Target Name=&ldquo;BeforeBuild&rdquo;> \
+    &lt;Exec Condition=&ldquo;Exists(&lsquo;\$(ProjectDir)packages.config&rsquo;)&rdquo;
+Command=&ldquo;&quot;\$(SolutionDir)..\Tools\nuget.exe&quot; install
+&quot;\$(ProjectDir)packages.config&quot; -o
+&quot;\$(SolutionDir)Packages&quot;&rdquo; /> \
+ &lt;/Target></p>
+
+<p>Once you have that project running and using local references, you are
+ready to deploy it to the cloud. You might want to create a new project
+in AppHabor or use an existing one for doing this.</p>
+
+<p>Every project in AppHarbor is basically mapped to a Git repository that
+you can use. Every time you make a push to that repository, they take
+care of building the solution, running the unit tests on it and publish
+it in a public address in their platform. The instructions for deploying
+the solution to their Git repository is all available in the project’s
+home page, and I can say it is pretty straightforward.</p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/Hermes_Cloud1_05A339A3.png"><img src="http://weblogs.asp.net/blogs/cibrax/Hermes_Cloud1_thumb_34A5757A.png" title="Hermes_Cloud1" alt="Hermes_Cloud1" /></a></p>
+
+<p>The public URL will be available in the home page as well once you make
+the first deployment as you can see in the image above. You can also
+associate a MongoDB instance to the project through the Add-ons option.</p>
+
+<p>You will have to configure two additional things in the configuration
+file (web.config) of the RestService, the public URL in AppHarbor and
+the MondoDB connection string (available through a configuration
+variable).</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+<connectionStrings>
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>&lt;add name="db.connectionString" connectionString="mongodb://appharbor:XXXXXXXX" /&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  </connectionStrings>
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  <appSettings>
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>&lt;add key="baseAddress" value="http://XXXXXXXXXX.apphb.com" /&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>............
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+  </appSettings>
+</del></p>
+
+<p>And that’s all, once you have configured that in the web.config file and
+pushed those changes to AppHarbor, you should be able to start using
+Hermes in the cloud. You can try the Publisher and Subscriber sample
+applications in the source code for testing your deployment in the
+cloud.</p>
+
+<p>Enjoy
+<img src="http://weblogs.asp.net/blogs/cibrax/wlEmoticon-smile_34496852.png" alt="Smile" /></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-07-25T00:00:00-03:00" pubdate data-updated="true">Jul 25<span>th</span>, 2011</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2011/07/25/hosting-your-own-pub-sub-in-the-cloud-with-appharbor-and-hermes/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2011/07/25/hosting-your-own-pub-sub-in-the-cloud-with-appharbor-and-hermes/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2011/07/12/hermes-a-new-open-source-alternative-for-doing-pub-sub-over-http/" title="Previous Post: Hermes – A new open source alternative for doing pub/sub over Http">&laquo; Hermes – A new open source alternative for doing pub/sub over Http</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2011/08/05/running-the-express-web-development-framework-on-node-for-windows/" title="Next Post: Running the “Express” web development framework on Node for Windows">Running the “Express” web development framework on Node for Windows &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2011/07/25/hosting-your-own-pub-sub-in-the-cloud-with-appharbor-and-hermes/';
+        var disqus_url = 'http://cibrax.me/blog/2011/07/25/hosting-your-own-pub-sub-in-the-cloud-with-appharbor-and-hermes/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

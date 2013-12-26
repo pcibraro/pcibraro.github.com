@@ -1,0 +1,1189 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="The other day I came across a pretty cool project,
+Linq2Twitter, that basically
+implements a linq provider for consuming the Twitter REST Api.  This &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/page/12">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/08/19/oauth-in-action-linq2twitter/">OAuth in Action – Linq2Twitter</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-08-19T00:00:00-03:00" pubdate data-updated="true">Aug 19<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/08/19/oauth-in-action-linq2twitter/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>The other day I came across a pretty cool project,
+<a href="http://linqtotwitter.codeplex.com/">Linq2Twitter</a>, that basically
+implements a linq provider for consuming the Twitter REST Api.  This
+project is not only interesting because it provides an intuitive model
+for incorporating Twitter calls into any existing application, but also
+because it shows how to use the OAuth authentication mode that the
+Twitter Api supports.</p>
+
+<p>As it is common with other linq providers, this library provides a root
+class “TwitterContext” for executing queries or calling other services
+in the API.</p>
+
+<p>So you can do things like this,</p>
+
+<p>var twitterCxt = new TwitterContext();</p>
+
+<p>var tweets =</p>
+
+<p>    from tweet in twitterCtx.Status</p>
+
+<p>    where tweet.Type == StatusType.Friends</p>
+
+<p>    select tweet;</p>
+
+<p>tweets.ToList().ForEach(</p>
+
+<p>    tweet => Console.WriteLine(</p>
+
+<p>        &ldquo;Friend: {0}\nTweet: {1}\n&rdquo;,</p>
+
+<p>        tweet.User.Name,</p>
+
+<p>        tweet.Text));</p>
+
+<p>The example above shows some code to gets the status of all your
+friends.</p>
+
+<p>Before using any of the services available in the API, you must first
+authenticate in Twitter using either basic authentication (The
+traditional way with username and password) or OAuth. The authentication
+mode is specified in the twitter context.</p>
+
+<p>In case you decide to go with OAuth, it is very simple to use. You only
+need to provide the OAuth secret and key associated to an application
+that you previously registered in Twitter.</p>
+
+<p>Console.Write(&ldquo;Consumer Key: &rdquo;);</p>
+
+<p>twitterCtx.ConsumerKey = Console.ReadLine();</p>
+
+<p>Console.Write(&ldquo;Consumer Secret: &rdquo;);</p>
+
+<p>twitterCtx.ConsumerSecret = Console.ReadLine();</p>
+
+<p>string link = twitterCtx.GetAuthorizationPageLink(false, false);</p>
+
+<p>Console.WriteLine(&ldquo;Authorization Page Link: {0}\n&rdquo;, link);</p>
+
+<p>Console.WriteLine(&ldquo;Next, you&rsquo;ll need to tell Twitter to authorize
+access. This program will not have access to your credentials, which is
+the benefit of OAuth.  Once you log into Twitter and give this program
+permission, come back to this console and press Enter to complete the
+authorization sequence.\n\nPress Enter now to continue.&rdquo;);</p>
+
+<p>Console.ReadKey();</p>
+
+<p>// launches browser so you can log in and give permissions</p>
+
+<p>Process.Start(link);</p>
+
+<p>Console.WriteLine(&ldquo;\nYou should see your browser navigate to Twitter,
+saying that your application wants to access your Twitter account. Once
+you&rsquo;ve authorized this program, return to this console and press any key
+to execute the LINQ to Twitter code.&rdquo;);</p>
+
+<p>Console.ReadKey();</p>
+
+<p>var uri = new Uri(link);</p>
+
+<p>NameValueCollection urlParams = HttpUtility.ParseQueryString(uri.Query);</p>
+
+<p>string oAuthToken = urlParams[&ldquo;oauth_token&rdquo;];</p>
+
+<p>twitterCtx.RetrieveAccessToken(oAuthToken);</p>
+
+<p>if (twitterCtx.AuthorizedViaOAuth)</p>
+
+<p>OAuth requires a browser session so you can log into twitter and
+authorize the client application to get your data. This is not a problem
+if the client application is a web application, the authentication and
+authorization processes flow very natural. However, in the case of
+Windows or Console Application, a browser instance needs to be created,
+this is what the example above is doing in the line “Process.Start”. If
+you are already authenticated in twitter, you will see this page where
+you need to authorize the application that wants to get access to your
+data.</p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/Twitter_03972E93.gif"><img src="http://weblogs.asp.net/blogs/cibrax/Twitter_thumb_322D3775.gif" title="Twitter" alt="Twitter" /></a></p>
+
+<p>It looks like <a href="http://blog.nerdbank.net/">Andrew Arnott</a> have been
+involved in the OAuth implementation for this library, which is a really
+good thing since he is the main contributor in two of the most stables
+projects for OpenID
+(<a href="http://code.google.com/p/dotnetopenid/">DotNetOpenId</a>) and OAuth
+(<a href="http://dotnetopenauth.net:8000/">DotNetOpenAuth</a>) in the .NET world. </p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/07/24/buenos-aires-codecamp-2009/">Buenos Aires Codecamp 2009</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-07-24T00:00:00-03:00" pubdate data-updated="true">Jul 24<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/07/24/buenos-aires-codecamp-2009/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>El proximo sabado 26 de septiembre vamos a tener la oportunidad de tener
+nuevamente un codecamp en buenos aires de la mano de Microsoft.</p>
+
+<p>El evento como en otras oportunidades va a ser mas que interesante, con
+un monton de charlas prometedoras y algunas novedades que Microsoft
+tiene para darnos.</p>
+
+<p>Para mas informacion, podes visitar el sitio oficial en</p>
+
+<p><a href="http://www.codecamp.com.ar/">http://www.codecamp.com.ar/</a> </p>
+
+<p>Los esperamos a todos.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/07/13/a-bad-idea-ef-entities-over-wcf-part-ii/">A Bad Idea, EF Entities Over WCF Part II</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-07-13T00:00:00-03:00" pubdate data-updated="true">Jul 13<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/07/13/a-bad-idea-ef-entities-over-wcf-part-ii/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>In the previous post, I discussed how bad was to expose EF entities
+directly as data contracts from a perspective of “interoperability”.
+This also revealed a lot of internal implementation details about EF
+that the client applications should not worry about. </p>
+
+<p>As <a href="http://blogs.msdn.com/dsimmons/">Daniel Simmons</a> pointed out, the
+next version of Entity Framework (4.0) will ship with a new and very
+useful feature to represent the data entities using POCOs (Self-tracking
+entities). This new support for POCOs will make possible to simplify a
+lot the final representation of entities on the wire, hiding all those
+annoying details about EF.  You will also able to decorate the entities
+with DataContract/DataMember attributes if you do not want to expose the
+whole entity in the service.</p>
+
+<p>However, I still do not buy the idea of using the EF entities as data
+contracts. By doing that, you are coupling your service interface to the
+final data model, which is not a good idea since both layers usually
+evolve at different rates. What is worse, any change in the database
+model might affect your service interface as well, breaking the contract
+that any potential consumer have with the service.</p>
+
+<p>This last aspect is related to versioning. The versioning between the
+two layers is completely different, you might have for instance an User
+entity in the data model, and different versions of the same entity in
+the service interface, UserV1, UserV2, etc (Any of these corresponding
+to a different version of the service). The service is the responsible
+of making the transition between the different data contracts to the
+final data model entities.</p>
+
+<p>I think this might be only useful for RIA applications where you use the
+services as a mechanism to interchange data between your backend layer
+and the UI, for instance web applications that use Ajax Callbacks or
+Silverlight applications. So, the number of potential consumers of the
+services is really low.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/06/26/disposing-a-wcf-proxy/">Disposing a WCF Proxy</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-06-26T00:00:00-03:00" pubdate data-updated="true">Jun 26<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/06/26/disposing-a-wcf-proxy/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>A common misconception is to think that a WCF proxy can be used and
+disposed as any other regular class that implements IDisposable.
+However, the IDisposable implementation in the WCF client channel is not
+like any other, and it can throws exceptions. A phrase I got from <a href="http://weblogs.asp.net/controlpanel/blogs/this%20discussion%20on%20the%20WCF%20forum">this
+thread</a>
+in the WCF forum will give you a better context about this scenario,</p>
+
+<p><em>“I think a key thing to notice is that Close() often implies doing
+&ldquo;real work&rdquo; that may fail, including network communication handshakes to
+shutdown sessions, committing transactions, etc.”</em></p>
+
+<p>As consequence of this, we should add some code to handle any possible
+exception for network errors when a proxy is closed/disposed.</p>
+
+<p>The common pattern for cleaning up a proxy is the following,</p>
+
+<p>try \
+{ \
+&hellip; \
+client.Close(); \
+} \
+catch (CommunicationException e) \
+{ \
+&hellip; \
+client.Abort(); \
+} \
+catch (TimeoutException e) \
+{ \
+&hellip; \
+client.Abort(); \
+} \
+catch (Exception e) \
+{ \
+&hellip; \
+client.Abort(); \
+throw; \
+} \</p>
+
+<p>The problem is, I do not want to have that code everywhere in my
+application. A good solution for that is to use a helper class like
+<a href="http://bloggingabout.net/blogs/erwyn/archive/2006/12/09/WCF-Service-Proxy-Helper.aspx">this
+one</a>.</p>
+
+<p><a href="http://www.dasblonde.net/">Michelle</a> recently announced a new project
+that automatically generates a proxy helper class like that in Visual
+Studio.
+<a href="http://wcfproxygenerator.codeplex.com/">http://wcfproxygenerator.codeplex.com/</a></p>
+
+<p>That is a feature I would like to see out of the box in the next version
+of WCF :).</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/06/25/a-bad-idea-ef-entities-over-wcf/">A Bad Idea, EF Entities Over WCF</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-06-25T00:00:00-03:00" pubdate data-updated="true">Jun 25<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/06/25/a-bad-idea-ef-entities-over-wcf/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Do you want to see something very ugly ?. Try to send a complete EF
+entity directly as a data contract over the wire with WCF,</p>
+
+<p>&lt;Order
+xmlns:i=&ldquo;<a href="http://www.w3.org/2001/XMLSchema-instance">http://www.w3.org/2001/XMLSchema-instance</a>&rdquo;
+z:Id=&ldquo;i1&rdquo;
+xmlns:z=&ldquo;<a href="http://schemas.microsoft.com/2003/10/Serialization/">http://schemas.microsoft.com/2003/10/Serialization/</a>&rdquo;
+xmlns=&ldquo;<a href="http://schemas.datacontract.org/2004/07/ClassLibrary2">http://schemas.datacontract.org/2004/07/ClassLibrary2</a>&rdquo;>
+\
+  &lt;EntityKey
+xmlns:d2p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data">http://schemas.datacontract.org/2004/07/System.Data</a>&rdquo;
+i:nil=&ldquo;true&rdquo;
+xmlns=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses">http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses</a>&rdquo;
+/> \
+  &lt;Description>My new order&lt;/Description> \
+  &lt;OrderId>1&lt;/OrderId> \
+  &lt;OrderItem> \
+    &lt;OrderItem z:Id=&ldquo;i2&rdquo;> \
+      &lt;EntityKey
+xmlns:d4p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data">http://schemas.datacontract.org/2004/07/System.Data</a>&rdquo;
+i:nil=&ldquo;true&rdquo;
+xmlns=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses">http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses</a>&rdquo;
+/> \
+      &lt;Currency>USD&lt;/Currency> \
+      &lt;Description>item 1&lt;/Description> \
+      &lt;ItemId>1&lt;/ItemId> \
+      &lt;Order z:Ref=&ldquo;i1&rdquo; /> \
+      &lt;OrderReference
+xmlns:d4p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses">http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses</a>&rdquo;>
+\
+        &lt;d4p1:EntityKey
+xmlns:d5p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data">http://schemas.datacontract.org/2004/07/System.Data</a>&rdquo;
+i:nil=&ldquo;true&rdquo; /> \
+      &lt;/OrderReference> \
+      &lt;UnitPrice>10&lt;/UnitPrice> \
+    &lt;/OrderItem> \
+    &lt;OrderItem z:Id=&ldquo;i3&rdquo;> \
+      &lt;EntityKey
+xmlns:d4p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data">http://schemas.datacontract.org/2004/07/System.Data</a>&rdquo;
+i:nil=&ldquo;true&rdquo;
+xmlns=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses">http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses</a>&rdquo;
+/> \
+      &lt;Currency>USD&lt;/Currency> \
+      &lt;Description>item 2&lt;/Description> \
+      &lt;ItemId>2&lt;/ItemId> \
+      &lt;Order z:Ref=&ldquo;i1&rdquo; /> \
+      &lt;OrderReference
+xmlns:d4p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses">http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses</a>&rdquo;>
+\
+        &lt;d4p1:EntityKey
+xmlns:d5p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data">http://schemas.datacontract.org/2004/07/System.Data</a>&rdquo;
+i:nil=&ldquo;true&rdquo; /> \
+      &lt;/OrderReference> \
+      &lt;UnitPrice>145&lt;/UnitPrice> \
+    &lt;/OrderItem> \
+  &lt;/OrderItem> \
+&lt;/Order></p>
+
+<p>That is the result of serializing a complete object graph. I do not know
+what the folks in Microsoft were thinking when they decided to enable a
+feature like this. They made a good work teaching us about how evil
+Datasets were for interoperability with other platforms, and now they
+came up with a solution like this, no way.</p>
+
+<p>I always like the idea of making boundaries explicit, that is the
+approach the WCF team took with the first version of the framework
+(Every data contract should be decorated with DataContract and
+DataMember attributes).  If you break that rule, you will end up with
+things like this.</p>
+
+<p>I know this a solution for people that want to develop things quickly
+with no need to create DTOs, and do all the mapping stuff, but there are
+good tools and frameworks like
+<a href="http://www.codeplex.com/AutoMapper">AutoMapper</a> to help with that. Or
+you can use ADO.NET Data Services today, which is also prepared to
+handle this kind of scenarios, all the transformations between layers
+are made by the framework itself, and still you get a very nice RESTful
+api. We still need some more features in ADO.NET DS to have a more
+complete framework, there is not good support today for injecting
+business logic, <a href="http://weblogs.asp.net/cibrax/archive/2009/06/08/injecting-custom-logic-in-ado-net-data-services.aspx">it can be
+done</a>
+but it is complicated, it looks like the <a href="http://johnpapa.net/silverlight/ado-net-data-services-v1-5-is-on-its-way/">next
+version</a>
+will address that aspect better.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/06/12/tellago-esta-contratando/">Tellago Esta Contratando!!</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-06-12T00:00:00-03:00" pubdate data-updated="true">Jun 12<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/06/12/tellago-esta-contratando/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Como Jesus menciono en su <a href="http://weblogs.asp.net/gsusx/archive/2009/06/12/we-are-still-hiring.aspx">post “We are still
+hiring..”</a>,
+en Tellago estamos buscando gente que quieran unirse a nuestro equipo de
+desarrollo. En estos momentos tenemos algunas posiciones para
+Arquitectos y Desarrolladores con buenos conocimientos de Biztalk e
+idioma ingles.</p>
+
+<p>Si queres ser parte de una empresa joven, jugar con las ultimas
+tecnologias o involucrarte en proyectos con diversos equipos de trabajo
+en Microsoft, enviame tu curriculum a pablo [dot] cibraro [at] tellago
+[dot] com</p>
+
+<p>Las posiciones pueden ser tanto en Buenos Aires como en los Estados
+Unidos.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/06/08/injecting-custom-logic-in-ado-net-data-services/">Injecting Custom Logic in ADO.NET Data Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-06-08T00:00:00-03:00" pubdate data-updated="true">Jun 8<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/06/08/injecting-custom-logic-in-ado-net-data-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>ADO.NET Data services represent today one of the most powerful
+alternatives to build RESTful services in the .NET platform. This
+framework basically creates a RESTful API on top of any IQueryable data
+source. Most of the steps required to publish a set of resources through
+http and make them available for any client are automatically
+implemented. </p>
+
+<p>Only Entity Framework data models are supported out of the box as
+read/write data sources, and any other IQueryable data source is
+considered by default read only. If you want to perform write operations
+on any other data source different from Entity Framework, you have to
+implement an additional interface IUpdatable as it is showed in this
+<a href="http://blogs.msdn.com/astoriateam/archive/2008/04/10/iupdatable-ado-net-data-services-framework.aspx">post</a>.
+(Update: The new CTP 1.5 seems to have a new class to implement custom
+data providers, I have not had a chance to play with it yet)</p>
+
+<p>Usually, you will need to inject custom logic in the services for
+performing validations or implementing business rules.</p>
+
+<p>ADO.NET services comes with two built-in extensibility points for adding
+custom logic or code to a service, Service Operations and Interceptors.</p>
+
+<p>Service operations represent a simple way to define custom read/write
+views on top of the data source exposed by the service. It is intended
+to be used in scenarios where you need to create complex queries, or
+simple data aggregations that are not supported out of the box in
+framework. If you want to expose those queries directly as another
+resource in the service, you have to use service operations.</p>
+
+<p>The classic example given to show this feature in action is a query that
+returns all the customers in an specific city. That query would be
+translated in a service operation as follow,</p>
+
+<p><em>public class MyService : DataService&lt;MyDataSource> \
+{ \
+    // This method is called only once to initialize service-wide
+policies. \
+    public static void InitializeService(IDataServiceConfiguration
+config) \
+    { \
+        config.SetEntitySetAccessRule(&ldquo;Customers&rdquo;,
+EntitySetRights.AllRead); \
+        config.SetServiceOperationAccessRule(&ldquo;CustomersInCity&rdquo;,
+ServiceOperationRights.All); \
+    }</em></p>
+
+<p><em>    [WebGet] \
+    public IQueryable&lt;MyDataSource.Customers> CustomersInCity(string
+city) \
+    { \
+        return from c in this.CurrentDataSource.Customers \
+               where c.City == city \
+               select c; \
+    } </em></p>
+
+<p><em>}</em></p>
+
+<p>As you can see in the code above, the service operation for this example
+is a simple method decorated with a WebGet attribute that returns an
+IQueryable implementation (With a pre-defined query in this example).
+The WebGet attribute specifies that  is a read-only view. As soon as we
+have that service running, you can navigate to that service operation
+with an URI like this, **</p>
+
+<p><em><a href="http://localhost/MyService.svc/CustomersInCity?city=BuenosAires">http://localhost/MyService.svc/CustomersInCity?city=BuenosAires</a></em></p>
+
+<p>Since you are returning an IQueryable implementation, you are also free
+to define additional transformations on top of this base query, such as
+projections, filtering, or ordering among others.</p>
+
+<p>WebInvoke can be also used in case you want to implement a write
+operation. Since a service operation works as a black box, only the post
+verb is supported for WebInvoke, which means that you can not use other
+verbs like DELETE or PUT. Regarding this limitation, this is the answer
+you can find in the
+<a href="http://social.msdn.microsoft.com/Forums/en-US/adodotnetdataservices/thread/e546042f-c5f7-489d-b3e7-03b84a4f07ab">forums</a></p>
+
+<p><strong><em>“We currently support only POST and GET verbs on the service
+operations (even in the recently released CTP). Is there a reason why
+you want to support  DELETE verb on service operation? The main reason
+for not supporting all the verbs is that from the client side, discovery
+becomes a issue &ndash; there is no way to know what verb to send for a
+service operation. Also service operations are black box to us &ndash; so we
+try and categorized them into side-effecting and non-side effecting
+ones. We recommend to use GET for non-side effection service opertions
+and use POST for side-effecting ones.</em></strong></p>
+
+<p><strong><em>Please let us know if you think there is a good reason why DELETE
+verb should be supported.</em></strong></p>
+
+<p><strong><em>Thanks \
+Pratik”</em></strong></p>
+
+<p>Another problem with service operations is that only scalar values are
+supported as arguments. Therefore, you can not pass entities or complex
+data types as arguments to a service operation.</p>
+
+<p>These limitations make hard to use service operations as a way to inject
+custom logic like validations or business rules into a data service.</p>
+
+<p>Fortunately, there is another extensibility point that becomes handy at
+the moment of implementing this kind of logic, the Interceptors. There
+are two kind of built-in interceptors, Query Interceptors, and Change
+Interceptors.</p>
+
+<p>A query interceptor represents a mechanism to change or transform the
+initial projection over an entity set. For example, if an user only
+allowed to see a subset of all the available data in an entity set, a
+query interceptor is the right place to filter the data for that user.</p>
+
+<p><em>[QueryInterceptor(&ldquo;Orders&rdquo;)] \
+public Expression&lt;Func&lt;Orders, bool>> QueryOrders() { \
+  return o => o.Number > 100; \
+}</em></p>
+
+<p>The syntax of a query interceptor is quite simple, you basically returns
+an expression that describes a function (the Func), which takes an input
+value (an order being evaluated) and returns a bool value (whether the
+order passes the filter or not). Since an expression is used there
+rather than a piece of code, that expression can be passed directly to
+the query provider, which ultimately will generate the appropriate SQL
+in the database server.</p>
+
+<p>A change interceptor on the other hand, intercepts all the calls that
+generates changes in the data source exposed by the service. Therefore,
+this interceptor is the right mechanism for performing some validations
+before the data is changed in the data source. This is the place where
+we can enforce the business rules or validate the data for an specific
+entity set in our application (Entity set in this scenario also
+represents a collection of resources, where each resource is the entity
+itself).</p>
+
+<p><em>[ChangeInterceptor(&ldquo;Orders&rdquo;)] \
+public void OnChangeOrders(Order o, UpdateOperations operation) \
+{ \
+     if (operation == UpdateOperations.Add || operation ==
+UpdateOperations.Change) \
+     { \
+        if (o.Number > 100) \
+        { \
+          throw new DataServiceException(400, \
+            &ldquo;You are not allowed to create or change an order with
+number greater than 100&rdquo;); \
+        } \
+    } \
+}</em></p>
+
+<p>A change interceptor method receives two arguments, the entity that will
+be persisted, and an enumeration UpdateOperations that specifies the
+operation currently performed on the entity. Possible values for this
+enumeration are, Add, Change and Delete.</p>
+
+<p>This interceptor is not just to perform validations, you are still free
+to call additional services or change some data in the entity before it
+is persisted. However, this method call is synchronous, so you should be
+careful about executing long running code there.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/05/29/what-i-like-about-openrasta/">What I Like About OpenRasta</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-05-29T00:00:00-03:00" pubdate data-updated="true">May 29<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/05/29/what-i-like-about-openrasta/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>After having playing with the current bits of
+<a href="http://serialseb.blogspot.com/2008/10/openrasta-status-update.html">OpenRasta</a>
+(OR) for a while, I  am now able to see great advantages in using this
+framework over other existing frameworks for building RESTful services
+such as WCF or the ASP.NET MVC.</p>
+
+<p>Let’s explore some of the good features that make OpenRasta an excellent
+alternative at the moment of developing RESTful services.</p>
+
+<p>​1. Clean separation of resource representation from service
+implementation</p>
+
+<p>If we take a look at a service implementation in OR, the operations in a
+handler receive or return a resource, but they never specify the final
+representation of that resource. Resource representation is a pure
+responsibility of the encoders configured for service implementation (a
+handler in OR).</p>
+
+<p>In that way, we have a service implementation completely reusable for
+different resource representations.</p>
+
+<p>public class CustomerHandler</p>
+
+<p>{</p>
+
+<p>    public OperationResult Get(int customerId)</p>
+
+<p>    {</p>
+
+<p>        return new OperationResult.OK</p>
+
+<p>        {  </p>
+
+<p>            ResponseResource = &ldquo;Customer with id &rdquo; + customerId</p>
+
+<p>        };</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>Once we have the service implementation, we only need to configure the
+encoders for that service, which could be encoders for Xml, Json, Atom
+or any other representation. You are free to configure all the encoders
+you want for the same handler.</p>
+
+<p>ConfigureServer(() => ResourceSpace.Has.ResourcesOfType&lt;Customer>()</p>
+
+<p>    .AtUri(&ldquo;/customer/{customerId}&rdquo;)</p>
+
+<p>    .HandledBy&lt;CustomerHandler>()</p>
+
+<p>    .AndTranscodedBy&lt;OpenRasta.Codecs.JsonDataContractCodec>(null));</p>
+
+<p>This is a different story in WCF. First of all, the content type (Xml or
+Json) has to be specified as part of the operation definition. If we
+want to support different content types, we need to replicate the same
+operation only to change the content type. Although this point has been
+improved considerably in WCF 4.0, some service implementations are still
+absolutely tied to the resource representation. For example, an
+operation that returns syndications feeds. In WCF, we have to return a
+concrete implementation of
+System.ServiceModel.Syndication.SyndicationFeedFormatter. It is not a
+simple as return a collection of entities or resources and specify
+somewhere that we want to represent them as entries in a feed.</p>
+
+<p>This works much better in ADO.NET data services, where you can just
+return a resource or a collection of resources, and the framework itself
+will chose the best representation according to what the client
+initially sent in the “Accept” header. That representation could be Json
+or Atom, nothing changes in the service implementation (which is also
+automatically implemented). However, ADO.NET data services provide few
+extensibility points today for injecting custom code, and that is
+probably a good reason to move to OpenRasta.</p>
+
+<p>​2. URI resolution</p>
+
+<p>In OpenRasta, the URI resolution to a handler is also part of the
+service configuration. This gives a great flexibility to have many URIs
+that resolve to the same resource instance.</p>
+
+<p>A typical example is a parent-child relationship, for instance, a
+customer/orders relationship.</p>
+
+<p>You might want to have different URIs to get access to the orders,</p>
+
+<p>Customer/1/Orders/1 => Give me the order number 1 for the customer with
+ID 1</p>
+
+<p>Or you might want to access to the order directly</p>
+
+<p>Orders/1 => Give me the order number 1</p>
+
+<p>In OR, you have a single handler implementation for orders (order is the
+resource in this case), and multiple URIs that resolve to an operation
+in that particular handler.</p>
+
+<p>ConfigureServer(() => ResourceSpace.Has.ResourcesOfType&lt;Order>()</p>
+
+<p>    .AtUri(&ldquo;/customer/{customerId}/Orders/{orderId}&rdquo;)</p>
+
+<p>    .AndAt(&ldquo;/orders/{orderId}&rdquo;)</p>
+
+<p>    .HandledBy&lt;OrderHandler>()</p>
+
+<p>    .AndTranscodedBy&lt;OpenRasta.Codecs.JsonDataContractCodec>(null));</p>
+
+<p>This is a problem in WCF because the URI template is tied to the
+operation definition, if you want to have different URIs for the same
+resource, you basically have to copy/paste the same operation just to
+change the URIs.</p>
+
+<p>[WebGet(UriTemplate=&ldquo;/Orders/{orderId}&rdquo;)]</p>
+
+<p>public Order GetOrderById(int orderId)</p>
+
+<p>{</p>
+
+<p>  //implementation</p>
+
+<p>}</p>
+
+<p>[WebGet(UriTemplate = &ldquo;/Customers/{customerId}/Orders/{orderId}&rdquo;)]</p>
+
+<p>public Order GetCustomerOrder(int customerId, int orderId)</p>
+
+<p>{</p>
+
+<p>  //implementation</p>
+
+<p>}</p>
+
+<p>So, you will have as many operations as URI and content types you want
+to support in the service.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/05/18/webcast-quot-openid-oauth-y-live-id-cual-es-la-diferencia/">Webcast &quot;OpenID, OAuth Y Live ID. Cual Es La Diferencia ?</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-05-18T00:00:00-03:00" pubdate data-updated="true">May 18<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/05/18/webcast-quot-openid-oauth-y-live-id-cual-es-la-diferencia/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>El proximo miercoles 20 de mayo a las 3 PM (GMT-05:00 Colombia, Panama),
+voy a estar presentando un MSDN webcast acerca de OpenID, OAuth
+y Windows Live ID. El evento va a ser transmitido en castellano para la
+comunidad de latinoamerica, y se va a enfocar en las caracteristicas
+principales de estas soluciones/protocolos, como funcionan, y algunos
+escenarios en donde se pueden aplicar con exito.</p>
+
+<p>El link al evento es el siguiente,
+<a href="http://msevents.microsoft.com/CUI/EventDetail.aspx?EventID=1032403625&amp;Culture=es-AR">http://msevents.microsoft.com/CUI/EventDetail.aspx?EventID=1032403625&amp;Culture=es-AR</a> </p>
+
+<p>Los espero.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/05/14/i-am-joining-tellago/">I Am Joining Tellago</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-05-14T00:00:00-03:00" pubdate data-updated="true">May 14<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/05/14/i-am-joining-tellago/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>On May 18th, I will officially become part of
+<a href="http://tellago.com/">Tellago</a>.  I will be joining a great team with
+people that I respect immensely like <a href="http://weblogs.asp.net/gsusx">Jesus
+Rodriguez</a>,
+<a href="http://weblogs.asp.net/controlpanel/blogs/www.donxml.com">DonXml</a>, or
+<a href="http://geekswithblogs.net/jklug/Default.aspx">Joe Klug</a> to name a few.
+Thanks guys for give me this opportunity!!.</p>
+
+<p>I am leaving Clarius after almost two years of service. I got involved
+in a lot of interesting projects there, and what is more important, I
+had a chance to work with an excellent team of “all-stars” developers. I
+would like to thank Clarius and wish them the best in the future!</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/13/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/blog/page/11/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

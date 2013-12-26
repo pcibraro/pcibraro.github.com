@@ -1,0 +1,362 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>“The system cannot find the file specified” error in the WIF FAM module - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="The Federation Authentication Module (FAM) shipped as part of WIF
+protects by the default the session cookies from being tampered with in
+passive &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2010/02/17/the-system-cannot-find-the-file-specified-error-in-the-wif-fam-module">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">“the System Cannot Find the File Specified” Error in the WIF FAM Module</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-02-17T00:00:00-03:00" pubdate data-updated="true">Feb 17<span>th</span>, 2010</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>The Federation Authentication Module (FAM) shipped as part of WIF
+protects by the default the session cookies from being tampered with in
+passive scenarios using DPAPI. As I mentioned in the past, this
+technique simplifies a lot the initial deployment for the whole solution
+as nothing extra needs to configured, the automatically generated DPAPI
+key is used to protect the cookies, so this might be reason to have that
+as default protection mechanism in WSE, WCF and now WIF.</p>
+
+<p>However, this technique has some serious drawbacks from my point of view
+that makes it useless for real enterprise scenarios.</p>
+
+<p>If web application that relies on FAM for authenticating the users is
+hosted in IIS. The account running the IIS process needs to have a
+profile created in order to use DPAPI. A workaround for this is to log
+into the machine with that account to create the initial profile or run
+some script to do it automatically.</p>
+
+<p>DPAPI is not suitable for web farm scenarios, as the machine key is used
+to protect the cookies. If the cookie is protected with one key, the
+following requests must be sent to the same machine. A workaround for
+this could be to use sticky sessions, so all the user requests from the
+same machine are handled by the same machine on the farm.</p>
+
+<p>Fortunately, WIF already provides some built-in classes to replace this
+default mechanism by a protection mechanism based on RSA keys with X509
+certificates.</p>
+
+<p>The “SecuritySessionHandler” is the handler in WIF that is responsible
+for tracking the authentication sessions into a cookie. That handler
+receives by default some built-in classes that applies transformations
+to the cookie content, such as the DeflatCookieTransform and the
+ProtectedDataCookieTransform (for protecting the content with DPAPI).
+There are also two other CookieTransform derived classes that are not
+used at all, and becomes very handy to enable enterprise scenarios, the
+RSAEncryptionCookieTransform and RSASignatureCookieTransform classes.
+Both classes receives either a RSA key or X509 certificate that is used
+to encrypt or sign the cookie content.</p>
+
+<p>Therefore, you can put the following code in the global.asax file to
+replace the default cookie transformations by the ones that use a X509
+certificate.</p>
+
+<p>protected void Application_Start(object sender, EventArgs e) \
+        { \
+            FederatedAuthentication.ServiceConfigurationCreated += new
+EventHandler&lt;Microsoft.IdentityModel.Web.Configuration.ServiceConfigurationCreatedEventArgs>(FederatedAuthentication_ServiceConfigurationCreated);
+\
+            \
+        }</p>
+
+<p>        void FederatedAuthentication_ServiceConfigurationCreated(object
+sender,
+Microsoft.IdentityModel.Web.Configuration.ServiceConfigurationCreatedEventArgs
+e) \
+        { \
+            var cookieProtectionCertificate =
+CertificateUtil.GetCertificate(StoreName.My, \
+                StoreLocation.LocalMachine, &ldquo;CN=myTestCert&rdquo;); \
+             \
+            e.ServiceConfiguration.SecurityTokenHandlers.AddOrReplace( \
+                new SessionSecurityTokenHandler(new
+System.Collections.ObjectModel.ReadOnlyCollection&lt;CookieTransform> ( \
+                    new List&lt;CookieTransform> \
+                    { \
+                        new DeflateCookieTransform(), \
+                        new
+RsaEncryptionCookieTransform(cookieProtectionCertificate), \
+                        new
+RsaSignatureCookieTransform(cookieProtectionCertificate) \
+                    }) \
+                )); \
+        }</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-02-17T00:00:00-03:00" pubdate data-updated="true">Feb 17<span>th</span>, 2010</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2010/02/17/the-system-cannot-find-the-file-specified-error-in-the-wif-fam-module/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2010/02/17/the-system-cannot-find-the-file-specified-error-in-the-wif-fam-module/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2010/02/01/monitoring-your-wcf-services-with-appfabric/" title="Previous Post: Monitoring your WCF services with AppFabric">&laquo; Monitoring your WCF services with AppFabric</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2010/02/18/a-good-way-to-handle-claim-based-security-in-restful-services/" title="Next Post: A good way to handle claim based security in RESTful services">A good way to handle claim based security in RESTful services &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2010/02/17/the-system-cannot-find-the-file-specified-error-in-the-wif-fam-module/';
+        var disqus_url = 'http://cibrax.me/blog/2010/02/17/the-system-cannot-find-the-file-specified-error-in-the-wif-fam-module/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

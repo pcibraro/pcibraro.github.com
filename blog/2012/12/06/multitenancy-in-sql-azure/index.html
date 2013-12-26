@@ -1,0 +1,401 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Multitenancy in SQL Azure - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="If you are building a SaaS application in Windows Azure that relies on
+SQL Azure, it’s probably that you will need to support multiple tenants
+at &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2012/12/06/multitenancy-in-sql-azure">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Multitenancy in SQL Azure</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-12-06T00:00:00-03:00" pubdate data-updated="true">Dec 6<span>th</span>, 2012</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>If you are building a SaaS application in Windows Azure that relies on
+SQL Azure, it’s probably that you will need to support multiple tenants
+at database level.</p>
+
+<p>This is short overview of the different approaches you can use for
+support that scenario,</p>
+
+<p><strong>A different database per tenant</strong></p>
+
+<p>A new database is created and assigned when a tenant is provisioned.</p>
+
+<p>Pros</p>
+
+<ul>
+<li>Complete isolation between tenants. All the data for a tenant lives
+in a database only he can access.</li>
+</ul>
+
+
+<p>Cons</p>
+
+<ul>
+<li>It’s not cost effective. SQL Azure databases are not cheap, and the
+minimum size for a database is 1GB.  You might be paying for storage
+that you don’t really use.</li>
+<li>A different connection pool is required per database.</li>
+<li>Updates must be replicated across all the databases</li>
+<li>You need multiple backup strategies across all the databases</li>
+</ul>
+
+
+<p><strong>Multiple schemas in a database shared by all the tenants</strong></p>
+
+<p>A single database is shared among all the tenants, but every tenant is
+assigned to a different schema and database user.</p>
+
+<p>Pros</p>
+
+<ul>
+<li>You only pay for a single database.</li>
+<li>Data is isolated at database level. If the credentials for one
+tenant is compromised, the rest of the data for the other tenants is
+not.</li>
+</ul>
+
+
+<p>Cons</p>
+
+<ul>
+<li>You need to replicate all the database objects in every schema, so
+the number of objects can increase indefinitely.</li>
+<li>Updates must be replicated across all the schemas.</li>
+<li>The connection pool for the database must maintain a different
+connection per tenant (or set of credentials)</li>
+<li>A different user is required per tenant, which is stored at server
+level. You have to backup that user independently.</li>
+</ul>
+
+
+<p><strong>Centralizing the database access with store procedures in a database
+shared by all the tenants</strong></p>
+
+<p>A single database is shared among all the tenants, but nobody can read
+the data directly from the tables. All the data operations are performed
+through store procedures that centralize the access to the tenant data.
+The store procedures contain some logic to map the database user to an
+specific tenant.</p>
+
+<p>Pros</p>
+
+<ul>
+<li>You only pay for a single database.</li>
+<li>You only have a set of objects to maintain and backup.</li>
+</ul>
+
+
+<p>Cons</p>
+
+<ul>
+<li>There is no real isolation. All the data for the different tenants
+is shared in the same tables.</li>
+<li>You can not use traditional ORM like EF code first for consuming the
+data.</li>
+<li>A different user is required per tenant, which is stored at server
+level. You have to backup that user independently.</li>
+</ul>
+
+
+<p><strong>SQL Federations</strong></p>
+
+<p>A single database is shared among all the tenants, but a different
+federation is used per tenant. A federation in few words, it’s a
+mechanism for horizontal scaling in SQL Azure, which basically uses the
+idea of logical partitions to distribute data based on certain criteria.</p>
+
+<p>Pros</p>
+
+<ul>
+<li>You only have a single database with multiple federations.</li>
+<li>You can use filtering in the connections to pick the right
+federation, so any ORM could be used to consume the data.</li>
+</ul>
+
+
+<p>Cons</p>
+
+<ul>
+<li>There is no real isolation at that database level. The isolation is
+enforced programmatically with federations.</li>
+</ul>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-12-06T00:00:00-03:00" pubdate data-updated="true">Dec 6<span>th</span>, 2012</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2012/12/06/multitenancy-in-sql-azure/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2012/12/06/multitenancy-in-sql-azure/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2012/11/15/await-whenall-waitall-oh-my/" title="Previous Post: await, WhenAll, WaitAll, oh my!!">&laquo; await, WhenAll, WaitAll, oh my!!</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2012/12/06/using-mac-authentication-for-simple-web-api-s-consumption/" title="Next Post: Using MAC Authentication for simple Web API’s consumption">Using MAC Authentication for simple Web API’s consumption &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2012/12/06/multitenancy-in-sql-azure/';
+        var disqus_url = 'http://cibrax.me/blog/2012/12/06/multitenancy-in-sql-azure/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

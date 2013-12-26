@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Cardspace | Pablo Cibraro (Cibrax)]]></title>
+  <link href="http://cibrax.me/blog/categories/cardspace/atom.xml" rel="self"/>
+  <link href="http://cibrax.me/"/>
+  <updated>2013-12-26T15:03:47-03:00</updated>
+  <id>http://cibrax.me/</id>
+  <author>
+    <name><![CDATA[Cibrax]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Upcoming MSDN WebCast &quot;Geneva Cardspace&quot; for Latin America]]></title>
+    <link href="http://cibrax.me/blog/2009/02/10/upcoming-msdn-webcast-quot-geneva-cardspace-quot-for-latin-america/"/>
+    <updated>2009-02-10T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2009/02/10/upcoming-msdn-webcast-quot-geneva-cardspace-quot-for-latin-america</id>
+    <content type="html"><![CDATA[<p>I will be presenting a MSDN webcast about &ldquo;Geneva Cardspace&rdquo; next
+Thursday 12th at 2 PM (GMT-05:00 Colombia, Panama). The event will be
+conducted in Spanish for all the community in Latin America. \</p>
+
+<p>You can register to this event following <a href="http://msevents.microsoft.com/CUI/WebCastEventDetails.aspx?EventID=1032400702&amp;EventCategory=4&amp;culture=es-R&amp;CountryCode=AR">this
+link</a>.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[WS-TRUST profiles and Cardspace]]></title>
+    <link href="http://cibrax.me/blog/2009/02/05/ws-trust-profiles-and-cardspace/"/>
+    <updated>2009-02-05T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2009/02/05/ws-trust-profiles-and-cardspace</id>
+    <content type="html"><![CDATA[<p>Geneva framework supports today the two WS-Trust profiles, Active and
+Passive.</p>
+
+<p>The active profile deals specially with applications that are able to
+make soap request to any WS-Trust endpoint. On other hand, the passive
+profile is for clients that are unable to emit proper SOAP (a web
+browser for instance) and therefore receive the name of &ldquo;passive
+requestors&rdquo;. This last one involves browser-based communication with
+several http redirects between the different parties (client, STS and
+relying party).</p>
+
+<p>Cardspace embedded in a web browser page however is not a Passive
+client. Once the user decides to be authenticated in a website with an
+information card, the Cardspace identity selector will negotiate and get
+the issue token from the identity provider using the active profile.
+Finally, the identity provider will pass the token to the browser using
+some Inter-Process communication, and the browser can later submit the
+token to the server using an standard http mechanism like a web post.</p>
+
+<p>As you can see, Carspace in a browser is actually an hybrid between
+Active and Passive.
+<a href="http://blogs.msdn.com/vbertocci/archive/2008/06/05/active-passive-and-passive-aggressive.aspx">Vittorio</a>
+has also discussed this scenario in the past, he called it
+&ldquo;Passive-Aggressive&rdquo;.</p>
+
+<p> </p>
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,498 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>ActAs in WS-Trust 1.4 - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="WS-Trust 1.4 introduced a new feature called as “ActAs” for addressing
+common scenarios where an application needs to call a service on behalf
+of the &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2010/01/04/actas-in-ws-trust-1-4">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">ActAs in WS-Trust 1.4</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-01-04T00:00:00-03:00" pubdate data-updated="true">Jan 4<span>th</span>, 2010</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>WS-Trust 1.4 introduced a new feature called as “ActAs” for addressing
+common scenarios where an application needs to call a service on behalf
+of the logged user or a service needs to call another service on behalf
+of the original caller. These are typical examples of what is usually
+resolved with the “<a href="http://www.soapatterns.org/trusted_subsystem.php">Trusted Subsystem”
+pattern</a>.</p>
+
+<p>“ActAs” is not more than a new element in the RST message for including
+additional information about the original caller when a token is
+negotiated with the STS for consuming the final service in the Relying
+Party (that means that a trust relationship already exists between the
+STS and the final service). That element usually takes the form of a
+token with identity claims, which are secured (encrypted/signed) and
+included together with the credentials of the client application that is
+negotiating the token with the STS.</p>
+
+<p>As this element is part of the WS-Trust specification, it only makes
+sense in scenarios where the client authentication is delegated to an
+STS. I already discussed this scenario several times in the past. The
+following message shows how this element is included in a RST message,</p>
+
+<p>&lt;trust:RequestSecurityToken
+xmlns:trust=&ldquo;<a href="http://docs.oasis-open.org/ws-sx/ws-trust/200512">http://docs.oasis-open.org/ws-sx/ws-trust/200512</a>&rdquo;>
+\
+  &lt;tr:ActAs
+xmlns:tr=&ldquo;<a href="http://docs.oasis-open.org/ws-sx/ws-trust/200802">http://docs.oasis-open.org/ws-sx/ws-trust/200802</a>&rdquo;>
+\
+    &lt;saml:Assertion MajorVersion=&ldquo;1&rdquo; MinorVersion=&ldquo;1&rdquo;
+AssertionID=&ldquo;_cf5f224e-4bae-4f2d-9800-248023ac0e4d&rdquo; Issuer=&ldquo;PassiveSTS&rdquo;
+IssueInstant=&ldquo;2010-01-04T15:20:14.506Z&rdquo;
+xmlns:saml=&ldquo;urn:oasis:names:tc:SAML:1.0:assertion&rdquo;> \
+      &lt;saml:Conditions NotBefore=&ldquo;2010-01-04T15:20:14.470Z&rdquo;
+NotOnOrAfter=&ldquo;2010-01-04T16:20:14.470Z&rdquo;>&lt;/saml:Conditions> \
+        &lt;saml:AttributeStatement> \
+          &lt;saml:Subject> \
+            &lt;saml:NameIdentifier
+Format=&ldquo;<a href="http://schemas.xmlsoap.org/claims/UPN%22%3Euid:0@stonehenge.com%3C/saml:NameIdentifier">uid:0@stonehenge.comhttp://schemas.xmlsoap.org/claims/UPN&#8221;>uid:0@stonehenge.com&lt;/saml:NameIdentifier</a>>
+\
+            &lt;saml:SubjectConfirmation> \
+             
+&lt;saml:ConfirmationMethod>urn:oasis:names:tc:SAML:1.0:cm:bearer&lt;/saml:ConfirmationMethod>
+\
+            &lt;/saml:SubjectConfirmation> \
+          &lt;/saml:Subject> \
+          &lt;saml:Attribute AttributeName=&#8221;role&rdquo;
+AttributeNamespace=&ldquo;<a href="http://microsoft">http://microsoft</a>&rdquo;> \
+            &lt;saml:AttributeValue>staff&lt;/saml:AttributeValue>\ \
+          &lt;/saml:Attribute> \
+        &lt;/saml:AttributeStatement> \
+        &lt;saml:AuthenticationStatement
+AuthenticationMethod=&ldquo;<a href="http://microsoft/geneva">http://microsoft/geneva</a>&rdquo;
+AuthenticationInstant=&ldquo;2010-01-04T15:20:14.481Z&rdquo;> \
+          &lt;saml:Subject> \
+            &lt;saml:NameIdentifier
+Format=&ldquo;<a href="http://schemas.xmlsoap.org/claims/UPN%22%3Euid:0@stonehenge.com%3C/saml:NameIdentifier">uid:0@stonehenge.comhttp://schemas.xmlsoap.org/claims/UPN&#8221;>uid:0@stonehenge.com&lt;/saml:NameIdentifier</a>>
+\
+            &lt;saml:SubjectConfirmation> \
+             
+&lt;saml:ConfirmationMethod>urn:oasis:names:tc:SAML:1.0:cm:bearer&lt;/saml:ConfirmationMethod>
+\
+            &lt;/saml:SubjectConfirmation> \
+          &lt;/saml:Subject> \
+        &lt;/saml:AuthenticationStatement> \
+        &lt;ds:Signature
+xmlns:ds=&rdquo;<a href="http://www.w3.org/2000/09/xmldsig">http://www.w3.org/2000/09/xmldsig</a>#&ldquo;>
+\
+        &lt;/ds:Signature> \
+      &lt;/saml:Assertion> \
+    &lt;/tr:ActAs> \
+ 
+&lt;trust:ComputedKeyAlgorithm><a href="http://docs.oasis-open.org/ws-sx/ws-trust/200512/CK/PSHA1&lt;/trust:ComputedKeyAlgorithm>&#8220;>http://docs.oasis-open.org/ws-sx/ws-trust/200512/CK/PSHA1&lt;/trust:ComputedKeyAlgorithm></a>
+\
+&lt;/trust:RequestSecurityToken></p>
+
+<p>If you still want to support an scenario like this when an STS is not
+involved for client authentication, the closer thing you can find is the
+client authentication through supporting tokens method. I described this
+scenario in this
+<a href="http://weblogs.asp.net/cibrax/archive/2008/01/22/authenticating-users-with-supporting-tokens-in-wcf.aspx">post</a>,
+and Dominick did a better job giving a <a href="http://www.leastprivilege.com/UserNameSupportingTokenInWCF.aspx">concrete
+implementation</a>
+in WCF that uses an Username Token as supporting token, a also a <a href="http://www.leastprivilege.com/UsingSAMLAsAClientCredentialTypeInWCFWithGeneva.aspx">SAML
+token</a>,
+which represents something very useful.</p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/WSTrust1_6E19D943.jpg"><img src="http://weblogs.asp.net/blogs/cibrax/WSTrust1_thumb_579714EF.jpg" title="WSTrust1" alt="WSTrust1" /></a></p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/WSTrust2_766D88CD.jpg"><img src="http://weblogs.asp.net/blogs/cibrax/WSTrust2_thumb_14D7C9B7.jpg" title="WSTrust2" alt="WSTrust2" /></a></p>
+
+<p>The images illustrate two scenarios where this new feature makes a lot
+of sense. Let’s discuss both of them more in detail.</p>
+
+<p>Scenario 1: A Service A calling a Service B</p>
+
+<p>In this scenario, we have a Service A that needs to make a call to an
+operation in the Service B. Both services are expecting an token issued
+by an STS that they trust (The example assumes that they both trust the
+same STS). This is how “ActAs” works in this scenario.</p>
+
+<p>​1. The client negotiates a SAML token with the STS for consuming the
+service A</p>
+
+<p>​2. The client invokes an operation in the Service A using the SAML
+token it got from the STS as client credentials.</p>
+
+<p>​3. Now, the Service A needs to invoke an operation in the Service B so
+it has to negotiate a new SAML token from the STS first. In order to do
+that, it includes the SAML token sent by the client as part of the ActAs
+element, and secures the message using any of the traditional
+WS-Security profiles. For example, Mutual Certificate, a client
+certificate for authenticating the client (Service A) and a service
+certificate for authenticating the service and protecting the messages.
+The STS issues a new token for consuming the service B using all the
+information received in the RST message.</p>
+
+<p>​4. The service A invokes an operation in the Service B using the SAML
+token it just got from the STS as client credentials.</p>
+
+<p>Scenario 2: A Web Application calling a Service</p>
+
+<p>In this scenario, the Web Application authenticates all its user through
+an STS that implements the WS-Trust passive profile. This means that the
+web application is a claim-aware application that receives the user
+identity as claims from a token sent by the STS (The user first
+authenticates in the STS, step 1). As the web application already has a
+token with the user claims, which is the token it received from the
+passive STS, it can include it as the ActAs element when it negotiates a
+SAML token from the Active STS (step 2). Once the application gets a
+SAML token from the Active STS, it can actually use it for consuming the
+service (step 3)</p>
+
+<p>Fortunately, WIF already includes support in the client API for
+negotiating a token with the ActAs element, and also support for parsing
+and getting access to that information in the STS implementation. 
+What’s more, the implementation of this new feature in WIF is totally
+interoperable with other Service stacks as well. This is something that
+have been proved in the Apache Stonehenge project by proving an example
+application that shows different interoperability scenarios with
+claim-based security with other service stacks like Sun Metro or WOS2.</p>
+
+<p> </p>
+
+<p> </p>
+
+<p>On the client side, WIF provides a couple of extensions methods in the
+WCF channel for including a token in the ActAs element.</p>
+
+<p>public static T CreateChannelActingAs&lt;T>(this ChannelFactory&lt;T>
+factory, SecurityToken actAs); \
+public static T CreateChannelActingAs&lt;T>(this ChannelFactory&lt;T>
+factory, EndpointAddress address, SecurityToken actAs); \
+public static T CreateChannelActingAs&lt;T>(this ChannelFactory&lt;T>
+factory, EndpointAddress address, Uri via, SecurityToken actAs);</p>
+
+<p>In case you are using a SAML token, you need to negotiate it out of band
+with the WSTrustChannel class or use the one that is available in the
+web application when passive authentication is used with an STS (and the
+setting saveBootstapTokens is enabled in the microsoft.IdentityModel
+section). The following code illustrates a sample that uses the SAML
+token available as part of the Bootstrap tokens in the IClaimsPrincipal
+instance attached to the current thread.</p>
+
+<p>SecurityToken callerToken = null;</p>
+
+<p>IClaimsPrincipal claimsPrincipal = Thread.CurrentPrincipal as
+IClaimsPrincipal; \
+ if (claimsPrincipal != null) \
+ { \
+   foreach (IClaimsIdentity claimsIdentity in
+claimsPrincipal.Identities) \
+   { \
+     if (claimsIdentity.BootstrapToken is SamlSecurityToken) \
+     { \
+       callerToken = claimsIdentity.BootstrapToken; \
+       break; \
+     } \
+  } \
+ }</p>
+
+<p>var channel = channelFactory.CreateChannelActingAs(callerToken);</p>
+
+<p>The STS implementation can get the ActAs element information from the
+RequestSecurityToken.ActAs property,</p>
+
+<p>if (request.ActAs != null) \
+{ \
+  IClaimsIdentity actAsIdentity = new ClaimsIdentity(); \
+  CopyClaims(request.ActAs.GetSubject().First(), actAsIdentity);</p>
+
+<p>  // Find the last delegate in the actAs identity \
+  IClaimsIdentity lastActingVia = actAsIdentity; \
+  while (lastActingVia.Actor != null) \
+  { \
+    lastActingVia = lastActingVia.Actor; \
+  }</p>
+
+<p>  // Put the caller&rsquo;s identity as the last delegate to the ActAs
+identity \
+  lastActingVia.Actor = outputIdentity;</p>
+
+<p>  // Return the actAsIdentity instead of the caller&rsquo;s identity in this
+case \
+  outputIdentity = actAsIdentity; \
+}</p>
+
+<p>The apache stonehenge application or the <a href="http://code.msdn.microsoft.com/FabrikamShipping">Fabrikam shipping
+sample</a> in codeplex are
+using this feature, so you might be interested in taking a look there.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-01-04T00:00:00-03:00" pubdate data-updated="true">Jan 4<span>th</span>, 2010</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2010/01/04/actas-in-ws-trust-1-4/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2010/01/04/actas-in-ws-trust-1-4/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2009/12/01/wif-support-for-w2k3/" title="Previous Post: WIF support for W2k3">&laquo; WIF support for W2k3</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2010/02/01/monitoring-your-wcf-services-with-appfabric/" title="Next Post: Monitoring your WCF services with AppFabric">Monitoring your WCF services with AppFabric &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2010/01/04/actas-in-ws-trust-1-4/';
+        var disqus_url = 'http://cibrax.me/blog/2010/01/04/actas-in-ws-trust-1-4/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

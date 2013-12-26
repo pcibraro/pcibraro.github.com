@@ -1,0 +1,816 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Writing an AuthenticationHandler for Katana - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="As I discussed in my previous
+post,
+Katana is pretty much organized in middleware services.  One of those
+middleware services is authentication, &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2013/07/26/writing-an-authenticationhandler-for-katana">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Writing an AuthenticationHandler for Katana</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-07-26T00:00:00-03:00" pubdate data-updated="true">Jul 26<span>th</span>, 2013</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>As I discussed in my previous
+<a href="http://weblogs.asp.net/cibrax/archive/2013/07/22/getting-started-with-owin-and-katana.aspx">post</a>,
+Katana is pretty much organized in middleware services.  One of those
+middleware services is authentication, which provides some built-in
+implementations for existing OAuth providers such as Facebook, Twitter,
+Google or Microsoft, and also an implementation for Forms authentication
+with cookies.  All those implementations are currently distributed as
+Nuget packages under the name of Microsoft.Owin.Security.*, where the
+last part identifies the name of the implementation (e.g.
+Microsoft.Owin.Security.Twitter).</p>
+
+<p>Microsoft.Owin.Security is also the core project where you can find the
+base classes for writing a new authentication handler, and the ones that
+all the these implementations use.</p>
+
+<p>At first glance, the core class that you will use to create a new
+authentication handler is
+Microsoft.Owin.Security.Infrastructure.AuthenticationHandler&lt;T>, where
+T is class that derives from AuthenticationOptions and contains all the
+properties for initializing the handler.</p>
+
+<p>AuthenticationHandler&lt;T> derives from
+Microsoft.Owin.Security.Infrastructure.AuthenticationHandler, which
+provides the following definition.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">abstract</span> <span class="k">class</span> <span class="nc">AuthenticationHandler</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>   <span class="k">protected</span> <span class="n">OwinRequest</span> <span class="n">Request</span><span class="p">;</span>
+</span><span class='line'>   <span class="k">protected</span> <span class="n">OwinResponse</span> <span class="n">Response</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="k">protected</span> <span class="nf">AuthenticationHandler</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="k">protected</span> <span class="k">virtual</span> <span class="n">Task</span> <span class="nf">ApplyResponseChallenge</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="k">protected</span> <span class="k">virtual</span> <span class="n">Task</span> <span class="nf">ApplyResponseCore</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="k">protected</span> <span class="k">virtual</span> <span class="n">Task</span> <span class="nf">ApplyResponseGrant</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="k">protected</span> <span class="k">abstract</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">AuthenticationTicket</span><span class="p">&gt;</span> <span class="n">AuthenticateCore</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This class basically provides access to the current request/response
+OWIN messages, and also a few methods that can be overridden as part of
+the implementation.</p>
+
+<ul>
+<li>ApplyResponseChallenge: This method can be overridden to send a
+authentication challenge when a middleware service in the upper
+layer denies the execution (e.g 401 status code). For example, this
+can be useful for basic authentication.</li>
+<li>ApplyResponseCore: This method by default calls
+ApplyResponseChallenge and ApplyResponseGrant. It can be changed to
+make some additional processing of the Response message.</li>
+<li>ApplyResponseGrant: This method is only useful for authentication
+methods that needs to implement sign-in/sign-out concerns such as
+OAuth or Forms authentication. You won’t be using this for some
+authentication options such as basic or hmac authentication.</li>
+<li>AuthenticateCore: This is the more important method, and the one
+where all the main implementation of the authentication handler
+lives. The AuthenticationTicket will contain the identity of the
+authenticated user or null if the user couldn’t be authenticated.</li>
+</ul>
+
+
+<p>The AuthenticationOptions base class only contains the following
+structure,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">abstract</span> <span class="k">class</span> <span class="nc">AuthenticationOptions</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="k">protected</span> <span class="nf">AuthenticationOptions</span><span class="p">(</span><span class="kt">string</span> <span class="n">authenticationType</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">public</span> <span class="n">AuthenticationMode</span> <span class="n">AuthenticationMode</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">public</span> <span class="kt">string</span> <span class="n">AuthenticationType</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">public</span> <span class="n">AuthenticationDescription</span> <span class="n">Description</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>AuthenticationMode. It’s an enumeration with two possible values
+Active/Passive. It basically identifies the http flow for the
+authentication implementation. Some authentication methods like
+Basic or HMac are Active, so it can be used directly against the
+current request without requiring additional http redirections. Some
+other methods like OAuth or Forms are not, so those have to
+identified as Passive. This setting will affect the authentication
+middleware behaves, so you have to set the correct value for it.</li>
+<li>AuthenticatinType. It represents the authentication scheme. For
+example, Basic.</li>
+<li>AuthenticationDescription. It can be used to provide more
+information about the authentication method.</li>
+</ul>
+
+
+<p>Only these two classes are used so far to create a new authentication
+handler. However, you will also need a another class that acts as a
+factory, and it is used to inject the handler into the OWIN pipeline.
+That class is
+Microsoft.Owin.Security.Infrastructure.AuthenticationMiddleware.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">abstract</span> <span class="k">class</span> <span class="nc">AuthenticationMiddleware</span><span class="p">&lt;</span><span class="n">TOptions</span><span class="p">&gt;</span> <span class="p">:</span> <span class="n">OwinMiddleware</span> <span class="k">where</span> <span class="n">TOptions</span> <span class="p">:</span> <span class="n">Microsoft</span><span class="p">.</span><span class="n">Owin</span><span class="p">.</span><span class="n">Security</span><span class="p">.</span><span class="n">AuthenticationOptions</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="k">public</span> <span class="nf">AuthenticationMiddleware</span><span class="p">(</span><span class="n">OwinMiddleware</span> <span class="n">next</span><span class="p">,</span> <span class="n">TOptions</span> <span class="n">options</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">public</span> <span class="n">TOptions</span> <span class="n">Options</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">protected</span> <span class="k">abstract</span> <span class="n">AuthenticationHandler</span><span class="p">&lt;</span><span class="n">TOptions</span><span class="p">&gt;</span> <span class="n">CreateHandler</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This class basically receives the Options that must be passed to the
+AuthenticationHandler, and also contains a method CreateHandler where
+the handler is actually created.</p>
+
+<p>I will use the rest of this post to describe the implementation of a
+handler for doing HMac authentication using Hawk.</p>
+
+<p>The first step in the implementation is to create a custom
+AuthenticationOptions class.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">HawkAuthenticationOptions</span> <span class="p">:</span> <span class="n">AuthenticationOptions</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="k">public</span> <span class="k">const</span> <span class="kt">string</span> <span class="n">Scheme</span> <span class="p">=</span> <span class="s">&quot;Hawk&quot;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">public</span> <span class="nf">HawkAuthenticationOptions</span><span class="p">()</span>
+</span><span class='line'>       <span class="p">:</span> <span class="k">base</span><span class="p">(</span><span class="n">Scheme</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>   <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">public</span> <span class="n">Func</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="n">HawkCredential</span><span class="p">&gt;</span> <span class="n">Credentials</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The Credentials property is a callback that the authentication handler
+implementation will use to resolve the user/key to verify the HMAC
+received in the authorization header. In a Basic Authentication
+implementation, you could potentially have a callback or a reference to
+a repository to verify the username and password received in the
+authorization header. I am also passing “Hawk” as part of the
+constructor to set the authentication scheme associated to the handler.</p>
+
+<p>The next step is to implement the AuthenticationHandler.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">HawkAuthenticationHandler</span> <span class="p">:</span> <span class="n">AuthenticationHandler</span><span class="p">&lt;</span><span class="n">HawkAuthenticationOptions</span><span class="p">&gt;</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="k">private</span> <span class="k">readonly</span> <span class="n">ILogger</span> <span class="n">logger</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">public</span> <span class="nf">HawkAuthenticationHandler</span><span class="p">(</span><span class="n">ILogger</span> <span class="n">logger</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>      <span class="k">this</span><span class="p">.</span><span class="n">logger</span> <span class="p">=</span> <span class="n">logger</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">protected</span> <span class="k">override</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">AuthenticationTicket</span><span class="p">&gt;</span> <span class="n">AuthenticateCore</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>     <span class="n">AuthenticationHeaderValue</span> <span class="n">authorization</span> <span class="p">=</span> <span class="k">null</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>     <span class="k">if</span> <span class="p">(</span><span class="n">Request</span><span class="p">.</span><span class="n">GetHeader</span><span class="p">(</span><span class="s">&quot;authorization&quot;</span><span class="p">)</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span>
+</span><span class='line'>     <span class="p">{</span>
+</span><span class='line'>         <span class="n">authorization</span> <span class="p">=</span> <span class="n">AuthenticationHeaderValue</span><span class="p">.</span><span class="n">Parse</span><span class="p">(</span><span class="n">Request</span><span class="p">.</span><span class="n">GetHeader</span><span class="p">(</span><span class="s">&quot;authorization&quot;</span><span class="p">));</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>     <span class="k">if</span> <span class="p">(</span><span class="n">authorization</span> <span class="p">!=</span> <span class="k">null</span> <span class="p">&amp;&amp;</span>
+</span><span class='line'>          <span class="p">!</span><span class="kt">string</span><span class="p">.</span><span class="n">Equals</span><span class="p">(</span><span class="n">authorization</span><span class="p">.</span><span class="n">Scheme</span><span class="p">,</span> <span class="n">HawkAuthenticationOptions</span><span class="p">.</span><span class="n">Scheme</span><span class="p">))</span>
+</span><span class='line'>     <span class="p">{</span>
+</span><span class='line'>          <span class="k">this</span><span class="p">.</span><span class="n">logger</span><span class="p">.</span><span class="n">WriteInformation</span><span class="p">(</span><span class="kt">string</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span><span class="s">&quot;Authorization skipped. Schema found {0}&quot;</span><span class="p">,</span>
+</span><span class='line'>               <span class="n">authorization</span><span class="p">.</span><span class="n">Scheme</span><span class="p">));</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="k">return</span> <span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span><span class="n">EmptyTicket</span><span class="p">());</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="n">authorization</span> <span class="p">==</span> <span class="k">null</span> <span class="p">||</span>
+</span><span class='line'>         <span class="kt">string</span><span class="p">.</span><span class="n">IsNullOrWhiteSpace</span><span class="p">(</span><span class="n">authorization</span><span class="p">.</span><span class="n">Scheme</span><span class="p">))</span>
+</span><span class='line'>      <span class="p">{</span>
+</span><span class='line'>          <span class="k">this</span><span class="p">.</span><span class="n">logger</span><span class="p">.</span><span class="n">WriteWarning</span><span class="p">(</span><span class="s">&quot;Authorization header not found&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="k">return</span> <span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span><span class="n">EmptyTicket</span><span class="p">());</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>      <span class="k">else</span>
+</span><span class='line'>      <span class="p">{</span>
+</span><span class='line'>          <span class="k">if</span> <span class="p">(</span><span class="kt">string</span><span class="p">.</span><span class="n">IsNullOrWhiteSpace</span><span class="p">(</span><span class="n">authorization</span><span class="p">.</span><span class="n">Parameter</span><span class="p">))</span>
+</span><span class='line'>          <span class="p">{</span>
+</span><span class='line'>              <span class="k">this</span><span class="p">.</span><span class="n">logger</span><span class="p">.</span><span class="n">WriteWarning</span><span class="p">(</span><span class="s">&quot;Invalid header format&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>              <span class="k">return</span> <span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span><span class="n">EmptyTicket</span><span class="p">());</span>
+</span><span class='line'>          <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>         <span class="k">if</span> <span class="p">(</span><span class="kt">string</span><span class="p">.</span><span class="n">IsNullOrWhiteSpace</span><span class="p">(</span><span class="n">Request</span><span class="p">.</span><span class="n">Host</span><span class="p">))</span>
+</span><span class='line'>         <span class="p">{</span>
+</span><span class='line'>              <span class="k">this</span><span class="p">.</span><span class="n">logger</span><span class="p">.</span><span class="n">WriteWarning</span><span class="p">(</span><span class="s">&quot;Missing Host header&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>              <span class="k">return</span> <span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span><span class="n">EmptyTicket</span><span class="p">());</span>
+</span><span class='line'>          <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="k">try</span>
+</span><span class='line'>          <span class="p">{</span>
+</span><span class='line'>              <span class="kt">var</span> <span class="n">principal</span> <span class="p">=</span> <span class="n">Hawk</span><span class="p">.</span><span class="n">Authenticate</span><span class="p">(</span><span class="n">authorization</span><span class="p">.</span><span class="n">Parameter</span><span class="p">,</span>
+</span><span class='line'>                   <span class="n">Request</span><span class="p">.</span><span class="n">Host</span><span class="p">,</span>
+</span><span class='line'>                   <span class="n">Request</span><span class="p">.</span><span class="n">Method</span><span class="p">,</span>
+</span><span class='line'>                   <span class="n">Request</span><span class="p">.</span><span class="n">Uri</span><span class="p">,</span>
+</span><span class='line'>                   <span class="k">this</span><span class="p">.</span><span class="n">Options</span><span class="p">.</span><span class="n">Credentials</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>              <span class="kt">var</span> <span class="n">identity</span> <span class="p">=</span> <span class="p">(</span><span class="n">ClaimsIdentity</span><span class="p">)((</span><span class="n">ClaimsPrincipal</span><span class="p">)</span><span class="n">principal</span><span class="p">).</span><span class="n">Identity</span><span class="p">;</span>
+</span><span class='line'>              <span class="kt">var</span> <span class="n">ticket</span> <span class="p">=</span> <span class="k">new</span> <span class="n">AuthenticationTicket</span><span class="p">(</span><span class="n">identity</span><span class="p">,</span> <span class="p">(</span><span class="n">AuthenticationExtra</span><span class="p">)</span><span class="k">null</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>              <span class="k">return</span> <span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span><span class="n">ticket</span><span class="p">);</span>
+</span><span class='line'>           <span class="p">}</span>
+</span><span class='line'>           <span class="k">catch</span> <span class="p">(</span><span class="n">SecurityException</span> <span class="n">ex</span><span class="p">)</span>
+</span><span class='line'>           <span class="p">{</span>
+</span><span class='line'>                <span class="k">this</span><span class="p">.</span><span class="n">logger</span><span class="p">.</span><span class="n">WriteWarning</span><span class="p">(</span><span class="n">ex</span><span class="p">.</span><span class="n">Message</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>                <span class="k">return</span> <span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span><span class="n">EmptyTicket</span><span class="p">());</span>
+</span><span class='line'>           <span class="p">}</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">protected</span> <span class="k">override</span> <span class="n">Task</span> <span class="nf">ApplyResponseChallenge</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>         <span class="k">if</span> <span class="p">(</span><span class="n">Response</span><span class="p">.</span><span class="n">StatusCode</span> <span class="p">!=</span> <span class="m">401</span><span class="p">)</span>
+</span><span class='line'>         <span class="p">{</span>
+</span><span class='line'>              <span class="k">return</span> <span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">&lt;</span><span class="kt">object</span><span class="p">&gt;(</span><span class="k">null</span><span class="p">);</span>
+</span><span class='line'>          <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>         <span class="kt">var</span> <span class="n">ts</span> <span class="p">=</span> <span class="n">Hawk</span><span class="p">.</span><span class="n">ConvertToUnixTimestamp</span><span class="p">(</span><span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">).</span><span class="n">ToString</span><span class="p">();</span>
+</span><span class='line'>         <span class="kt">var</span> <span class="n">challenge</span> <span class="p">=</span> <span class="kt">string</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span><span class="s">&quot;ts=\&quot;{0}\&quot; ntp=\&quot;{1}\&quot;&quot;</span><span class="p">,</span>
+</span><span class='line'>                <span class="n">ts</span><span class="p">,</span> <span class="s">&quot;pool.ntp.org&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>         <span class="n">Response</span><span class="p">.</span><span class="n">AddHeader</span><span class="p">(</span><span class="s">&quot;WWW-Authenticate&quot;</span><span class="p">,</span> <span class="n">HawkAuthenticationOptions</span><span class="p">.</span><span class="n">Scheme</span> <span class="p">+</span> <span class="s">&quot; &quot;</span> <span class="p">+</span> <span class="n">challenge</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">return</span> <span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">&lt;</span><span class="kt">object</span><span class="p">&gt;(</span><span class="k">null</span><span class="p">);</span>
+</span><span class='line'>     <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>     <span class="k">private</span> <span class="k">static</span> <span class="n">AuthenticationTicket</span> <span class="nf">EmptyTicket</span><span class="p">()</span>
+</span><span class='line'>     <span class="p">{</span>
+</span><span class='line'>         <span class="k">return</span> <span class="k">new</span> <span class="nf">AuthenticationTicket</span><span class="p">(</span><span class="k">null</span><span class="p">,</span> <span class="p">(</span><span class="n">AuthenticationExtra</span><span class="p">)</span><span class="k">null</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The implementation is Active, so only overrides the AuthenticationCore
+and ApplyResponseChallenge methods. The AuthenticationCore
+implementation tries to locate a Authorization Header with a format that
+follows the Hawk specification to authenticate the call. If an
+Authorization header is not found or it can not be parsed, an
+AuthenticationTicket instance with an empty identity is returned.
+Otherwise, the identity is set in the ticket and returned as part of the
+task. This implementation also uses the logging facilities provided by
+Katana.</p>
+
+<p>The last step is to implement the AuthenticationMiddleware class.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">HawkAuthenticationMiddleware</span> <span class="p">:</span> <span class="n">AuthenticationMiddleware</span><span class="p">&lt;</span><span class="n">HawkAuthenticationOptions</span><span class="p">&gt;</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">private</span> <span class="k">readonly</span> <span class="n">ILogger</span> <span class="n">logger</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="nf">HawkAuthenticationMiddleware</span><span class="p">(</span>
+</span><span class='line'>        <span class="n">OwinMiddleware</span> <span class="n">next</span><span class="p">,</span>
+</span><span class='line'>        <span class="n">IAppBuilder</span> <span class="n">app</span><span class="p">,</span>
+</span><span class='line'>        <span class="n">HawkAuthenticationOptions</span> <span class="n">options</span><span class="p">)</span> <span class="p">:</span> <span class="k">base</span><span class="p">(</span><span class="n">next</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>         <span class="k">this</span><span class="p">.</span><span class="n">logger</span> <span class="p">=</span> <span class="n">app</span><span class="p">.</span><span class="n">CreateLogger</span><span class="p">&lt;</span><span class="n">HawkAuthenticationHandler</span><span class="p">&gt;();</span>
+</span><span class='line'>     <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>     <span class="k">protected</span> <span class="k">override</span> <span class="n">AuthenticationHandler</span><span class="p">&lt;</span><span class="n">HawkAuthenticationOptions</span><span class="p">&gt;</span> <span class="n">CreateHandler</span><span class="p">()</span>
+</span><span class='line'>     <span class="p">{</span>
+</span><span class='line'>         <span class="k">return</span> <span class="k">new</span> <span class="nf">HawkAuthenticationHandler</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">logger</span><span class="p">);</span>
+</span><span class='line'>     <span class="p">}</span>
+</span><span class='line'> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This implementation only overrides the CreateHandler method to return a
+new HawkAuthenticationHandler instance. As that instance relies on the
+Katana logger, the logger instance is first created from the IAppBuilder
+instance injected in the constructor.</p>
+
+<p>Once you have the AuthenticationMiddleware implementation completed, you
+will want to inject it in the OWIN pipeline to use it in an existing
+application. An extension method can be provided to make this task
+easier for the developer.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">static</span> <span class="k">class</span> <span class="nc">HawkAuthenticationExtensions</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">static</span> <span class="n">IAppBuilder</span> <span class="nf">UseHawkAuthentication</span><span class="p">(</span><span class="k">this</span> <span class="n">IAppBuilder</span> <span class="n">app</span><span class="p">,</span> <span class="n">HawkAuthenticationOptions</span> <span class="n">options</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">app</span><span class="p">.</span><span class="n">Use</span><span class="p">(</span><span class="k">typeof</span><span class="p">(</span><span class="n">HawkAuthenticationMiddleware</span><span class="p">),</span> <span class="n">app</span><span class="p">,</span> <span class="n">options</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">app</span><span class="p">.</span><span class="n">UseStageMarkerAuthenticate</span><span class="p">();</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">app</span><span class="p">;</span>
+</span><span class='line'>     <span class="p">}</span>
+</span><span class='line'> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The following example shows how this extension is used to register the
+HawkAuthenticationMiddleware service in an application that uses Web API
+with OWIN</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">Startup</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>     <span class="k">public</span> <span class="k">void</span> <span class="nf">Configuration</span><span class="p">(</span><span class="n">IAppBuilder</span> <span class="n">app</span><span class="p">)</span>
+</span><span class='line'>     <span class="p">{</span>
+</span><span class='line'>         <span class="n">app</span><span class="p">.</span><span class="n">SetLoggerFactory</span><span class="p">(</span><span class="k">new</span> <span class="n">ConsoleLoggerFactory</span><span class="p">());</span>
+</span><span class='line'>
+</span><span class='line'>         <span class="kt">var</span> <span class="n">config</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpConfiguration</span><span class="p">();</span>
+</span><span class='line'>         <span class="n">config</span><span class="p">.</span><span class="n">Routes</span><span class="p">.</span><span class="n">MapHttpRoute</span><span class="p">(</span><span class="s">&quot;Default&quot;</span><span class="p">,</span> <span class="s">&quot;api/{controller}&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>         <span class="n">app</span><span class="p">.</span><span class="n">UseHawkAuthentication</span><span class="p">(</span><span class="k">new</span> <span class="n">HawkAuthenticationOptions</span>
+</span><span class='line'>         <span class="p">{</span>
+</span><span class='line'>             <span class="n">Credentials</span> <span class="p">=</span> <span class="p">(</span><span class="n">id</span><span class="p">)</span> <span class="p">=&gt;</span>
+</span><span class='line'>             <span class="p">{</span>
+</span><span class='line'>                 <span class="k">return</span> <span class="k">new</span> <span class="n">HawkCredential</span>
+</span><span class='line'>                 <span class="p">{</span>
+</span><span class='line'>                     <span class="n">Id</span> <span class="p">=</span> <span class="s">&quot;dh37fgj492je&quot;</span><span class="p">,</span>
+</span><span class='line'>                     <span class="n">Key</span> <span class="p">=</span> <span class="s">&quot;werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn&quot;</span><span class="p">,</span>
+</span><span class='line'>                     <span class="n">Algorithm</span> <span class="p">=</span> <span class="s">&quot;hmacsha256&quot;</span><span class="p">,</span>
+</span><span class='line'>                     <span class="n">User</span> <span class="p">=</span> <span class="s">&quot;steve&quot;</span>
+</span><span class='line'>                 <span class="p">};</span>
+</span><span class='line'>              <span class="p">}</span>
+</span><span class='line'>         <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">app</span><span class="p">.</span><span class="n">UseWebApi</span><span class="p">(</span><span class="n">config</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>     <span class="p">}</span>
+</span><span class='line'> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>All the code provided as part of this example for Hawk can be found in
+the <a href="https://github.com/pcibraro/hawknet">HawkNet github project</a>.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-07-26T00:00:00-03:00" pubdate data-updated="true">Jul 26<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/dot-net/'>.NET</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2013/07/26/writing-an-authenticationhandler-for-katana/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2013/07/26/writing-an-authenticationhandler-for-katana/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/07/22/getting-started-with-owin-and-katana/" title="Previous Post: Getting started with Owin and Katana">&laquo; Getting started with Owin and Katana</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/" title="Next Post: Using the Katana Authentication handlers with NancyFx">Using the Katana Authentication handlers with NancyFx &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2013/07/26/writing-an-authenticationhandler-for-katana/';
+        var disqus_url = 'http://cibrax.me/blog/2013/07/26/writing-an-authenticationhandler-for-katana/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Wix | Pablo Cibraro (Cibrax)]]></title>
+  <link href="http://cibrax.me/blog/categories/wix/atom.xml" rel="self"/>
+  <link href="http://cibrax.me/"/>
+  <updated>2013-12-26T15:03:47-03:00</updated>
+  <id>http://cibrax.me/</id>
+  <author>
+    <name><![CDATA[Cibrax]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Writing managed custom actions in an easy way]]></title>
+    <link href="http://cibrax.me/blog/2005/04/14/400351/"/>
+    <updated>2005-04-14T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2005/04/14/400351</id>
+    <content type="html"><![CDATA[<p>In my last post, I talked about hosting the CRL within a native custom
+action. \
+This week I found an easier way to execute a managed custom action, it
+is based on a hack and not extra C++ code is required.\
+Actually, you can&rsquo;t write a C# custom action because the compiler
+doesn&rsquo;t allow you to create a __stdcall function to be  \
+called from the outside. \
+Well, take a look to this
+<a href="http://www.c-sharpcorner.com/Code/2003/Aug/ExportManagedCodeasUnmanaged.asp">article</a>,
+it shows how to overcome that problem.</p>
+
+<p>Let&rsquo;s use this article to write our managed custom action, I&rsquo;ll start
+writing the custom action&rsquo;s skeleton:</p>
+
+<p>using System;\
+\
+namespace CustomActions\
+{\
+    public class MyCustomAction\
+    {\
+        public static int Execute( long handle )\
+        {\
+            System.Windows.Forms.MessageBox.Show( String.Format( &ldquo;Hello
+World {0}&rdquo;, handle ) );\
+\
+            return 0;\
+\
+        }\
+    }\
+}</p>
+
+<p>When the installer calls to this custom action, it will show a message
+box with the current msi handler number. \
+As next step, you will have to read that article and do the same things,
+but changing the &ldquo;SayHello&rdquo; method by &ldquo;Execute&rdquo;.\
+After finishing the last article step, you will have a managed assembly,
+which exports an &ldquo;Execute&rdquo; method. \
+You will able to use that method as &ldquo;DllEntry&rdquo; when you define the
+custom action in the custom actions table. \</p>
+
+<p>Using wix, the custom action definition should look like this:</p>
+
+<p>&lt;CustomAction Id=&ldquo;CustomActions&rdquo; BinaryKey=&ldquo;CustomActions&rdquo;
+DllEntry=&ldquo;Execute&rdquo; /></p>
+
+<p>I hope this can help you to develop more custom actions in an easy way
+:)</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Hosting the CLR within a custom action]]></title>
+    <link href="http://cibrax.me/blog/2005/04/11/399839/"/>
+    <updated>2005-04-11T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2005/04/11/399839</id>
+    <content type="html"><![CDATA[<p>Today, in order to develop a custom action for a Window Installer setup,
+you can choose between two options:</p>
+
+<p>  1. Writing a Native custom action using the C language\
+  2. Writing a Managed custom action using any .NET compliant language</p>
+
+<p>Both options have different pros and cons, so I will start enumerating
+some of them:</p>
+
+<p>Native custom actions</p>
+
+<p>  Pros:</p>
+
+<p>    1. Access to the installer context information.\
+    2. Interop code not required.</p>
+
+<p>  Cons:</p>
+
+<p>    1. Require some understanding of Windows programming and C language
+as well.\
+    2. Lack of code protection and memory management, you are
+responsible to acquire and release all used resources.\
+    3. Find a problem can be a nightmare, for example, a memory leak
+problem.\
+    4. Hard to debug.\</p>
+
+<p>Managed custom actions</p>
+
+<p>  Pros:</p>
+
+<p>    1. Extremely easy to develop in any CLR compliant language.\
+    2. Easy to debug and find problems.</p>
+
+<p>  Cons:</p>
+
+<p>    1. Inability to get context information.\
+    2. Only deferred custom actions ( They run at the end, you can&rsquo;t
+change any condition or property during the install ).\</p>
+
+<h3>A new option</h3>
+
+<p>To overcome the disadvantages of both options, the last week I developed
+a native custom action which hosts the CRL Runtime and executes a
+managed custom action. This solution combines the best of both worlds,
+and you can get many benefits of using it. \
+It contains three parts, a native custom action, a managed custom
+action, and a small msi framework to be used within the managed custom
+action. I will describe each one in detail next.</p>
+
+<h3>Native custom action project</h3>
+
+<p>The native custom action is a normal custom action written in C, which
+is responsible to host the CLR runtime and call to the managed custom
+action. \
+Basically, this custom action contains code to do the following things:</p>
+
+<p>​1. Loads the CLR runtime\
+2. Gets the managed custom action assembly from the msi binary table\
+3. Copies the assembly to the user temp folder\
+4. Loads the assembly within the CLR instance\
+5. Executes the managed custom action\
+6. Unloads the CLR runtime\</p>
+
+<p>You can find all this code under the CLRHosting folder. This code is
+always the same, and you won&rsquo;t have to change almost anything of it,
+except some parameters located in the file &ldquo;String.h&rdquo;:</p>
+
+<p>// CLR version\
+static LPCWSTR szCLRVersion = L"v1.1.4322";\
+\
+// CLR flavor, workstation or server\
+static LPCWSTR szCLRFlavor = L"wks";\
+\
+// Application domain name\
+static LPCWSTR szApplicationName = L"MsiHosting";\
+\
+// Configuration file assigned to the application domain. You can attach
+this file to the binary table in the msi\
+static TCHAR* szApplicationConfigFile = &ldquo;MsiHosting.config&rdquo;;\
+\
+// Entry point of the managed custom action\
+static OLECHAR FAR* szCustomActionMember = L"RunActions";\
+\
+// Managed custom action assembly\
+static TCHAR* szAssemblyName = &ldquo;CustomActionRuntime&rdquo;;\
+\
+// Managed custom action class name\
+static TCHAR* szClassName = &ldquo;CustomActionRuntime.Runtime&rdquo;;\
+\
+// Key used to locate the assembly file within the msi binary table\
+static TCHAR* szCustomActionRuntimeBinaryKey = &ldquo;CustomActionRuntime&rdquo;;\
+\
+// Key used to locate the configuration file within the msi binary
+table\
+static TCHAR* szApplicationConfigFileBinaryKey = &ldquo;MsiHostingConfig&rdquo;;</p>
+
+<h3>Managed custom action project</h3>
+
+<p>I wrote the project using C#, it includes the managed custom action and
+a small framework to manipulate the installer context.\
+You can find this code under the CustomActionRuntime folder.\
+The managed custom action should be implemented in &ldquo;CustomAction.cs&rdquo;,
+and usually looks like this:</p>
+
+<p>public class CustomAction\
+{\
+  #region Constructors\
+\
+  public CustomAction()\
+  {\
+  }\
+\
+  #endregion\
+\
+  public void Run( InstallerContext context )\
+  {\
+    // TODO: do something\
+  }\
+}\</p>
+
+<p>The context parameter represents a facade to the msi framework, through
+this framework you can query and modify different things of the
+installer context, not to mention the fact of executing dynamic SQL
+query against the msi tables.</p>
+
+<p>This sample makes use of this framework to query all available
+properties, it is a useless sample, but helps to show that
+functionality:</p>
+
+<p>public class CustomAction\
+{\
+  #region Constructors\
+\
+  public CustomAction()\
+  {\
+  }\
+\
+  #endregion\
+\
+  public void Run( InstallerContext context )\
+  {\
+    View view = context.OpenView( &ldquo;SELECT * FROM Property&rdquo; );\
+    RecordCollection records = view.Execute();\
+\
+    foreach( Record record in records )\
+    {\
+      foreach( Field field in record.Fields )\
+      {\
+       string value = field.GetString();\
+      }\
+    }\
+\
+    view.Close();\
+  }\
+}</p>
+
+<h3>Using this custom action within Wix</h3>
+
+<p>Until here I described the different parts of this solution, now I will
+describe how to integrate it in your installer using Wix.\
+To start I picked up a sample provided in this
+<a href="http://www.tramontana.co.hu/wix/lesson3.html#custom_actions">tutorial</a>,
+by the way an excellent tutorial to learn Wix.\
+This sample shows how to validate a PID using a custom action, so I&rsquo;ll
+modify it a little bit to use this solution.</p>
+
+<p><strong>1. &ldquo;Including the native custom action&rdquo;</strong>\</p>
+
+<p>Go to the custom action definition section, and replace this line :</p>
+
+<p>&lt;CustomAction Id=&ldquo;CheckingPID&rdquo; BinaryKey=&ldquo;CheckPID&rdquo; DllEntry=&ldquo;CheckPID&rdquo;
+/></p>
+
+<p>For</p>
+
+<p>&lt;CustomAction Id=&ldquo;CheckingPID&rdquo; BinaryKey=&ldquo;CheckPID&rdquo; DllEntry=&ldquo;Execute&rdquo;
+/></p>
+
+<p>You have to change only the DllEntry attribute, because my solution
+exports a different dll entry. ( &ldquo;Execute&rdquo; instead of &ldquo;CheckPID&rdquo; )</p>
+
+<p><strong>2. &ldquo;Modifying the binary table&rdquo;</strong>\</p>
+
+<p>Go to the binaries definition section, and replace this line :</p>
+
+<p>&lt;Binary Id=&ldquo;CheckPID&rdquo; src=&ldquo;Binary\CheckPID.dll&rdquo; /></p>
+
+<p>For</p>
+
+<p>&lt;!&mdash; Files required to run the .NET custom action &mdash;>\
+&lt;!&mdash; Native custom action &mdash;>\
+&lt;Binary Id=&ldquo;CheckPID&rdquo; src=&ldquo;Binary\CLRHosting.dll&rdquo; />\
+\
+&lt;!&mdash; Managed custom action assembly file, this key can be changed from
+Strings.h &mdash;>\
+&lt;Binary Id=&ldquo;CustomActionRuntime&rdquo; src=&ldquo;Binary\CustomActionRuntime.dll&rdquo;
+/>\
+\
+&lt;!&mdash; AppDomain config file, this key can be changed from Strings.h
+&mdash;>\
+&lt;Binary Id=&ldquo;MsiHostingConfig&rdquo; src=&ldquo;Binary\MsiHosting.config&rdquo; />\</p>
+
+<p>This change includes the files required to run my solution.</p>
+
+<p><strong>3. &ldquo;Compiling the solution&rdquo;</strong>\</p>
+
+<p>Open the &ldquo;MSIHosting.sln&rdquo; solution file with visual studio and compile
+it. This compilation will produce the binary files required to run the
+custom action.</p>
+
+<p><strong>4. &ldquo;Copying the binary files&rdquo;</strong>\</p>
+
+<p>Copy the following files to the &ldquo;Binary&rdquo; folder:\
+\
+CLRHosting\Debug\CLRHosting.dll\
+CustomActionRuntime\bin\debug\CustomActionRuntime.dll\
+CustomActionRuntime\MsiHosting.config\</p>
+
+<p>After all these steps, you will able to compile the wix source file to
+get the final msi.\
+\
+<a href="/images/legacy/MSIHosting.zip">Download Source Code</a></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Installing a SQL database with WIX]]></title>
+    <link href="http://cibrax.me/blog/2005/03/30/396338/"/>
+    <updated>2005-03-30T00:00:00-03:00</updated>
+    <id>http://cibrax.me/blog/2005/03/30/396338</id>
+    <content type="html"><![CDATA[<p>I like to share a sample about how to install a Sql database using a
+custom action shipped within WIX, it is an easy task and it can be
+useful in many scenarios.\
+Let&rsquo;s take a look to this source file &ldquo;sql.wxs&rdquo;:</p>
+
+<p>\</p>
+
+<p>&lt;Wix xmlns=&lsquo;<a href="http://schemas.microsoft.com/wix/2003/01/wi">http://schemas.microsoft.com/wix/2003/01/wi</a>&rsquo;>\
+  &lt;Product Name=&lsquo;SQL app 1.0&rsquo; Id=&lsquo;DB501C18-86C7-4D14-AEC0-86416A69ABDE&rsquo;
+Language=&lsquo;1033&rsquo; Codepage=&lsquo;1252&rsquo;\
+     Version=&lsquo;1.0.0&rsquo; Manufacturer=&lsquo;Cibrax Ltd.&rsquo;>\
+            &lt;Package Id=&lsquo;????????&ndash;????&ndash;????&ndash;????&ndash;????????????&rsquo;
+Keywords=&lsquo;Installer&rsquo; Description=&ldquo;SQL App 1.0 Installer&rdquo;\
+              Comments=&lsquo;SQL app is a registered trademark of Cibrax
+Ltd.&rsquo; Manufacturer=&lsquo;Cibrax Ltd.&rsquo; InstallerVersion=&lsquo;100&rsquo;\
+              Languages=&lsquo;1033&rsquo; Compressed=&lsquo;yes&rsquo; SummaryCodepage=&lsquo;1252&rsquo;
+/>\
+        &lt;Media Id=&lsquo;1&rsquo; Cabinet=&lsquo;Sample.cab&rsquo; EmbedCab=&lsquo;yes&rsquo; />\
+        &lt;User Id=&ldquo;MySQLUser&rdquo; Name=&ldquo;[SQLUSER]&rdquo;
+Password=&ldquo;[SQLUSERPASSWORD]&rdquo;>&lt;/User>\
+        &lt;Directory Id=&lsquo;TARGETDIR&rsquo; Name=&lsquo;SourceDir&rsquo;>\
+            &lt;Directory Id=&lsquo;ProgramFilesFolder&rsquo; Name=&lsquo;PFiles&rsquo;>\
+                &lt;Directory Id=&lsquo;INSTALLDIR&rsquo; Name=&lsquo;TestSQL&rsquo;>\
+                      &lt;Component Id=&ldquo;MySqlComponent&rdquo;
+Guid=&ldquo;C50999A0-02FD-42d5-9F65-7375318DD328&rdquo;>\
+                        &lt;SqlDatabase Id=&ldquo;MySqlDatabase&rdquo;
+Database=&ldquo;MyDatabase&rdquo; Server=&ldquo;[SQLSERVER]&rdquo; Instance=&ldquo;[SQLINSTANCE]&rdquo;\
+                            CreateOnInstall=&ldquo;yes&rdquo; DropOnUninstall=&ldquo;yes&rdquo;
+User=&ldquo;MySQLUser&rdquo; ContinueOnError=&ldquo;yes&rdquo;>\
+                              &lt;SqlScript Id=&ldquo;CreateTables&rdquo;
+ExecuteOnInstall=&ldquo;yes&rdquo; BinaryKey=&ldquo;CreateTablesBin&rdquo;>&lt;/SqlScript>\
+                        &lt;/SqlDatabase>\
+                      &lt;/Component>\
+                &lt;/Directory>\
+             &lt;/Directory>\
+         &lt;/Directory>\
+        &lt;Binary Id=&ldquo;CreateTablesBin&rdquo;
+src=&ldquo;CreateTables.sql&rdquo;>&lt;/Binary>\
+        &lt;Feature Id=&lsquo;Complete&rsquo; Level=&lsquo;1&rsquo; Description=&ldquo;Full&rdquo; Title=&ldquo;Full
+Installation&rdquo;>\
+            &lt;ComponentRef Id=&lsquo;MySqlComponent&rsquo; />\
+        &lt;/Feature>\
+    &lt;/Product>\
+&lt;/Wix>\</p>
+
+<p>I&rsquo;ll start describing the most important elements in this script:</p>
+
+<p><strong>&lt;User></strong> \</p>
+
+<p>It contains authentication settings necessary to sign on against the Sql
+database server. \
+As you can see, the user and password are properties, so you can change
+them later in runtime maybe using a user dialog or custom action. Other
+point to consider, you can nest this element within the component, in
+that case, the installer will create a windows user account user during
+the install, and we don&rsquo;t need that in this sample.</p>
+
+<p><strong>&lt;SqlDatabase></strong> \</p>
+
+<p>Using this element we can specify some settings required to create the
+database, such as database name, server, instance and user. The user
+attribute contains a reference to the existing user element, in this
+case, &ldquo;MySQLUser&rdquo;. \
+It supports other conditional attributes, such as CreateOnInstall,
+DropUnistall and ContinueOnError. These attributes specifies what to do
+during the install, uninstall and when an error occurs. \
+The properties will take default values if you do not provided them, for
+example, the default value for Server is “localhost”.</p>
+
+<p><strong>&lt;SqlScript></strong> \</p>
+
+<p>I will use this element to execute a sql script because the previous
+element only creates an empty database, but in this sample, I also want
+to create some empty tables within the database.\
+The BinaryKey contains a reference to the script file in the Binary
+table.</p>
+
+<p>The CreateTables.sql file is a simple script to create a new table, and
+looks like this:</p>
+
+<p>CREATE TABLE [dbo].[Test] (\
+    [Test_Id] [int] NOT NULL \
+) ON [PRIMARY]\</p>
+
+<p>At this point, we have a simple wix script to install a new database,
+but what is next? Obviously, we need to compile this file using
+&ldquo;candle.exe&rdquo; and then, &ldquo;light.exe&rdquo;. \
+We will start compiling this script in a wix object file using
+&ldquo;candle.exe&rdquo; ( Replace &ldquo;[Wix Path]&rdquo; with the current wix path in your
+machine ):\
+\</p>
+
+<p>[Wix path]\candle.exe sql.wxs</p>
+
+<p>If everything goes fine, you will able to find a sql.wixobj file in the
+same folder than sql.wxs. \
+As next step, we will use &ldquo;light.exe&rdquo; to create the final msi file.</p>
+
+<p>[Wix path]\light.exe sql.wixobj</p>
+
+<p>Ughh, you will get a wix linker error after running this command, but
+what is wrong with the script? Well, to install a sql database, wix uses
+some custom actions, which will run along the msi, and we did not
+specify any of these custom actions in our script. \
+Do we need to include these custom actions in our script? Not exactly,
+&ldquo;light.exe&rdquo; can include them automatically when the msi is generated. \
+To do that, we need to provide some extra parameters:</p>
+
+<p>[Wix path]\light.exe -out sql.msi sql.wixobj [Wix path]\ca\sca.wixlib</p>
+
+<p>After running this command, you will find a new sql.msi file. Now, you
+can use it to install your database in any machine.</p>
+]]></content>
+  </entry>
+  
+</feed>

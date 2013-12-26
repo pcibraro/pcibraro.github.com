@@ -1,0 +1,1543 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="My coleague Juan Wajnerman has
+written two interesting articles about &#8221;ASMX/WCF
+Migration&ldquo;
+and
+&rdquo;REST/POX&ldquo;.
+The first one &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/page/21">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2007/06/10/asmx-wcf-migration-rest-pox-articles/">ASMX/WCF Migration - REST/POX Articles</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-06-10T00:00:00-03:00" pubdate data-updated="true">Jun 10<span>th</span>, 2007</time>
+        
+         | <a href="/blog/2007/06/10/asmx-wcf-migration-rest-pox-articles/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>My coleague <a href="http://weblogs.manas.com.ar/waj/">Juan Wajnerman</a> has
+written two interesting articles about &#8221;<a href="http://weblogs.manas.com.ar/waj/2007/05/31/asmx-to-wcf-migration/">ASMX/WCF
+Migration</a>&ldquo;
+and
+&rdquo;<a href="http://weblogs.manas.com.ar/waj/2007/05/13/rest-pox-client-with-wcf/">REST/POX</a>&ldquo;.
+The first one describes an complete procedure to migrate a plain ASMX
+web service to a WCF service using an incremental approach.</p>
+
+<p>In the second article about &#8221;REST/POX&#8221;, he illustrates how to write a
+client in WCF for a &#8221;REST/POX&#8221; service
+(<a href="http://vasters.com/clemensv/PermaLink,guid,2d61b97b-3a6e-46bd-89db-b1b20499ba18.aspx">Clemens</a> made
+an excellent job implementing this kind of service in WCF). REST/POX
+will be fully supported in the next version of WCF (Orcas timeframe), in
+the meantime, if you are interested in this topic, you can take a look
+to Juan&rsquo;s article.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2007/05/26/clarius-consulting/">Clarius Consulting</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-05-26T00:00:00-03:00" pubdate data-updated="true">May 26<span>th</span>, 2007</time>
+        
+         | <a href="/blog/2007/05/26/clarius-consulting/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>On June 4th, I will officially become an associate of <a href="http://www.clariusconsulting.net/">Clarius
+Consulting</a>. I&rsquo;ll be joining a great
+team of &#8221;all-stars&#8221; developers such as <a href="http://weblogs.asp.net/cazzu">Daniel
+Cazzulino</a>, <a href="http://weblogs.asp.net/vga">Victor Garcia
+Aprea</a>, Juan Carlos Elichirigoity and
+Fernando Simonazzi, which is pretty amazing to me. Thanks guys for give
+me this opportunity!!.</p>
+
+<p>I&rsquo;m leaving Lagash after almost five years of service. As developer and
+first employee of the company, I made a lot of interesting stuff
+there, most of them for the Patterns &amp; Practices team. I&rsquo;d like to
+thank Lagash and wish them the best in the future!</p>
+
+<p> </p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2007/05/08/more-about-wcf-binding-configurations-in-sts-scenarios/">More About WCF Binding Configurations in STS Scenarios</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-05-08T00:00:00-03:00" pubdate data-updated="true">May 8<span>th</span>, 2007</time>
+        
+         | <a href="/blog/2007/05/08/more-about-wcf-binding-configurations-in-sts-scenarios/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Some time ago I wrote an <a href="http://weblogs.asp.net/cibrax/archive/2006/03/14/440222.aspx">introductory
+post</a>
+showing a basic architecture for a federation scenario in WCF. If we go
+back until then, the architecture showed there was something like the
+image below:</p>
+
+<p><img src="/images/legacy/STS_WCF_Bindings.jpg" alt="" /></p>
+
+<p>In this simple architecture we can find the following components:</p>
+
+<ol>
+<li>Client Application: The application that will be consuming the WCF
+services. In order to execute one of those services, this
+application needs first a security token granted by the STS.</li>
+<li>Security Token Service (STS): It is an specific service with the
+unique purpose to grant tokens according to some information
+received from the client. The process to grant tokens is not as easy
+as it sounds, I will talk more about this later in this post.</li>
+<li>Service: An specific service that provides some functionality
+required by the client application, for instance, a business
+operation. There is an implicit trust relationship between the
+service and the STS, any valid token granted by the STS can be used
+to authenticate the client.</li>
+</ol>
+
+
+<p>Now that we have a better understanding of the overall architecture, I
+will discuss more in detail the WCF bindings involved in the process to
+interchange the messages between the different parties.</p>
+
+<h3>Communication between the client and the STS</h3>
+
+<p>At this point, a pair of RST/RSTR messages will be interchanged between
+both parties. The WCF infrastructure takes care of creating those
+messages for us, but we still need to configure some channel settings
+through a binding configuration. Some of those settings involve channel
+security, type of transport or more specific things like the type of
+security token that will be presented to the STS. </p>
+
+<p>As you can see, there is not any limitation here and we are free to use
+any of the existing WCF bindings.</p>
+
+<p>In my previous sample I used a mutual certificate authentication over
+Http. Anyway, I could also use any transport or any other kind of token
+such as username token, a saml token, kerberos or any custom token.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="p">&lt;</span><span class="n">customBinding</span><span class="p">&gt;</span>
+</span><span class='line'>  <span class="p">&lt;</span><span class="n">binding</span> <span class="n">name</span><span class="p">=</span><span class="s">&quot;MutalCertificateBinding&quot;</span><span class="p">&gt;</span>
+</span><span class='line'>    <span class="p">&lt;</span><span class="n">security</span> <span class="n">authenticationMode</span><span class="p">=</span><span class="s">&quot;MutualCertificate&quot;</span>
+</span><span class='line'>         <span class="n">requireSecurityContextCancellation</span> <span class="p">=</span><span class="s">&quot;false&quot;</span>
+</span><span class='line'>         <span class="n">requireSignatureConfirmation</span><span class="p">=</span><span class="s">&quot;false&quot;</span>
+</span><span class='line'>         <span class="n">messageProtectionOrder</span> <span class="p">=</span><span class="s">&quot;SignBeforeEncrypt&quot;</span>
+</span><span class='line'>    <span class="n">requireDerivedKeys</span><span class="p">=</span><span class="s">&quot;true&quot;</span><span class="p">&gt;</span>
+</span><span class='line'>    <span class="p">&lt;/</span><span class="n">security</span><span class="p">&gt;</span>
+</span><span class='line'>    <span class="p">&lt;</span><span class="n">httpTransport</span><span class="p">/&gt;</span>
+</span><span class='line'>   <span class="p">&lt;/</span><span class="n">binding</span><span class="p">&gt;</span>
+</span><span class='line'><span class="p">&lt;/</span><span class="n">customBinding</span><span class="p">&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Communication between the client and the service</h3>
+
+<p>Here, we do not have the same flexibility as we had before, and
+WsHttpFederation is the only available binding.</p>
+
+<p>As it name clearly says, this binding only supports the following
+aspects:</p>
+
+<ul>
+<li>Authentication based on the token obtained from the configured STS</li>
+<li>Http transport, which means that we can not use other kind of
+transport such as TCP, MSMQ or whatever we want.</li>
+<li>Channel Security based on the token obtained from the STS.   </li>
+</ul>
+
+
+<h3></h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="p">&lt;</span><span class="n">wsFederationHttpBinding</span><span class="p">&gt;</span>
+</span><span class='line'>  <span class="p">&lt;</span><span class="n">binding</span> <span class="n">name</span><span class="p">=</span><span class="s">&quot;ServiceBinding&quot;</span><span class="p">&gt;</span>
+</span><span class='line'>    <span class="p">&lt;</span><span class="n">security</span> <span class="n">mode</span><span class="p">=</span><span class="s">&quot;Message&quot;</span><span class="p">&gt;</span>
+</span><span class='line'>      <span class="p">&lt;</span><span class="n">message</span> <span class="n">issuedTokenType</span><span class="p">=</span><span class="s">&quot;http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1&quot;</span> <span class="n">negotiateServiceCredential</span><span class="p">=</span><span class="s">&quot;false&quot;</span><span class="p">&gt;</span>
+</span><span class='line'>      <span class="p">&lt;</span><span class="n">issuer</span> <span class="n">address</span><span class="p">=</span><span class="s">&quot;http://localhost/WCFSecurityTokenService/service.svc&quot;</span> <span class="n">bindingConfiguration</span><span class="p">=</span><span class="s">&quot;MutalCertificateBinding&quot;</span> <span class="n">binding</span><span class="p">=</span><span class="s">&quot;customBinding&quot;</span><span class="p">&gt;</span>
+</span><span class='line'>        <span class="p">&lt;</span><span class="n">identity</span><span class="p">&gt;</span>
+</span><span class='line'>    <span class="p">&lt;</span><span class="n">dns</span> <span class="k">value</span><span class="p">=</span><span class="s">&quot;WCFQuickstartServer&quot;</span><span class="p">/&gt;</span>
+</span><span class='line'>        <span class="p">&lt;/</span><span class="n">identity</span><span class="p">&gt;</span>
+</span><span class='line'>      <span class="p">&lt;/</span><span class="n">issuer</span><span class="p">&gt;</span>
+</span><span class='line'>     <span class="p">&lt;/</span><span class="n">message</span><span class="p">&gt;</span>
+</span><span class='line'>    <span class="p">&lt;/</span><span class="n">security</span><span class="p">&gt;</span>
+</span><span class='line'>  <span class="p">&lt;/</span><span class="n">binding</span><span class="p">&gt;</span>
+</span><span class='line'><span class="p">&lt;/</span><span class="n">wsFederationHttpBinding</span><span class="p">&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Other alternatives for the communication between the client and the STS</h3>
+
+<p>A typical case could be to present a token obtained from a second STS in
+our STS. This scenario is usually called Federation.</p>
+
+<p>The image below illustrates the architecture for this kind of scenario:</p>
+
+<p><img src="/images/legacy/Federation_WCF_Binding.jpg" alt="" /></p>
+
+<p>What is really important about federation is that a trust relationship
+can be expanded across different domains without limits through
+different STS.</p>
+
+<p>The WCF SDK already provides a good sample of this scenario, so you can
+find the code here [SDK Folder]\TechnologySamples\Scenario\Federation</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2007/04/02/mvp-award-in-quot-connected-systems-quot/">MVP Award in &quot;Connected Systems&quot;</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-04-02T00:00:00-03:00" pubdate data-updated="true">Apr 2<span>nd</span>, 2007</time>
+        
+         | <a href="/blog/2007/04/02/mvp-award-in-quot-connected-systems-quot/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Today I received an email re-awarding my &#8221;Connected Systems&#8221; MVP status
+for another year. Thanks Again Microsoft !! for this award.</p>
+
+<p>I have been quite busy this last month, working on an interesting
+project for one of the 500 fortune companies and my first incursion in
+the mobile arena.\
+For those who do not know, I have returned to Argentina and I am working
+again for my previous company <a href="http://www.lagash.com">Lagash</a>.</p>
+
+<p>I promise I will start blogging soon so stay tuned.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2007/01/25/services-in-net-part-i/">Services in .NET - Part I</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-01-25T00:00:00-03:00" pubdate data-updated="true">Jan 25<span>th</span>, 2007</time>
+        
+         | <a href="/blog/2007/01/25/services-in-net-part-i/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><strong>What is a service after all ?</strong></p>
+
+<p>I could not find a concrete definition of service. Many authors give
+different definitions for the same thing but all of them agree on
+describing a service through the famous tenets of service orientation:</p>
+
+<p>​1. Services are autonomous</p>
+
+<p>​2. Service have explicit boundaries</p>
+
+<p>​3. Services share schema and contract, but do not share implementation</p>
+
+<p>​4. Service compatibility is determined by a policy</p>
+
+<p>After reading these tenets I can conclude the following:</p>
+
+<ul>
+<li>Each service is independent of other services, for instance, if one
+service crashes, the other services are not affected.</li>
+<li>At first glance, I know where a service ends and another starts.</li>
+<li>A service can be considered as an unit of design and deployment.</li>
+<li>Schema describes the format and the content of the messages.
+Contract describes message sequences allowed in and out of the
+service. This is more related to the concept of loose-coupling
+through messaging (The client and the service are decoupled), the
+communication between services is performed by means of a message
+interchange pattern. For instance, this is not true for a .NET
+remoting object where the client must have a reference to the server
+type.</li>
+<li>The use of a service is governed by metadata or policies. In other
+words, each service has a set of requirements to be used, and these
+requirements are expresses through metadata. For instance security.</li>
+</ul>
+
+
+<p>This is nice in theory, but not-so-clever in practice.</p>
+
+<p>As you can see, these tenets do not mention anything about XML, SOAP or
+any of the available WS-* standards. Therefore, I assume that a Soap
+Service is a concrete implementation that adhere to these principles.
+Let&rsquo;s discuss more about soap service in the following paragraphs.</p>
+
+<p><strong>Soap Services</strong></p>
+
+<p>Soap Services interchange xml messages (Soap Messages) which basically
+contains data (The payload expected by the service) and metadata
+(Headers required to execute the service, most of them are part the
+WS-* Family). The service policy in this kind of service is expressed
+through the WS-Policy standard, and the contract through WSDL.</p>
+
+<p>The concept of service becomes evident in WCF, where we can build real
+soap services. According to the Don Box&rsquo;s article &ldquo;<a href="http://msdn.microsoft.com/msdnmag/issues/04/01/indigo/default.aspx#S3">A Guide to
+Developing and Running Connected Systems with
+Indigo</a>&rdquo;,  </p>
+
+<p><em>Service-oriented development focuses on systems that are built from a
+set of autonomous services. This difference has a profound impact on the
+assumptions one makes about the development experience.</em></p>
+
+<p><em>In Indigo, a service is simply a program that one interacts with via
+message exchanges. A set of deployed services is a system.</em></p>
+
+<p>In addition, a web service is an specific type of Soap Service that uses
+Http as transport for interchanging messages. The Web services (Asmx)
+provided by default in the .NET framework (Basic Profile 1.1)  does not
+implement the concept of policy at all, unless you decided to use WSE or
+WCF.</p>
+
+<p><strong>Existing techniques to design and implement a soap service</strong></p>
+
+<p>Once we know the business requirements for a service, it is time to
+start thinking in the design and implementation. Nowadays, the most
+common paths in that direction are &#8221;Development-First&#8221; and
+&ldquo;Contract-First&rdquo;.</p>
+
+<p>In the first approach or technique, which is the approach used by
+default when you develop an asmx service with Visual Studio, the steps
+to design the XSD and WSDL are totally hidden for the developer.</p>
+
+<p>The developer begin authoring the service class and its operations or
+methods (A asmx for simple web services or a service contract in WCF).
+In addition, he decorates the service with attributes that the framework
+will use later to automatically generate the WSDL for the service. In
+this way, the developer does not have to deal with complexities of WSDL
+or XSD and he can get the service running with some minimal efforts.  </p>
+
+<p>On the other hand, the &ldquo;Contract-First&rdquo; approach has a completely
+different starting point. As first step in this approach, the developer
+usually defines the XSD types and designs the service messages.  </p>
+
+<p>Once the service messages are ready, as second step, he begin authoring
+the service WSDL or contract. Finally, the latest service&rsquo;s WSDL version
+is used to generate the code and implementation.  This can be easily
+done in .NET with the WSDL.exe tool, but other platforms such as JAVA
+also provides tools to perform the same task. Most developers use this
+approach from a client side perspective to generate the proxy classes
+required to consume the service.</p>
+
+<p>As you can imagine, creating a WSDL by hand can be a complicated and
+error prone task, many developers (including me) are not familiar at all
+with the complete specification. However, it provides a explicit control
+of the generated contracts, which is in my opinion, it is a crucial
+point for interop scenarios.</p>
+
+<p>Unfortunately, these is not a good tooling support in Visual Studio to
+use this approach, I mean VS does not provide the necessary tools
+to increase the developer productivity.</p>
+
+<p>As result, the .NET community has started developing tools to support
+his approach as well. One of the most well-know projects in this are is
+<a href="http://www.thinktecture.com/Resources/Software/WSContractFirst/default.html">WSCF</a>
+created by <a href="http://www.thinktecture.com">Thinktecture</a>, this tool
+basically provides a set of wizards and designers to generate the XSD
+types and the final WSDL.</p>
+
+<p>The <a href="http://msdn.microsoft.com/servicefactory">Service Factory Project</a>
+from Patterns &amp; Practices supports both approaches as well, if you are
+not familiar with project, the P&amp;P team has lately beginning to provide
+software factories for different purposes, most of them are based on the
+Guidance Automation Toolkit (GAT). The aim of this project is to create
+web services using the best practices of the market and facilitate the
+developer work through a set of tools, wizards and code generators
+totally integrated in Visual Studio. Don Smith has published a [nice
+blogcast](<a href="http://blogs.msdn.com/donsmith/archive/2006/04/20/579735.aspx)">http://blogs.msdn.com/donsmith/archive/2006/04/20/579735.aspx)</a>
+showing the complete process to create contracts with the wizards
+provided in Service Factory.</p>
+
+<p>As usual, there is some controversy about what approach is the
+best, <a href="http://www.25hoursaday.com">Dare Obasanjo</a> gives his thoughts in
+this <a href="http://www.25hoursaday.com/weblog/PermaLink.aspx?guid=e1ab8978-f0a9-4913-bee3-badc1cbefbe5">interesting
+post</a>.</p>
+
+<p>I personally prefer a mix between the two approaches, which can be
+illustrated with the following steps:</p>
+
+<ol>
+<li>Design the XSD types and messages</li>
+<li>Create the service interface with the necessary operations</li>
+<li>Decorate the interface and operations with the right attributes</li>
+<li>Use the WSDL generation support provided by ASP.NET or WCF to
+automatically create the service WSDL</li>
+</ol>
+
+
+<p>We (Me and rest of team) successfully used this approach in the <a href="http://practices.gotdotnet.com/wsibsp">&ldquo;WS-I
+Sample Application&rdquo;</a> project. The
+main objective here was interop between different platforms, and I can
+say it worked perfect, we only found some minor issues without
+importance.</p>
+
+<p>For more information about this topic, I recommend these two articles
+written by Aaron Skonnard:</p>
+
+<ul>
+<li><a href="http://msdn.microsoft.com/msdnmag/issues/05/05/ServiceStation/#S3">Contract-First Service
+Development</a></li>
+<li><a href="http://msdn.microsoft.com/msdnmag/issues/05/06/ServiceStation/">Techniques for Contract-First
+Development</a></li>
+</ul>
+
+
+<p> <strong>Service Versioning</strong></p>
+
+<p>For this section, I decided to put a link to this excellent article
+<a href="http://blogs.msdn.com/donsmith/pages/VersioningWebServices.aspx">&ldquo;Versioning Web
+Services&rdquo;</a>
+ written by Don Smith. This article mainly discusses well-know practices
+to the versioning problem in Soap Services.</p>
+
+<p>This is all for now, I will continue discussing more topics about
+service design in my next posts.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2007/01/25/crud-interface-for-a-service-is-a-bad-practice/">CRUD Interface for a Service - Is a Bad Practice ?</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-01-25T00:00:00-03:00" pubdate data-updated="true">Jan 25<span>th</span>, 2007</time>
+        
+         | <a href="/blog/2007/01/25/crud-interface-for-a-service-is-a-bad-practice/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I have been reading in different places that using a CRUD (Create, Read,
+Update, Delete) interface for a service is considered a bad practice or
+anti-pattern. Therefore, this kind of interface should be avoided at all
+cost.</p>
+
+<p>I am not agree with this at all, when I hear the word CRUD, I assume
+something like this:</p>
+
+<ul>
+<li>CreateCustomer (Create new customer)</li>
+<li>ModifyCustomer (Modify an existing customer)</li>
+<li>DeleteCustomer (Delete an existing customer)</li>
+<li>FindCustomer (Find an existing customer)</li>
+</ul>
+
+
+<p>This is typical case of a CRUD interface to manage data related to a
+customer entity.</p>
+
+<p>What happens if those services represent real business events in the
+system that I am trying to model, and the design of them also adheres to
+the four tenets of service orientation, is that considered a bad
+practice as well ?.</p>
+
+<p>I do not think so.</p>
+
+<p>The sample given in this article <a href="http://msdn2.microsoft.com/en-us/library/ms954638.aspx">&ldquo;Principles of Service Design: Service
+Patterns and
+Anti-Patterns&rdquo;</a>
+ shows an ugly sample of CRUD interface, and it is ok to consider it an
+anti-pattern. However, not all the CRUD interfaces are modeled in that
+way, in fact, I have never seen such a bad design as the one shown in
+that sample.</p>
+
+<p>What do think ?. I would like to hear any opinion about this topic.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2007/01/22/tagged/">Tagged</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-01-22T00:00:00-03:00" pubdate data-updated="true">Jan 22<span>nd</span>, 2007</time>
+        
+         | <a href="/blog/2007/01/22/tagged/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Thanks <a href="http://solepano.blogspot.com/">Soledad</a> for tagging me.</p>
+
+<p>​1. I was born in Buenos Aires, Argentina and I lived there until 8
+months ago. Now, I am working for the Inter-American Development Bank in
+Washington DC but I have plans to go back to argentina soon.</p>
+
+<p>​2. I like to play video games in my spare time. My fist video game
+console was an Atari 600, it was a gift from my father, then I had a
+commodore 64. My latest acquisition is a PSP, and yes, I am thinking in
+buying a XBox 360.</p>
+
+<p>​3. I like sports; I used to play soccer twice a week with my friends,
+but I haven&rsquo;t played anymore since I moved to the DC. Now, I go biking a
+lot.</p>
+
+<p>​4. I got married with my wonderful girlfriend Romina just 9 months ago.</p>
+
+<p>​5. I started programming around 14 when I was in the high school, first
+with Pascal and Cobol, and next year with Visual Basic 3.0. I actually
+went to high school to be a car technician, but then, I changed my
+mind and I started studying Computer Science. By the way, I don&rsquo;t know
+anything about cars, just the usual things.</p>
+
+<p>Now it&rsquo;s time to tag another 5 people :
+<a href="http://weblogs.shockbyte.com.ar/rodolfof">Rodofo</a>, <a href="/gsusx">Jesus</a>,
+<a href="/dgonzalez">Diegog</a>, <a href="http://blogs.msdn.com/thehoggblog">Jason</a>, and
+<a href="http://staff.southworks.net/blogs/matiaswoloski">Matias</a>.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2007/01/08/windows-communication-foundation-compact-edition/">Windows Communication Foundation (Compact Edition)</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-01-08T00:00:00-03:00" pubdate data-updated="true">Jan 8<span>th</span>, 2007</time>
+        
+         | <a href="/blog/2007/01/08/windows-communication-foundation-compact-edition/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>The .NetCF team is working on a subset of WCF for the next version of
+the compact framework. Today I came accross this post &ldquo;<a href="http://blogs.msdn.com/romanbat/archive/2006/10/21/windows-communication-foundation-compact-edition-and-the-story-of-the-lunch-launcher.aspx">Windows
+Communication Foundation (Compact Edition) and the story of the Lunch
+Launcher</a>&#8220; from
+<a href="http://blogs.msdn.com/romanbat">Roman</a>, a bit late because it was
+published almost three months ago. Anyway,  it is still good news for
+the Windows Mobile community.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/12/11/service-interface-framework-sif/">Service Invocation Framework</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-12-11T00:00:00-03:00" pubdate data-updated="true">Dec 11<span>th</span>, 2006</time>
+        
+         | <a href="/blog/2006/12/11/service-interface-framework-sif/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>My friends Sergio Borromei (Microsoft Consulting) and Rodolfo
+Finochietti (Lagash) have recently released the first RTM of their
+Service Invocation Framework.</p>
+
+<p>This light-weight basically provides a collection of service adapters
+that a client application can use to consume a service with some
+location and implementation transparency.</p>
+
+<p>The client application only need to know the service contract to locate
+and consume the real service implementation, which can actually be a
+remoting object, a web service or an in-proc object to name a few.</p>
+
+<p>In my opinion, this kind of framework can be useful in scenarios
+where you need to interop with different technologies. This helps to
+minimize the dependency between the client application and those
+technologies and facilitate possible changes due to new requirements. </p>
+
+<p>These are some of the adapters that comes by default with the framework:</p>
+
+<ul>
+<li> Web Service Adapter: It can be used to execute any HTTP web service
+compliant with the Basic Profile. This adapter also provides a nice
+feature to generate the web service proxies on the fly using a
+wsdl definition. (Yes, there is not need to manually generate
+the proxies using a tool like wsdl.exe).</li>
+<li>Remoting Adapter: As it name says, it can be used to execute methods
+on a object published with remoting.</li>
+<li>InProc Adapter: This adapter is useful in scenarios where the client
+and service live in the same process, so any inter-process
+communication or data marshaling is not required.</li>
+<li>Pipeline Adapter: It can execute a collection of filters to modify
+the service&rsquo;s inbound or outbound messages.</li>
+</ul>
+
+
+<p>Let&rsquo;s go through a simple quickstart to show the main features of this
+framework:</p>
+
+<p>​1. First of all, we need to define a interface for our service
+implementation. In this sample, I decided to design a extremely complex
+one to return a &ldquo;Hello World&rdquo; message:</p>
+
+<p>public interface IHelloWorld</p>
+
+<p>{</p>
+
+<p>    string HelloWorld();</p>
+
+<p>}</p>
+
+<p>​2. As a second step, our real service implementation needs to implement
+the interface.  I used a web service, but it can be any other service
+implementation.</p>
+
+<p>[WebService(Namespace = &ldquo;<a href="http://tempuri.org/">http://tempuri.org/</a>&rdquo;)]</p>
+
+<p>[WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]</p>
+
+<p>public class Service : System.Web.Services.WebService, IHelloWorld</p>
+
+<p>{</p>
+
+<p>    public Service () {</p>
+
+<p> </p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    [WebMethod]</p>
+
+<p>    public string HelloWorld() {</p>
+
+<p>        return &ldquo;Hello World&rdquo;;</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>​3. Now, it is time to implement the client application. We have to add
+a the following configuration section to the application configuration
+file,</p>
+
+<p> </p>
+
+<p>&lt;configuration></p>
+
+<p>  &lt;configSections></p>
+
+<p>    &lt;section name=&ldquo;servicesInvocationFramework&rdquo;
+type=&ldquo;InvocationFramework.Core.Configuration.SectionHandler,
+InvocationFramework.Core, Version=1.1.0.0, Culture=neutral,
+PublicKeyToken=4396b271bcbb0166&rdquo; /></p>
+
+<p>  &lt;/configSections></p>
+
+<p> </p>
+
+<p>  &lt;servicesInvocationFramework></p>
+
+<p>    &lt;caller></p>
+
+<p>      &lt;serviceAdapters></p>
+
+<p>        &lt;serviceAdapter id=&ldquo;WebServicesAdapter&rdquo; order=&ldquo;0&rdquo;
+enabled=&ldquo;true&rdquo;
+type=&ldquo;InvocationFramework.Adapters.WebServices.WebServicesAdapter,
+InvocationFramework.Adapters.WebServices, Version=1.1.0.0,
+Culture=neutral, PublicKeyToken=4396b271bcbb0166&rdquo;></p>
+
+<p>          &lt;services></p>
+
+<p>            &lt;service name=&ldquo;SampleService&rdquo;
+wsdlLocation=&ldquo;<a href="http://localhost:9300/SampleService/Service.asmx?WSDL">http://localhost:9300/SampleService/Service.asmx?WSDL</a>&rdquo;
+contractType=&ldquo;Contracts.IHelloWorld, Contracts&rdquo;/></p>
+
+<p>          &lt;/services></p>
+
+<p>        &lt;/serviceAdapter></p>
+
+<p>      &lt;/serviceAdapters></p>
+
+<p>    &lt;/caller></p>
+
+<p>  &lt;/servicesInvocationFramework></p>
+
+<p>&lt;/configuration></p>
+
+<p>In a few words, this section says that we are going to use the service
+adapter to consume the service &#8221;SampleService&#8221;. This service also
+implements the contract IHelloWorld.</p>
+
+<p>The WSDL location is required because the adapter will generate the
+proxy to consume the service using that definition.</p>
+
+<p>​4. Finally, some code is required on the client application to locate
+the service and consume it.</p>
+
+<p>ServiceProxyBuilder&lt;IHelloWorld> factory = new
+ServiceProxyBuilder&lt;IHelloWorld>(&ldquo;SampleService&rdquo;);</p>
+
+<p>IHelloWorld service = factory.BuildProxy();</p>
+
+<p> </p>
+
+<p>Console.WriteLine(service.HelloWorld());</p>
+
+<p>It is as simple as that, the client receives a proxy class to consume
+the real service implementation. (All the inter-process communications
+and messages interchanges will be managed by the adapter).</p>
+
+<p>You can find more information about this framework in the <a href="http://weblogs.shockbyte.com.ar/rodolfof/archive/2006/12/08/10650.aspx">Rodolfo&rsquo;s
+blog</a>,
+and the <a href="http://www.codeplex.com/SIF">Service Invocation Framework web site
+(CodePlex)</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/11/29/recommendations-to-design-message-contracts/">Recommendations to Design Message Contracts</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-11-29T00:00:00-03:00" pubdate data-updated="true">Nov 29<span>th</span>, 2006</time>
+        
+         | <a href="/blog/2006/11/29/recommendations-to-design-message-contracts/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>These are some useful practices to design message contracts. They are
+based on my experience as developer on different software projects.</p>
+
+<ol>
+<li>Do not include business behavior on the messages</li>
+<li>Do not use datasets as messages</li>
+<li>Be aware of any extensibility point</li>
+</ol>
+
+
+<h6>Do not include business behavior on the messages</h6>
+
+<p>Always use simple DTO (Data Transfer Object) classes to transfer data
+between the web service and the client.</p>
+
+<p>Here, a DTO is a object that represents the data in a simple format
+whose only purpose is to transfer the data. There is no business logic
+and no database logic in these objects, just data.</p>
+
+<p>These will also map more closely to XML, and so will be likely to be
+compatible between the client and the service.</p>
+
+<p>This allows you to use whatever business-layer or data layer you like
+inside of the service, yet to only present the data itself to the
+clients.</p>
+
+<p>A DTO could contain some serialization logic when the mapping between
+the object state and XML is as not simple as it should be. This logic is
+usually implemented through the IXMLSerializable Interface, which
+provides the methods to serialize and deserialize an object to XML.</p>
+
+<p>I am not saying that a DTO must not contain any method, it actually can
+have some helper methods, but those methods are not going to be used by
+the client application. This is because the client will only receive a
+XML copy of the DTO object, it is not going to receive an instance of
+the DTO implementation class. (For instance, a .NET class).</p>
+
+<p>For example, we can have a method to sum up the total amount of an
+purchase order, this method basically enumerates each item in the order
+and adds the item amount to the total amount.  As I said before, this
+method will only be available on the service side.</p>
+
+<p> </p>
+
+<p>    1 [XmlRoot(&ldquo;Order&rdquo;)]</p>
+
+<p>    2 public class Order</p>
+
+<p>    3 {</p>
+
+<p>    4    private OrderItem[] _items;</p>
+
+<p>    5 </p>
+
+<p>    6    public Order()</p>
+
+<p>    7    {</p>
+
+<p>    8    }</p>
+
+<p>    9 </p>
+
+<p>   10    [XmlArray(&ldquo;Items&rdquo;)]</p>
+
+<p>   11    [XmlArrayItem(&ldquo;Item&rdquo;)]</p>
+
+<p>   12    public OrderItem[] Items</p>
+
+<p>   13    {</p>
+
+<p>   14      get { return _items; }</p>
+
+<p>   15      set { _items = value; }</p>
+
+<p>   16    }</p>
+
+<p>   17 </p>
+
+<p>   18    public decimal GetOrderTotal()</p>
+
+<p>   19    {</p>
+
+<p>   20      decimal total = 0;</p>
+
+<p>   21      foreach (OrderItem item in _items)</p>
+
+<p>   22      {</p>
+
+<p>   23        total += item.Amount;</p>
+
+<p>   24      }</p>
+
+<p>   25 </p>
+
+<p>   26      return total;</p>
+
+<p>   27    }</p>
+
+<p>   28 }</p>
+
+<p>   29 </p>
+
+<p>   30 public class OrderItem</p>
+
+<p>   31 {</p>
+
+<p>   32   private int _id;</p>
+
+<p>   33   private decimal _amount;</p>
+
+<p>   34 </p>
+
+<p>   35   public OrderItem()</p>
+
+<p>   36   {</p>
+
+<p>   37   }</p>
+
+<p>   38 </p>
+
+<p>   39   [XmlAttribute(&ldquo;Id&rdquo;)]</p>
+
+<p>   40   public int Id</p>
+
+<p>   41   {</p>
+
+<p>   42     get { return _id; }</p>
+
+<p>   43     set { _id = value; }</p>
+
+<p>   44   }</p>
+
+<p>   45 </p>
+
+<p>   46   [XmlAttribute(&ldquo;Amount&rdquo;)]</p>
+
+<p>   47   public decimal Amount</p>
+
+<p>   48   {</p>
+
+<p>   49     set { _amount = value; }</p>
+
+<p>   50     get { return _amount; }</p>
+
+<p>   51   }</p>
+
+<p>   52 }</p>
+
+<p>I know, you can modify the auto-generated proxy class on the client
+side( Usually, this class is auto generated by a tool using the
+service&rsquo;s WSDL. .NET and Java provide similar tools to perform this
+task ) to use the DTO implementation class instead of the auto-generated
+messages, but that goes against the interoperability principle of a web
+service. What happens if you need to support a new client platform in
+the future, for instance a PHP or action script client, are you going to
+implement the DTO in those platforms as well ?. Or if you simply change
+something in the message contract, you will have to deploy this
+change on every client application again.</p>
+
+<p>You can have similar problems when you try to expose a business entity
+like an NHibernate entity as a message for a web service. As I described
+before, the client will only receive an entire XML copy of the object
+graph, it is not going to receive an instance of business entity itself
+(And all its methods)</p>
+
+<p>This can be much worse if the design of business entity involves a
+relationship with many tables, since you can practically send a copy of
+entire database to the client application. This kind of class also
+presents serialization problems, they usually expose properties with
+types that can not be easily translated to XML.</p>
+
+<p>In this case, you will need an additional layer to transform or map the
+business objects to DTOs. This could easily be done on the service
+interface layer. The DTOs should not necessarily have the same
+properties or granularity level of the business object. For instance,
+a business entity with the following structure,</p>
+
+<p>    1 public class OrderStatus</p>
+
+<p>    2 {</p>
+
+<p>    3     private string _id;</p>
+
+<p>    4     private string _description;</p>
+
+<p>    5 </p>
+
+<p>    6     public OrderStatus()</p>
+
+<p>    7     {</p>
+
+<p>    8     }</p>
+
+<p>    9 </p>
+
+<p>   10     public string Id</p>
+
+<p>   11     {</p>
+
+<p>   12         get { return _id; }</p>
+
+<p>   13         set { _id = value; }</p>
+
+<p>   14     }</p>
+
+<p>   15 </p>
+
+<p>   16     public string Description</p>
+
+<p>   17     {</p>
+
+<p>   18         get { return _description; }</p>
+
+<p>   19         set { _description = value; }</p>
+
+<p>   20     }</p>
+
+<p>   21 }</p>
+
+<p>   22 </p>
+
+<p>   23 public class Order</p>
+
+<p>   24 {</p>
+
+<p>   25     private List&lt;OrderItem> _items = new List&lt;OrderItem>();</p>
+
+<p>   26     private OrderStatus _status;</p>
+
+<p>   27 </p>
+
+<p>   28     public Order(OrderStatus status)</p>
+
+<p>   29     {</p>
+
+<p>   30         _status = status;</p>
+
+<p>   31     }</p>
+
+<p>   32 </p>
+
+<p>   33     public OrderStatus Status</p>
+
+<p>   34     {</p>
+
+<p>   35         get { return _status; }</p>
+
+<p>   36     }</p>
+
+<p>   37 </p>
+
+<p>   38     public IList&lt;OrderItem> Items</p>
+
+<p>   39     {</p>
+
+<p>   40         get { _items; }</p>
+
+<p>   41     }</p>
+
+<p>   42 }</p>
+
+<p>could be represented in a different way</p>
+
+<p>    1 [XmlRoot(&ldquo;Order&rdquo;)]</p>
+
+<p>    2 public class Order</p>
+
+<p>    3 {</p>
+
+<p>    4     private string _statusId;</p>
+
+<p>    5     private string _statusDescription;</p>
+
+<p>    6     private OrderItem[] _items;</p>
+
+<p>    7 </p>
+
+<p>    8     public Order()</p>
+
+<p>    9     {</p>
+
+<p>   10     }</p>
+
+<p>   11 </p>
+
+<p>   12     [XmlArray(&ldquo;Items&rdquo;)]</p>
+
+<p>   13     [XmlArrayItem(&ldquo;Item&rdquo;)]</p>
+
+<p>   14     public OrderItem[] Items</p>
+
+<p>   15     {</p>
+
+<p>   16         get { return _items; }</p>
+
+<p>   17         set { _items = value; }</p>
+
+<p>   18     }</p>
+
+<p>   19 </p>
+
+<p>   20     [XmlElement(&ldquo;StatusId&rdquo;)]</p>
+
+<p>   21     public string StatusId</p>
+
+<p>   22     {</p>
+
+<p>   23         get { return _statusId; }</p>
+
+<p>   24         set { _statusId = value; }</p>
+
+<p>   25     }</p>
+
+<p>   26 </p>
+
+<p>   27     [XmlElement(&ldquo;StatusDescription&rdquo;)]</p>
+
+<p>   28     public string StatusDescription</p>
+
+<p>   29     {</p>
+
+<p>   30         get { return _statusDescription; }</p>
+
+<p>   31         set { _statusDescription = value; }</p>
+
+<p>   32     }</p>
+
+<p>   33 }</p>
+
+<h4></h4>
+
+<p>Do not use Datasets</p>
+
+<p>Datasets provide a bunch of cool features for data management, such as
+data ordering or data filtering. They are also great to transport data
+between internal application layers.</p>
+
+<p>However, they are an evil when we talk about interoperability with other
+platforms. The XML structure of a dataset is quite complex and really
+hard to represent in other platforms different from .NET. (Without
+mentioning the size of the payload generated after their serialization)</p>
+
+<p>If your service is going to be consumed by different kind of client
+platforms, or that is something certainly unknown, use a DTO instead.</p>
+
+<p>Be aware of any extensibility point</p>
+
+<p>You can not predict offhand any change on the service requirements, but
+you can minimize the risks adding extensibility points to the messages.</p>
+
+<p>For instance, using open XSD schemas or supporting a &ldquo;any
+element/attribute&rdquo; collection.</p>
+
+<p>WCF also supports this concept through the interface
+IExtensibleDataObject.</p>
+
+<p>    1 [DataContract]</p>
+
+<p>    2 public class MyDataContract : IExtensibleDataObject</p>
+
+<p>    3 {</p>
+
+<p>    4     private ExtensionDataObject extensionData;</p>
+
+<p>    5 </p>
+
+<p>    6     public ExtensionDataObject ExtensionData</p>
+
+<p>    7     {</p>
+
+<p>    8         get</p>
+
+<p>    9         {</p>
+
+<p>   10             return this.extensionData;</p>
+
+<p>   11         }</p>
+
+<p>   12 </p>
+
+<p>   13         set</p>
+
+<p>   14         {</p>
+
+<p>   15             this.extensionData = value;</p>
+
+<p>   16         }</p>
+
+<p>   17     }</p>
+
+<p>   18 }</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/22/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/blog/page/20/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

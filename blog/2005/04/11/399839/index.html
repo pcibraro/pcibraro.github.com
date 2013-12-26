@@ -1,0 +1,511 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Hosting the CLR within a custom action - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="Today, in order to develop a custom action for a Window Installer setup,
+you can choose between two options:   1. Writing a Native custom action &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2005/04/11/399839">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Hosting the CLR Within a Custom Action</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2005-04-11T00:00:00-03:00" pubdate data-updated="true">Apr 11<span>th</span>, 2005</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Today, in order to develop a custom action for a Window Installer setup,
+you can choose between two options:</p>
+
+<p>  1. Writing a Native custom action using the C language\
+  2. Writing a Managed custom action using any .NET compliant language</p>
+
+<p>Both options have different pros and cons, so I will start enumerating
+some of them:</p>
+
+<p>Native custom actions</p>
+
+<p>  Pros:</p>
+
+<p>    1. Access to the installer context information.\
+    2. Interop code not required.</p>
+
+<p>  Cons:</p>
+
+<p>    1. Require some understanding of Windows programming and C language
+as well.\
+    2. Lack of code protection and memory management, you are
+responsible to acquire and release all used resources.\
+    3. Find a problem can be a nightmare, for example, a memory leak
+problem.\
+    4. Hard to debug.\</p>
+
+<p>Managed custom actions</p>
+
+<p>  Pros:</p>
+
+<p>    1. Extremely easy to develop in any CLR compliant language.\
+    2. Easy to debug and find problems.</p>
+
+<p>  Cons:</p>
+
+<p>    1. Inability to get context information.\
+    2. Only deferred custom actions ( They run at the end, you can&rsquo;t
+change any condition or property during the install ).\</p>
+
+<h3>A new option</h3>
+
+<p>To overcome the disadvantages of both options, the last week I developed
+a native custom action which hosts the CRL Runtime and executes a
+managed custom action. This solution combines the best of both worlds,
+and you can get many benefits of using it. \
+It contains three parts, a native custom action, a managed custom
+action, and a small msi framework to be used within the managed custom
+action. I will describe each one in detail next.</p>
+
+<h3>Native custom action project</h3>
+
+<p>The native custom action is a normal custom action written in C, which
+is responsible to host the CLR runtime and call to the managed custom
+action. \
+Basically, this custom action contains code to do the following things:</p>
+
+<p>​1. Loads the CLR runtime\
+2. Gets the managed custom action assembly from the msi binary table\
+3. Copies the assembly to the user temp folder\
+4. Loads the assembly within the CLR instance\
+5. Executes the managed custom action\
+6. Unloads the CLR runtime\</p>
+
+<p>You can find all this code under the CLRHosting folder. This code is
+always the same, and you won&rsquo;t have to change almost anything of it,
+except some parameters located in the file &ldquo;String.h&rdquo;:</p>
+
+<p>// CLR version\
+static LPCWSTR szCLRVersion = L&#8221;v1.1.4322&#8221;;\
+\
+// CLR flavor, workstation or server\
+static LPCWSTR szCLRFlavor = L&#8221;wks&#8221;;\
+\
+// Application domain name\
+static LPCWSTR szApplicationName = L&#8221;MsiHosting&#8221;;\
+\
+// Configuration file assigned to the application domain. You can attach
+this file to the binary table in the msi\
+static TCHAR* szApplicationConfigFile = &ldquo;MsiHosting.config&rdquo;;\
+\
+// Entry point of the managed custom action\
+static OLECHAR FAR* szCustomActionMember = L&#8221;RunActions&#8221;;\
+\
+// Managed custom action assembly\
+static TCHAR* szAssemblyName = &ldquo;CustomActionRuntime&rdquo;;\
+\
+// Managed custom action class name\
+static TCHAR* szClassName = &ldquo;CustomActionRuntime.Runtime&rdquo;;\
+\
+// Key used to locate the assembly file within the msi binary table\
+static TCHAR* szCustomActionRuntimeBinaryKey = &ldquo;CustomActionRuntime&rdquo;;\
+\
+// Key used to locate the configuration file within the msi binary
+table\
+static TCHAR* szApplicationConfigFileBinaryKey = &ldquo;MsiHostingConfig&rdquo;;</p>
+
+<h3>Managed custom action project</h3>
+
+<p>I wrote the project using C#, it includes the managed custom action and
+a small framework to manipulate the installer context.\
+You can find this code under the CustomActionRuntime folder.\
+The managed custom action should be implemented in &ldquo;CustomAction.cs&rdquo;,
+and usually looks like this:</p>
+
+<p>public class CustomAction\
+{\
+  #region Constructors\
+\
+  public CustomAction()\
+  {\
+  }\
+\
+  #endregion\
+\
+  public void Run( InstallerContext context )\
+  {\
+    // TODO: do something\
+  }\
+}\</p>
+
+<p>The context parameter represents a facade to the msi framework, through
+this framework you can query and modify different things of the
+installer context, not to mention the fact of executing dynamic SQL
+query against the msi tables.</p>
+
+<p>This sample makes use of this framework to query all available
+properties, it is a useless sample, but helps to show that
+functionality:</p>
+
+<p>public class CustomAction\
+{\
+  #region Constructors\
+\
+  public CustomAction()\
+  {\
+  }\
+\
+  #endregion\
+\
+  public void Run( InstallerContext context )\
+  {\
+    View view = context.OpenView( &ldquo;SELECT * FROM Property&rdquo; );\
+    RecordCollection records = view.Execute();\
+\
+    foreach( Record record in records )\
+    {\
+      foreach( Field field in record.Fields )\
+      {\
+       string value = field.GetString();\
+      }\
+    }\
+\
+    view.Close();\
+  }\
+}</p>
+
+<h3>Using this custom action within Wix</h3>
+
+<p>Until here I described the different parts of this solution, now I will
+describe how to integrate it in your installer using Wix.\
+To start I picked up a sample provided in this
+<a href="http://www.tramontana.co.hu/wix/lesson3.html#custom_actions">tutorial</a>,
+by the way an excellent tutorial to learn Wix.\
+This sample shows how to validate a PID using a custom action, so I&rsquo;ll
+modify it a little bit to use this solution.</p>
+
+<p><strong>1. &ldquo;Including the native custom action&rdquo;</strong>\</p>
+
+<p>Go to the custom action definition section, and replace this line :</p>
+
+<p>&lt;CustomAction Id=&ldquo;CheckingPID&rdquo; BinaryKey=&ldquo;CheckPID&rdquo; DllEntry=&ldquo;CheckPID&rdquo;
+/></p>
+
+<p>For</p>
+
+<p>&lt;CustomAction Id=&ldquo;CheckingPID&rdquo; BinaryKey=&ldquo;CheckPID&rdquo; DllEntry=&ldquo;Execute&rdquo;
+/></p>
+
+<p>You have to change only the DllEntry attribute, because my solution
+exports a different dll entry. ( &ldquo;Execute&rdquo; instead of &ldquo;CheckPID&rdquo; )</p>
+
+<p><strong>2. &ldquo;Modifying the binary table&rdquo;</strong>\</p>
+
+<p>Go to the binaries definition section, and replace this line :</p>
+
+<p>&lt;Binary Id=&ldquo;CheckPID&rdquo; src=&ldquo;Binary\CheckPID.dll&rdquo; /></p>
+
+<p>For</p>
+
+<p>&lt;!&mdash; Files required to run the .NET custom action &mdash;>\
+&lt;!&mdash; Native custom action &mdash;>\
+&lt;Binary Id=&ldquo;CheckPID&rdquo; src=&ldquo;Binary\CLRHosting.dll&rdquo; />\
+\
+&lt;!&mdash; Managed custom action assembly file, this key can be changed from
+Strings.h &mdash;>\
+&lt;Binary Id=&ldquo;CustomActionRuntime&rdquo; src=&ldquo;Binary\CustomActionRuntime.dll&rdquo;
+/>\
+\
+&lt;!&mdash; AppDomain config file, this key can be changed from Strings.h
+&mdash;>\
+&lt;Binary Id=&ldquo;MsiHostingConfig&rdquo; src=&ldquo;Binary\MsiHosting.config&rdquo; />\</p>
+
+<p>This change includes the files required to run my solution.</p>
+
+<p><strong>3. &ldquo;Compiling the solution&rdquo;</strong>\</p>
+
+<p>Open the &ldquo;MSIHosting.sln&rdquo; solution file with visual studio and compile
+it. This compilation will produce the binary files required to run the
+custom action.</p>
+
+<p><strong>4. &ldquo;Copying the binary files&rdquo;</strong>\</p>
+
+<p>Copy the following files to the &ldquo;Binary&rdquo; folder:\
+\
+CLRHosting\Debug\CLRHosting.dll\
+CustomActionRuntime\bin\debug\CustomActionRuntime.dll\
+CustomActionRuntime\MsiHosting.config\</p>
+
+<p>After all these steps, you will able to compile the wix source file to
+get the final msi.\
+\
+<a href="/images/legacy/MSIHosting.zip">Download Source Code</a></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2005-04-11T00:00:00-03:00" pubdate data-updated="true">Apr 11<span>th</span>, 2005</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/wix/'>Wix</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2005/04/11/399839/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2005/04/11/399839/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2005/03/30/396338/" title="Previous Post: Installing a SQL database with WIX">&laquo; Installing a SQL database with WIX</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2005/04/14/400351/" title="Next Post: Writing managed custom actions in an easy way">Writing managed custom actions in an easy way &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2005/04/11/399839/';
+        var disqus_url = 'http://cibrax.me/blog/2005/04/11/399839/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
