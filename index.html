@@ -9,7 +9,7 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="ADFS 2.0 supports multiple authentication methods through authentication handlers that are mutually exclusive. If one of the handlers runs, the &hellip;">
+  <meta name="description" content="ADFS 2.0 only supports SAML 2.0 and WS-Federation for doing single sign on for web applications and services. However, some new development platforms &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +79,161 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTeckture Authorization Server</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-12-27T10:23:00-03:00" pubdate data-updated="true">Dec 27<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>ADFS 2.0 only supports SAML 2.0 and WS-Federation for doing single sign on for web applications and services. However, some new development platforms such as iOS only support OAuth 2.0, which makes the use of ADFS a bit tricky. ADFS for Windows Server 2012 R2 already provides some limited support for JSON Web Tokens (JWT) with the OAuth 2.0 the code flow (As it is described in this <a href="http://www.cloudidentity.com/blog/2013/07/30/securing-a-web-api-with-windows-server-2012-r2-adfs-and-katana/">excellent post</a> by Vittorio).</p>
+
+<p>For some other scenarios in which your applications or services rely on JWTs for doing authentication/authorization, the ThinkTeckure Authorization Server represents a very nice alternative, which integrates really well with ADFS. The Authorization Server can act as a brige or broker between client apps that use OAuth 2.0 to get a JWT, and ADFS, which is used for authenticating the users.</p>
+
+<p>The configuration of the Authorization Server is very simple. Once you get Authorization Server deployed in IIS, it uses Entity Framework code first to automatically generate the backend database for you on the first use. After that, you only need to change the configuration files to trust ADFS as it is shown bellow,</p>
+
+<p>[Authorization Server Folder]\Configuration\identityModel.config</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;issuerNameRegistry</span> <span class="na">type=</span><span class="s">&quot;System.IdentityModel.Tokens.ValidatingIssuerNameRegistry, </span>
+</span><span class='line'><span class="s">  System.IdentityModel.Tokens.ValidatingIssuerNameRegistry&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;authority</span> <span class="na">name=</span><span class="s">&quot;http://[your ADFS server]/adfs/services/trust&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;keys&gt;</span>
+</span><span class='line'>          <span class="nt">&lt;add</span> <span class="na">thumbprint=</span><span class="s">&quot;[signing cert thumprint]&quot;</span><span class="nt">/&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;/keys&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;validIssuers&gt;</span>
+</span><span class='line'>          <span class="nt">&lt;add</span> <span class="na">name=</span><span class="s">&quot;http://[your ADFS server]/adfs/services/trust&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;/validIssuers&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/authority&gt;</span>
+</span><span class='line'><span class="nt">&lt;/issuerNameRegistry&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>[Authorization Server Folder]\Configuration\identityModel.services.config</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;system.identityModel.services&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;federationConfiguration&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;wsFederation</span> <span class="na">passiveRedirectEnabled=</span><span class="s">&quot;true&quot;</span>
+</span><span class='line'> <span class="na">issuer=</span><span class="s">&quot;https://[your ADFS server]/adfs/ls/&quot;</span> <span class="na">realm=</span><span class="s">&quot;urn:authorizationserver&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/federationConfiguration&gt;</span>
+</span><span class='line'><span class="nt">&lt;/system.identityModel.services&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>urn:authorizationserver is the Relying Party identifier I used for configuring Authorization Server in ADFS. In ADFS, you only to configure a new relying party with a WS-Federation endpoint, and set the URL of the Authorization Server. Make also sure the Relying Party identifier matches the one you configured in Authorization Server.</p>
+
+<p>The following code shows how to get a JWT from Authorization Server using the Resource Owner Flow (The user is authenticated by Authorization Server in ADFS)</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">private</span> <span class="k">static</span> <span class="kt">string</span> <span class="nf">GetToken</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">ServicePointManager</span><span class="p">.</span><span class="n">ServerCertificateValidationCallback</span> <span class="p">=</span>
+</span><span class='line'>      <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">cert</span><span class="p">,</span> <span class="n">chain</span><span class="p">,</span> <span class="n">ssl</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="k">true</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">HttpClient</span> <span class="n">client</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpClient</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">HttpRequestMessage</span> <span class="n">request</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpRequestMessage</span><span class="p">(</span><span class="n">HttpMethod</span><span class="p">.</span><span class="n">Post</span><span class="p">,</span>
+</span><span class='line'>      <span class="s">&quot;https://[your auth server]/[App namespace in Authorization Server]/oauth/token&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">request</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="s">&quot;Authorization&quot;</span><span class="p">,</span>
+</span><span class='line'>      <span class="s">&quot;Basic &quot;</span> <span class="p">+</span> <span class="n">Convert</span><span class="p">.</span><span class="n">ToBase64String</span><span class="p">(</span><span class="n">System</span><span class="p">.</span><span class="n">Text</span><span class="p">.</span><span class="n">ASCIIEncoding</span><span class="p">.</span><span class="n">ASCII</span><span class="p">.</span><span class="n">GetBytes</span><span class="p">(</span>
+</span><span class='line'>          <span class="kt">string</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span><span class="s">&quot;{0}:{1}&quot;</span><span class="p">,</span> <span class="s">&quot;[client id]&quot;</span><span class="p">,</span> <span class="s">&quot;[client secret]&quot;</span><span class="p">))));</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">request</span><span class="p">.</span><span class="n">Content</span> <span class="p">=</span> <span class="k">new</span> <span class="n">FormUrlEncodedContent</span><span class="p">(</span><span class="k">new</span> <span class="n">Dictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>         <span class="p">{</span><span class="s">&quot;grant_type&quot;</span><span class="p">,</span> <span class="s">&quot;password&quot;</span><span class="p">},</span>
+</span><span class='line'>         <span class="p">{</span><span class="s">&quot;username&quot;</span><span class="p">,</span> <span class="s">&quot;[account]&quot;</span><span class="p">},</span> <span class="c1">//Windows account name without domain</span>
+</span><span class='line'>         <span class="p">{</span><span class="s">&quot;password&quot;</span><span class="p">,</span> <span class="s">&quot;[password]&quot;</span><span class="p">},</span>
+</span><span class='line'>         <span class="p">{</span><span class="s">&quot;scope&quot;</span><span class="p">,</span> <span class="s">&quot;All&quot;</span><span class="p">}</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">HttpResponseMessage</span> <span class="n">response</span> <span class="p">=</span> <span class="n">client</span><span class="p">.</span><span class="n">SendAsync</span><span class="p">(</span><span class="n">request</span><span class="p">).</span><span class="n">Result</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">response</span><span class="p">.</span><span class="n">EnsureSuccessStatusCode</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">JObject</span> <span class="n">json</span> <span class="p">=</span> <span class="n">JObject</span><span class="p">.</span><span class="n">Parse</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">Content</span><span class="p">.</span><span class="n">ReadAsStringAsync</span><span class="p">().</span><span class="n">Result</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">string</span> <span class="n">accessToken</span> <span class="p">=</span> <span class="n">json</span><span class="p">[</span><span class="s">&quot;access_token&quot;</span><span class="p">].</span><span class="n">ToString</span><span class="p">();</span>
+</span><span class='line'>    <span class="kt">string</span> <span class="n">refreshToken</span> <span class="p">=</span> <span class="n">json</span><span class="p">[</span><span class="s">&quot;refresh_token&quot;</span><span class="p">].</span><span class="n">ToString</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">accessToken</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -2329,94 +2484,6 @@ error response is returned to the client.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/05/21/authentication-in-web-apis-keys-oauth-or-hmac/">Authentication in Web APIs. Keys, OAuth or HMAC</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-05-21T00:00:00-03:00" pubdate data-updated="true">May 21<span>st</span>, 2013</time>
-        
-         | <a href="/blog/2013/05/21/authentication-in-web-apis-keys-oauth-or-hmac/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Most of the Web APIs available out there in the web nowadays use some
-kind of authentication for identifying client applications. Although
-they implement authentication in different ways, they can be typically
-categorized in three main groups, services that use Keys, OAuth or HMAC.</p>
-
-<p>Keys is the first scenario and probably the simplest one. Every client
-application is identified with a simple and fixed application key. This
-authentication mechanism is perhaps a bit weak, but the data that the
-service has to offer is not sensitive at all. The data is available for
-everyone with a key, and it’s pretty much used for public services such
-as Google maps or a search for public pictures in Instagram for example.
-The only purpose of the key is to identify clients and apply different
-SLA (service level agreements) such as api quotas, availability, etc.</p>
-
-<p>HMAC is typically used for consuming sensitive data that is only
-consumed by his owner and not shared with anyone else. This kind of
-authentication is typically used in multitenant applications, where a
-tenant is the owner of the data. This model fits real well with cloud
-computing where a vendor such as AWS or Windows Azure use a key for
-identifying the tenant and provide the right services and private data.
-No matter which client application is used to consume the services and
-data, the main purpose of the key is to identify the tenant. Hawk is new
-specification born in this area to standardize how HMAC
-authentication.  </p>
-
-<p>OAuth is last one and probably the most complicated one. It was born
-with the idea of delegating authorization in the web 2.0. The service
-who owns the data can use OAuth to share that data with other services
-or applications without compromising the owner credentials.</p>
-
-<p>The analogy given by Eran Hammer Lahav in this post &ldquo;<a href="http://www.hueniverse.com/hueniverse/2007/09/explaining-oaut.html">Explaining
-OAuth</a>&rdquo;
-is very close to what the specification tries to address,</p>
-
-<p><em>&ldquo;Many luxury cars today come with a valet key. It is a special key you
-give the parking attendant and unlike your regular key, will not allow
-the car to drive more than a mile or two. Some valet keys will not open
-the trunk, while others will block access to your onboard cell phone
-address book. Regardless of what restrictions the valet key imposes, the
-idea is very clever. You give someone limited access to your car with a
-special key, while using another key to unlock everything else.&rdquo;</em></p>
-
-<p>This kind of authentication makes a lot of sense in social media
-services like Twitter, Facebook, Windows Live or Google to name a few,
-where the service owns some private data like contacts or pictures that
-can shared with other applications without putting the user credentials
-into risk.</p>
-
-<p>OAuth assigns a key to every different client application allowed to
-consume the data, so the access can easily be revoked by disabling the
-key associated that client application.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -2432,6 +2499,10 @@ key associated that client application.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTeckture Authorization Server</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
@@ -2445,10 +2516,6 @@ key associated that client application.</p>
     
       <li class="post">
         <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
       </li>
     
   </ul>

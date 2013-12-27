@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="One of the features supported by Hawk, an HTTP authentication protocol
-based on HMAC, is to provide read-only access to a Web API for a short
-period &hellip;">
+  <meta name="description" content="Most of the Web APIs available out there in the web nowadays use some
+kind of authentication for identifying client applications. Although
+they &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +81,94 @@ period &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2013/05/21/authentication-in-web-apis-keys-oauth-or-hmac/">Authentication in Web APIs. Keys, OAuth or HMAC</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-21T00:00:00-03:00" pubdate data-updated="true">May 21<span>st</span>, 2013</time>
+        
+         | <a href="/blog/2013/05/21/authentication-in-web-apis-keys-oauth-or-hmac/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Most of the Web APIs available out there in the web nowadays use some
+kind of authentication for identifying client applications. Although
+they implement authentication in different ways, they can be typically
+categorized in three main groups, services that use Keys, OAuth or HMAC.</p>
+
+<p>Keys is the first scenario and probably the simplest one. Every client
+application is identified with a simple and fixed application key. This
+authentication mechanism is perhaps a bit weak, but the data that the
+service has to offer is not sensitive at all. The data is available for
+everyone with a key, and it’s pretty much used for public services such
+as Google maps or a search for public pictures in Instagram for example.
+The only purpose of the key is to identify clients and apply different
+SLA (service level agreements) such as api quotas, availability, etc.</p>
+
+<p>HMAC is typically used for consuming sensitive data that is only
+consumed by his owner and not shared with anyone else. This kind of
+authentication is typically used in multitenant applications, where a
+tenant is the owner of the data. This model fits real well with cloud
+computing where a vendor such as AWS or Windows Azure use a key for
+identifying the tenant and provide the right services and private data.
+No matter which client application is used to consume the services and
+data, the main purpose of the key is to identify the tenant. Hawk is new
+specification born in this area to standardize how HMAC
+authentication.  </p>
+
+<p>OAuth is last one and probably the most complicated one. It was born
+with the idea of delegating authorization in the web 2.0. The service
+who owns the data can use OAuth to share that data with other services
+or applications without compromising the owner credentials.</p>
+
+<p>The analogy given by Eran Hammer Lahav in this post &ldquo;<a href="http://www.hueniverse.com/hueniverse/2007/09/explaining-oaut.html">Explaining
+OAuth</a>&rdquo;
+is very close to what the specification tries to address,</p>
+
+<p><em>&ldquo;Many luxury cars today come with a valet key. It is a special key you
+give the parking attendant and unlike your regular key, will not allow
+the car to drive more than a mile or two. Some valet keys will not open
+the trunk, while others will block access to your onboard cell phone
+address book. Regardless of what restrictions the valet key imposes, the
+idea is very clever. You give someone limited access to your car with a
+special key, while using another key to unlock everything else.&rdquo;</em></p>
+
+<p>This kind of authentication makes a lot of sense in social media
+services like Twitter, Facebook, Windows Live or Google to name a few,
+where the service owns some private data like contacts or pictures that
+can shared with other applications without putting the user credentials
+into risk.</p>
+
+<p>OAuth assigns a key to every different client application allowed to
+consume the data, so the access can easily be revoked by disabling the
+key associated that client application.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1686,249 +1774,6 @@ and
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2012/09/10/consuming-the-amazon-s3-service-from-a-win8-metro-application/">Consuming the Amazon S3 Service From a Win8 Metro Application</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-09-10T00:00:00-03:00" pubdate data-updated="true">Sep 10<span>th</span>, 2012</time>
-        
-         | <a href="/blog/2012/09/10/consuming-the-amazon-s3-service-from-a-win8-metro-application/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>As many of the existing Http APIs for Cloud Services, AWS also provides
-a set of different platform SDKs for hiding many of complexities present
-in the APIs. While there is a platform SDK for .NET, which is open
-source and available in C#, that SDK does not work in Win8 Metro
-Applications for the changes introduced in WinRT. WinRT offers a
-complete different set of APIs for doing I/O operations such as doing
-http calls or using cryptography for signing or encrypting data, two
-aspects that are absolutely necessary for consuming AWS. All the I/O
-APIs available as part of WinRT are asynchronous, and uses the TPL model
-for .NET applications (HTML and JavaScript Metro applications use a
-model based in promises, which is similar concept). </p>
-
-<p>In the case of S3, the http Authorization header is used for two
-purposes, authenticating clients and make sure the messages were not
-altered while they were in transit. For doing that, it uses a signature
-or hash of the message content and some of the headers using a symmetric
-key (That&rsquo;s just one of the available mechanisms). Windows Azure for
-example also uses the same mechanism in many of its APIs.</p>
-
-<p>There are three challenges that any developer working for first time in
-Metro will have to face to consume S3, the new WinRT APIs, the
-asynchronous nature of them and the complexity introduced for generating
-the Authorization header. Having said that, I decided to write this post
-with some of the gotchas I found myself trying to consume this Amazon
-service.</p>
-
-<p>​1. Generating the signature for the Authorization header</p>
-
-<p>All the cryptography APIs in WinRT are available under
-Windows.Security.Cryptography namespace. Many of operations available in
-these APIs uses the concept of buffers (IBuffer) for representing a
-chunk of binary data. As you will see in the example below, these
-buffers are mainly generated with the use of static methods in a WinRT
-class CryptographicBuffer available as part of the namespace previously
-mentioned.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">private</span> <span class="kt">string</span> <span class="nf">DeriveAuthToken</span><span class="p">(</span><span class="kt">string</span> <span class="n">resource</span><span class="p">,</span> <span class="kt">string</span> <span class="n">httpMethod</span><span class="p">,</span> <span class="kt">string</span> <span class="n">timestamp</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="kt">var</span> <span class="n">stringToSign</span> <span class="p">=</span> <span class="kt">string</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span><span class="s">&quot;{0}\n&quot;</span> <span class="p">+</span>
-</span><span class='line'>      <span class="s">&quot;\n&quot;</span> <span class="p">+</span>
-</span><span class='line'>      <span class="s">&quot;\n&quot;</span> <span class="p">+</span>
-</span><span class='line'>      <span class="s">&quot;\n&quot;</span> <span class="p">+</span>
-</span><span class='line'>      <span class="s">&quot;x-amz-date:{1}\n&quot;</span> <span class="p">+</span>
-</span><span class='line'>      <span class="s">&quot;/{2}/&quot;</span><span class="p">,</span> <span class="n">httpMethod</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">resource</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="kt">var</span> <span class="n">algorithm</span> <span class="p">=</span> <span class="n">MacAlgorithmProvider</span><span class="p">.</span><span class="n">OpenAlgorithm</span><span class="p">(</span><span class="s">&quot;HMAC_SHA1&quot;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="kt">var</span> <span class="n">keyMaterial</span> <span class="p">=</span> <span class="n">CryptographicBuffer</span><span class="p">.</span><span class="n">CreateFromByteArray</span><span class="p">(</span><span class="n">Encoding</span><span class="p">.</span><span class="n">UTF8</span><span class="p">.</span><span class="n">GetBytes</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">secret</span><span class="p">));</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="kt">var</span> <span class="n">hmacKey</span> <span class="p">=</span> <span class="n">algorithm</span><span class="p">.</span><span class="n">CreateKey</span><span class="p">(</span><span class="n">keyMaterial</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="kt">var</span> <span class="n">signature</span> <span class="p">=</span> <span class="n">CryptographicEngine</span><span class="p">.</span><span class="n">Sign</span><span class="p">(</span>
-</span><span class='line'>                <span class="n">hmacKey</span><span class="p">,</span>
-</span><span class='line'>                <span class="n">CryptographicBuffer</span><span class="p">.</span><span class="n">CreateFromByteArray</span><span class="p">(</span><span class="n">Encoding</span><span class="p">.</span><span class="n">UTF8</span><span class="p">.</span><span class="n">GetBytes</span><span class="p">(</span><span class="n">stringToSign</span><span class="p">))</span>
-</span><span class='line'>            <span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="k">return</span> <span class="n">CryptographicBuffer</span><span class="p">.</span><span class="n">EncodeToBase64String</span><span class="p">(</span><span class="n">signature</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The algorithm that determines the information or content you need to use
-for generating the signature is very well described as part of the AWS
-documentation. In this case, this method is generating a signature
-required for creating a new bucket. A HmacSha1 hash is computed using a
-secret or symetric key provided by AWS in the management console. \
- \
-2. Sending an Http Request to the S3 service</p>
-
-<p>WinRT also ships with the System.Net.Http.HttpClient that was first
-introduced some months ago with ASP.NET Web API. This client provides a
-rich interface on top the traditional WebHttpRequest class, and also
-solves some of limitations found in this last one. There are a few
-things that don&rsquo;t work with a raw WebHttpRequest such as setting the
-Host header, which is something absolutely required for consuming S3.
-Also, HttpClient is more friendly for doing unit tests, as it receives a
-HttpMessageHandler as part of the constructor that can fake to emulate a
-real http call. This is how the code for consuming the service with
-HttpClient looks like,</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">async</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">S3Response</span><span class="p">&gt;</span> <span class="n">CreateBucket</span><span class="p">(</span><span class="kt">string</span> <span class="n">name</span><span class="p">,</span> <span class="kt">string</span> <span class="n">region</span> <span class="p">=</span> <span class="k">null</span><span class="p">,</span> <span class="k">params</span> <span class="kt">string</span><span class="p">[]</span> <span class="n">acl</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="kt">var</span> <span class="n">timestamp</span> <span class="p">=</span> <span class="kt">string</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span><span class="s">&quot;{0:r}&quot;</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">.</span><span class="n">UtcNow</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">var</span> <span class="n">auth</span> <span class="p">=</span> <span class="n">DeriveAuthToken</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s">&quot;PUT&quot;</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">var</span> <span class="n">request</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpRequestMessage</span><span class="p">(</span><span class="n">HttpMethod</span><span class="p">.</span><span class="n">Put</span><span class="p">,</span> <span class="s">&quot;http://s3.amazonaws.com/&quot;</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">request</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">Host</span> <span class="p">=</span> <span class="kt">string</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span><span class="s">&quot;{0}.s3.amazonaws.com&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">request</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">TryAddWithoutValidation</span><span class="p">(</span><span class="s">&quot;Authorization&quot;</span><span class="p">,</span> <span class="s">&quot;AWS &quot;</span> <span class="p">+</span> <span class="k">this</span><span class="p">.</span><span class="n">key</span> <span class="p">+</span> <span class="s">&quot;:&quot;</span> <span class="p">+</span> <span class="n">auth</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">request</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="s">&quot;x-amz-date&quot;</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">var</span> <span class="n">client</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpClient</span><span class="p">();</span>
-</span><span class='line'>    <span class="kt">var</span> <span class="n">response</span> <span class="p">=</span> <span class="k">await</span> <span class="n">client</span><span class="p">.</span><span class="n">SendAsync</span><span class="p">(</span><span class="n">request</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">return</span> <span class="k">new</span> <span class="n">S3Response</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>         <span class="n">Succeed</span> <span class="p">=</span> <span class="n">response</span><span class="p">.</span><span class="n">StatusCode</span> <span class="p">==</span> <span class="n">HttpStatusCode</span><span class="p">.</span><span class="n">OK</span><span class="p">,</span>
-</span><span class='line'>         <span class="n">Message</span> <span class="p">=</span> <span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">Content</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span> <span class="p">?</span>
-</span><span class='line'>            <span class="k">await</span> <span class="n">response</span><span class="p">.</span><span class="n">Content</span><span class="p">.</span><span class="n">ReadAsStringAsync</span><span class="p">()</span> <span class="p">:</span> <span class="k">null</span>
-</span><span class='line'>     <span class="p">};</span>
-</span><span class='line'> <span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>You will notice a few additional things in this code. By default,
-HttpClient validates the values for some well-know headers, and
-Authorization is one of them. It won&rsquo;t allow you to set a value with &ldquo;:&rdquo;
-on it, which is something that S3 expects. However, that&rsquo;s not a problem
-at all, as you can skip the validation by using the
-TryAddWithoutValidation method. \
-Also, the code is heavily relying on the new async and await keywords to
-transform all the asynchronous calls into synchronous ones. In case you
-would want to unit test this code and faking the call to the real S3
-service, you should have to modify it to inject a custom
-HttpMessageHandler into the HttpClient. The following implementation
-illustrates this concept,</p>
-
-<p>In case you would want to unit test this code and faking the call to the
-real S3 service, you should have to modify it to inject a custom
-HttpMessageHandler into the HttpClient. The following implementation
-illustrates this concept,</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">FakeHttpMessageHandler</span> <span class="p">:</span> <span class="n">HttpMessageHandler</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="n">HttpResponseMessage</span> <span class="n">response</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">public</span> <span class="nf">FakeHttpMessageHandler</span><span class="p">(</span><span class="n">HttpResponseMessage</span> <span class="n">response</span><span class="p">)</span>
-</span><span class='line'>  <span class="p">{</span>
-</span><span class='line'>       <span class="k">this</span><span class="p">.</span><span class="n">response</span> <span class="p">=</span> <span class="n">response</span><span class="p">;</span>
-</span><span class='line'>   <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="k">protected</span> <span class="k">override</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;</span> <span class="n">SendAsync</span><span class="p">(</span><span class="n">HttpRequestMessage</span> <span class="n">request</span><span class="p">,</span> <span class="n">System</span><span class="p">.</span><span class="n">Threading</span><span class="p">.</span><span class="n">CancellationToken</span> <span class="n">cancellationToken</span><span class="p">)</span>
-</span><span class='line'>   <span class="p">{</span>
-</span><span class='line'>      <span class="kt">var</span> <span class="n">tcs</span> <span class="p">=</span> <span class="k">new</span> <span class="n">TaskCompletionSource</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;();</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="n">tcs</span><span class="p">.</span><span class="n">SetResult</span><span class="p">(</span><span class="n">response</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="k">return</span> <span class="n">tcs</span><span class="p">.</span><span class="n">Task</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>You can use this handler for injecting any response while you are unit
-testing the code.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/3/">&larr; Older</a>
@@ -1946,6 +1791,10 @@ testing the code.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTeckture Authorization Server</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
@@ -1959,10 +1808,6 @@ testing the code.</p>
     
       <li class="post">
         <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
       </li>
     
   </ul>

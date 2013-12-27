@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="Deployment is considered today as one of the major pain points in the
-Windows Azure platform.  A simple application deployment today can take
-around &hellip;">
+  <meta name="description" content="We have been working a lot lately with PowerShell as part of our star
+product at Tellago Studios, “Moesion”. One of the main features we
+provide in &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +81,77 @@ around &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/11/28/leveraging-nuget-as-a-central-repository-for-powershell-modules/">Leveraging NuGet as a Central Repository for PowerShell Modules</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-11-28T00:00:00-03:00" pubdate data-updated="true">Nov 28<span>th</span>, 2011</time>
+        
+         | <a href="/blog/2011/11/28/leveraging-nuget-as-a-central-repository-for-powershell-modules/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>We have been working a lot lately with PowerShell as part of our star
+product at Tellago Studios, “Moesion”. One of the main features we
+provide in Moesion is the ability to execute PowerShell commands
+remotely in a given server using a web mobile interface (You can read
+more in my previous
+<a href="http://weblogs.asp.net/cibrax/archive/2011/09/19/pub-sub-in-the-cloud-for-it-management.aspx">post</a>
+about Moesion).</p>
+
+<p>One of the things we realized in all this time is that PowerShell lacks
+of a central repository where IT guys or we, the developers, can easily
+grab and reuse commands.  All the commands or modules are basically
+spread across multiple places or websites, like personal blogs, TechNet
+or CodePlex projects to name a few making the search of them very hard.
+You are usually limited to use your favorite search engine and copy what
+you find. In addition, there is not an easy way to reuse, extend or
+version these commands, which also limits any contribution that you
+could make to the community. </p>
+
+<p>My friend Jose wrote a great
+<a href="http://joseoncode.com/2011/11/24/sharing-powershell-modules-easily/">post</a>
+the other day about the importance of reusing PowerShell modules, and
+what is the mechanism to reuse them. Jose, however, based his post in a
+custom implementation using a GIT repository for storing the modules.</p>
+
+<p>We have NuGet in the .NET platform for sharing and reusing existing
+libraries or code, so why can’t just leverage it for reusing PowerShell
+modules as well ?. Some teams in Microsoft are using NuGet for
+distributing libraries and binaries so it would be a great thing for all
+of us if they also distribute the scripting interfaces in PowerShell
+using NuGet. This applies to the .NET OS community as well.</p>
+
+<p>In fact, it looks like <a href="http://vibrantcode.com">Andrew Nurse</a> had the
+same idea and implemented a project for this in BitBucket,
+<a href="https://bitbucket.org/anurse/psget">PsGet</a>.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1570,362 +1641,6 @@ Studios</a> website.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2011/06/14/interop-bindings-for-wcf-released-in-codeplex/">Interop Bindings for WCF Released in Codeplex</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-06-14T00:00:00-03:00" pubdate data-updated="true">Jun 14<span>th</span>, 2011</time>
-        
-         | <a href="/blog/2011/06/14/interop-bindings-for-wcf-released-in-codeplex/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>I am happy to announce that one of the projects in which Microsoft and
-Tellago have been collaborating together during the last few months was
-released as part of
-<a href="http://wcf.codeplex.com/wikipage?title=WCF%20Express%20Interop%20Bindings">wcf.codeplex.com</a>.
-The primary aim of this “WCF Interop Bindings” project is to simplify
-the work needed for making WCF services interoperable with other service
-stacks like Oracle WebLogic, IBM Websphere, Metro or Apache Axis. </p>
-
-<p>The main goal behind web services has always been to enable
-communication between heterogeneous systems. However, we all know that
-archiving such level of interoperability in the context of web services
-and WS-* is really complicated and requires good knowledge of the
-different message stacks to generate compatible messages at the wire
-level.</p>
-
-<p>For that reason, the WCF team came up with this interesting idea of
-providing a set of pre-defined bindings with a limited set of settings
-that you can use out of the box for supporting the most common interop
-scenarios with the mentioned stacks using protocols like WS-Security,
-WS-SecureConversation or WS-ReliableMessaging.</p>
-
-<p><strong>Bindings provided out of the box in the current bits</strong></p>
-
-<p>The current bits provides a set of custom binding implementations for
-Oracle WebLogic, IBM Websphere, Metro and Apache Axis. The name of those
-bindings basically matches the message stack you want to use. For
-example, the following configuration illustrates how a service can be
-configured to be compatible at wire level with Oracle WebLogic using
-Username over certificates as the security scenario.</p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-<configuration>
-</del></p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-  &lt;system.serviceModel>
-</del></p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>&lt;services&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>  &lt;service name="Microsoft.ServiceModel.Interop.Samples.HelloWorldService" behaviorConfiguration="helloWorld"&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>    &lt;endpoint address="Username_WebLogic" binding="webLogicBinding" bindingConfiguration="helloWorld_UsernameOverCertificate" 
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-contract=&ldquo;Microsoft.ServiceModel.Interop.Samples.IHelloWorld&rdquo;/>
-</del></p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>    &lt;endpoint address="Mex" binding="mexHttpBinding" contract="IMetadataExchange"/&gt; 
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>  &lt;/service&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>&lt;/services&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>&lt;bindings&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>  &lt;webLogicBinding&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>    &lt;binding name="helloWorld_UsernameOverCertificate"&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>      &lt;security mode="UserNameOverCertificate"/&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>    &lt;/binding&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>  &lt;/webLogicBinding&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>&lt;/bindings&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>&lt;behaviors&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>  &lt;serviceBehaviors&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>    &lt;behavior name="helloWorld"&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>      &lt;serviceMetadata httpGetEnabled="true"/&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>      &lt;serviceDebug httpHelpPageEnabled="true"/&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>      &lt;serviceCredentials&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>        &lt;serviceCertificate
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>          storeLocation="LocalMachine"
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>          storeName="TrustedPeople"
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>          x509FindType="FindBySubjectDistinguishedName"
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>          findValue="CN=HelloWorldService"/&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>      &lt;/serviceCredentials&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>    &lt;/behavior&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>  &lt;/serviceBehaviors&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>&lt;/behaviors&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>&lt;extensions&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>  &lt;bindingExtensions&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>    &lt;add name="webLogicBinding" type="Microsoft.ServiceModel.Interop.WebLogic.Configuration.WebLogicBindingCollectionElement,
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
- Microsoft.ServiceModel.Interop, Version=1.0.0.0, Culture=neutral, PublicKeyToken=4fc38efee625237e&#8221;/>
-</del></p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>  &lt;/bindingExtensions&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>&lt;/extensions&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-  &lt;/system.serviceModel>
-</del></p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-</configuration>
-</del></p>
-
-<p><strong>Visual Studio 2010 Integration</strong></p>
-
-<p>The binding implementations are not the only thing you get out of the
-box with the current bits. The WCF team also wanted to provide
-developers with a rich experience for configuring and creating the
-services with one of the pre-defined interop scenarios. Having that in
-mind, this project also integrates in Visual Studio 2010 by providing a
-set of project templates for creating WCF services for an specific
-scenario and a configuration wizard for generating the binding
-configuration.</p>
-
-<p><a href="http://weblogs.asp.net/blogs/cibrax/ProjectTemplates_7BB28048.png"><img src="http://weblogs.asp.net/blogs/cibrax/ProjectTemplates_thumb_40127188.png" title="ProjectTemplates" alt="ProjectTemplates" /></a></p>
-
-<p>As you can see in the image above, two new project templates are
-automatically registered under the &ldquo;WCF&rdquo; category that you can use to
-create a new service configured with one of the provided interop
-bindings. You can use the &ldquo;WCF Interoperable Service Library&rdquo; template
-for creating a new WCF service as part of the service library, or &ldquo;WCF
-Interoperable Service Application&rdquo; for creating a new WCF service as
-part of a Web Application. The templates will automatically launch a
-configuration wizard for selecting the desired interop scenario as it is
-shown in the images bellow.</p>
-
-<p><a href="http://weblogs.asp.net/blogs/cibrax/Wizard1_43D01658.png"><img src="http://weblogs.asp.net/blogs/cibrax/Wizard1_thumb_5AAEE7D4.png" title="Wizard1" alt="Wizard1" /></a>
-\
-<a href="http://weblogs.asp.net/blogs/cibrax/Wizard2_6D173889.png"><img src="http://weblogs.asp.net/blogs/cibrax/Wizard2_thumb_1CF1DA4B.png" title="Wizard2" alt="Wizard2" /></a></p>
-
-<p>In the wizard you can pick one of the existing interop scenarios, and
-specific settings for those scenarios like Security or Reliable
-Messaging to give an example. At the end of wizard, the configuration
-file associated to the WCF project will be automatically updated with
-the chosen binding and settings.</p>
-
-<p>Enjoy!!</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/6/">&larr; Older</a>
@@ -1943,6 +1658,10 @@ the chosen binding and settings.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTeckture Authorization Server</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
@@ -1956,10 +1675,6 @@ the chosen binding and settings.</p>
     
       <li class="post">
         <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
       </li>
     
   </ul>

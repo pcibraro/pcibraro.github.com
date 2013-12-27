@@ -9,9 +9,10 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="A common requirement that we received from some customers while we were
-in the early design stages of SO-Aware was the ability of tracking
-static &hellip;">
+  <meta name="description" content="My colleagues Jesus Rodriguez and
+Dwight Goins were talking about many
+of challenges you might find for managing WCF services in the
+enterprise, and &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +82,50 @@ static &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/08/11/our-wcf-service-repository-so-aware-on-channel-9/">Our WCF Service Repository (SO-Aware) on Channel 9</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-08-11T00:00:00-03:00" pubdate data-updated="true">Aug 11<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/08/11/our-wcf-service-repository-so-aware-on-channel-9/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>My colleagues <a href="http://weblogs.asp.net/gsusx">Jesus Rodriguez</a> and
+<a href="http://dwightgoins.blogspot.com/">Dwight Goins</a> were talking about many
+of challenges you might find for managing WCF services in the
+enterprise, and how
+<a href="http://www.tellagostudios.com/products/so-aware%E2%84%A2">SO-Aware</a> can
+help you out in all those aspects. Check it out
+<a href="http://channel9.msdn.com/shows/Endpoint/endpointtv-Meet-SO-Aware-Part-1/">here</a>.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -2047,256 +2092,6 @@ manually configure the bindings and behaviors.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2010/04/15/integrating-wif-with-wcf-data-services/">Integrating WIF With WCF Data Services</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2010-04-15T00:00:00-03:00" pubdate data-updated="true">Apr 15<span>th</span>, 2010</time>
-        
-         | <a href="/blog/2010/04/15/integrating-wif-with-wcf-data-services/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>A time ago I
-<a href="http://weblogs.asp.net/cibrax/archive/2009/03.aspx">discussed</a> how a
-custom REST Starter kit interceptor could be used to parse a SAML token
-in the Http Authorization header and wrap that into a ClaimsPrincipal
-that the WCF services could use. The thing is that code was initially
-created for Geneva framework, so it got deprecated quickly. I recently
-needed that piece of code for one of projects where I am currently
-working on so I decided to update it for WIF. As this interceptor can be
-injected in any host for WCF REST services, also represents an excellent
-solution for integrating claim-based security into WCF Data Services
-(previously known as ADO.NET Data Services).</p>
-
-<p>The interceptor basically expects a SAML token in the Authorization
-header. If a token is found, it is parsed and a new ClaimsPrincipal is
-initialized and injected in the WCF authorization context.</p>
-
-<p>public class SamlAuthenticationInterceptor : RequestInterceptor \
-{ \
-  SecurityTokenHandlerCollection handlers;</p>
-
-<p>  public SamlAuthenticationInterceptor() \
-    : base(false) \
-  { \
-    this.handlers =
-FederatedAuthentication.ServiceConfiguration.SecurityTokenHandlers; \
-  }</p>
-
-<p>  public override void ProcessRequest(ref RequestContext requestContext)
-\
-  { \
-    SecurityToken token =
-ExtractCredentials(requestContext.RequestMessage);</p>
-
-<p>    if (token != null) \
-    { \
-      ClaimsIdentityCollection claims = handlers.ValidateToken(token);</p>
-
-<p>      var principal = new ClaimsPrincipal(claims); \
-      InitializeSecurityContext(requestContext.RequestMessage,
-principal); \
-    } \
-    else \
-    { \
-      DenyAccess(ref requestContext); \
-    } \
-  }</p>
-
-<p>  private void DenyAccess(ref RequestContext requestContext) \
-  { \
-    Message reply = Message.CreateMessage(MessageVersion.None, null); \
-    HttpResponseMessageProperty responseProperty = new
-HttpResponseMessageProperty() { StatusCode = HttpStatusCode.Unauthorized
-};</p>
-
-<p>    responseProperty.Headers.Add(&ldquo;WWW-Authenticate&rdquo;, \
-          String.Format(&ldquo;Basic realm=\&rdquo;{0}\&ldquo;&rdquo;, &ldquo;&rdquo;));</p>
-
-<p>    reply.Properties[HttpResponseMessageProperty.Name] =
-responseProperty; \
-    requestContext.Reply(reply);</p>
-
-<p>    requestContext = null; \
-  }</p>
-
-<p>  private SecurityToken ExtractCredentials(Message requestMessage) \
-  { \
-    HttpRequestMessageProperty request = (HttpRequestMessageProperty) 
-requestMessage.Properties[HttpRequestMessageProperty.Name];</p>
-
-<p>    string authHeader = request.Headers[&ldquo;Authorization&rdquo;];</p>
-
-<p>    if (authHeader != null &amp;&amp; authHeader.Contains(&ldquo;&lt;saml&rdquo;)) \
-    { \
-      XmlTextReader xmlReader = new XmlTextReader(new
-StringReader(authHeader));</p>
-
-<p>      var col =
-SecurityTokenHandlerCollection.CreateDefaultSecurityTokenHandlerCollection();
-\
-      SecurityToken token = col.ReadToken(xmlReader); \
-                                 \
-      return token; \
-    }</p>
-
-<p>    return null; \
-  }</p>
-
-<p>  private void InitializeSecurityContext(Message request, IPrincipal
-principal) \
-  { \
-    List&lt;IAuthorizationPolicy> policies = new
-List&lt;IAuthorizationPolicy>(); \
-    policies.Add(new PrincipalAuthorizationPolicy(principal)); \
-    ServiceSecurityContext securityContext = new
-ServiceSecurityContext(policies.AsReadOnly());</p>
-
-<p>    if (request.Properties.Security != null) \
-    { \
-      request.Properties.Security.ServiceSecurityContext =
-securityContext; \
-    } \
-    else \
-    { \
-      request.Properties.Security = new SecurityMessageProperty() {
-ServiceSecurityContext = securityContext }; \
-     } \
-   }</p>
-
-<p>   class PrincipalAuthorizationPolicy : IAuthorizationPolicy \
-   { \
-     string id = Guid.NewGuid().ToString(); \
-     IPrincipal user;</p>
-
-<p>     public PrincipalAuthorizationPolicy(IPrincipal user) \
-     { \
-       this.user = user; \
-     }</p>
-
-<p>     public ClaimSet Issuer \
-     { \
-       get { return ClaimSet.System; } \
-     }</p>
-
-<p>     public string Id \
-     { \
-       get { return this.id; } \
-     }</p>
-
-<p>     public bool Evaluate(EvaluationContext evaluationContext, ref
-object state) \
-     { \
-       evaluationContext.AddClaimSet(this, new
-DefaultClaimSet(System.IdentityModel.Claims.Claim.CreateNameClaim(user.Identity.Name)));
-\
-       evaluationContext.Properties[&ldquo;Identities&rdquo;] = new
-List&lt;IIdentity>(new IIdentity[] { user.Identity }); \
-       evaluationContext.Properties[&ldquo;Principal&rdquo;] = user; \
-       return true; \
-     } \
-   } \</p>
-
-<p>A WCF Data Service, as any other WCF Service, contains a service host
-where this interceptor can be injected. The following code illustrates
-how that can be done in the “svc” file.</p>
-
-<p>&lt;%@ ServiceHost Language=&ldquo;C#&rdquo; Debug=&ldquo;true&rdquo;
-Service=&ldquo;ContactsDataService&rdquo; \
-                Factory=&ldquo;AppServiceHostFactory&rdquo; %></p>
-
-<p>using System; \
- using System.ServiceModel; \
- using System.ServiceModel.Activation; \
- using Microsoft.ServiceModel.Web;</p>
-
-<p>class AppServiceHostFactory : ServiceHostFactory \
- { \
-   protected override ServiceHost CreateServiceHost(Type serviceType,
-Uri[] baseAddresses) \
-  { \
-    WebServiceHost2 result = new WebServiceHost2(serviceType, true,
-baseAddresses);</p>
-
-<p>    result.Interceptors.Add(new SamlAuthenticationInterceptor()); \
-            \
-    return result; \
-  } \
-}</p>
-
-<p>WCF Data Services includes an specific WCF host of out the box
-(DataServiceHost). However, the service is not affected at all if you
-replace it with a custom one as I am doing in the code above
-(WebServiceHost2 is part of the REST Starter kit).</p>
-
-<p>Finally, the client application needs to pass the SAML token somehow to
-the data service. In case you are using any Http client library for
-consuming the data service, that’s easy to do, you only need to include
-the SAML token as part of the “Authorization” header. If you are using
-the auto-generated data service proxy, a little piece of code is needed
-to inject a SAML token into the DataServiceContext instance. That class
-provides an event “SendingRequest” that any client application can
-leverage to include custom code that modified the Http request before it
-is sent to the service. So, you can easily create an extension method
-for the DataServiceContext that negotiates the SAML token with an
-existing STS, and adds that token as part of the “Authorization” header.</p>
-
-<p>public static class DataServiceContextExtensions \
- {     </p>
-
-<p>  public static void ConfigureFederatedCredentials(this
-DataServiceContext context, string baseStsAddress, string realm) \
-  { \
-    string address = string.Format(STSAddressFormat, baseStsAddress,
-realm); \
-             \
-    string token = NegotiateSecurityToken(address); \
-    context.SendingRequest += (source, args) => \
-    { \
-      args.RequestHeaders.Add(&ldquo;Authorization&rdquo;, token); \
-    }; \
-  }</p>
-
-<p>private string NegotiateSecurityToken(string address) \
- { \
- }</p>
-
-<p>}</p>
-
-<p>I left the NegociateSecurityToken method empty for this extension as it
-depends pretty much on how you are negotiating tokens from an existing
-STS. In case you want to end-to-end REST solution that involves an Http
-endpoint for the STS, you should definitely take a look at the
-<a href="http://startersts.codeplex.com/">Thinktecture starter STS project</a> in
-codeplex.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/11/">&larr; Older</a>
@@ -2314,6 +2109,10 @@ codeplex.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTeckture Authorization Server</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
@@ -2327,10 +2126,6 @@ codeplex.</p>
     
       <li class="post">
         <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
       </li>
     
   </ul>

@@ -4,7 +4,7 @@
   <title><![CDATA[Pablo Cibraro (Cibrax)]]></title>
   <link href="http://cibrax.me/atom.xml" rel="self"/>
   <link href="http://cibrax.me/"/>
-  <updated>2013-12-26T15:07:34-03:00</updated>
+  <updated>2013-12-27T12:14:41-03:00</updated>
   <id>http://cibrax.me/</id>
   <author>
     <name><![CDATA[Cibrax]]></name>
@@ -12,6 +12,133 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[OAuth Bridge for ADFS with ThinkTeckture Authorization Server]]></title>
+    <link href="http://cibrax.me/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/"/>
+    <updated>2013-12-27T10:23:00-03:00</updated>
+    <id>http://cibrax.me/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server</id>
+    <content type="html"><![CDATA[<p>ADFS 2.0 only supports SAML 2.0 and WS-Federation for doing single sign on for web applications and services. However, some new development platforms such as iOS only support OAuth 2.0, which makes the use of ADFS a bit tricky. ADFS for Windows Server 2012 R2 already provides some limited support for JSON Web Tokens (JWT) with the OAuth 2.0 the code flow (As it is described in this <a href="http://www.cloudidentity.com/blog/2013/07/30/securing-a-web-api-with-windows-server-2012-r2-adfs-and-katana/">excellent post</a> by Vittorio).</p>
+
+<p>For some other scenarios in which your applications or services rely on JWTs for doing authentication/authorization, the ThinkTeckure Authorization Server represents a very nice alternative, which integrates really well with ADFS. The Authorization Server can act as a brige or broker between client apps that use OAuth 2.0 to get a JWT, and ADFS, which is used for authenticating the users.</p>
+
+<p>The configuration of the Authorization Server is very simple. Once you get Authorization Server deployed in IIS, it uses Entity Framework code first to automatically generate the backend database for you on the first use. After that, you only need to change the configuration files to trust ADFS as it is shown bellow,</p>
+
+<p>[Authorization Server Folder]\Configuration\identityModel.config</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;issuerNameRegistry</span> <span class="na">type=</span><span class="s">&quot;System.IdentityModel.Tokens.ValidatingIssuerNameRegistry, </span>
+</span><span class='line'><span class="s">  System.IdentityModel.Tokens.ValidatingIssuerNameRegistry&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;authority</span> <span class="na">name=</span><span class="s">&quot;http://[your ADFS server]/adfs/services/trust&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;keys&gt;</span>
+</span><span class='line'>          <span class="nt">&lt;add</span> <span class="na">thumbprint=</span><span class="s">&quot;[signing cert thumprint]&quot;</span><span class="nt">/&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;/keys&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;validIssuers&gt;</span>
+</span><span class='line'>          <span class="nt">&lt;add</span> <span class="na">name=</span><span class="s">&quot;http://[your ADFS server]/adfs/services/trust&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;/validIssuers&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/authority&gt;</span>
+</span><span class='line'><span class="nt">&lt;/issuerNameRegistry&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>[Authorization Server Folder]\Configuration\identityModel.services.config</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;system.identityModel.services&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;federationConfiguration&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;wsFederation</span> <span class="na">passiveRedirectEnabled=</span><span class="s">&quot;true&quot;</span>
+</span><span class='line'> <span class="na">issuer=</span><span class="s">&quot;https://[your ADFS server]/adfs/ls/&quot;</span> <span class="na">realm=</span><span class="s">&quot;urn:authorizationserver&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/federationConfiguration&gt;</span>
+</span><span class='line'><span class="nt">&lt;/system.identityModel.services&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>urn:authorizationserver is the Relying Party identifier I used for configuring Authorization Server in ADFS. In ADFS, you only to configure a new relying party with a WS-Federation endpoint, and set the URL of the Authorization Server. Make also sure the Relying Party identifier matches the one you configured in Authorization Server.</p>
+
+<p>The following code shows how to get a JWT from Authorization Server using the Resource Owner Flow (The user is authenticated by Authorization Server in ADFS)</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">private</span> <span class="k">static</span> <span class="kt">string</span> <span class="nf">GetToken</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">ServicePointManager</span><span class="p">.</span><span class="n">ServerCertificateValidationCallback</span> <span class="p">=</span>
+</span><span class='line'>      <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">cert</span><span class="p">,</span> <span class="n">chain</span><span class="p">,</span> <span class="n">ssl</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="k">true</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">HttpClient</span> <span class="n">client</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpClient</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">HttpRequestMessage</span> <span class="n">request</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpRequestMessage</span><span class="p">(</span><span class="n">HttpMethod</span><span class="p">.</span><span class="n">Post</span><span class="p">,</span>
+</span><span class='line'>      <span class="s">&quot;https://[your auth server]/[App namespace in Authorization Server]/oauth/token&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">request</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="s">&quot;Authorization&quot;</span><span class="p">,</span>
+</span><span class='line'>      <span class="s">&quot;Basic &quot;</span> <span class="p">+</span> <span class="n">Convert</span><span class="p">.</span><span class="n">ToBase64String</span><span class="p">(</span><span class="n">System</span><span class="p">.</span><span class="n">Text</span><span class="p">.</span><span class="n">ASCIIEncoding</span><span class="p">.</span><span class="n">ASCII</span><span class="p">.</span><span class="n">GetBytes</span><span class="p">(</span>
+</span><span class='line'>          <span class="kt">string</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span><span class="s">&quot;{0}:{1}&quot;</span><span class="p">,</span> <span class="s">&quot;[client id]&quot;</span><span class="p">,</span> <span class="s">&quot;[client secret]&quot;</span><span class="p">))));</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">request</span><span class="p">.</span><span class="n">Content</span> <span class="p">=</span> <span class="k">new</span> <span class="n">FormUrlEncodedContent</span><span class="p">(</span><span class="k">new</span> <span class="n">Dictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>         <span class="p">{</span><span class="s">&quot;grant_type&quot;</span><span class="p">,</span> <span class="s">&quot;password&quot;</span><span class="p">},</span>
+</span><span class='line'>         <span class="p">{</span><span class="s">&quot;username&quot;</span><span class="p">,</span> <span class="s">&quot;[account]&quot;</span><span class="p">},</span> <span class="c1">//Windows account name without domain</span>
+</span><span class='line'>         <span class="p">{</span><span class="s">&quot;password&quot;</span><span class="p">,</span> <span class="s">&quot;[password]&quot;</span><span class="p">},</span>
+</span><span class='line'>         <span class="p">{</span><span class="s">&quot;scope&quot;</span><span class="p">,</span> <span class="s">&quot;All&quot;</span><span class="p">}</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">HttpResponseMessage</span> <span class="n">response</span> <span class="p">=</span> <span class="n">client</span><span class="p">.</span><span class="n">SendAsync</span><span class="p">(</span><span class="n">request</span><span class="p">).</span><span class="n">Result</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">response</span><span class="p">.</span><span class="n">EnsureSuccessStatusCode</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">JObject</span> <span class="n">json</span> <span class="p">=</span> <span class="n">JObject</span><span class="p">.</span><span class="n">Parse</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">Content</span><span class="p">.</span><span class="n">ReadAsStringAsync</span><span class="p">().</span><span class="n">Result</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">string</span> <span class="n">accessToken</span> <span class="p">=</span> <span class="n">json</span><span class="p">[</span><span class="s">&quot;access_token&quot;</span><span class="p">].</span><span class="n">ToString</span><span class="p">();</span>
+</span><span class='line'>    <span class="kt">string</span> <span class="n">refreshToken</span> <span class="p">=</span> <span class="n">json</span><span class="p">[</span><span class="s">&quot;refresh_token&quot;</span><span class="p">].</span><span class="n">ToString</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">accessToken</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+]]></content>
+    
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Automatic Client Cert Detection in ADFS 2.0]]></title>
@@ -3454,223 +3581,6 @@ discussed already in these two great posts from
 <a href="http://pfelix.wordpress.com/2012/03/05/asp-net-web-api-in-memory-hosting/">Pedro</a>
 and
 <a href="http://www.strathweb.com/2012/06/asp-net-web-api-integration-testing-with-in-memory-hosting/">Filip</a>. </p>
-]]></content>
-    
-      <category scheme="http://cibrax.me/categories/" term=".net" />
-    
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Consuming the Amazon S3 service from a Win8 Metro Application]]></title>
-    <link href="http://cibrax.me/blog/2012/09/10/consuming-the-amazon-s3-service-from-a-win8-metro-application/"/>
-    <updated>2012-09-10T00:00:00-03:00</updated>
-    <id>http://cibrax.me/blog/2012/09/10/consuming-the-amazon-s3-service-from-a-win8-metro-application</id>
-    <content type="html"><![CDATA[<p>As many of the existing Http APIs for Cloud Services, AWS also provides
-a set of different platform SDKs for hiding many of complexities present
-in the APIs. While there is a platform SDK for .NET, which is open
-source and available in C#, that SDK does not work in Win8 Metro
-Applications for the changes introduced in WinRT. WinRT offers a
-complete different set of APIs for doing I/O operations such as doing
-http calls or using cryptography for signing or encrypting data, two
-aspects that are absolutely necessary for consuming AWS. All the I/O
-APIs available as part of WinRT are asynchronous, and uses the TPL model
-for .NET applications (HTML and JavaScript Metro applications use a
-model based in promises, which is similar concept). </p>
-
-<p>In the case of S3, the http Authorization header is used for two
-purposes, authenticating clients and make sure the messages were not
-altered while they were in transit. For doing that, it uses a signature
-or hash of the message content and some of the headers using a symmetric
-key (That&rsquo;s just one of the available mechanisms). Windows Azure for
-example also uses the same mechanism in many of its APIs.</p>
-
-<p>There are three challenges that any developer working for first time in
-Metro will have to face to consume S3, the new WinRT APIs, the
-asynchronous nature of them and the complexity introduced for generating
-the Authorization header. Having said that, I decided to write this post
-with some of the gotchas I found myself trying to consume this Amazon
-service.</p>
-
-<p>​1. Generating the signature for the Authorization header</p>
-
-<p>All the cryptography APIs in WinRT are available under
-Windows.Security.Cryptography namespace. Many of operations available in
-these APIs uses the concept of buffers (IBuffer) for representing a
-chunk of binary data. As you will see in the example below, these
-buffers are mainly generated with the use of static methods in a WinRT
-class CryptographicBuffer available as part of the namespace previously
-mentioned.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">private</span> <span class="kt">string</span> <span class="nf">DeriveAuthToken</span><span class="p">(</span><span class="kt">string</span> <span class="n">resource</span><span class="p">,</span> <span class="kt">string</span> <span class="n">httpMethod</span><span class="p">,</span> <span class="kt">string</span> <span class="n">timestamp</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="kt">var</span> <span class="n">stringToSign</span> <span class="p">=</span> <span class="kt">string</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span><span class="s">&quot;{0}\n&quot;</span> <span class="p">+</span>
-</span><span class='line'>      <span class="s">&quot;\n&quot;</span> <span class="p">+</span>
-</span><span class='line'>      <span class="s">&quot;\n&quot;</span> <span class="p">+</span>
-</span><span class='line'>      <span class="s">&quot;\n&quot;</span> <span class="p">+</span>
-</span><span class='line'>      <span class="s">&quot;x-amz-date:{1}\n&quot;</span> <span class="p">+</span>
-</span><span class='line'>      <span class="s">&quot;/{2}/&quot;</span><span class="p">,</span> <span class="n">httpMethod</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">resource</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="kt">var</span> <span class="n">algorithm</span> <span class="p">=</span> <span class="n">MacAlgorithmProvider</span><span class="p">.</span><span class="n">OpenAlgorithm</span><span class="p">(</span><span class="s">&quot;HMAC_SHA1&quot;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="kt">var</span> <span class="n">keyMaterial</span> <span class="p">=</span> <span class="n">CryptographicBuffer</span><span class="p">.</span><span class="n">CreateFromByteArray</span><span class="p">(</span><span class="n">Encoding</span><span class="p">.</span><span class="n">UTF8</span><span class="p">.</span><span class="n">GetBytes</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">secret</span><span class="p">));</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="kt">var</span> <span class="n">hmacKey</span> <span class="p">=</span> <span class="n">algorithm</span><span class="p">.</span><span class="n">CreateKey</span><span class="p">(</span><span class="n">keyMaterial</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="kt">var</span> <span class="n">signature</span> <span class="p">=</span> <span class="n">CryptographicEngine</span><span class="p">.</span><span class="n">Sign</span><span class="p">(</span>
-</span><span class='line'>                <span class="n">hmacKey</span><span class="p">,</span>
-</span><span class='line'>                <span class="n">CryptographicBuffer</span><span class="p">.</span><span class="n">CreateFromByteArray</span><span class="p">(</span><span class="n">Encoding</span><span class="p">.</span><span class="n">UTF8</span><span class="p">.</span><span class="n">GetBytes</span><span class="p">(</span><span class="n">stringToSign</span><span class="p">))</span>
-</span><span class='line'>            <span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="k">return</span> <span class="n">CryptographicBuffer</span><span class="p">.</span><span class="n">EncodeToBase64String</span><span class="p">(</span><span class="n">signature</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The algorithm that determines the information or content you need to use
-for generating the signature is very well described as part of the AWS
-documentation. In this case, this method is generating a signature
-required for creating a new bucket. A HmacSha1 hash is computed using a
-secret or symetric key provided by AWS in the management console. \
- \
-2. Sending an Http Request to the S3 service</p>
-
-<p>WinRT also ships with the System.Net.Http.HttpClient that was first
-introduced some months ago with ASP.NET Web API. This client provides a
-rich interface on top the traditional WebHttpRequest class, and also
-solves some of limitations found in this last one. There are a few
-things that don&rsquo;t work with a raw WebHttpRequest such as setting the
-Host header, which is something absolutely required for consuming S3.
-Also, HttpClient is more friendly for doing unit tests, as it receives a
-HttpMessageHandler as part of the constructor that can fake to emulate a
-real http call. This is how the code for consuming the service with
-HttpClient looks like,</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">async</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">S3Response</span><span class="p">&gt;</span> <span class="n">CreateBucket</span><span class="p">(</span><span class="kt">string</span> <span class="n">name</span><span class="p">,</span> <span class="kt">string</span> <span class="n">region</span> <span class="p">=</span> <span class="k">null</span><span class="p">,</span> <span class="k">params</span> <span class="kt">string</span><span class="p">[]</span> <span class="n">acl</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="kt">var</span> <span class="n">timestamp</span> <span class="p">=</span> <span class="kt">string</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span><span class="s">&quot;{0:r}&quot;</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">.</span><span class="n">UtcNow</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">var</span> <span class="n">auth</span> <span class="p">=</span> <span class="n">DeriveAuthToken</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s">&quot;PUT&quot;</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">var</span> <span class="n">request</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpRequestMessage</span><span class="p">(</span><span class="n">HttpMethod</span><span class="p">.</span><span class="n">Put</span><span class="p">,</span> <span class="s">&quot;http://s3.amazonaws.com/&quot;</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">request</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">Host</span> <span class="p">=</span> <span class="kt">string</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span><span class="s">&quot;{0}.s3.amazonaws.com&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">request</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">TryAddWithoutValidation</span><span class="p">(</span><span class="s">&quot;Authorization&quot;</span><span class="p">,</span> <span class="s">&quot;AWS &quot;</span> <span class="p">+</span> <span class="k">this</span><span class="p">.</span><span class="n">key</span> <span class="p">+</span> <span class="s">&quot;:&quot;</span> <span class="p">+</span> <span class="n">auth</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">request</span><span class="p">.</span><span class="n">Headers</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="s">&quot;x-amz-date&quot;</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">var</span> <span class="n">client</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpClient</span><span class="p">();</span>
-</span><span class='line'>    <span class="kt">var</span> <span class="n">response</span> <span class="p">=</span> <span class="k">await</span> <span class="n">client</span><span class="p">.</span><span class="n">SendAsync</span><span class="p">(</span><span class="n">request</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">return</span> <span class="k">new</span> <span class="n">S3Response</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>         <span class="n">Succeed</span> <span class="p">=</span> <span class="n">response</span><span class="p">.</span><span class="n">StatusCode</span> <span class="p">==</span> <span class="n">HttpStatusCode</span><span class="p">.</span><span class="n">OK</span><span class="p">,</span>
-</span><span class='line'>         <span class="n">Message</span> <span class="p">=</span> <span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">Content</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span> <span class="p">?</span>
-</span><span class='line'>            <span class="k">await</span> <span class="n">response</span><span class="p">.</span><span class="n">Content</span><span class="p">.</span><span class="n">ReadAsStringAsync</span><span class="p">()</span> <span class="p">:</span> <span class="k">null</span>
-</span><span class='line'>     <span class="p">};</span>
-</span><span class='line'> <span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>You will notice a few additional things in this code. By default,
-HttpClient validates the values for some well-know headers, and
-Authorization is one of them. It won&rsquo;t allow you to set a value with &ldquo;:&rdquo;
-on it, which is something that S3 expects. However, that&rsquo;s not a problem
-at all, as you can skip the validation by using the
-TryAddWithoutValidation method. \
-Also, the code is heavily relying on the new async and await keywords to
-transform all the asynchronous calls into synchronous ones. In case you
-would want to unit test this code and faking the call to the real S3
-service, you should have to modify it to inject a custom
-HttpMessageHandler into the HttpClient. The following implementation
-illustrates this concept,</p>
-
-<p>In case you would want to unit test this code and faking the call to the
-real S3 service, you should have to modify it to inject a custom
-HttpMessageHandler into the HttpClient. The following implementation
-illustrates this concept,</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">FakeHttpMessageHandler</span> <span class="p">:</span> <span class="n">HttpMessageHandler</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="n">HttpResponseMessage</span> <span class="n">response</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">public</span> <span class="nf">FakeHttpMessageHandler</span><span class="p">(</span><span class="n">HttpResponseMessage</span> <span class="n">response</span><span class="p">)</span>
-</span><span class='line'>  <span class="p">{</span>
-</span><span class='line'>       <span class="k">this</span><span class="p">.</span><span class="n">response</span> <span class="p">=</span> <span class="n">response</span><span class="p">;</span>
-</span><span class='line'>   <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="k">protected</span> <span class="k">override</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;</span> <span class="n">SendAsync</span><span class="p">(</span><span class="n">HttpRequestMessage</span> <span class="n">request</span><span class="p">,</span> <span class="n">System</span><span class="p">.</span><span class="n">Threading</span><span class="p">.</span><span class="n">CancellationToken</span> <span class="n">cancellationToken</span><span class="p">)</span>
-</span><span class='line'>   <span class="p">{</span>
-</span><span class='line'>      <span class="kt">var</span> <span class="n">tcs</span> <span class="p">=</span> <span class="k">new</span> <span class="n">TaskCompletionSource</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;();</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="n">tcs</span><span class="p">.</span><span class="n">SetResult</span><span class="p">(</span><span class="n">response</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="k">return</span> <span class="n">tcs</span><span class="p">.</span><span class="n">Task</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>You can use this handler for injecting any response while you are unit
-testing the code.</p>
 ]]></content>
     
       <category scheme="http://cibrax.me/categories/" term=".net" />

@@ -9,9 +9,10 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="One of the beauties of using Http as application protocol when building
-Web Apis is that you can reuse all the available infrastructure in the
-web to &hellip;">
+  <meta name="description" content="As I discussed in my previous
+post,
+web caching relies on specific headers that you need to use correctly on
+your services. That’s an http &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +82,63 @@ web to &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/04/29/second-round-on-web-http-caching/">Second Round of Web Http Caching</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-04-29T00:00:00-03:00" pubdate data-updated="true">Apr 29<span>th</span>, 2011</time>
+        
+         | <a href="/blog/2011/04/29/second-round-on-web-http-caching/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As I discussed in my <a href="http://weblogs.asp.net/cibrax/archive/2011/04/25/implementing-caching-in-your-wcf-web-apis.aspx">previous
+post</a>,
+web caching relies on specific headers that you need to use correctly on
+your services. That’s an http application protocol thing, and something
+that you can easily use in any application framework that treats Http as
+first citizen. This means that you don’t need to implement anything
+fancy or exclusively rely on an specific caching technology or
+components for doing ouput caching (e.g ASP.NET Cache).</p>
+
+<p>You only need to worry about using the Expires and Cache-Control headers
+correctly and optionally setting up a validation process with
+conditional gets. If the application framework automatically provides
+this for you under the hood, that’s definitely a good thing too.</p>
+
+<p>I promised to write a more detailed post with some extensions for WCF,
+but Jose beat me to it. He wrote an <a href="http://jfromaniello.blogspot.com/2011/04/http-cache-and-rest-services.html">excellent
+post</a>
+on how to implement some generic extensions for WCF Web Apis, and what’s
+more important, how to configure intermediaries like local caches in the
+browser or reverse proxies (Squid) to cache the data for us. </p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -4030,150 +4088,6 @@ authentication with SAML model works with this new WCF Http bits.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2011/02/03/so-aware-service-explorer-configure-and-export-your-services-from-vs-2010-into-the-repository/">SO-Aware Service Explorer – Configure and Export Your Services From vs 2010 Into the Repository</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-02-03T00:00:00-03:00" pubdate data-updated="true">Feb 3<span>rd</span>, 2011</time>
-        
-         | <a href="/blog/2011/02/03/so-aware-service-explorer-configure-and-export-your-services-from-vs-2010-into-the-repository/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>We have introduced a new Visual Studio tool called “Service Explorer” as
-part of the new <a href="http://www.tellagostudios.com/projectfiles/SO-Aware_SDK_1.3.zip">SO-Aware SDK version
-1.3</a> to
-help developers to configure and export any regular WCF service into the
-SO-Aware service repository.</p>
-
-<p>This new tool is a regular Visual Studio Tool Window that can be opened
-from “View –> Other Windows –> Services Explorer”.</p>
-
-<p><a href="http://weblogs.asp.net/blogs/cibrax/ServicesExplorer_VS_6976924A.png"><img src="http://weblogs.asp.net/blogs/cibrax/ServicesExplorer_VS_thumb_65A8C7AD.png" title="ServicesExplorer_VS" alt="ServicesExplorer_VS" /></a></p>
-
-<p>Once you open the Services Explorer, you will able to see all the
-available WCF services in the Visual Studio Solution.</p>
-
-<p><a href="http://weblogs.asp.net/blogs/cibrax/ServicesExplorer_VS2_3883B512.png"><img src="http://weblogs.asp.net/blogs/cibrax/ServicesExplorer_VS2_thumb_2847C74C.png" title="ServicesExplorer_VS2" alt="ServicesExplorer_VS2" /></a></p>
-
-<p>In the image above, you can see that a “HelloWorld” service was found in
-the solution and listed under the Tool window on the left. There are two
-things you can do for a new service in tool, you can either export it to
-SO-Aware repository or associate it to an existing service version in
-the repository.</p>
-
-<p>Exporting the service to SO-Aware means that you want to create a new
-service version in the repository and associate the WCF service WSDL to
-that version. Associating the service means that you want to use a
-version already created in SO-Aware with the only purpose of managing
-and centralizing the service configuration in SO-Aware.</p>
-
-<p>The option for exporting a service will popup a dialog like the one
-bellow in which you can enter some basic information about the service
-version you want to create and the repository location.</p>
-
-<p><a href="http://weblogs.asp.net/blogs/cibrax/ServicesExplorer_VS3_1E332621.png"><img src="http://weblogs.asp.net/blogs/cibrax/ServicesExplorer_VS3_thumb_7C674D8F.png" title="ServicesExplorer_VS3" alt="ServicesExplorer_VS3" /></a></p>
-
-<p>The option for associating a service will popup a dialog in which you
-can pick any existing service version repository and the application
-configuration file that you want to keep in sync for the service
-configuration. Two options are available for configuring a service, WCF
-Configuration or SO-Aware. The WCF Configuration option just tells the
-tool that the service will use the standard WCF configuration section
-“system.serviceModel” but that section must be updated and kept in sync
-with the configuration selected for the service in the repository. The
-SO-Aware configuration option will tell the tool that the service
-configuration will be resolved at runtime from the repository.</p>
-
-<p><a href="http://weblogs.asp.net/blogs/cibrax/ServicesExplorer_VS4_1A655B84.png"><img src="http://weblogs.asp.net/blogs/cibrax/ServicesExplorer_VS4_thumb_4F423AF4.png" title="ServicesExplorer_VS4" alt="ServicesExplorer_VS4" /></a></p>
-
-<p>For example, selecting SO-Aware will generate the following
-configuration in the selected application configuration file,</p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-<configuration>
-</del></p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-  <configSections>
-</del></p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>&lt;section name="serviceRepository" type="Tellago.ServiceModel.Governance.ServiceConfiguration.ServiceRepositoryConfigurationSection, Tellago.ServiceModel.Governance.ServiceConfiguration" /&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-  </configSections>
-</del></p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-  <serviceRepository url="http://localhost/soaware/servicerepository.svc">
-</del></p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>&lt;services&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>  &lt;service name="ref:HelloWorldService(1.0)@dev" type="SOAwareSampleService.HelloWorldService" /&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>&lt;/services&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-  </serviceRepository>
-</del></p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-</configuration>
-</del></p>
-
-<p>As you can see the tool represents a great addition to the toolset that
-any developer can use to manage and centralize configuration for WCF
-services. In addition, it can be combined with other useful tools like
-WSCF.Blue (Web Service Contract First) for generating the service
-artifacts like schemas, service code or the service WSDL itself.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/8/">&larr; Older</a>
@@ -4191,6 +4105,10 @@ artifacts like schemas, service code or the service WSDL itself.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTeckture Authorization Server</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
@@ -4204,10 +4122,6 @@ artifacts like schemas, service code or the service WSDL itself.</p>
     
       <li class="post">
         <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
       </li>
     
   </ul>

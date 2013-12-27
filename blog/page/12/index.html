@@ -9,9 +9,10 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="The other day I came across a pretty cool project,
-Linq2Twitter, that basically
-implements a linq provider for consuming the Twitter REST Api.  This &hellip;">
+  <meta name="description" content="As Dr Nick announced in this
+post,
+WCF 4.0 will ship with a new feature to configure a client channel from
+a configuration source other than the &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +82,107 @@ implements a linq provider for consuming the Twitter REST Api.  This &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/09/08/client-configuration-in-wcf-4-0/">Client Configuration in WCF 4.0</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-09-08T00:00:00-03:00" pubdate data-updated="true">Sep 8<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/09/08/client-configuration-in-wcf-4-0/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As Dr Nick announced in this
+<a href="http://blogs.msdn.com/drnick/archive/2009/08/24/what-s-new-in-wcf-4-more-on-services-and-configuration.aspx">post</a>,
+WCF 4.0 will ship with a new feature to configure a client channel from
+a configuration source other than the traditional section in the
+application configuration file (I discussed a workaround for doing the
+same thing in WCF 3.0 a time ago in this
+<a href="http://weblogs.asp.net/cibrax/archive/2007/10/19/loading-the-wcf-configuration-from-different-files-on-the-client-side.aspx">post</a>)</p>
+
+<p>This will provide the flexibility to deploy some binaries with the
+client proxies together with an independent configuration file (which
+might be a resource file, a stand alone file included with your
+application or something you can download from an specific place), so
+the main configuration file does not need to be touched at all.</p>
+
+<p>A new channel factory “ConfigurationChannelFactory” is included as part
+of the System.ServiceModel.Configuration namespace to create channels
+from an alternative configuration source.</p>
+
+<p><strong>var fileMap = new ExeConfigurationFileMap(); \
+            fileMap.ExeConfigFilename = &ldquo;otherFile.config&rdquo;;</strong></p>
+
+<p><strong>var configuration =
+ConfigurationManager.OpenMappedExeConfiguration(fileMap,
+ConfigurationUserLevel.None);</strong></p>
+
+<p><strong>var factory = new
+ConfigurationChannelFactory&lt;IService1>(&ldquo;BasicHttpBinding_IService1&rdquo;,
+configuration, new
+EndpointAddress(&ldquo;</strong><a href="http://localhost:49187/Service1.svc"><strong>http://localhost:49187/Service1.svc</strong></a><strong>&rdquo;));</strong></p>
+
+<p>var client = factory.CreateChannel();</p>
+
+<p>var s = client.GetData(3);</p>
+
+<p>Console.WriteLine(s);</p>
+
+<p>The file “otherFile.config” is just a simple configuration file that
+contains the client definition and configuration for using the
+“IService1” service.</p>
+
+<p>&lt;configuration> \
+  \
+    &lt;system.serviceModel> \
+        &lt;bindings> \
+            &lt;basicHttpBinding> \
+              &lt;binding name=&ldquo;BasicHttpBinding_IService1&rdquo; > \
+                    &lt;security mode=&ldquo;None&rdquo;> \
+                    &lt;/security> \
+                &lt;/binding> \
+            &lt;/basicHttpBinding> \
+        &lt;/bindings> \
+        &lt;client> \
+            &lt;endpoint
+address=&ldquo;<a href="http://localhost:49187/Service1.svc">http://localhost:49187/Service1.svc</a>&rdquo;
+binding=&ldquo;basicHttpBinding&rdquo; \
+                bindingConfiguration=&ldquo;BasicHttpBinding_IService1&rdquo;
+contract=&ldquo;ServiceReference1.IService1&rdquo; \
+                name=&ldquo;BasicHttpBinding_IService1&rdquo; /> \
+        &lt;/client> \
+    &lt;/system.serviceModel> \
+&lt;/configuration></p>
+
+<p>All this code is based on the .NET 4.0 beta 1, so it might change in the
+final release.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1015,55 +1117,6 @@ escenarios en donde se pueden aplicar con exito.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2009/05/14/i-am-joining-tellago/">I Am Joining Tellago</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2009-05-14T00:00:00-03:00" pubdate data-updated="true">May 14<span>th</span>, 2009</time>
-        
-         | <a href="/blog/2009/05/14/i-am-joining-tellago/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>On May 18th, I will officially become part of
-<a href="http://tellago.com/">Tellago</a>.  I will be joining a great team with
-people that I respect immensely like <a href="http://weblogs.asp.net/gsusx">Jesus
-Rodriguez</a>,
-<a href="http://weblogs.asp.net/controlpanel/blogs/www.donxml.com">DonXml</a>, or
-<a href="http://geekswithblogs.net/jklug/Default.aspx">Joe Klug</a> to name a few.
-Thanks guys for give me this opportunity!!.</p>
-
-<p>I am leaving Clarius after almost two years of service. I got involved
-in a lot of interesting projects there, and what is more important, I
-had a chance to work with an excellent team of “all-stars” developers. I
-would like to thank Clarius and wish them the best in the future!</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/13/">&larr; Older</a>
@@ -1081,6 +1134,10 @@ would like to thank Clarius and wish them the best in the future!</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTeckture Authorization Server</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
@@ -1094,10 +1151,6 @@ would like to thank Clarius and wish them the best in the future!</p>
     
       <li class="post">
         <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
       </li>
     
   </ul>

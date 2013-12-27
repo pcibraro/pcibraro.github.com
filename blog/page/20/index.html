@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="Want to work at a growing, high energy services-software company?
-Clarius Consulting is looking for the candidates to help us fill the
-following &hellip;">
+  <meta name="description" content="A common problem in WCF that many people face is the impossibility of
+loading the client configuration from different configuration files.
+This is a &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +81,270 @@ following &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2007/10/19/loading-the-wcf-configuration-from-different-files-on-the-client-side/">Loading the WCF Configuration From Different Files on the Client Side</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-10-19T00:00:00-03:00" pubdate data-updated="true">Oct 19<span>th</span>, 2007</time>
+        
+         | <a href="/blog/2007/10/19/loading-the-wcf-configuration-from-different-files-on-the-client-side/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>A common problem in WCF that many people face is the impossibility of
+loading the client configuration from different configuration files.
+This is a common scenario  when the developer wants to
+deploy some binaries with along with an independent configuration file
+(Which may be in a resource file also) to avoid modifying the main
+configuration file. A weeks ago, I described a easy workaround to use
+the external configuration files through the use of the configSource
+attribute (A mechanism provided by .NET). However, that approach
+requires several configuration files to configure an entire WCF channel,
+at least three files (client section, bindings and behaviors).</p>
+
+<p>Another approach, which is less common and I will describe in this post,
+requires some custom code to extend the ChannelFactory&lt;T> class.</p>
+
+<p>The ChannelFactory&lt;T> provides a virtual method &ldquo;CreateDescription&rdquo;
+that can be overridden to create a ServiceEndpoint.</p>
+
+<p> </p>
+
+<p>//</p>
+
+<p>// Summary:</p>
+
+<p>//    Creates a description of the service endpoint.</p>
+
+<p>//</p>
+
+<p>// Returns:</p>
+
+<p>//    The System.ServiceModel.Description.ServiceEndpoint of the
+service.</p>
+
+<p>//</p>
+
+<p>// Exceptions:</p>
+
+<p>//   System.InvalidOperatorException:</p>
+
+<p>//    The callback contract is null but the service endpoint requires
+one that</p>
+
+<p>//    is non-null.</p>
+
+<p>protected override ServiceEndpoint CreateDescription();</p>
+
+<p>The default implementation of this method basically tries to load
+the endpoint configuration from the default configuration file (The file
+configured for the default AppDomain). So, the workaround here is to
+override that method and load the configuration from another file. It
+seems to be pretty easy to do at first glance, but as you will see next,
+it requires a lot of plumbing code to make it work.</p>
+
+<p>The first step is to derive our custom channel class from the
+ChannelFactory&lt;T> class and add an argument in the constructor to
+specify a different configuration file.</p>
+
+<p>/// &lt;summary></p>
+
+<p>/// Custom client channel. Allows to specify a different configuration
+file</p>
+
+<p>/// &lt;/summary></p>
+
+<p>/// &lt;typeparam name=&ldquo;T&rdquo;>&lt;/typeparam></p>
+
+<p>public class CustomClientChannel&lt;T> : ChannelFactory&lt;T></p>
+
+<p>{</p>
+
+<p>  string configurationPath;</p>
+
+<p> </p>
+
+<p>  /// &lt;summary></p>
+
+<p>  /// Constructor</p>
+
+<p>  /// &lt;/summary></p>
+
+<p>  /// &lt;param name=&ldquo;configurationPath&rdquo;>&lt;/param></p>
+
+<p>  public CustomClientChannel(string configurationPath) : base(typeof(T))</p>
+
+<p>  {</p>
+
+<p>    this.configurationPath = configurationPath;</p>
+
+<p>    base.InitializeEndpoint((string)null, null);</p>
+
+<p>  }</p>
+
+<p>As you can see, a call to the method InitialiazeEndpoint of the base
+class is required. That method will automatically call to our
+CreateDescription method to configure the service endpoint.</p>
+
+<p>/// &lt;summary></p>
+
+<p>/// Loads the serviceEndpoint description from the specified
+configuration file</p>
+
+<p>/// &lt;/summary></p>
+
+<p>/// &lt;returns>&lt;/returns></p>
+
+<p>protected override ServiceEndpoint CreateDescription()</p>
+
+<p>{</p>
+
+<p>   ServiceEndpoint serviceEndpoint = base.CreateDescription();</p>
+
+<p> </p>
+
+<p>   ExeConfigurationFileMap map = new ExeConfigurationFileMap();</p>
+
+<p>   map.ExeConfigFilename = this.configurationPath;</p>
+
+<p> </p>
+
+<p>   Configuration config =
+ConfigurationManager.OpenMappedExeConfiguration(map,
+ConfigurationUserLevel.None);</p>
+
+<p>   ServiceModelSectionGroup group =
+ServiceModelSectionGroup.GetSectionGroup(config);</p>
+
+<p> </p>
+
+<p>   ChannelEndpointElement selectedEndpoint = null;</p>
+
+<p> </p>
+
+<p>   foreach (ChannelEndpointElement endpoint in group.Client.Endpoints)</p>
+
+<p>   {</p>
+
+<p>      if (endpoint.Contract ==
+serviceEndpoint.Contract.ConfigurationName)</p>
+
+<p>      {</p>
+
+<p>        selectedEndpoint = endpoint;</p>
+
+<p>        break;</p>
+
+<p>      }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    if (selectedEndpoint != null)</p>
+
+<p>    {</p>
+
+<p>      if (serviceEndpoint.Binding == null)</p>
+
+<p>      {</p>
+
+<p>        serviceEndpoint.Binding =
+CreateBinding(selectedEndpoint.Binding, group);</p>
+
+<p>      }</p>
+
+<p> </p>
+
+<p>      if (serviceEndpoint.Address == null)</p>
+
+<p>      {</p>
+
+<p>        serviceEndpoint.Address = new
+EndpointAddress(selectedEndpoint.Address,
+GetIdentity(selectedEndpoint.Identity),
+selectedEndpoint.Headers.Headers);</p>
+
+<p>      }</p>
+
+<p> </p>
+
+<p>      if (serviceEndpoint.Behaviors.Count == 0 &amp;&amp;
+selectedEndpoint.BehaviorConfiguration != null)</p>
+
+<p>      {</p>
+
+<p>        AddBehaviors(selectedEndpoint.BehaviorConfiguration,
+serviceEndpoint, group);</p>
+
+<p>      }</p>
+
+<p> </p>
+
+<p>      serviceEndpoint.Name = selectedEndpoint.Contract;</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    return serviceEndpoint;</p>
+
+<p> </p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>CreateDescription is the core method where we create the service
+endpoint using the configuration file specified in the constructor
+method.</p>
+
+<p>And the last step, is to use our custom channel in the client
+application instead of the base channel provided by WCF.</p>
+
+<p>CustomClientChannel&lt;ICalculator> channel = new
+CustomClientChannel&lt;ICalculator>(&ldquo;OtherConfig.config&rdquo;);</p>
+
+<p>ICalculator client = channel.CreateChannel();</p>
+
+<p>The code below uses the ICalculator contract  that comes with the WCF
+sdk samples.</p>
+
+<p>You can download the <a href="/images/legacy/CustomChannel.zip">complete sample
+here</a></p>
+
+<p> </p>
+
+<p> </p>
+
+<p> </p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -898,166 +1162,6 @@ here</a>. </p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2007/06/18/integrating-the-wcf-trace-with-the-logging-application-block/">Integrating the WCF Trace With the Logging Application Block</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2007-06-18T00:00:00-03:00" pubdate data-updated="true">Jun 18<span>th</span>, 2007</time>
-        
-         | <a href="/blog/2007/06/18/integrating-the-wcf-trace-with-the-logging-application-block/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>As part of the integration between WCF and EntLib 3.0, this last one
-comes with a nice feature to redirect the WCF trace to the logging
-application block. This is done by Entlib through a custom trace
-listener (system.diagnostics) that captures the trace generated by WCF,
-and then, transfer that trace to any of the EntLib&rsquo;s trace listeners
-(Logging application block) configured in the application.</p>
-
-<p>The image below illustrates the approach used by EntLib.</p>
-
-<p> </p>
-
-<p><img src="/images/legacy/Logging.gif" alt="" />\</p>
-
-<p>The fact of executing an extra component to transfer the trace messages
-and the logging application block itself will add some overhead to
-the overall solution by sure. On the other hand, we can use many of the
-available features in the logging application block, such as formatters,
-filters and trace listeners. Regarding the trace listeners, they will
-allow us to store the trace in different storages, like databases, msmq
-and files to name a few. Since we can actually do the same with a custom
-trace listener in system.diagnostics, the real benefit here is that we
-can leverage one of listeners provided in EntLib without needing to
-write one from the scratch or centralize the application trace and WCF
-trace just in one place.</p>
-
-<p>If want to still use the trace viewer tool provided in WCF
-(svctraceviewer.exe), the bad news is that this tool only supports xml
-files (It would be great to have a plugging architecture here to read
-the trace information from any storage). Therefore, we will have to
-store the trace in a valid xml format, and then build something to dump
-the trace to a xml file. Entlib comes with a trace listener
-XmlTraceListener that generates a xml file with the format expected by
-the svctraceviewer.exe tool.\</p>
-
-<p>The EntLib&rsquo;s trace listener to redirect the trace messages the Logging
-application block can be configured as follow</p>
-
-<p>&lt;system.diagnostics></p>
-
-<p>        &lt;sharedListeners></p>
-
-<p>            &lt;add name=&ldquo;EntLibListener&rdquo;
-type=&ldquo;Microsoft.Practices.EnterpriseLibrary.Logging.TraceListeners.EntLibLoggingProxyTraceListener,
-Microsoft.Practices.EnterpriseLibrary.Logging&rdquo;/></p>
-
-<p>        &lt;/sharedListeners></p>
-
-<p>        &lt;sources></p>
-
-<p>            &lt;source name=&ldquo;System.ServiceModel&rdquo;
-switchValue=&ldquo;Information, ActivityTracing&rdquo; propagateActivity=&ldquo;true&rdquo;></p>
-
-<p>                &lt;listeners></p>
-
-<p>                    &lt;add name=&ldquo;EntLibListener&rdquo;/></p>
-
-<p>                &lt;/listeners></p>
-
-<p>            &lt;/source></p>
-
-<p>        &lt;/sources></p>
-
-<p> &lt;/system.diagnostics></p>
-
-<p>For this post, I will demostrate how to configure the XmlTraceListener
-that comes out of the box to generate the file expected by the trace
-viewer tool.</p>
-
-<p>&lt;loggingConfiguration name=&ldquo;Logging Application Block&rdquo;
-tracingEnabled=&ldquo;true&rdquo;</p>
-
-<p>    defaultCategory=&ldquo;General&rdquo; logWarningsWhenNoCategoriesMatch=&ldquo;true&rdquo;></p>
-
-<p>    &lt;listeners></p>
-
-<p>        &lt;add fileName=&ldquo;trace-xml.xml&rdquo;
-listenerDataType=&ldquo;Microsoft.Practices.EnterpriseLibrary.Logging.Configuration.XmlTraceListenerData,
-Microsoft.Practices.EnterpriseLibrary.Logging&rdquo;</p>
-
-<p>        traceOutputOptions=&ldquo;None&rdquo;
-type=&ldquo;Microsoft.Practices.EnterpriseLibrary.Logging.TraceListeners.XmlTraceListener,
-Microsoft.Practices.EnterpriseLibrary.Logging&rdquo;</p>
-
-<p>        name=&ldquo;XML Trace Listener&rdquo; /></p>
-
-<p> </p>
-
-<p>    &lt;/listeners></p>
-
-<p>    &lt;formatters></p>
-
-<p>    &lt;/formatters></p>
-
-<p>    &lt;categorySources></p>
-
-<p>        &lt;add switchValue=&ldquo;All&rdquo; name=&ldquo;System.ServiceModel&rdquo;></p>
-
-<p>            &lt;listeners></p>
-
-<p>                &lt;add name=&ldquo;XML Trace Listener&rdquo; /></p>
-
-<p>            &lt;/listeners></p>
-
-<p>        &lt;/add></p>
-
-<p> </p>
-
-<p>    &lt;/categorySources></p>
-
-<p>    &lt;specialSources></p>
-
-<p>        &lt;allEvents switchValue=&ldquo;All&rdquo; name=&ldquo;All Events&rdquo; /></p>
-
-<p>        &lt;notProcessed switchValue=&ldquo;All&rdquo; name=&ldquo;Unprocessed Category&rdquo; /></p>
-
-<p>        &lt;errors switchValue=&ldquo;All&rdquo; name=&ldquo;Logging Errors &amp; Warnings&rdquo;
-/></p>
-
-<p>    &lt;/specialSources></p>
-
-<p> </p>
-
-<p>&lt;/loggingConfiguration></p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/21/">&larr; Older</a>
@@ -1075,6 +1179,10 @@ Microsoft.Practices.EnterpriseLibrary.Logging&rdquo;</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTeckture Authorization Server</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
@@ -1088,10 +1196,6 @@ Microsoft.Practices.EnterpriseLibrary.Logging&rdquo;</p>
     
       <li class="post">
         <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
       </li>
     
   </ul>

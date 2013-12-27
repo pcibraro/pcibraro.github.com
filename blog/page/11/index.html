@@ -9,10 +9,10 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="I
-discussed
-a time ago how WIF supported a new WS-Trust 1.4 element, “ActAs”, and
-how that element could be used for authentication delegation.  The &hellip;">
+  <meta name="description" content="A time ago I
+discussed how a
+custom REST Starter kit interceptor could be used to parse a SAML token
+in the Http Authorization header and wrap that &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -82,6 +82,256 @@ how that element could be used for authentication delegation.  The &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/04/15/integrating-wif-with-wcf-data-services/">Integrating WIF With WCF Data Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-04-15T00:00:00-03:00" pubdate data-updated="true">Apr 15<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/04/15/integrating-wif-with-wcf-data-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>A time ago I
+<a href="http://weblogs.asp.net/cibrax/archive/2009/03.aspx">discussed</a> how a
+custom REST Starter kit interceptor could be used to parse a SAML token
+in the Http Authorization header and wrap that into a ClaimsPrincipal
+that the WCF services could use. The thing is that code was initially
+created for Geneva framework, so it got deprecated quickly. I recently
+needed that piece of code for one of projects where I am currently
+working on so I decided to update it for WIF. As this interceptor can be
+injected in any host for WCF REST services, also represents an excellent
+solution for integrating claim-based security into WCF Data Services
+(previously known as ADO.NET Data Services).</p>
+
+<p>The interceptor basically expects a SAML token in the Authorization
+header. If a token is found, it is parsed and a new ClaimsPrincipal is
+initialized and injected in the WCF authorization context.</p>
+
+<p>public class SamlAuthenticationInterceptor : RequestInterceptor \
+{ \
+  SecurityTokenHandlerCollection handlers;</p>
+
+<p>  public SamlAuthenticationInterceptor() \
+    : base(false) \
+  { \
+    this.handlers =
+FederatedAuthentication.ServiceConfiguration.SecurityTokenHandlers; \
+  }</p>
+
+<p>  public override void ProcessRequest(ref RequestContext requestContext)
+\
+  { \
+    SecurityToken token =
+ExtractCredentials(requestContext.RequestMessage);</p>
+
+<p>    if (token != null) \
+    { \
+      ClaimsIdentityCollection claims = handlers.ValidateToken(token);</p>
+
+<p>      var principal = new ClaimsPrincipal(claims); \
+      InitializeSecurityContext(requestContext.RequestMessage,
+principal); \
+    } \
+    else \
+    { \
+      DenyAccess(ref requestContext); \
+    } \
+  }</p>
+
+<p>  private void DenyAccess(ref RequestContext requestContext) \
+  { \
+    Message reply = Message.CreateMessage(MessageVersion.None, null); \
+    HttpResponseMessageProperty responseProperty = new
+HttpResponseMessageProperty() { StatusCode = HttpStatusCode.Unauthorized
+};</p>
+
+<p>    responseProperty.Headers.Add(&ldquo;WWW-Authenticate&rdquo;, \
+          String.Format(&ldquo;Basic realm=\&rdquo;{0}\&ldquo;&rdquo;, &ldquo;&rdquo;));</p>
+
+<p>    reply.Properties[HttpResponseMessageProperty.Name] =
+responseProperty; \
+    requestContext.Reply(reply);</p>
+
+<p>    requestContext = null; \
+  }</p>
+
+<p>  private SecurityToken ExtractCredentials(Message requestMessage) \
+  { \
+    HttpRequestMessageProperty request = (HttpRequestMessageProperty) 
+requestMessage.Properties[HttpRequestMessageProperty.Name];</p>
+
+<p>    string authHeader = request.Headers[&ldquo;Authorization&rdquo;];</p>
+
+<p>    if (authHeader != null &amp;&amp; authHeader.Contains(&ldquo;&lt;saml&rdquo;)) \
+    { \
+      XmlTextReader xmlReader = new XmlTextReader(new
+StringReader(authHeader));</p>
+
+<p>      var col =
+SecurityTokenHandlerCollection.CreateDefaultSecurityTokenHandlerCollection();
+\
+      SecurityToken token = col.ReadToken(xmlReader); \
+                                 \
+      return token; \
+    }</p>
+
+<p>    return null; \
+  }</p>
+
+<p>  private void InitializeSecurityContext(Message request, IPrincipal
+principal) \
+  { \
+    List&lt;IAuthorizationPolicy> policies = new
+List&lt;IAuthorizationPolicy>(); \
+    policies.Add(new PrincipalAuthorizationPolicy(principal)); \
+    ServiceSecurityContext securityContext = new
+ServiceSecurityContext(policies.AsReadOnly());</p>
+
+<p>    if (request.Properties.Security != null) \
+    { \
+      request.Properties.Security.ServiceSecurityContext =
+securityContext; \
+    } \
+    else \
+    { \
+      request.Properties.Security = new SecurityMessageProperty() {
+ServiceSecurityContext = securityContext }; \
+     } \
+   }</p>
+
+<p>   class PrincipalAuthorizationPolicy : IAuthorizationPolicy \
+   { \
+     string id = Guid.NewGuid().ToString(); \
+     IPrincipal user;</p>
+
+<p>     public PrincipalAuthorizationPolicy(IPrincipal user) \
+     { \
+       this.user = user; \
+     }</p>
+
+<p>     public ClaimSet Issuer \
+     { \
+       get { return ClaimSet.System; } \
+     }</p>
+
+<p>     public string Id \
+     { \
+       get { return this.id; } \
+     }</p>
+
+<p>     public bool Evaluate(EvaluationContext evaluationContext, ref
+object state) \
+     { \
+       evaluationContext.AddClaimSet(this, new
+DefaultClaimSet(System.IdentityModel.Claims.Claim.CreateNameClaim(user.Identity.Name)));
+\
+       evaluationContext.Properties[&ldquo;Identities&rdquo;] = new
+List&lt;IIdentity>(new IIdentity[] { user.Identity }); \
+       evaluationContext.Properties[&ldquo;Principal&rdquo;] = user; \
+       return true; \
+     } \
+   } \</p>
+
+<p>A WCF Data Service, as any other WCF Service, contains a service host
+where this interceptor can be injected. The following code illustrates
+how that can be done in the “svc” file.</p>
+
+<p>&lt;%@ ServiceHost Language=&ldquo;C#&rdquo; Debug=&ldquo;true&rdquo;
+Service=&ldquo;ContactsDataService&rdquo; \
+                Factory=&ldquo;AppServiceHostFactory&rdquo; %></p>
+
+<p>using System; \
+ using System.ServiceModel; \
+ using System.ServiceModel.Activation; \
+ using Microsoft.ServiceModel.Web;</p>
+
+<p>class AppServiceHostFactory : ServiceHostFactory \
+ { \
+   protected override ServiceHost CreateServiceHost(Type serviceType,
+Uri[] baseAddresses) \
+  { \
+    WebServiceHost2 result = new WebServiceHost2(serviceType, true,
+baseAddresses);</p>
+
+<p>    result.Interceptors.Add(new SamlAuthenticationInterceptor()); \
+            \
+    return result; \
+  } \
+}</p>
+
+<p>WCF Data Services includes an specific WCF host of out the box
+(DataServiceHost). However, the service is not affected at all if you
+replace it with a custom one as I am doing in the code above
+(WebServiceHost2 is part of the REST Starter kit).</p>
+
+<p>Finally, the client application needs to pass the SAML token somehow to
+the data service. In case you are using any Http client library for
+consuming the data service, that’s easy to do, you only need to include
+the SAML token as part of the “Authorization” header. If you are using
+the auto-generated data service proxy, a little piece of code is needed
+to inject a SAML token into the DataServiceContext instance. That class
+provides an event “SendingRequest” that any client application can
+leverage to include custom code that modified the Http request before it
+is sent to the service. So, you can easily create an extension method
+for the DataServiceContext that negotiates the SAML token with an
+existing STS, and adds that token as part of the “Authorization” header.</p>
+
+<p>public static class DataServiceContextExtensions \
+ {     </p>
+
+<p>  public static void ConfigureFederatedCredentials(this
+DataServiceContext context, string baseStsAddress, string realm) \
+  { \
+    string address = string.Format(STSAddressFormat, baseStsAddress,
+realm); \
+             \
+    string token = NegotiateSecurityToken(address); \
+    context.SendingRequest += (source, args) => \
+    { \
+      args.RequestHeaders.Add(&ldquo;Authorization&rdquo;, token); \
+    }; \
+  }</p>
+
+<p>private string NegotiateSecurityToken(string address) \
+ { \
+ }</p>
+
+<p>}</p>
+
+<p>I left the NegociateSecurityToken method empty for this extension as it
+depends pretty much on how you are negotiating tokens from an existing
+STS. In case you want to end-to-end REST solution that involves an Http
+endpoint for the STS, you should definitely take a look at the
+<a href="http://startersts.codeplex.com/">Thinktecture starter STS project</a> in
+codeplex.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1106,107 +1356,6 @@ identity providers do not support this spec as it is discussed
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2009/09/08/client-configuration-in-wcf-4-0/">Client Configuration in WCF 4.0</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2009-09-08T00:00:00-03:00" pubdate data-updated="true">Sep 8<span>th</span>, 2009</time>
-        
-         | <a href="/blog/2009/09/08/client-configuration-in-wcf-4-0/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>As Dr Nick announced in this
-<a href="http://blogs.msdn.com/drnick/archive/2009/08/24/what-s-new-in-wcf-4-more-on-services-and-configuration.aspx">post</a>,
-WCF 4.0 will ship with a new feature to configure a client channel from
-a configuration source other than the traditional section in the
-application configuration file (I discussed a workaround for doing the
-same thing in WCF 3.0 a time ago in this
-<a href="http://weblogs.asp.net/cibrax/archive/2007/10/19/loading-the-wcf-configuration-from-different-files-on-the-client-side.aspx">post</a>)</p>
-
-<p>This will provide the flexibility to deploy some binaries with the
-client proxies together with an independent configuration file (which
-might be a resource file, a stand alone file included with your
-application or something you can download from an specific place), so
-the main configuration file does not need to be touched at all.</p>
-
-<p>A new channel factory “ConfigurationChannelFactory” is included as part
-of the System.ServiceModel.Configuration namespace to create channels
-from an alternative configuration source.</p>
-
-<p><strong>var fileMap = new ExeConfigurationFileMap(); \
-            fileMap.ExeConfigFilename = &ldquo;otherFile.config&rdquo;;</strong></p>
-
-<p><strong>var configuration =
-ConfigurationManager.OpenMappedExeConfiguration(fileMap,
-ConfigurationUserLevel.None);</strong></p>
-
-<p><strong>var factory = new
-ConfigurationChannelFactory&lt;IService1>(&ldquo;BasicHttpBinding_IService1&rdquo;,
-configuration, new
-EndpointAddress(&ldquo;</strong><a href="http://localhost:49187/Service1.svc"><strong>http://localhost:49187/Service1.svc</strong></a><strong>&rdquo;));</strong></p>
-
-<p>var client = factory.CreateChannel();</p>
-
-<p>var s = client.GetData(3);</p>
-
-<p>Console.WriteLine(s);</p>
-
-<p>The file “otherFile.config” is just a simple configuration file that
-contains the client definition and configuration for using the
-“IService1” service.</p>
-
-<p>&lt;configuration> \
-  \
-    &lt;system.serviceModel> \
-        &lt;bindings> \
-            &lt;basicHttpBinding> \
-              &lt;binding name=&ldquo;BasicHttpBinding_IService1&rdquo; > \
-                    &lt;security mode=&ldquo;None&rdquo;> \
-                    &lt;/security> \
-                &lt;/binding> \
-            &lt;/basicHttpBinding> \
-        &lt;/bindings> \
-        &lt;client> \
-            &lt;endpoint
-address=&ldquo;<a href="http://localhost:49187/Service1.svc">http://localhost:49187/Service1.svc</a>&rdquo;
-binding=&ldquo;basicHttpBinding&rdquo; \
-                bindingConfiguration=&ldquo;BasicHttpBinding_IService1&rdquo;
-contract=&ldquo;ServiceReference1.IService1&rdquo; \
-                name=&ldquo;BasicHttpBinding_IService1&rdquo; /> \
-        &lt;/client> \
-    &lt;/system.serviceModel> \
-&lt;/configuration></p>
-
-<p>All this code is based on the .NET 4.0 beta 1, so it might change in the
-final release.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/12/">&larr; Older</a>
@@ -1224,6 +1373,10 @@ final release.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTeckture Authorization Server</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
@@ -1237,10 +1390,6 @@ final release.</p>
     
       <li class="post">
         <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
       </li>
     
   </ul>

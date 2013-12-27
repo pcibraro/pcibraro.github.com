@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="If you got the chance to look into the WSE 3.0 code, maybe you noticed
-that it comes with two turn-key scenarios for X509 tokens,
-“ &hellip;">
+  <meta name="description" content="This is probably one of the main concerns for people involved in the
+development of web services using WSE. \
+Unfortunately, WSE 3.0 was designed &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +81,91 @@ that it comes with two turn-key scenarios for X509 tokens,
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2005/11/25/431528/">Interoperability Between WSE 2.0 and WSE 3.0</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2005-11-25T00:00:00-03:00" pubdate data-updated="true">Nov 25<span>th</span>, 2005</time>
+        
+         | <a href="/blog/2005/11/25/431528/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>This is probably one of the main concerns for people involved in the
+development of web services using WSE. \
+Unfortunately, WSE 3.0 was designed from the beginning to be compatible
+at wire level with Indigo and therefore it doesn&rsquo;t interoperate well
+with WSE 2.0.\
+To be clear, &ldquo;Wire compatible&rdquo; means equivalent messages. \
+I wrote this post to provide some necessary points to obtain
+interoperability between both versions.\</p>
+
+<h3>WS-Security xx specs</h3>
+
+<p>At this moment, there are two available versions of this specification,
+1.0 and 1.1 (Also called WS-Security extensions). \
+WSE 2.0 only implements the first version whereas WSE 3.0 uses features
+of both versions (such as signature confirmation and key derivation). \
+Both endpoints, the client and the server should use features provided
+only by WS-Security 1.0.\</p>
+
+<h3>Secure conversation</h3>
+
+<p>Secure Conversation is a special feature provided by WSE, in which
+client and server negotiate a session token to protect the communication
+for a specific period of time. This feature decrease the response time
+because the token negotiation happens once compared to other turn-key
+scenarios where the negotiation is done for each message. (This feature
+is really important when the client and the server interchange many
+messages during a period of time). \
+The SecureContext token used in WSE 3.0 is not compatible with WSE 2.0
+since it was modified to support new features like &ldquo;Stateful secure
+context tokens&rdquo;.\</p>
+
+<h3>WS-Addressing xx specs</h3>
+
+<p>WSE 3.0 uses a newer version of this specification (The same as Indigo)
+and therefore the messages produced by both versions are not
+compatible.\
+There is not a good way to fix this problem, but probably a SoapFilter
+to update the addressing headers can be a solution.\</p>
+
+<h3>Algorithm suite</h3>
+
+<p>WSE 3.0 uses by default the same algorithm suite as Indigo, AES256 for
+symmetric encryption and RSA-OAEP for key wrap. On the other hand, WSE
+2.0 uses AES128 and RSA-15.\
+You will have to update the configuration settings in both endpoints in
+order to use the same algorithm suite.\
+I explained how to change this setting in a previous
+<a href="http://weblogs.asp.net/cibrax/archive/2005/09/19/425555.aspx">post</a></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -248,7 +333,7 @@ The only way I found to bind an ADAM principal to Azman was through the
 user’s SID\</p>
 
 <p>//ADAM Provider was configured in the Web.Config file\
-MembershipUser user = Membership.GetUser(&ldquo;<a href="&#x6d;&#x61;&#x69;&#x6c;&#116;&#111;&#x3a;&#109;&#x79;&#117;&#x73;&#101;&#114;&#x40;&#77;&#121;&#x44;&#111;&#x6d;&#97;&#x69;&#x6e;&#x2e;&#99;&#x6f;&#109;">&#x6d;&#x79;&#x75;&#x73;&#101;&#x72;&#64;&#x4d;&#121;&#x44;&#x6f;&#109;&#x61;&#x69;&#x6e;&#x2e;&#x63;&#x6f;&#x6d;</a>&rdquo;);\
+MembershipUser user = Membership.GetUser(&ldquo;<a href="&#109;&#97;&#x69;&#x6c;&#116;&#111;&#58;&#x6d;&#x79;&#117;&#x73;&#x65;&#114;&#64;&#77;&#x79;&#68;&#111;&#x6d;&#97;&#x69;&#x6e;&#x2e;&#99;&#111;&#109;">&#109;&#121;&#117;&#115;&#x65;&#114;&#x40;&#77;&#121;&#x44;&#111;&#109;&#x61;&#105;&#x6e;&#x2e;&#99;&#111;&#109;</a>&rdquo;);\
 \
 AzAuthorizationStoreClass store = new AzAuthorizationStoreClass();\
 \
@@ -1181,265 +1266,6 @@ DllEntry=&ldquo;Execute&rdquo; /></p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2005/04/11/399839/">Hosting the CLR Within a Custom Action</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2005-04-11T00:00:00-03:00" pubdate data-updated="true">Apr 11<span>th</span>, 2005</time>
-        
-         | <a href="/blog/2005/04/11/399839/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Today, in order to develop a custom action for a Window Installer setup,
-you can choose between two options:</p>
-
-<p>  1. Writing a Native custom action using the C language\
-  2. Writing a Managed custom action using any .NET compliant language</p>
-
-<p>Both options have different pros and cons, so I will start enumerating
-some of them:</p>
-
-<p>Native custom actions</p>
-
-<p>  Pros:</p>
-
-<p>    1. Access to the installer context information.\
-    2. Interop code not required.</p>
-
-<p>  Cons:</p>
-
-<p>    1. Require some understanding of Windows programming and C language
-as well.\
-    2. Lack of code protection and memory management, you are
-responsible to acquire and release all used resources.\
-    3. Find a problem can be a nightmare, for example, a memory leak
-problem.\
-    4. Hard to debug.\</p>
-
-<p>Managed custom actions</p>
-
-<p>  Pros:</p>
-
-<p>    1. Extremely easy to develop in any CLR compliant language.\
-    2. Easy to debug and find problems.</p>
-
-<p>  Cons:</p>
-
-<p>    1. Inability to get context information.\
-    2. Only deferred custom actions ( They run at the end, you can&rsquo;t
-change any condition or property during the install ).\</p>
-
-<h3>A new option</h3>
-
-<p>To overcome the disadvantages of both options, the last week I developed
-a native custom action which hosts the CRL Runtime and executes a
-managed custom action. This solution combines the best of both worlds,
-and you can get many benefits of using it. \
-It contains three parts, a native custom action, a managed custom
-action, and a small msi framework to be used within the managed custom
-action. I will describe each one in detail next.</p>
-
-<h3>Native custom action project</h3>
-
-<p>The native custom action is a normal custom action written in C, which
-is responsible to host the CLR runtime and call to the managed custom
-action. \
-Basically, this custom action contains code to do the following things:</p>
-
-<p>​1. Loads the CLR runtime\
-2. Gets the managed custom action assembly from the msi binary table\
-3. Copies the assembly to the user temp folder\
-4. Loads the assembly within the CLR instance\
-5. Executes the managed custom action\
-6. Unloads the CLR runtime\</p>
-
-<p>You can find all this code under the CLRHosting folder. This code is
-always the same, and you won&rsquo;t have to change almost anything of it,
-except some parameters located in the file &ldquo;String.h&rdquo;:</p>
-
-<p>// CLR version\
-static LPCWSTR szCLRVersion = L&#8221;v1.1.4322&#8221;;\
-\
-// CLR flavor, workstation or server\
-static LPCWSTR szCLRFlavor = L&#8221;wks&#8221;;\
-\
-// Application domain name\
-static LPCWSTR szApplicationName = L&#8221;MsiHosting&#8221;;\
-\
-// Configuration file assigned to the application domain. You can attach
-this file to the binary table in the msi\
-static TCHAR* szApplicationConfigFile = &ldquo;MsiHosting.config&rdquo;;\
-\
-// Entry point of the managed custom action\
-static OLECHAR FAR* szCustomActionMember = L&#8221;RunActions&#8221;;\
-\
-// Managed custom action assembly\
-static TCHAR* szAssemblyName = &ldquo;CustomActionRuntime&rdquo;;\
-\
-// Managed custom action class name\
-static TCHAR* szClassName = &ldquo;CustomActionRuntime.Runtime&rdquo;;\
-\
-// Key used to locate the assembly file within the msi binary table\
-static TCHAR* szCustomActionRuntimeBinaryKey = &ldquo;CustomActionRuntime&rdquo;;\
-\
-// Key used to locate the configuration file within the msi binary
-table\
-static TCHAR* szApplicationConfigFileBinaryKey = &ldquo;MsiHostingConfig&rdquo;;</p>
-
-<h3>Managed custom action project</h3>
-
-<p>I wrote the project using C#, it includes the managed custom action and
-a small framework to manipulate the installer context.\
-You can find this code under the CustomActionRuntime folder.\
-The managed custom action should be implemented in &ldquo;CustomAction.cs&rdquo;,
-and usually looks like this:</p>
-
-<p>public class CustomAction\
-{\
-  #region Constructors\
-\
-  public CustomAction()\
-  {\
-  }\
-\
-  #endregion\
-\
-  public void Run( InstallerContext context )\
-  {\
-    // TODO: do something\
-  }\
-}\</p>
-
-<p>The context parameter represents a facade to the msi framework, through
-this framework you can query and modify different things of the
-installer context, not to mention the fact of executing dynamic SQL
-query against the msi tables.</p>
-
-<p>This sample makes use of this framework to query all available
-properties, it is a useless sample, but helps to show that
-functionality:</p>
-
-<p>public class CustomAction\
-{\
-  #region Constructors\
-\
-  public CustomAction()\
-  {\
-  }\
-\
-  #endregion\
-\
-  public void Run( InstallerContext context )\
-  {\
-    View view = context.OpenView( &ldquo;SELECT * FROM Property&rdquo; );\
-    RecordCollection records = view.Execute();\
-\
-    foreach( Record record in records )\
-    {\
-      foreach( Field field in record.Fields )\
-      {\
-       string value = field.GetString();\
-      }\
-    }\
-\
-    view.Close();\
-  }\
-}</p>
-
-<h3>Using this custom action within Wix</h3>
-
-<p>Until here I described the different parts of this solution, now I will
-describe how to integrate it in your installer using Wix.\
-To start I picked up a sample provided in this
-<a href="http://www.tramontana.co.hu/wix/lesson3.html#custom_actions">tutorial</a>,
-by the way an excellent tutorial to learn Wix.\
-This sample shows how to validate a PID using a custom action, so I&rsquo;ll
-modify it a little bit to use this solution.</p>
-
-<p><strong>1. &ldquo;Including the native custom action&rdquo;</strong>\</p>
-
-<p>Go to the custom action definition section, and replace this line :</p>
-
-<p>&lt;CustomAction Id=&ldquo;CheckingPID&rdquo; BinaryKey=&ldquo;CheckPID&rdquo; DllEntry=&ldquo;CheckPID&rdquo;
-/></p>
-
-<p>For</p>
-
-<p>&lt;CustomAction Id=&ldquo;CheckingPID&rdquo; BinaryKey=&ldquo;CheckPID&rdquo; DllEntry=&ldquo;Execute&rdquo;
-/></p>
-
-<p>You have to change only the DllEntry attribute, because my solution
-exports a different dll entry. ( &ldquo;Execute&rdquo; instead of &ldquo;CheckPID&rdquo; )</p>
-
-<p><strong>2. &ldquo;Modifying the binary table&rdquo;</strong>\</p>
-
-<p>Go to the binaries definition section, and replace this line :</p>
-
-<p>&lt;Binary Id=&ldquo;CheckPID&rdquo; src=&ldquo;Binary\CheckPID.dll&rdquo; /></p>
-
-<p>For</p>
-
-<p>&lt;!&mdash; Files required to run the .NET custom action &mdash;>\
-&lt;!&mdash; Native custom action &mdash;>\
-&lt;Binary Id=&ldquo;CheckPID&rdquo; src=&ldquo;Binary\CLRHosting.dll&rdquo; />\
-\
-&lt;!&mdash; Managed custom action assembly file, this key can be changed from
-Strings.h &mdash;>\
-&lt;Binary Id=&ldquo;CustomActionRuntime&rdquo; src=&ldquo;Binary\CustomActionRuntime.dll&rdquo;
-/>\
-\
-&lt;!&mdash; AppDomain config file, this key can be changed from Strings.h
-&mdash;>\
-&lt;Binary Id=&ldquo;MsiHostingConfig&rdquo; src=&ldquo;Binary\MsiHosting.config&rdquo; />\</p>
-
-<p>This change includes the files required to run my solution.</p>
-
-<p><strong>3. &ldquo;Compiling the solution&rdquo;</strong>\</p>
-
-<p>Open the &ldquo;MSIHosting.sln&rdquo; solution file with visual studio and compile
-it. This compilation will produce the binary files required to run the
-custom action.</p>
-
-<p><strong>4. &ldquo;Copying the binary files&rdquo;</strong>\</p>
-
-<p>Copy the following files to the &ldquo;Binary&rdquo; folder:\
-\
-CLRHosting\Debug\CLRHosting.dll\
-CustomActionRuntime\bin\debug\CustomActionRuntime.dll\
-CustomActionRuntime\MsiHosting.config\</p>
-
-<p>After all these steps, you will able to compile the wix source file to
-get the final msi.\
-\
-<a href="/images/legacy/MSIHosting.zip">Download Source Code</a></p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/26/">&larr; Older</a>
@@ -1457,6 +1283,10 @@ get the final msi.\
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTeckture Authorization Server</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
@@ -1470,10 +1300,6 @@ get the final msi.\
     
       <li class="post">
         <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
       </li>
     
   </ul>

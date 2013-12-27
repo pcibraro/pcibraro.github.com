@@ -9,9 +9,10 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="Conditional puts is a technique generally used in a REST architecture to
-inform clients about possible conflicts when multiple updates are
-performed &hellip;">
+  <meta name="description" content="Continuing from my previous posts &ldquo;REST and Workflow services play well
+together
+I&rdquo;
+and &ldquo;REST and Workflow services play well &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +82,124 @@ performed &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/11/06/routing-to-the-right-workflow-service-instance-through-uri-templates-rest-workflows-part-iii/">Routing to the Right Workflow Service Instance Through URI Templates (REST Workflows Part III)</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-11-06T00:00:00-03:00" pubdate data-updated="true">Nov 6<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/11/06/routing-to-the-right-workflow-service-instance-through-uri-templates-rest-workflows-part-iii/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Continuing from my previous posts &ldquo;<a href="http://weblogs.asp.net/cibrax/archive/2008/10/24/rest-and-workflow-services-play-well-together.aspx">REST and Workflow services play well
+together
+I</a>&rdquo;
+and &ldquo;<a href="http://weblogs.asp.net/cibrax/archive/2008/10/30/rest-and-workflow-services-play-well-together-part-ii.aspx">REST and Workflow services play well together
+II</a>&rdquo;,
+in which I created a new binding to send the workflow context as an http
+header, I&rsquo;ve applied some modifications to that sample to support also
+routing through URI templates. This is very helpful for scenarios where
+client applications are not necessarily aware of the existence of a
+workflow services on the other end, so the context information is
+reconstructed from the resource URI using Uri templates.</p>
+
+<p>For example, the following Uri template &ldquo;/orders/{instanceId}&rdquo; applied
+to the Uri
+<a href="http://localhost:8000/orders/3C3DE415-71F4-4538-ADA6-87A735827DF6">http://localhost:8000/orders/3C3DE415-71F4-4538-ADA6-87A735827DF6</a>
+will result in a match for the key &ldquo;instanceId&rdquo; with a value of
+&ldquo;3C3DE415-71F4-4538-ADA6-87A735827DF6&rdquo;. We can now pass that instanceId
+variable to the WF context correlation manager so it will be able to
+locate and load the corresponding workflow service instance.</p>
+
+<p>The configuration for the binding on the service side looks as follow,</p>
+
+<p>&lt;webHttpContext></p>
+
+<p>&lt;binding name=&ldquo;myServiceBinding&rdquo; contextMode=&ldquo;UriTemplate&rdquo;></p>
+
+<p>  &lt;uriTemplates></p>
+
+<p>    &lt;add name=&ldquo;orders&rdquo; value=&ldquo;order/{instanceId}&rdquo;>&lt;/add></p>
+
+<p>    &lt;add name=&ldquo;payments&rdquo; value=&ldquo;payment/order/{instanceId}&rdquo;>&lt;/add></p>
+
+<p>  &lt;/uriTemplates></p>
+
+<p>&lt;/binding></p>
+
+<p>&lt;/webHttpContext></p>
+
+<p>UriTemplates is a collection, you can configure there all the possible
+URIs that your workflow can handle. In that example, instanceId is the
+name of the variable used by WF to locate the workflow instance, other
+variable names can also be used. For example &ldquo;conversationId&rdquo; can be
+used to continue the workflow in a specific ReceiveActivity (Usually
+required when the workflow is waiting for some event in a parallel
+branch activity)</p>
+
+<p>We can now return the following links (representing the possible
+branches in the workflow) to the client,</p>
+
+<p>currentOrder.Next = new Next[] {</p>
+
+<p>    new Next</p>
+
+<p>    {</p>
+
+<p>        Rel = &ldquo;<a href="http://starbucks.example.org/payment">http://starbucks.example.org/payment</a>&rdquo;,</p>
+
+<p>        Uri = &ldquo;<a href="http://localhost:8000/payment/order/">http://localhost:8000/payment/order/</a>&rdquo; +
+WorkflowEnvironment.WorkflowInstanceId.ToString(),</p>
+
+<p>    },</p>
+
+<p>    new Next</p>
+
+<p>    {</p>
+
+<p>        Rel = &ldquo;<a href="http://starbucks.example/order/update">http://starbucks.example/order/update</a>&rdquo;,</p>
+
+<p>        Uri = &ldquo;<a href="http://localhost:8000/order/">http://localhost:8000/order/</a>&rdquo; +
+WorkflowEnvironment.WorkflowInstanceId.ToString()</p>
+
+<p>    }</p>
+
+<p>};</p>
+
+<p>The client application will not need to remember to send a context
+header in the next execution to resume an existing workflow instance,
+the Uri will be enough to parse the context information.</p>
+
+<p>Download the complete sample from <a href="/images/legacy/RestWorkflowsIII.zip">this
+location</a></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1766,224 +1885,6 @@ here</a></p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2008/08/01/combining-jquery-validation-with-asp-net-mvc/">Combining JQuery Validation With ASP.NET MVC</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2008-08-01T00:00:00-03:00" pubdate data-updated="true">Aug 1<span>st</span>, 2008</time>
-        
-         | <a href="/blog/2008/08/01/combining-jquery-validation-with-asp-net-mvc/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>One of the most nicest things about JQuery &ndash; in addition to the powerful
-mechanism it provides to manipulate the HTML DOM &ndash; is the great number
-of very useful plugins available out there.</p>
-
-<p><a href="http://bassistance.de/jquery-plugins/jquery-plugin-validation/">JQuery
-Validation</a>
-is one of my favorites, and today we will see how this plugin can be
-used with the MVC framework to validate all the inputs in a form before
-it is submitted to the controller.</p>
-
-<p>This plugin supports the concept of &ldquo;validation rule&rdquo;, a validation that
-has to be performed to an input field. For instance, &ldquo;The field is
-required&rdquo;, &ldquo;The field should have at least N characters&rdquo;, or &ldquo;This field
-has to be a valid email&rdquo;, many of them are the same you can find in the
-ASP.NET validators. (These validators do not work with the MVC framework
-because they are tied to the ASP.NET Viewstate). Of course, new rules
-can also be created for performing custom validations specific to an
-application, some examples of this are also available in the <a href="http://bassistance.de/jquery-plugins/jquery-plugin-validation/">plugin&rsquo;s
-website</a>.</p>
-
-<p>A rule can be applied to an input field in two ways:</p>
-
-<p>​1. Declarative, the rule is specified in the input field by means of
-the class attribute:</p>
-
-<p>&lt;input name=&ldquo;email&rdquo; id=&ldquo;email&rdquo; maxlength=&ldquo;60&rdquo; class=&ldquo;required email&rdquo;
-type=&ldquo;text&rdquo;/></p>
-
-<p>As you can see, two rules were specified in the class attribute,
-&ldquo;Required&rdquo; and &ldquo;Email&rdquo;, which means that two validations have to be
-performed for this field. Many rules can be applied to the same field,
-they only have to be separated by an space.</p>
-
-<p>​2. Imperative in code, the rule is specified in an script:</p>
-
-<p>&lt;script type=&ldquo;text/javascript&rdquo;></p>
-
-<p>\$(document).ready(function(){</p>
-
-<p>  \$(&ldquo;#form-sign-up&rdquo;).validate( {</p>
-
-<p>    rules: {</p>
-
-<p>      email: {</p>
-
-<p>        required: true,</p>
-
-<p>        email: true</p>
-
-<p>    },</p>
-
-<p>    messages: {</p>
-
-<p>      email: {</p>
-
-<p>        required: &ldquo;Please provide an email&rdquo;,</p>
-
-<p>        email: &ldquo;Please provide a valid email&rdquo;</p>
-
-<p>     } });</p>
-
-<p>});</p>
-
-<p>&lt;/script></p>
-
-<p>The validation was attached to the input field &ldquo;email&rdquo; in the form
-&ldquo;form-sign-up&rdquo;. The message displayed when a validation fails for an
-specific field can also be customized using the &ldquo;messages&rdquo; section in
-the script. (This is optional, the plugin already comes with a set of
-pre-defined error messages)</p>
-
-<p>And finally, one of the most interesting validation rules you can find
-there is &ldquo;remote&rdquo;, which performs a remote validation using an Ajax
-endpoint. At this point we can use an MVC controller method to perform
-an specific validation, for instance to see if a login name is still
-available to be used.</p>
-
-<p>&lt;script type=&ldquo;text/javascript&rdquo;></p>
-
-<p>\$(document).ready(function(){</p>
-
-<p>\$(&ldquo;#form-sign-up&rdquo;).validate( {</p>
-
-<p>  rules: {</p>
-
-<p>    login: {</p>
-
-<p>      required: true,</p>
-
-<p>      remote: &lsquo;&lt;%=Url.Action(&ldquo;IsLoginAvailable&rdquo;, &ldquo;Accounts&rdquo;) %>&rsquo;</p>
-
-<p>   }</p>
-
-<p>  },</p>
-
-<p>  messages: {</p>
-
-<p>    login: {</p>
-
-<p>     required: &ldquo;Please provide an alias&rdquo;,</p>
-
-<p>     remote: jQuery.format(&ldquo;{0} is already in use&rdquo;)</p>
-
-<p>   }</p>
-
-<p>  } });</p>
-
-<p>});</p>
-
-<p>&lt;/script></p>
-
-<p>The only requirement for the controller is that it must be return Json
-with the result of the validation. This can be easily done with MVC,</p>
-
-<p>public JsonResult IsLoginAvailable(string login)</p>
-
-<p>{</p>
-
-<p>    //TODO: Do the validation</p>
-
-<p>    JsonResult result = new JsonResult();</p>
-
-<p>    if (login == &ldquo;cibrax&rdquo;)</p>
-
-<p>      result.Data = false;</p>
-
-<p>    else</p>
-
-<p>      result.Data = true;</p>
-
-<p> </p>
-
-<p>    return result;</p>
-
-<p>}</p>
-
-<p>In the example above, if &ldquo;cibrax&rdquo; is entered as login name, the
-validation will fail and the user will see an error message.</p>
-
-<p><img src="/images/legacy/MVC_Validation.jpg" alt="" /></p>
-
-<p>The styles for the error messages can also be customized with the
-following rules,</p>
-
-<p>label.error {</p>
-
-<p>display: block;</p>
-
-<p>color: red;</p>
-
-<p>font-style: italic;</p>
-
-<p>font-weight: normal;</p>
-
-<p>}</p>
-
-<p>input.error {</p>
-
-<p>border: 2px solid red;</p>
-
-<p>}</p>
-
-<p>td.field input.error, td.field select.error, tr.errorRow td.field
-input,tr.errorRow td.field select {</p>
-
-<p>border: 2px solid red;</p>
-
-<p>background-color: #FFFFD5;</p>
-
-<p>margin: 0px;</p>
-
-<p>color: red;</p>
-
-<p>}</p>
-
-<p>As we have discussed here, JQuery validation is a great tool that we all
-should consider at the moment to validate data in the ASP.NET MVC
-framework.</p>
-
-<p>A complete example with different validations can be <a href="/images/legacy/Mvc.Validation.zip">downloaded from
-this location</a>.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/18/">&larr; Older</a>
@@ -2001,6 +1902,10 @@ this location</a>.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTeckture Authorization Server</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
@@ -2014,10 +1919,6 @@ this location</a>.</p>
     
       <li class="post">
         <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
       </li>
     
   </ul>

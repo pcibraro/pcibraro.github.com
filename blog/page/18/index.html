@@ -9,8 +9,8 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="While I was working for one of my customers, we ran into a very strange
-problem when they tried to deploy some WCF services in a web farm using &hellip;">
+  <meta name="description" content="One of the most nicest things about JQuery &ndash; in addition to the powerful
+mechanism it provides to manipulate the HTML DOM &ndash; is the great &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -80,6 +80,224 @@ problem when they tried to deploy some WCF services in a web farm using &hellip;
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/08/01/combining-jquery-validation-with-asp-net-mvc/">Combining JQuery Validation With ASP.NET MVC</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-08-01T00:00:00-03:00" pubdate data-updated="true">Aug 1<span>st</span>, 2008</time>
+        
+         | <a href="/blog/2008/08/01/combining-jquery-validation-with-asp-net-mvc/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>One of the most nicest things about JQuery &ndash; in addition to the powerful
+mechanism it provides to manipulate the HTML DOM &ndash; is the great number
+of very useful plugins available out there.</p>
+
+<p><a href="http://bassistance.de/jquery-plugins/jquery-plugin-validation/">JQuery
+Validation</a>
+is one of my favorites, and today we will see how this plugin can be
+used with the MVC framework to validate all the inputs in a form before
+it is submitted to the controller.</p>
+
+<p>This plugin supports the concept of &ldquo;validation rule&rdquo;, a validation that
+has to be performed to an input field. For instance, &ldquo;The field is
+required&rdquo;, &ldquo;The field should have at least N characters&rdquo;, or &ldquo;This field
+has to be a valid email&rdquo;, many of them are the same you can find in the
+ASP.NET validators. (These validators do not work with the MVC framework
+because they are tied to the ASP.NET Viewstate). Of course, new rules
+can also be created for performing custom validations specific to an
+application, some examples of this are also available in the <a href="http://bassistance.de/jquery-plugins/jquery-plugin-validation/">plugin&rsquo;s
+website</a>.</p>
+
+<p>A rule can be applied to an input field in two ways:</p>
+
+<p>​1. Declarative, the rule is specified in the input field by means of
+the class attribute:</p>
+
+<p>&lt;input name=&ldquo;email&rdquo; id=&ldquo;email&rdquo; maxlength=&ldquo;60&rdquo; class=&ldquo;required email&rdquo;
+type=&ldquo;text&rdquo;/></p>
+
+<p>As you can see, two rules were specified in the class attribute,
+&ldquo;Required&rdquo; and &ldquo;Email&rdquo;, which means that two validations have to be
+performed for this field. Many rules can be applied to the same field,
+they only have to be separated by an space.</p>
+
+<p>​2. Imperative in code, the rule is specified in an script:</p>
+
+<p>&lt;script type=&ldquo;text/javascript&rdquo;></p>
+
+<p>\$(document).ready(function(){</p>
+
+<p>  \$(&ldquo;#form-sign-up&rdquo;).validate( {</p>
+
+<p>    rules: {</p>
+
+<p>      email: {</p>
+
+<p>        required: true,</p>
+
+<p>        email: true</p>
+
+<p>    },</p>
+
+<p>    messages: {</p>
+
+<p>      email: {</p>
+
+<p>        required: &ldquo;Please provide an email&rdquo;,</p>
+
+<p>        email: &ldquo;Please provide a valid email&rdquo;</p>
+
+<p>     } });</p>
+
+<p>});</p>
+
+<p>&lt;/script></p>
+
+<p>The validation was attached to the input field &ldquo;email&rdquo; in the form
+&ldquo;form-sign-up&rdquo;. The message displayed when a validation fails for an
+specific field can also be customized using the &ldquo;messages&rdquo; section in
+the script. (This is optional, the plugin already comes with a set of
+pre-defined error messages)</p>
+
+<p>And finally, one of the most interesting validation rules you can find
+there is &ldquo;remote&rdquo;, which performs a remote validation using an Ajax
+endpoint. At this point we can use an MVC controller method to perform
+an specific validation, for instance to see if a login name is still
+available to be used.</p>
+
+<p>&lt;script type=&ldquo;text/javascript&rdquo;></p>
+
+<p>\$(document).ready(function(){</p>
+
+<p>\$(&ldquo;#form-sign-up&rdquo;).validate( {</p>
+
+<p>  rules: {</p>
+
+<p>    login: {</p>
+
+<p>      required: true,</p>
+
+<p>      remote: &lsquo;&lt;%=Url.Action(&ldquo;IsLoginAvailable&rdquo;, &ldquo;Accounts&rdquo;) %>&rsquo;</p>
+
+<p>   }</p>
+
+<p>  },</p>
+
+<p>  messages: {</p>
+
+<p>    login: {</p>
+
+<p>     required: &ldquo;Please provide an alias&rdquo;,</p>
+
+<p>     remote: jQuery.format(&ldquo;{0} is already in use&rdquo;)</p>
+
+<p>   }</p>
+
+<p>  } });</p>
+
+<p>});</p>
+
+<p>&lt;/script></p>
+
+<p>The only requirement for the controller is that it must be return Json
+with the result of the validation. This can be easily done with MVC,</p>
+
+<p>public JsonResult IsLoginAvailable(string login)</p>
+
+<p>{</p>
+
+<p>    //TODO: Do the validation</p>
+
+<p>    JsonResult result = new JsonResult();</p>
+
+<p>    if (login == &ldquo;cibrax&rdquo;)</p>
+
+<p>      result.Data = false;</p>
+
+<p>    else</p>
+
+<p>      result.Data = true;</p>
+
+<p> </p>
+
+<p>    return result;</p>
+
+<p>}</p>
+
+<p>In the example above, if &ldquo;cibrax&rdquo; is entered as login name, the
+validation will fail and the user will see an error message.</p>
+
+<p><img src="/images/legacy/MVC_Validation.jpg" alt="" /></p>
+
+<p>The styles for the error messages can also be customized with the
+following rules,</p>
+
+<p>label.error {</p>
+
+<p>display: block;</p>
+
+<p>color: red;</p>
+
+<p>font-style: italic;</p>
+
+<p>font-weight: normal;</p>
+
+<p>}</p>
+
+<p>input.error {</p>
+
+<p>border: 2px solid red;</p>
+
+<p>}</p>
+
+<p>td.field input.error, td.field select.error, tr.errorRow td.field
+input,tr.errorRow td.field select {</p>
+
+<p>border: 2px solid red;</p>
+
+<p>background-color: #FFFFD5;</p>
+
+<p>margin: 0px;</p>
+
+<p>color: red;</p>
+
+<p>}</p>
+
+<p>As we have discussed here, JQuery validation is a great tool that we all
+should consider at the moment to validate data in the ASP.NET MVC
+framework.</p>
+
+<p>A complete example with different validations can be <a href="/images/legacy/Mvc.Validation.zip">downloaded from
+this location</a>.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -2189,51 +2407,6 @@ services like these into their sites for the benefit of all :).</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2008/04/07/mvp-again/">MVP Again 2008!!!</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2008-04-07T00:00:00-03:00" pubdate data-updated="true">Apr 7<span>th</span>, 2008</time>
-        
-         | <a href="/blog/2008/04/07/mvp-again/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>I am so excited, this is third time I received the Microsoft MVP award.
-Thanks to all people involved in the evaluation process and my MVP lead
-<a href="http://blogs.msdn.com/mvplead">Fernando Garcia Loera</a>.</p>
-
-<p>I am looking forward to continue that collaborating throughout this
-year.</p>
-
-<p>Thanks again Microsoft!!!</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/19/">&larr; Older</a>
@@ -2251,6 +2424,10 @@ year.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTeckture Authorization Server</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
@@ -2264,10 +2441,6 @@ year.</p>
     
       <li class="post">
         <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
       </li>
     
   </ul>

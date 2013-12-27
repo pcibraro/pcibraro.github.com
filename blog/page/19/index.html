@@ -9,9 +9,8 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="A couple of months ago I described a useful authentication pattern for
-Web applications based on supporting tokens, one of features provided by
-WCF. &hellip;">
+  <meta name="description" content="I am so excited, this is third time I received the Microsoft MVP award.
+Thanks to all people involved in the evaluation process and my MVP lead &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +80,51 @@ WCF. &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/04/07/mvp-again/">MVP Again 2008!!!</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-04-07T00:00:00-03:00" pubdate data-updated="true">Apr 7<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/04/07/mvp-again/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I am so excited, this is third time I received the Microsoft MVP award.
+Thanks to all people involved in the evaluation process and my MVP lead
+<a href="http://blogs.msdn.com/mvplead">Fernando Garcia Loera</a>.</p>
+
+<p>I am looking forward to continue that collaborating throughout this
+year.</p>
+
+<p>Thanks again Microsoft!!!</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1469,270 +1513,6 @@ future posts.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2007/10/19/loading-the-wcf-configuration-from-different-files-on-the-client-side/">Loading the WCF Configuration From Different Files on the Client Side</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2007-10-19T00:00:00-03:00" pubdate data-updated="true">Oct 19<span>th</span>, 2007</time>
-        
-         | <a href="/blog/2007/10/19/loading-the-wcf-configuration-from-different-files-on-the-client-side/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>A common problem in WCF that many people face is the impossibility of
-loading the client configuration from different configuration files.
-This is a common scenario  when the developer wants to
-deploy some binaries with along with an independent configuration file
-(Which may be in a resource file also) to avoid modifying the main
-configuration file. A weeks ago, I described a easy workaround to use
-the external configuration files through the use of the configSource
-attribute (A mechanism provided by .NET). However, that approach
-requires several configuration files to configure an entire WCF channel,
-at least three files (client section, bindings and behaviors).</p>
-
-<p>Another approach, which is less common and I will describe in this post,
-requires some custom code to extend the ChannelFactory&lt;T> class.</p>
-
-<p>The ChannelFactory&lt;T> provides a virtual method &ldquo;CreateDescription&rdquo;
-that can be overridden to create a ServiceEndpoint.</p>
-
-<p> </p>
-
-<p>//</p>
-
-<p>// Summary:</p>
-
-<p>//    Creates a description of the service endpoint.</p>
-
-<p>//</p>
-
-<p>// Returns:</p>
-
-<p>//    The System.ServiceModel.Description.ServiceEndpoint of the
-service.</p>
-
-<p>//</p>
-
-<p>// Exceptions:</p>
-
-<p>//   System.InvalidOperatorException:</p>
-
-<p>//    The callback contract is null but the service endpoint requires
-one that</p>
-
-<p>//    is non-null.</p>
-
-<p>protected override ServiceEndpoint CreateDescription();</p>
-
-<p>The default implementation of this method basically tries to load
-the endpoint configuration from the default configuration file (The file
-configured for the default AppDomain). So, the workaround here is to
-override that method and load the configuration from another file. It
-seems to be pretty easy to do at first glance, but as you will see next,
-it requires a lot of plumbing code to make it work.</p>
-
-<p>The first step is to derive our custom channel class from the
-ChannelFactory&lt;T> class and add an argument in the constructor to
-specify a different configuration file.</p>
-
-<p>/// &lt;summary></p>
-
-<p>/// Custom client channel. Allows to specify a different configuration
-file</p>
-
-<p>/// &lt;/summary></p>
-
-<p>/// &lt;typeparam name=&ldquo;T&rdquo;>&lt;/typeparam></p>
-
-<p>public class CustomClientChannel&lt;T> : ChannelFactory&lt;T></p>
-
-<p>{</p>
-
-<p>  string configurationPath;</p>
-
-<p> </p>
-
-<p>  /// &lt;summary></p>
-
-<p>  /// Constructor</p>
-
-<p>  /// &lt;/summary></p>
-
-<p>  /// &lt;param name=&ldquo;configurationPath&rdquo;>&lt;/param></p>
-
-<p>  public CustomClientChannel(string configurationPath) : base(typeof(T))</p>
-
-<p>  {</p>
-
-<p>    this.configurationPath = configurationPath;</p>
-
-<p>    base.InitializeEndpoint((string)null, null);</p>
-
-<p>  }</p>
-
-<p>As you can see, a call to the method InitialiazeEndpoint of the base
-class is required. That method will automatically call to our
-CreateDescription method to configure the service endpoint.</p>
-
-<p>/// &lt;summary></p>
-
-<p>/// Loads the serviceEndpoint description from the specified
-configuration file</p>
-
-<p>/// &lt;/summary></p>
-
-<p>/// &lt;returns>&lt;/returns></p>
-
-<p>protected override ServiceEndpoint CreateDescription()</p>
-
-<p>{</p>
-
-<p>   ServiceEndpoint serviceEndpoint = base.CreateDescription();</p>
-
-<p> </p>
-
-<p>   ExeConfigurationFileMap map = new ExeConfigurationFileMap();</p>
-
-<p>   map.ExeConfigFilename = this.configurationPath;</p>
-
-<p> </p>
-
-<p>   Configuration config =
-ConfigurationManager.OpenMappedExeConfiguration(map,
-ConfigurationUserLevel.None);</p>
-
-<p>   ServiceModelSectionGroup group =
-ServiceModelSectionGroup.GetSectionGroup(config);</p>
-
-<p> </p>
-
-<p>   ChannelEndpointElement selectedEndpoint = null;</p>
-
-<p> </p>
-
-<p>   foreach (ChannelEndpointElement endpoint in group.Client.Endpoints)</p>
-
-<p>   {</p>
-
-<p>      if (endpoint.Contract ==
-serviceEndpoint.Contract.ConfigurationName)</p>
-
-<p>      {</p>
-
-<p>        selectedEndpoint = endpoint;</p>
-
-<p>        break;</p>
-
-<p>      }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    if (selectedEndpoint != null)</p>
-
-<p>    {</p>
-
-<p>      if (serviceEndpoint.Binding == null)</p>
-
-<p>      {</p>
-
-<p>        serviceEndpoint.Binding =
-CreateBinding(selectedEndpoint.Binding, group);</p>
-
-<p>      }</p>
-
-<p> </p>
-
-<p>      if (serviceEndpoint.Address == null)</p>
-
-<p>      {</p>
-
-<p>        serviceEndpoint.Address = new
-EndpointAddress(selectedEndpoint.Address,
-GetIdentity(selectedEndpoint.Identity),
-selectedEndpoint.Headers.Headers);</p>
-
-<p>      }</p>
-
-<p> </p>
-
-<p>      if (serviceEndpoint.Behaviors.Count == 0 &amp;&amp;
-selectedEndpoint.BehaviorConfiguration != null)</p>
-
-<p>      {</p>
-
-<p>        AddBehaviors(selectedEndpoint.BehaviorConfiguration,
-serviceEndpoint, group);</p>
-
-<p>      }</p>
-
-<p> </p>
-
-<p>      serviceEndpoint.Name = selectedEndpoint.Contract;</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    return serviceEndpoint;</p>
-
-<p> </p>
-
-<p>}</p>
-
-<p> </p>
-
-<p>CreateDescription is the core method where we create the service
-endpoint using the configuration file specified in the constructor
-method.</p>
-
-<p>And the last step, is to use our custom channel in the client
-application instead of the base channel provided by WCF.</p>
-
-<p>CustomClientChannel&lt;ICalculator> channel = new
-CustomClientChannel&lt;ICalculator>(&ldquo;OtherConfig.config&rdquo;);</p>
-
-<p>ICalculator client = channel.CreateChannel();</p>
-
-<p>The code below uses the ICalculator contract  that comes with the WCF
-sdk samples.</p>
-
-<p>You can download the <a href="/images/legacy/CustomChannel.zip">complete sample
-here</a></p>
-
-<p> </p>
-
-<p> </p>
-
-<p> </p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/20/">&larr; Older</a>
@@ -1750,6 +1530,10 @@ here</a></p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTeckture Authorization Server</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
@@ -1763,10 +1547,6 @@ here</a></p>
     
       <li class="post">
         <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a>
       </li>
     
   </ul>
