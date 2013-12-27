@@ -9,7 +9,7 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="ADFS 2.0 only supports SAML 2.0 and WS-Federation for doing single sign on for web applications and services. However, some new development platforms &hellip;">
+  <meta name="description" content="ADFS 2.0 only supports SAML 2.0 and WS-Federation for supporting single sign on web applications and services. However, some new development &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -110,9 +110,9 @@
   </header>
 
 
-  <div class="entry-content"><p>ADFS 2.0 only supports SAML 2.0 and WS-Federation for doing single sign on for web applications and services. However, some new development platforms such as iOS only support OAuth 2.0, which makes the use of ADFS a bit tricky. ADFS for Windows Server 2012 R2 already provides some limited support for JSON Web Tokens (JWT) with the OAuth 2.0 the code flow (As it is described in this <a href="http://www.cloudidentity.com/blog/2013/07/30/securing-a-web-api-with-windows-server-2012-r2-adfs-and-katana/">excellent post</a> by Vittorio).</p>
+  <div class="entry-content"><p>ADFS 2.0 only supports SAML 2.0 and WS-Federation for supporting single sign on web applications and services. However, some new development platforms such as iOS only support OAuth 2.0, which makes the use of ADFS a bit tricky. ADFS for Windows Server 2012 R2 already provides some limited support for JSON Web Tokens (JWT) with the OAuth 2.0 the code flow (As it is described in this <a href="http://www.cloudidentity.com/blog/2013/07/30/securing-a-web-api-with-windows-server-2012-r2-adfs-and-katana/">excellent post</a> by Vittorio).</p>
 
-<p>For some other scenarios in which your applications or services rely on JWTs for doing authentication/authorization, the ThinkTeckure Authorization Server represents a very nice alternative, which integrates really well with ADFS. The Authorization Server can act as a brige or broker between client apps that use OAuth 2.0 to get a JWT, and ADFS, which is used for authenticating the users.</p>
+<p>For some other scenarios in which your applications or services rely on JWTs for doing authentication/authorization, the Thinktecture Authorization Server represents a very nice alternative, which integrates really well with ADFS. The Authorization Server can act as a brige or broker between client apps that use OAuth 2.0 to get a JWT, and ADFS, which is used for authenticating the users.</p>
 
 <p>The configuration of the Authorization Server is very simple. Once you get Authorization Server deployed in IIS, it uses Entity Framework code first to automatically generate the backend database for you on the first use. After that, you only need to change the configuration files to trust ADFS as it is shown bellow,</p>
 
@@ -227,7 +227,7 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-
+<p>You can find more details in the <a href="http://leastprivilege.com/2013/09/19/adding-oauth2-to-adfs-and-thus-bridging-the-gap-between-modern-applications-and-enterprise-back-ends">Dominick&rsquo;s blog</a></p>
 </div>
   
   
