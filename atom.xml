@@ -4,7 +4,7 @@
   <title><![CDATA[Pablo Cibraro (Cibrax)]]></title>
   <link href="http://cibrax.me/atom.xml" rel="self"/>
   <link href="http://cibrax.me/"/>
-  <updated>2013-12-27T12:14:41-03:00</updated>
+  <updated>2013-12-27T12:17:05-03:00</updated>
   <id>http://cibrax.me/</id>
   <author>
     <name><![CDATA[Cibrax]]></name>
@@ -14,7 +14,7 @@
 
   
   <entry>
-    <title type="html"><![CDATA[OAuth Bridge for ADFS with ThinkTeckture Authorization Server]]></title>
+    <title type="html"><![CDATA[OAuth Bridge for ADFS with ThinkTecture Authorization Server]]></title>
     <link href="http://cibrax.me/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/"/>
     <updated>2013-12-27T10:23:00-03:00</updated>
     <id>http://cibrax.me/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server</id>
