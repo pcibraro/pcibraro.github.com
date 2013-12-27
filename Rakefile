@@ -437,3 +437,8 @@ end
 desc "Notify various services about new content"
 task :notify => [:pingomatic, :sitemapgoogle, :sitemapbing] do
 end
+
+task :runwindows do
+    puts '* Changing the codepage'
+    `chcp 65001`
+end

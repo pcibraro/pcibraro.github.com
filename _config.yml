@@ -98,3 +98,5 @@ google_analytics_tracking_id: UA-44468149-1
 
 # Facebook Like
 facebook_like: false
+
+encoding: UTF-8
