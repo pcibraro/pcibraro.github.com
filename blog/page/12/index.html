@@ -9,10 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="As Dr Nick announced in this
-post,
-WCF 4.0 will ship with a new feature to configure a client channel from
-a configuration source other than the &hellip;">
+  <meta name="description" content="I was wondering these days what would be the point in using WS-Passive
+when there is another simple sign-on solution, OpenID, that works really
+well &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -82,6 +81,93 @@ a configuration source other than the &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/09/14/scenarios-for-ws-passive-and-openid/">Scenarios for WS-Passive and OpenID</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-09-14T00:00:00-03:00" pubdate data-updated="true">Sep 14<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/09/14/scenarios-for-ws-passive-and-openid/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I was wondering these days what would be the point in using WS-Passive
+when there is another simple sign-on solution, OpenID, that works really
+well and it’s getting a great adoption in the community. I can not say
+the same about WS-Passive, I haven’t seen any concrete implementation
+yet (For instance, Microsoft is planning to release a first
+implementation as part of the WIF framework before the end of this
+year).</p>
+
+<p>However, I reached the conclusion that both technologies are prepared
+for addressing different scenarios. For me, OpenID is more suitable for
+community or social networking web sites that expect to have a great
+number of users, and can benefit from using the large user databases
+that some of the existing OpenID providers already have. This is also a
+great thing for the final user as he can reuse his public OpenID
+identifier to log into all these web sites. </p>
+
+<p>On the other hand, WS-Passive seems to work better for enterprise
+scenarios in companies that might have some sort of security
+infrastructure in place (Customer user databases, active directory,
+active STSs for services) and do not want to have third parties (other
+than the parties involved in the business) to participate in the
+business transactions or to share their user databases with these
+parties. This is closely related to one of the identity laws that Kim
+Cameron <a href="http://www.identityblog.com/stories/2004/12/09/thelaws.html">announced a time
+ago</a>. Law
+#3, “Justifiable Parties”, <em>Digital identity systems must be designed
+so the disclosure of identifying information is limited to parties
+having a necessary and justifiable place in a given identity
+relationship.</em></p>
+
+<p>This was one of the big failures in the adoption of Passport as
+Single-Sign-On technology. Some relying parties did not understand the
+purpose of having Microsoft (and Passport) involved in their business
+transactions.</p>
+
+<p>In addition, WS-Passive only specifies a way to interchange a security
+token with user claims between the involved parties (Client, STS and
+Relying Party), so it provides the flexibility of using any security
+token profile. The most common token profile used today is SAML, as it
+can be customized with custom assertions or claims specific to the
+business. OpenID also specifies a way to exchange custom data (other
+than <a href="http://openid.net/specs/openid-simple-registration-extension-1_0.html">Simple
+Registration</a>
+or SReg data) through the <a href="http://openid.net/specs/openid-attribute-exchange-1_0.html">“Attribute
+Exchange”</a>
+spec. However, it looks like many of the existing relying parties or
+identity providers do not support this spec as it is discussed
+<a href="http://dennisbloete.de/blog/on-openid-attribute-exchange/">here</a>.</p>
+
+<p>I am just guessing :). What do you think ?. \</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1069,54 +1155,6 @@ to support in the service.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2009/05/18/webcast-quot-openid-oauth-y-live-id-cual-es-la-diferencia/">Webcast &quot;OpenID, OAuth Y Live ID. Cual Es La Diferencia ?</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2009-05-18T00:00:00-03:00" pubdate data-updated="true">May 18<span>th</span>, 2009</time>
-        
-         | <a href="/blog/2009/05/18/webcast-quot-openid-oauth-y-live-id-cual-es-la-diferencia/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>El proximo miercoles 20 de mayo a las 3 PM (GMT-05:00 Colombia, Panama),
-voy a estar presentando un MSDN webcast acerca de OpenID, OAuth
-y Windows Live ID. El evento va a ser transmitido en castellano para la
-comunidad de latinoamerica, y se va a enfocar en las caracteristicas
-principales de estas soluciones/protocolos, como funcionan, y algunos
-escenarios en donde se pueden aplicar con exito.</p>
-
-<p>El link al evento es el siguiente,
-<a href="http://msevents.microsoft.com/CUI/EventDetail.aspx?EventID=1032403625&amp;Culture=es-AR">http://msevents.microsoft.com/CUI/EventDetail.aspx?EventID=1032403625&amp;Culture=es-AR</a> </p>
-
-<p>Los espero.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/13/">&larr; Older</a>
@@ -1134,6 +1172,10 @@ escenarios en donde se pueden aplicar con exito.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
@@ -1147,10 +1189,6 @@ escenarios en donde se pueden aplicar con exito.</p>
     
       <li class="post">
         <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
       </li>
     
   </ul>
@@ -1198,7 +1236,7 @@ escenarios en donde se pueden aplicar con exito.</p>
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2013 - Cibrax -
+  Copyright &copy; 2014 - Cibrax -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 

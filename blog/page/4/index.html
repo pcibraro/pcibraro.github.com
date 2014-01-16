@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="The Http status codes for reporting errors to clients can mainly be
-categorized on two groups, client errors and server errors. Any status
-code under &hellip;">
+  <meta name="description" content="ASP.NET Web API provides a very similar model to MVC for resolving
+dependencies using a service locator pattern. What you basically do is
+to provide &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +81,307 @@ code under &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/02/29/doing-di-with-autofac-in-asp-net-web-api/">Doing DI With Autofac in ASP.NET Web API</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-02-29T00:00:00-03:00" pubdate data-updated="true">Feb 29<span>th</span>, 2012</time>
+        
+         | <a href="/blog/2012/02/29/doing-di-with-autofac-in-asp-net-web-api/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>ASP.NET Web API provides a very similar model to MVC for resolving
+dependencies using a service locator pattern. What you basically do is
+to provide the implementation of that service locator to return any of
+the requested dependencies, and that implementation is typically tied to
+a DI container. </p>
+
+<p>The service locator can be injected into the Web API runtime using the
+ServiceResolver entry in the global configuration object
+(GlobalConfiguration.Configuration.ServiceResolver), which basically
+supports different overloads.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+public void SetResolver(IDependencyResolver resolver);
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+public void SetResolver(object commonServiceLocator);
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+public void SetResolver(Func&lt;Type, object> getService, Func&lt;Type, IEnumerable<object>> getServices);
+</del></p>
+
+<p>The first overload receives an instance of a IDependencyResolver
+implementation, which provides two methods for resolving one or multiple
+dependencies.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+public interface IDependencyResolver
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>object GetService(Type serviceType);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>IEnumerable&lt;object&gt; GetServices(Type serviceType);
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+}
+</del></p>
+
+<p>GetService should return null if the dependency can not resolved.
+GetServices should return an empty IEnumerable if the same thing
+happens.</p>
+
+<p>The second overload uses reflection for invoking the same two methods,
+GetService and GetServices.</p>
+
+<p>The third overload receives a set of Func delegates for doing the same
+thing.</p>
+
+<p>Autofac already provides a very smooth integration with ASP.NET Web API
+through a set of assemblies available in the “Autofac ASP.NET MVC
+integration” nuget package. The bad news is that you can not use the
+DepedencyResolver implementation in that package as it is not compatible
+with the one required by ASP.NET Web API.</p>
+
+<p>The AutofacDepedencyResolver class in that package implements
+System.Web.Mvc.IDependencyResolver, while ASP.NET Web API expects a
+System.Web.Http.Services.IDependencyResolver implementation. Nothing
+that we can not fix with  a simple few lines of code. We can reuse the
+existing implementation through the third overload that receives a set
+of delegates.</p>
+
+<p>The following code snippet illustrates how you can register all
+dependencies in the Autofac container and use that for resolving all the
+Web API dependencies,</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ContainerBuilder builder = new ContainerBuilder();
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+builder.RegisterType<ContactRepository>()
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>.As&lt;IContactRepository&gt;()
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>.InstancePerHttpRequest();
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+builder.RegisterApiControllers(Assembly.GetExecutingAssembly());
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+IContainer container = builder.Build();
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+var resolver = new AutofacDependencyResolver(container);
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+GlobalConfiguration.Configuration.ServiceResolver.SetResolver(
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>t =&gt; resolver.GetService(t),
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>t =&gt; resolver.GetServices(t));
+</code></pre>
+
+<p>~~~~</p>
+
+<p>One the things you can do with Autofac is to set the lifetime of the
+dependencies instances to be equal to a http request lifetime by using
+the “InstancePerHttpRequest” method. I also created a simple extension
+method “RegisterApiControllers” to automatically register all the
+existing Api controllers in the the project into the DI container.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+public static class RegistrationExtensions
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public static IRegistrationBuilder&lt;object, ScanningActivatorData, DynamicRegistrationStyle&gt; RegisterApiControllers(this ContainerBuilder builder, params Assembly[] controllerAssemblies)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    return
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        from t in builder.RegisterAssemblyTypes(controllerAssemblies)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        where typeof(IHttpController).IsAssignableFrom(t) &amp;&amp; t.Name.EndsWith("Controller")
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>        select t;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+}
+</del></p>
+
+<p>Using the code above, you should be able to use a API controller that
+looks like this (The contact repository is injected as a depedency)</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+public class ContactController : ApiController
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>IContactRepository repository;
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>public ContactController(IContactRepository repository)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>    this.repository = repository;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -3831,97 +4132,6 @@ browser (myapp/faye.js).</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2011/12/09/a-simple-backup-tool-for-sql-azure/">A Simple Backup Tool for SQL Azure</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-12-09T00:00:00-03:00" pubdate data-updated="true">Dec 9<span>th</span>, 2011</time>
-        
-         | <a href="/blog/2011/12/09/a-simple-backup-tool-for-sql-azure/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>If you are using SQL Azure nowadays, you probably know that there are
-only a few alternatives for making backups of your existing data.</p>
-
-<ul>
-<li>You can use SQL Azure Data Sync, which provides bi-directional data
-synchronization and data management capabilities allowing data to be
-easily shared across SQL Azure databases within multiple data
-centers. This implies you need at least one additional database for
-backing up your data, and SQL Azure databases are not necessarily
-cheap to keep them around without any functional use.</li>
-<li>You can use third party tools like the ones offered by Cerebrata or
-RedGate to synchronize SQL Azure databases with On-Premises
-databases or dump your data to files</li>
-</ul>
-
-
-<p>Or you can use
-<a href="http://weblogs.asp.net/bleroy/archive/2011/12/04/source-controlled-database-backups.aspx">Hgdbackup</a>,
-an OS alternative started by <a href="http://weblogs.asp.net/bleroy">Bertrand Le
-Roy</a> that uses the SQL BCP command line
-tool to persist your database data into text-based files.  As this was
-exactly what I was needing for an Azure project, I decided to contribute
-some code to that tool for storing the backup files to the Blob Storage
-in Azure. Therefore, you can now specify in the tool the Azure storage
-account you want to use to store your backup files, or restore your
-database from. </p>
-
-<p>The tool uses the raw REST API for the Blob Storage service so the Azure
-SDK or the binaries included on it are not required. This means the tool
-is very simple to distribute or run in a server with minimal requisites.</p>
-
-<p>The following examples illustrates how you can run the tool for making a
-new backup or restore an existing database.</p>
-
-<p><strong>Backup Example</strong></p>
-
-<p>Hgdbackup.exe /S:tcp:YOUR_Server.database.windows.net /D:YOUR_DB
-/U:YOUR_USER /P:YOUR_PASSWORD /A:YOUR_BLOB_ACCOUNT
-/K:YOUR_BLOB_KEY /T:&ldquo;Server={0},1433;Database={1};User
-Id={2};Password={3};Trusted_Connection=False;Encrypt=True;&rdquo;</p>
-
-<p><strong>Restore Example</strong></p>
-
-<p>Hgdrestore.exe /S:.\SQLExpress /D:YOUR_DB  /C:YOUR_BLOB_CONTAINER
-/A:YOUR_BLOB_ACCOUNT /K:YOUR_BLOB_KEY</p>
-
-<p>The backup tool supports an additional argument “C:” for passing the
-container where you want to store the text files with the data. If you
-don’t provide a container name, the tool will generate a new container
-for you.</p>
-
-<p>The good thing about this tool is that it is an open source initiative
-so you are free to contribute, give feedback or improve it as I did with
-this support for the blob storage.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/5/">&larr; Older</a>
@@ -3939,6 +4149,10 @@ this support for the blob storage.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
@@ -3952,10 +4166,6 @@ this support for the blob storage.</p>
     
       <li class="post">
         <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
       </li>
     
   </ul>
@@ -4003,7 +4213,7 @@ this support for the blob storage.</p>
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2013 - Cibrax -
+  Copyright &copy; 2014 - Cibrax -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 

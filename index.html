@@ -9,7 +9,7 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="ADFS 2.0 only supports SAML 2.0 and WS-Federation for supporting single sign on web applications and services. However, some new development &hellip;">
+  <meta name="description" content="When you first move to Node.js, you need to get used to write asynchronous single thread code that does not block. For some scenarios, writing such &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +79,224 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-01-13T10:39:00-03:00" pubdate data-updated="true">Jan 13<span>th</span>, 2014</time>
+        
+         | <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>When you first move to Node.js, you need to get used to write asynchronous single thread code that does not block. For some scenarios, writing such kind of code is not trivial, specially when you have to coordinate the execution of multiple async calls in parallel and return a result after all these tasks have been completed. One thing you don&rsquo;t want to do in that scenario is block the main thread to wait for all the calls, which is how you normally do in other platforms. Let&rsquo;s discuss a very trivial example that coordinates two calls for getting information from two different sources, which is subsequently returned as a response message in express.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">index</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">returnResponse</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="p">{};</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">getName</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">data</span><span class="p">.</span><span class="nx">name</span> <span class="o">=</span> <span class="nx">name</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">returnResponse</span><span class="p">)</span>
+</span><span class='line'>          <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">title</span><span class="o">:</span> <span class="s1">&#39;Express&#39;</span><span class="p">,</span> <span class="nx">data</span><span class="o">:</span> <span class="nx">data</span> <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">returnResponse</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">getPhone</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">phone</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">data</span><span class="p">.</span><span class="nx">phone</span> <span class="o">=</span> <span class="nx">phone</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">returnResponse</span><span class="p">)</span>
+</span><span class='line'>          <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">title</span><span class="o">:</span> <span class="s1">&#39;Express&#39;</span><span class="p">,</span> <span class="nx">data</span><span class="o">:</span> <span class="nx">data</span> <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">returnResponse</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The code above calls two functions to retrieve a name and a phone from different places asynchronously. The results of the calls are temporarily stored as members of the &ldquo;data&rdquo; variable. The ugly part is how the &ldquo;returnResponse&rdquo; variable is also used to notify that each function has done its part and a response can be returned. This contains duplicated code, it&rsquo;s error prone and it can easily get more complicated as the number of async calls increase.</p>
+
+<p>As interesting fact, there isn&rsquo;t any built-in or native functionality to handle an scenario like this in Node.js. That&rsquo;s where an module like &ldquo;async&rdquo; comes in place. &ldquo;Async&rdquo; is a swiss knife for async work in Node.js. It provides a ton of functions for coordinating asynchronous tasks such as the ones shown in next examples.</p>
+
+<p>One of the functions you will find useful for an scenario like this is parallel. The parallel function receives an array of async functions to call, and invokes a final callback when all the functions have completed their part.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">index</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">async</span><span class="p">.</span><span class="nx">parallel</span><span class="p">([</span>
+</span><span class='line'>      <span class="kd">function</span><span class="p">(</span><span class="nx">callback</span><span class="p">){</span> <span class="nx">getName</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">name</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">})},</span>
+</span><span class='line'>      <span class="kd">function</span><span class="p">(</span><span class="nx">callback</span><span class="p">){</span> <span class="nx">getPhone</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">phone</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">phone</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">})}</span>
+</span><span class='line'>  <span class="p">],</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">results</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">name</span> <span class="o">:</span> <span class="nx">results</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+</span><span class='line'>          <span class="nx">phone</span><span class="o">:</span> <span class="nx">results</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">title</span><span class="o">:</span> <span class="s1">&#39;Express&#39;</span><span class="p">,</span> <span class="nx">data</span><span class="o">:</span> <span class="nx">data</span> <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Every function in the Array passed to the parallel function receives a callback argument, which must be called after the work is completed. That callback receives two arguments, an error if something went wrong and a result. All the collected results and  errors are later passed to the final callback.</p>
+
+<p>Another useful function is &ldquo;each&rdquo;, which is similar to &ldquo;parallel&rdquo;, but it iterates over an array and invokes a function representing the async work for every element in that array.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">index</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">async</span><span class="p">.</span><span class="nx">each</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="kd">function</span><span class="p">(</span><span class="nx">item</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">getDataForItem</span><span class="p">(</span><span class="nx">item</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>              <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">data</span><span class="p">);</span>
+</span><span class='line'>          <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>       <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;index2&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">title</span><span class="o">:</span> <span class="s1">&#39;Express&#39;</span><span class="p">,</span> <span class="nx">data</span><span class="o">:</span> <span class="nx">data</span> <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In the code above, the function is executed three times with the values &ldquo;1&rdquo;, &ldquo;2&rdquo; and &ldquo;3&rdquo;. A callback is also executed when the work is completed. The final callback is executed after all the functions invoked the callback.</p>
+
+<p>This is a good way to coordinate async work in node.js, but you also have promises, which is not widely adopted yet in the platform as a way to represent async tasks. It&rsquo;s implemented by a lot of modules out there, but it&rsquo;s not something standard yet. A promise is an object that represents an asynchronous task. Among other things, this object represents a way to manipulate the task, determine when it is completed or to chain other tasks for example. The following example illustrates how a promise looks like in the Moongose module (example included in the <a href="http://mongoosejs.com/docs/api.html">Moongose docs</a>),</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">promise</span> <span class="o">=</span> <span class="nx">Meetups</span><span class="p">.</span><span class="nx">find</span><span class="p">({</span> <span class="nx">tags</span><span class="o">:</span> <span class="s1">&#39;javascript&#39;</span> <span class="p">}).</span><span class="nx">select</span><span class="p">(</span><span class="s1">&#39;_id&#39;</span><span class="p">).</span><span class="nx">exec</span><span class="p">();</span>
+</span><span class='line'><span class="nx">promise</span><span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">meetups</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">ids</span> <span class="o">=</span> <span class="nx">meetups</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">m</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">m</span><span class="p">.</span><span class="nx">_id</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">People</span><span class="p">.</span><span class="nx">find</span><span class="p">({</span> <span class="nx">meetups</span><span class="o">:</span> <span class="p">{</span> <span class="nx">$in</span><span class="o">:</span> <span class="nx">ids</span> <span class="p">}).</span><span class="nx">exec</span><span class="p">();</span>
+</span><span class='line'><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">people</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nx">people</span><span class="p">.</span><span class="nx">length</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span> <span class="mi">10000</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Too few people!!!&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Still need more people!!!&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">assert</span><span class="p">.</span><span class="nx">ok</span><span class="p">(</span><span class="nx">err</span> <span class="k">instanceof</span> <span class="nb">Error</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Meetups is a Moongose object for executing queries against a MongoDB collection. &ldquo;exec&rdquo; is a method in the returned promise to start the call, and &ldquo;then&rdquo; is another method to chain other promises when the execution is completed. In this example, another promise to find people is executed after all the meetups have been found.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -2299,191 +2517,6 @@ and receive the generated messages at real time.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/05/22/ip-throttling-in-asp-net-web-api/">IP Throttling in ASP.NET Web API</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-05-22T00:00:00-03:00" pubdate data-updated="true">May 22<span>nd</span>, 2013</time>
-        
-         | <a href="/blog/2013/05/22/ip-throttling-in-asp-net-web-api/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Some Web APIs use the client IP address to enforce Service Level
-Agreements such as limit the number of calls in a period of time. The
-client IP address can be used as a replacement for an authentication key
-sometimes when a previous registration of client applications is not
-required.</p>
-
-<p>This is relatively simple to implement in a message handler,</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">IPThrottlingMessageHandler</span> <span class="p">:</span> <span class="n">DelegatingHandler</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="n">IIPRepository</span> <span class="n">repository</span><span class="p">;</span>
-</span><span class='line'>  <span class="kt">int</span> <span class="n">maxRequestsHour</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">public</span> <span class="nf">IPThrottlingMessageHandler</span><span class="p">(</span><span class="n">IIPRepository</span> <span class="n">repository</span><span class="p">,</span> <span class="kt">int</span> <span class="n">maxRequestsHour</span> <span class="p">=</span> <span class="m">150</span><span class="p">)</span>
-</span><span class='line'>            <span class="p">:</span> <span class="k">base</span><span class="p">()</span>
-</span><span class='line'>  <span class="p">{</span>
-</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="n">repository</span> <span class="p">=</span> <span class="n">repository</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="n">maxRequestsHour</span> <span class="p">=</span> <span class="n">maxRequestsHour</span><span class="p">;</span>
-</span><span class='line'>   <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="k">public</span> <span class="nf">IPThrottlingMessageHandler</span><span class="p">(</span><span class="n">HttpMessageHandler</span> <span class="n">inner</span><span class="p">,</span> <span class="n">IIPRepository</span> <span class="n">repository</span><span class="p">,</span> <span class="kt">int</span> <span class="n">maxRequestsHour</span> <span class="p">=</span> <span class="m">150</span><span class="p">)</span>
-</span><span class='line'>            <span class="p">:</span> <span class="k">base</span><span class="p">(</span><span class="n">inner</span><span class="p">)</span>
-</span><span class='line'>  <span class="p">{</span>
-</span><span class='line'>     <span class="k">this</span><span class="p">.</span><span class="n">repository</span> <span class="p">=</span> <span class="n">repository</span><span class="p">;</span>
-</span><span class='line'>     <span class="k">this</span><span class="p">.</span><span class="n">maxRequestsHour</span> <span class="p">=</span> <span class="n">maxRequestsHour</span><span class="p">;</span>
-</span><span class='line'>   <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="k">protected</span> <span class="k">override</span> <span class="n">System</span><span class="p">.</span><span class="n">Threading</span><span class="p">.</span><span class="n">Tasks</span><span class="p">.</span><span class="n">Task</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;</span> <span class="n">SendAsync</span><span class="p">(</span><span class="n">HttpRequestMessage</span> <span class="n">request</span><span class="p">,</span> <span class="n">System</span><span class="p">.</span><span class="n">Threading</span><span class="p">.</span><span class="n">CancellationToken</span> <span class="n">cancellationToken</span><span class="p">)</span>
-</span><span class='line'>  <span class="p">{</span>
-</span><span class='line'>     <span class="kt">var</span> <span class="n">ip</span> <span class="p">=</span> <span class="n">GetClientIp</span><span class="p">(</span><span class="n">request</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="n">ip</span> <span class="p">==</span> <span class="k">null</span><span class="p">)</span>
-</span><span class='line'>      <span class="p">{</span>
-</span><span class='line'>         <span class="k">return</span> <span class="nf">ToResponse</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">HttpStatusCode</span><span class="p">.</span><span class="n">Forbidden</span><span class="p">,</span> <span class="s">&quot;The client ip couldn&#39;t be found&quot;</span><span class="p">);</span>
-</span><span class='line'>       <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>       <span class="k">if</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">repository</span><span class="p">.</span><span class="n">Increment</span><span class="p">(</span><span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">.</span><span class="n">Hour</span><span class="p">,</span> <span class="n">ip</span><span class="p">)</span> <span class="p">&gt;</span> <span class="k">this</span><span class="p">.</span><span class="n">maxRequestsHour</span><span class="p">)</span>
-</span><span class='line'>       <span class="p">{</span>
-</span><span class='line'>          <span class="k">return</span> <span class="nf">ToResponse</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">HttpStatusCode</span><span class="p">.</span><span class="n">Forbidden</span><span class="p">,</span> <span class="s">&quot;Quota exceeded&quot;</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>       <span class="k">return</span> <span class="k">base</span><span class="p">.</span><span class="n">SendAsync</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">cancellationToken</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">private</span> <span class="kt">string</span> <span class="nf">GetClientIp</span><span class="p">(</span><span class="n">HttpRequestMessage</span> <span class="n">request</span><span class="p">)</span>
-</span><span class='line'>  <span class="p">{</span>
-</span><span class='line'>     <span class="k">if</span> <span class="p">(</span><span class="n">request</span><span class="p">.</span><span class="n">Properties</span><span class="p">.</span><span class="n">ContainsKey</span><span class="p">(</span><span class="s">&quot;MS_HttpContext&quot;</span><span class="p">))</span>
-</span><span class='line'>     <span class="p">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="p">((</span><span class="n">HttpContextWrapper</span><span class="p">)</span><span class="n">request</span><span class="p">.</span><span class="n">Properties</span><span class="p">[</span><span class="s">&quot;MS_HttpContext&quot;</span><span class="p">]).</span><span class="n">Request</span><span class="p">.</span><span class="n">UserHostAddress</span><span class="p">;</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>     <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">request</span><span class="p">.</span><span class="n">Properties</span><span class="p">.</span><span class="n">ContainsKey</span><span class="p">(</span><span class="n">RemoteEndpointMessageProperty</span><span class="p">.</span><span class="n">Name</span><span class="p">))</span>
-</span><span class='line'>     <span class="p">{</span>
-</span><span class='line'>        <span class="n">RemoteEndpointMessageProperty</span> <span class="n">prop</span><span class="p">;</span>
-</span><span class='line'>        <span class="n">prop</span> <span class="p">=</span> <span class="p">(</span><span class="n">RemoteEndpointMessageProperty</span><span class="p">)</span><span class="n">request</span><span class="p">.</span><span class="n">Properties</span><span class="p">[</span><span class="n">RemoteEndpointMessageProperty</span><span class="p">.</span><span class="n">Name</span><span class="p">];</span>
-</span><span class='line'>        <span class="k">return</span> <span class="n">prop</span><span class="p">.</span><span class="n">Address</span><span class="p">;</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>      <span class="k">else</span>
-</span><span class='line'>      <span class="p">{</span>
-</span><span class='line'>          <span class="k">return</span> <span class="k">null</span><span class="p">;</span>
-</span><span class='line'>       <span class="p">}</span>
-</span><span class='line'>   <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="k">private</span> <span class="k">static</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;</span> <span class="n">ToResponse</span><span class="p">(</span><span class="n">HttpRequestMessage</span> <span class="n">request</span><span class="p">,</span> <span class="n">HttpStatusCode</span> <span class="n">code</span><span class="p">,</span> <span class="kt">string</span> <span class="n">message</span><span class="p">)</span>
-</span><span class='line'>   <span class="p">{</span>
-</span><span class='line'>       <span class="kt">var</span> <span class="n">tsc</span> <span class="p">=</span> <span class="k">new</span> <span class="n">TaskCompletionSource</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;();</span>
-</span><span class='line'>
-</span><span class='line'>       <span class="kt">var</span> <span class="n">response</span> <span class="p">=</span> <span class="n">request</span><span class="p">.</span><span class="n">CreateResponse</span><span class="p">(</span><span class="n">code</span><span class="p">);</span>
-</span><span class='line'>       <span class="n">response</span><span class="p">.</span><span class="n">ReasonPhrase</span> <span class="p">=</span> <span class="n">message</span><span class="p">;</span>
-</span><span class='line'>       <span class="n">response</span><span class="p">.</span><span class="n">Content</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StringContent</span><span class="p">(</span><span class="n">message</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>       <span class="n">tsc</span><span class="p">.</span><span class="n">SetResult</span><span class="p">(</span><span class="n">response</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="k">return</span> <span class="n">tsc</span><span class="p">.</span><span class="n">Task</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'> <span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This handler uses a repository to store the number of calls with a given
-IP in one hour. If the number of requests per hour exceeds the quota, an
-error response is returned to the client.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -2499,6 +2532,10 @@ error response is returned to the client.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
@@ -2512,10 +2549,6 @@ error response is returned to the client.</p>
     
       <li class="post">
         <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
       </li>
     
   </ul>
@@ -2563,7 +2596,7 @@ error response is returned to the client.</p>
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2013 - Cibrax -
+  Copyright &copy; 2014 - Cibrax -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 

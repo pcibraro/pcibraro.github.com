@@ -9,8 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="Today, in order to develop a custom action for a Window Installer setup,
-you can choose between two options:   1. Writing a Native custom action &hellip;">
+  <meta name="description" content="In my last post, I talked about hosting the CRL within a native custom
+action. \
+This week I found an easier way to execute a managed custom action, &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -80,6 +81,90 @@ you can choose between two options:   1. Writing a Native custom action &hell
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2005/04/14/400351/">Writing Managed Custom Actions in an Easy Way</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2005-04-14T00:00:00-03:00" pubdate data-updated="true">Apr 14<span>th</span>, 2005</time>
+        
+         | <a href="/blog/2005/04/14/400351/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>In my last post, I talked about hosting the CRL within a native custom
+action. \
+This week I found an easier way to execute a managed custom action, it
+is based on a hack and not extra C++ code is required.\
+Actually, you can&rsquo;t write a C# custom action because the compiler
+doesn&rsquo;t allow you to create a __stdcall function to be  \
+called from the outside. \
+Well, take a look to this
+<a href="http://www.c-sharpcorner.com/Code/2003/Aug/ExportManagedCodeasUnmanaged.asp">article</a>,
+it shows how to overcome that problem.</p>
+
+<p>Let&rsquo;s use this article to write our managed custom action, I&rsquo;ll start
+writing the custom action&rsquo;s skeleton:</p>
+
+<p>using System;\
+\
+namespace CustomActions\
+{\
+    public class MyCustomAction\
+    {\
+        public static int Execute( long handle )\
+        {\
+            System.Windows.Forms.MessageBox.Show( String.Format( &ldquo;Hello
+World {0}&rdquo;, handle ) );\
+\
+            return 0;\
+\
+        }\
+    }\
+}</p>
+
+<p>When the installer calls to this custom action, it will show a message
+box with the current msi handler number. \
+As next step, you will have to read that article and do the same things,
+but changing the &ldquo;SayHello&rdquo; method by &ldquo;Execute&rdquo;.\
+After finishing the last article step, you will have a managed assembly,
+which exports an &ldquo;Execute&rdquo; method. \
+You will able to use that method as &ldquo;DllEntry&rdquo; when you define the
+custom action in the custom actions table. \</p>
+
+<p>Using wix, the custom action definition should look like this:</p>
+
+<p>&lt;CustomAction Id=&ldquo;CustomActions&rdquo; BinaryKey=&ldquo;CustomActions&rdquo;
+DllEntry=&ldquo;Execute&rdquo; /></p>
+
+<p>I hope this can help you to develop more custom actions in an easy way
+:)</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -504,6 +589,10 @@ can use it to install your database in any machine.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
@@ -517,10 +606,6 @@ can use it to install your database in any machine.</p>
     
       <li class="post">
         <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
       </li>
     
   </ul>
@@ -568,7 +653,7 @@ can use it to install your database in any machine.</p>
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2013 - Cibrax -
+  Copyright &copy; 2014 - Cibrax -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 

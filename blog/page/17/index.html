@@ -9,10 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="Continuing from my previous posts &ldquo;REST and Workflow services play well
-together
-I&rdquo;
-and &ldquo;REST and Workflow services play well &hellip;">
+  <meta name="description" content="While OpenID and WS-Federation focus on delegating user identity (or a
+collection of identity claims), OAuth was designed to address a
+different and &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -82,6 +81,232 @@ and &ldquo;REST and Workflow services play well &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/11/14/oauth-channel-for-wcf-restful-services/">OAuth Channel for WCF RESTful Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-11-14T00:00:00-03:00" pubdate data-updated="true">Nov 14<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/11/14/oauth-channel-for-wcf-restful-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>While OpenID and WS-Federation focus on delegating user identity (or a
+collection of identity claims), OAuth was designed to address a
+different and complementary scenario, the delegation of user
+authorization. In few words, OAuth allows a client application to obtain
+user consent (as access tokens) for executing operations over private
+resources on his behalf.</p>
+
+<p>The analogy given by Eran Hammer Lahav in this post &ldquo;<a href="http://www.hueniverse.com/hueniverse/2007/09/explaining-oaut.html">Explaining
+OAuth</a>&rdquo;
+is very close to what the specification tries to address,</p>
+
+<p><em>&ldquo;Many luxury cars today come with a valet key. It is a special key you
+give the parking attendant and unlike your regular key, will not allow
+the car to drive more than a mile or two. Some valet keys will not open
+the trunk, while others will block access to your onboard cell phone
+address book. Regardless of what restrictions the valet key imposes, the
+idea is very clever. You give someone limited access to your car with a
+special key, while using another key to unlock everything else.&rdquo;</em></p>
+
+<p>Now, if we analyze the specification in more detail, we will see that
+the real purpose behind OAuth is to create a network of collaboration 
+between applications. It will not be necessary anymore to keep all our
+stuff just in a single place, we can have for instance our pictures in a
+website, our contacts in another place and a third application making
+use of them, all these applications collaborating together.</p>
+
+<p>If you want to know more about how OAuth works, you should read the
+following posts</p>
+
+<ul>
+<li><a href="http://www.hueniverse.com/hueniverse/2007/10/beginners-guide.html">&ldquo;Begginer&rsquo;s Guide to OAuth &ndash; Part
+I&rdquo;</a></li>
+<li><a href="http://www.hueniverse.com/hueniverse/2007/10/beginners-gui-1.html">&ldquo;Begginer&rsquo;s Guide to OAuth &ndash; Part II &ndash; Protocol
+Workflow&rdquo;</a></li>
+<li><a href="http://www.hueniverse.com/hueniverse/2008/10/beginners-guide.html">&ldquo;Begginer&rsquo;s Guide to OAuth &ndash; Part III &ndash; Security
+Architecture&rdquo;</a></li>
+</ul>
+
+
+<p>When I initially said that OpenID and OAuth complement each other, I
+meant that the user can first authenticated by an OpenID provider, and
+then redirected to the relying party to obtain his consent.
+(Authorization for consuming a private resource).</p>
+
+<p><a href="http://blog.bittercoder.com/">Alex Henderson (Aka Bittercoder)</a> has
+written a pretty good OAuth library in .NET for implementing an OAuth
+consumer and service provider. The library is available
+<a href="http://code.google.com/p/devdefined-tools/wiki/OAuth">here</a> under a MIT
+license (do wherever you want with it), and it is very easy to use. Alex
+has definitively made a very good work.</p>
+
+<p>My WCF channel implementation for OAuth mounts on top of his library and
+it basically transforms a OAuth token into a .NET security principal
+that can be used later within the service implementation. The channel is
+implemented as a RequestInterceptor, one of new features introduced in
+the REST WCF Starter Kit. This interceptor basically captures the
+request at channel level and performs all the validations required by
+OAuth. The following sample illustrates how the interceptors can be
+plugged into an existing service host (service.svc),</p>
+
+<p>&lt;%@ ServiceHost Language=&ldquo;C#&rdquo; Debug=&ldquo;true&rdquo;
+Service=&ldquo;ExampleOAuthChannel.FeedService&rdquo;
+Factory=&ldquo;ExampleOAuthChannel.AppServiceHostFactory&rdquo;%></p>
+
+<p>using System;\
+using System.ServiceModel;\
+using System.ServiceModel.Activation;\
+using Microsoft.ServiceModel.Web;</p>
+
+<p>namespace ExampleOAuthChannel \
+{\
+  class AppServiceHostFactory : ServiceHostFactory\
+  {\
+    protected override ServiceHost CreateServiceHost(Type serviceType,
+Uri[] baseAddresses)\
+    {\
+        WebServiceHost2 result = new WebServiceHost2(serviceType, true,
+baseAddresses);\
+        result.Interceptors.Add(new OAuthChannel.OAuthInterceptor(\
+   OAuthServicesLocator.Provider,
+OAuthServicesLocator.AccessTokenRepository));\
+        return result;\
+    }\
+  }\
+}</p>
+
+<p>OAuthServicesLocator.Provider and
+OAuthServiceLocator.AccessTokenRepository are just part of the OAuth
+implementation.</p>
+
+<p>The interaction (and all the messages interchanged) between the consumer
+and the provider was very well summarized by Alex in this post <a href="http://blog.bittercoder.com/PermaLink,guid,83488336-290d-4c4b-a314-14fe255e5b4e.aspx">&ldquo;OAuth
+for
+beginners&rdquo;</a></p>
+
+<p>The following code illustrates some of the functionality implemented in
+the OAuth interceptor,</p>
+
+<p>Message request = requestContext.RequestMessage;</p>
+
+<p>HttpRequestMessageProperty requestProperty =
+(HttpRequestMessageProperty)request.Properties[HttpRequestMessageProperty.Name];</p>
+
+<p> </p>
+
+<p>OAuthContext context = new
+OAuthContextBuilder().FromUri(requestProperty.Method,
+request.Headers.To);</p>
+
+<p> </p>
+
+<p>try</p>
+
+<p>{</p>
+
+<p>    _provider.AccessProtectedResourceRequest(context);</p>
+
+<p> </p>
+
+<p>    OAuthChannel.Models.AccessToken accessToken =
+_repository.GetToken(context.Token);</p>
+
+<p> </p>
+
+<p>    TokenPrincipal principal = new TokenPrincipal(</p>
+
+<p>        new GenericIdentity(accessToken.UserName, &ldquo;OAuth&rdquo;),</p>
+
+<p>        accessToken.Roles,</p>
+
+<p>        accessToken);</p>
+
+<p> </p>
+
+<p>    InitializeSecurityContext(request, principal);</p>
+
+<p>}</p>
+
+<p>catch (OAuthException authEx)</p>
+
+<p>{</p>
+
+<p>    XElement response = XElement.Load(new StringReader(&ldquo;&lt;?xml
+version=&#34;1.0\&rdquo; encoding=\&ldquo;utf-8\&rdquo;?>&lt;html
+xmlns=\&ldquo;<a href="http://www.w3.org/1999/xhtml\">http://www.w3.org/1999/xhtml\</a>&rdquo; version=\&ldquo;&ndash;//W3C//DTD XHTML
+2.0//EN\&rdquo; xml:lang=\&ldquo;en\&rdquo;
+xmlns:xsi=\&ldquo;<a href="http://www.w3.org/2001/XMLSchema-instance\">http://www.w3.org/2001/XMLSchema-instance\</a>&rdquo;
+xsi:schemaLocation=\&ldquo;<a href="http://www.w3.org/1999/xhtml">http://www.w3.org/1999/xhtml</a>
+<a href="http://www.w3.org/MarkUp/SCHEMA/xhtml2.xsd\">http://www.w3.org/MarkUp/SCHEMA/xhtml2.xsd\</a>&rdquo;>&lt;HEAD>&lt;TITLE>Request
+Error&lt;/TITLE>&lt;/HEAD>&lt;BODY>&lt;DIV id=\&ldquo;content\&rdquo;>&lt;P
+class=\&ldquo;heading1\&rdquo;>&lt;B>&ldquo; +
+HttpUtility.HtmlEncode(authEx.Report.ToString()) +
+&rdquo;&lt;/B>&lt;/P>&lt;/DIV>&lt;/BODY>&lt;/html>&ldquo;));</p>
+
+<p>    Message reply = Message.CreateMessage(MessageVersion.None, null,
+response);</p>
+
+<p>    HttpResponseMessageProperty responseProperty = new
+HttpResponseMessageProperty() { StatusCode = HttpStatusCode.Forbidden,
+StatusDescription = authEx.Report.ToString() };</p>
+
+<p>    responseProperty.Headers[HttpResponseHeader.ContentType] =
+&ldquo;text/html&rdquo;;</p>
+
+<p>    reply.Properties[HttpResponseMessageProperty.Name] =
+responseProperty;</p>
+
+<p>    requestContext.Reply(reply);</p>
+
+<p> </p>
+
+<p>    requestContext = null;</p>
+
+<p>}</p>
+
+<p>It basically validates the OAuth ticket using the library written by
+Alex and initializes a new principal containing the ticket identity. If
+the ticket can not be validated for some reason, it returns a friendly
+exception to the consumer.</p>
+
+<p>UPDATE: Alex has now include the channel as part of the OAuth Library.
+It is available under the following links,</p>
+
+<p><a href="http://devdefined-tools.googlecode.com/svn/trunk/projects/oauth/DevDefined.OAuth.Wcf/">http://devdefined-tools.googlecode.com/svn/trunk/projects/oauth/DevDefined.OAuth.Wcf/</a></p>
+
+<p><a href="http://devdefined-tools.googlecode.com/svn/trunk/projects/oauth/ExampleOAuthChannel/">http://devdefined-tools.googlecode.com/svn/trunk/projects/oauth/ExampleOAuthChannel/</a></p>
+
+<p>Coming next  &ldquo;Using the WCF OAuth channel with an ADO.NET service&rdquo; (The
+complete source code will be available as part of that post)</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1668,223 +1893,6 @@ would be great!!. Enjoy!!.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2008/08/21/dependency-injection-made-easy-for-the-asp-net-mvc/">Dependency Injection Made Easy for the ASP.NET MVC</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2008-08-21T00:00:00-03:00" pubdate data-updated="true">Aug 21<span>st</span>, 2008</time>
-        
-         | <a href="/blog/2008/08/21/dependency-injection-made-easy-for-the-asp-net-mvc/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>I decided to write this post to show how cool is Autofac for doing
-dependency injection in the ASP.NET MVC framework. Autofac, for me the
-Moq stepbrother  in the dependency injection arena because of its
-very-easy-to-use fluent interface and nice support of lambda
-expressions, comes with a built-in ASP.NET module to automatically
-intercept the creation of the controllers and pass the required
-dependencies to them, the only thing a programmer has to do is to
-provide instances of those dependencies or expressions to build them.</p>
-
-<p>Well, it is time to see Autofac in action with a practical example. If
-you have the chance to use the MVC preview 4, you may notice that it
-comes with a new controller &ldquo;Account&rdquo; to manage the website membership.
-This controller receives two dependencies in the constructor,</p>
-
-<p>public AccountController(IFormsAuthentication formsAuth,
-MembershipProvider provider)</p>
-
-<p>{</p>
-
-<p>  FormsAuth = formsAuth ?? new FormsAuthenticationWrapper();</p>
-
-<p>  Provider = provider ?? Membership.Provider;</p>
-
-<p>}</p>
-
-<p> </p>
-
-<p>public IFormsAuthentication FormsAuth</p>
-
-<p>{</p>
-
-<p>  get;</p>
-
-<p>  private set;</p>
-
-<p>}</p>
-
-<p> </p>
-
-<p>public MembershipProvider Provider</p>
-
-<p>{</p>
-
-<p>  get;</p>
-
-<p>  private set;</p>
-
-<p>}</p>
-
-<p>If those dependencies are not provided, it creates a default
-implementation of &ldquo;FormsAuthenticationWrapper&rdquo; and use the Membership
-singleton instance. Ok, let&rsquo;s make some minor changes to this controller
-so we always assume that those instances must be provided by the caller
-code (It will be actually responsibility of the DI container).</p>
-
-<p>public AccountController(IFormsAuthentication formsAuth,
-MembershipProvider provider)</p>
-
-<p>{</p>
-
-<p>  FormsAuth = formsAuth;</p>
-
-<p>  Provider = provider;</p>
-
-<p>}</p>
-
-<p>We now have to initialize a container to instruct Autofac about how to
-initialize or get instances of those classes. This can be done in the
-global.asax file,</p>
-
-<p>static IContainerProvider containerProvider;</p>
-
-<p> </p>
-
-<p>protected void Application_Start()</p>
-
-<p>{</p>
-
-<p>   RegisterRoutes(RouteTable.Routes);</p>
-
-<p> </p>
-
-<p>   var builder = new ContainerBuilder();</p>
-
-<p> </p>
-
-<p>   // Automatically register all controllers in the current assembly.</p>
-
-<p>   builder.RegisterModule(new
-AutofacControllerModule(Assembly.GetExecutingAssembly()));</p>
-
-<p> </p>
-
-<p>   builder.Register&lt;MembershipProvider>(container =>
-Membership.Provider).ExternallyOwned();</p>
-
-<p>  
-builder.Register&lt;FormsAuthenticationWrapper>().As&lt;IFormsAuthentication>().FactoryScoped();</p>
-
-<p> </p>
-
-<p>   containerProvider = new ContainerProvider(builder.Build());</p>
-
-<p> </p>
-
-<p>   // Hook MVC factory.</p>
-
-<p>   ControllerBuilder.Current.SetControllerFactory(new
-AutofacControllerFactory(containerProvider));</p>
-
-<p>}</p>
-
-<p>There are some lines in the code above that deserve special attention,
-so let&rsquo;s discuss them in details:</p>
-
-<ol>
-<li></li>
-</ol>
-
-
-<p>// Automatically register all controllers in the current assembly.</p>
-
-<p>builder.RegisterModule(new
-AutofacControllerModule(Assembly.GetExecutingAssembly()));</p>
-
-<p>This line basically discovers and registers all the controllers within
-the current assembly (The website itself) into the DI container.</p>
-
-<ol>
-<li></li>
-</ol>
-
-
-<p>builder.Register&lt;MembershipProvider>(container =>
-Membership.Provider).ExternallyOwned();</p>
-
-<p>builder.Register&lt;FormsAuthenticationWrapper>().As&lt;IFormsAuthentication>().FactoryScoped();</p>
-
-<p>The dependencies are registered in the container builder (The one that
-later knows how to create instances of the dependencies). The Register
-method optionally receives an lambda expression that will be used later
-to create or get the dependency instance, it could be considered a sort
-of lazy class construction. The container can also be used in the
-expressions to resolve other dependencies, for example,</p>
-
-<p>builder.Register&lt;MessagingService>(c => new
-MessagingService(c.Resolve&lt;IMessageRepository>).As&lt;IMessagingService>();</p>
-
-<p>Another important aspect in the initialization is the scope, which
-basically controls the dependency lifetime. In the code above I used two
-scopes, ExternallyOwned (The instance is managed by the application) and
-FactoryScoped (A new instance is created for every dependency
-resolution, very useful for instances that must be used and disposed
-just after, like the DataContext in Linq to SQL). Other possible scopes
-could be ContainerScoped (An instance per container) or Singleton (An
-instance shared between all containers).</p>
-
-<ol>
-<li></li>
-</ol>
-
-
-<p>containerProvider = new ContainerProvider(builder.Build());</p>
-
-<p> </p>
-
-<p>// Hook MVC factory.</p>
-
-<p>ControllerBuilder.Current.SetControllerFactory(new
-AutofacControllerFactory(containerProvider));</p>
-
-<p>The container provider is created, and the controller factory
-implementation provided by Autofac is set for the current application.</p>
-
-<p>As you can see, most of the plumbing code is already provided by
-Autofac, just a couple of lines were needed to start using DI in the MVC
-framework.</p>
-
-<p>The code sample is available to <a href="/images/legacy/MvcDI.zip">download
-here</a></p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/18/">&larr; Older</a>
@@ -1902,6 +1910,10 @@ here</a></p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
@@ -1915,10 +1927,6 @@ here</a></p>
     
       <li class="post">
         <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
       </li>
     
   </ul>
@@ -1966,7 +1974,7 @@ here</a></p>
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2013 - Cibrax -
+  Copyright &copy; 2014 - Cibrax -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 

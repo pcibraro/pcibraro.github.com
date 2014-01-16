@@ -9,11 +9,10 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="My good friend Pablo
-Galiano has released a
-pretty cool plug-in for Visual Studio 2008, Sticky
-Notes. In a few words, this extension
-allows you to &hellip;">
+  <meta name="description" content="The other day I came across this interesting
+article written by
+Subbu Allamaraju, where he discusses some of
+the aspects that drive the design of a &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -83,6 +82,165 @@ allows you to &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/01/08/describing-restful-applications/">Describing RESTful Applications</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-01-08T00:00:00-03:00" pubdate data-updated="true">Jan 8<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/01/08/describing-restful-applications/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>The other day I came across <a href="http://www.infoq.com/articles/subbu-allamaraju-rest">this interesting
+article</a> written by
+<a href="http://www.subbu.org/">Subbu Allamaraju</a>, where he discusses some of
+the aspects that drive the design of a pure and self-describing RESTful
+interface for a service (Or service contract in other words).</p>
+
+<p>He points out three main pieces that every service contract should have:</p>
+
+<p>​1. An uniform interface. An uniform interface is probably one the
+aspects that we best know about REST, or we may heard often when a REST
+service is described. This refers to the fact that each service exposes
+the same interface, which is a good thing for eliminating ad hoc
+messages and focusing primarily on an standard API that defines pieces
+of information that can be retrieved and manipulated. Instead of adding
+special function calls or interfaces to the architecture, new services
+add new pieces of information can be manipulated using standard
+requests. For instance, in Http RESTful services, this point involves
+using standard http verbs, headers and status codes.</p>
+
+<p>​2. Resource representations based on media types. This is quite
+interesting, what he proposes is to use a more specialized
+&ldquo;content-type&rdquo; for any of the xml schemas that a service may return. He
+confirms that generic media types such as &ldquo;application/xml&rdquo; are not
+enough to distinguish resource representations. We might want to know if
+the resource represents an account or a customer without making any
+assumptions about the resource&rsquo;s URI. In those cases, content types like
+&ldquo;application/vnd.bank.org.accounts+xml&rdquo; or
+&ldquo;application/vnd.bank.org.customers+xml&rdquo; would be more helpful and still
+being valid according to the spec  &ldquo;rfc3023, XML media types&rdquo;.</p>
+
+<p>200 OK \
+<strong>Content-Type: application/vnd.bank.org.account+xml</strong></p>
+
+<p>&lt;accounts xmlns=&ldquo;urn:org:bank:accounts&rdquo;> \
+    &lt;account> \
+        &lt;id>AZA12093&lt;/id>        \
+        &lt;balance currency=&ldquo;USD&rdquo;>993.95&lt;/balance> \
+    &lt;/account> \
+&lt;/accounts></p>
+
+<p>​3. Contextual links to resources. In addition to the resource
+representation, the client should also receive links representing what
+it can do next (Taking the form of a workflow). As Subbu concludes, this
+aspect decouples the client from the actual URIs of resources, and the
+client does not need to know the rest of the URIs until run-time.</p>
+
+<p>200 OK \
+Content-Type: application/vnd.bank.org.account+xml;charset=UTF-8</p>
+
+<p>&lt;accounts xmlns=&ldquo;urn:org:bank:accounts&rdquo;> \
+    &lt;account> \
+        &lt;id>AZA12093&lt;/id> \
+        <strong>&lt;link
+href=&ldquo;</strong><a href="http://bank.org/account/AZA12093"><strong>http://bank.org/account/AZA12093</strong></a><strong>&rdquo;
+rel=&ldquo;self&rdquo;/> \
+        &lt;link
+rel=&ldquo;</strong><a href="http://bank.org/rel/transfer"><strong>http://bank.org/rel/transfer</strong></a><strong>edit&rdquo;
+\
+              type=&ldquo;application/vnd.bank.org.transfer+xml&rdquo; \
+             
+href=&ldquo;</strong><a href="http://bank.org/transfers%22/"><strong>http://bank.org/transfers&#8221;/</strong></a><strong>>
+\
+        &lt;link
+rel=&rdquo;</strong><a href="http://bank.org/rel/customer"><strong>http://bank.org/rel/customer</strong></a><strong>&ldquo;
+\
+              type=&#8221;application/vnd.bank.org.customer+xml&rdquo; \
+             
+href=&ldquo;</strong><a href="http://bank.org/customer/7t676323a%22/"><strong>http://bank.org/customer/7t676323a&#8221;/</strong></a><strong>>
+\
+</strong>        &lt;balance currency=&#8221;USD&rdquo;>993.95&lt;/balance> \
+    &lt;/account> \
+    &hellip;..</p>
+
+<p>As you can see in the example above, the account representation contains
+links to itself (Self link) and other resources. The operations that can
+be performed over those resources are expressed by the &ldquo;rel&rdquo; attribute.</p>
+
+<p>Altough there is not built-in support in WCF to enforce these aspects
+automatically, it can be easily done in the service implementation using
+specific data contracts and the WebOperationContext. </p>
+
+<p>Setting up the content type before returning the service response:</p>
+
+<p>public Account GetAccount(string id)</p>
+
+<p>{</p>
+
+<p>  WebOperationContext.Current.OutgoingResponse.ContentType =
+&ldquo;application/vnd.bank.org.account+xml&rdquo;;</p>
+
+<p>  return repository.Accounts.Where(a => a.Id == id).FirstOrDefault();</p>
+
+<p>}</p>
+
+<p>A link can be modeled as a regular data contract:</p>
+
+<p>[DataContract(Name=&ldquo;link&rdquo;)]</p>
+
+<p>public class Link</p>
+
+<p>{</p>
+
+<p>   [DataMember(Name=&ldquo;href&rdquo;)]</p>
+
+<p>   public string Href { get; set; }</p>
+
+<p> </p>
+
+<p>   [DataMember(Name = &ldquo;rel&rdquo;)]</p>
+
+<p>   public string Rel { get; set; }</p>
+
+<p> </p>
+
+<p>   [DataMember(Name = &ldquo;type&rdquo;)]</p>
+
+<p>   public string Type { get; set; }</p>
+
+<p>}</p>
+
+<p>Read the <a href="http://www.infoq.com/articles/subbu-allamaraju-rest">article</a>
+for more information.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1750,16 +1908,16 @@ with the ADO.NET data service</strong></p>
 
 <p>        _contacts = new Contact[]{</p>
 
-<p>          new Contact(){ Id=0, Name=&ldquo;Mike&rdquo;, Email=&ldquo;<a href="&#109;&#x61;&#x69;&#108;&#116;&#111;&#58;&#x6d;&#x69;&#107;&#101;&#64;&#99;&#111;&#110;&#x74;&#x6f;&#115;&#x6f;&#46;&#99;&#111;&#x6d;">&#x6d;&#105;&#107;&#x65;&#x40;&#99;&#x6f;&#x6e;&#x74;&#111;&#x73;&#x6f;&#46;&#99;&#x6f;&#x6d;</a>&rdquo;,
+<p>          new Contact(){ Id=0, Name=&ldquo;Mike&rdquo;, Email=&ldquo;<a href="&#x6d;&#97;&#x69;&#x6c;&#x74;&#x6f;&#x3a;&#x6d;&#x69;&#x6b;&#x65;&#64;&#99;&#x6f;&#110;&#x74;&#111;&#x73;&#111;&#46;&#x63;&#x6f;&#109;">&#x6d;&#105;&#x6b;&#101;&#64;&#99;&#x6f;&#110;&#x74;&#111;&#x73;&#111;&#x2e;&#99;&#111;&#x6d;</a>&rdquo;,
 Owner = &ldquo;jane&rdquo; },</p>
 
-<p>          new Contact(){ Id=1, Name=&ldquo;Saaid&rdquo;, Email=&ldquo;<a href="&#109;&#97;&#x69;&#108;&#x74;&#111;&#58;&#83;&#97;&#x61;&#105;&#x64;&#64;&#x68;&#x6f;&#x74;&#x6d;&#97;&#x69;&#108;&#46;&#x63;&#x6f;&#109;">&#x53;&#97;&#x61;&#x69;&#100;&#x40;&#x68;&#111;&#x74;&#x6d;&#97;&#105;&#x6c;&#x2e;&#99;&#111;&#109;</a>&rdquo;,
+<p>          new Contact(){ Id=1, Name=&ldquo;Saaid&rdquo;, Email=&ldquo;<a href="&#109;&#x61;&#x69;&#108;&#x74;&#x6f;&#58;&#83;&#x61;&#97;&#105;&#x64;&#x40;&#x68;&#111;&#116;&#109;&#x61;&#x69;&#x6c;&#x2e;&#x63;&#111;&#x6d;">&#x53;&#x61;&#x61;&#x69;&#x64;&#x40;&#104;&#x6f;&#x74;&#x6d;&#97;&#105;&#108;&#46;&#99;&#111;&#109;</a>&rdquo;,
 Owner = &ldquo;jane&rdquo;},</p>
 
-<p>          new Contact(){ Id=2, Name=&ldquo;John&rdquo;, Email=&ldquo;<a href="&#x6d;&#97;&#x69;&#108;&#116;&#111;&#x3a;&#106;&#x31;&#x32;&#x33;&#64;&#x6c;&#x69;&#118;&#101;&#x2e;&#x63;&#111;&#109;">&#106;&#x31;&#50;&#x33;&#x40;&#108;&#105;&#118;&#101;&#46;&#x63;&#111;&#109;</a>&rdquo;, Owner
+<p>          new Contact(){ Id=2, Name=&ldquo;John&rdquo;, Email=&ldquo;<a href="&#x6d;&#97;&#105;&#108;&#x74;&#x6f;&#x3a;&#106;&#x31;&#50;&#51;&#64;&#108;&#x69;&#118;&#x65;&#46;&#x63;&#x6f;&#x6d;">&#x6a;&#x31;&#50;&#x33;&#64;&#x6c;&#105;&#x76;&#x65;&#46;&#x63;&#111;&#109;</a>&rdquo;, Owner
 = &ldquo;john&rdquo;},</p>
 
-<p>          new Contact(){ Id=3, Name=&ldquo;Pablo&rdquo;, Email=&ldquo;<a href="&#109;&#97;&#x69;&#108;&#x74;&#111;&#58;&#80;&#x61;&#98;&#x6c;&#111;&#x40;&#109;&#97;&#105;&#x6c;&#46;&#x63;&#111;&#x6d;">&#80;&#x61;&#x62;&#108;&#111;&#64;&#109;&#x61;&#105;&#x6c;&#x2e;&#99;&#111;&#109;</a>&rdquo;,
+<p>          new Contact(){ Id=3, Name=&ldquo;Pablo&rdquo;, Email=&ldquo;<a href="&#x6d;&#x61;&#x69;&#x6c;&#x74;&#111;&#x3a;&#x50;&#x61;&#x62;&#x6c;&#x6f;&#x40;&#109;&#97;&#105;&#108;&#x2e;&#x63;&#111;&#109;">&#80;&#97;&#98;&#x6c;&#x6f;&#64;&#109;&#97;&#105;&#108;&#x2e;&#99;&#x6f;&#109;</a>&rdquo;,
 Owner = &ldquo;john&rdquo;}};</p>
 
 <p>    }</p>
@@ -1865,232 +2023,6 @@ includes a client application implementation as well)</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2008/11/14/oauth-channel-for-wcf-restful-services/">OAuth Channel for WCF RESTful Services</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2008-11-14T00:00:00-03:00" pubdate data-updated="true">Nov 14<span>th</span>, 2008</time>
-        
-         | <a href="/blog/2008/11/14/oauth-channel-for-wcf-restful-services/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>While OpenID and WS-Federation focus on delegating user identity (or a
-collection of identity claims), OAuth was designed to address a
-different and complementary scenario, the delegation of user
-authorization. In few words, OAuth allows a client application to obtain
-user consent (as access tokens) for executing operations over private
-resources on his behalf.</p>
-
-<p>The analogy given by Eran Hammer Lahav in this post &ldquo;<a href="http://www.hueniverse.com/hueniverse/2007/09/explaining-oaut.html">Explaining
-OAuth</a>&rdquo;
-is very close to what the specification tries to address,</p>
-
-<p><em>&ldquo;Many luxury cars today come with a valet key. It is a special key you
-give the parking attendant and unlike your regular key, will not allow
-the car to drive more than a mile or two. Some valet keys will not open
-the trunk, while others will block access to your onboard cell phone
-address book. Regardless of what restrictions the valet key imposes, the
-idea is very clever. You give someone limited access to your car with a
-special key, while using another key to unlock everything else.&rdquo;</em></p>
-
-<p>Now, if we analyze the specification in more detail, we will see that
-the real purpose behind OAuth is to create a network of collaboration 
-between applications. It will not be necessary anymore to keep all our
-stuff just in a single place, we can have for instance our pictures in a
-website, our contacts in another place and a third application making
-use of them, all these applications collaborating together.</p>
-
-<p>If you want to know more about how OAuth works, you should read the
-following posts</p>
-
-<ul>
-<li><a href="http://www.hueniverse.com/hueniverse/2007/10/beginners-guide.html">&ldquo;Begginer&rsquo;s Guide to OAuth &ndash; Part
-I&rdquo;</a></li>
-<li><a href="http://www.hueniverse.com/hueniverse/2007/10/beginners-gui-1.html">&ldquo;Begginer&rsquo;s Guide to OAuth &ndash; Part II &ndash; Protocol
-Workflow&rdquo;</a></li>
-<li><a href="http://www.hueniverse.com/hueniverse/2008/10/beginners-guide.html">&ldquo;Begginer&rsquo;s Guide to OAuth &ndash; Part III &ndash; Security
-Architecture&rdquo;</a></li>
-</ul>
-
-
-<p>When I initially said that OpenID and OAuth complement each other, I
-meant that the user can first authenticated by an OpenID provider, and
-then redirected to the relying party to obtain his consent.
-(Authorization for consuming a private resource).</p>
-
-<p><a href="http://blog.bittercoder.com/">Alex Henderson (Aka Bittercoder)</a> has
-written a pretty good OAuth library in .NET for implementing an OAuth
-consumer and service provider. The library is available
-<a href="http://code.google.com/p/devdefined-tools/wiki/OAuth">here</a> under a MIT
-license (do wherever you want with it), and it is very easy to use. Alex
-has definitively made a very good work.</p>
-
-<p>My WCF channel implementation for OAuth mounts on top of his library and
-it basically transforms a OAuth token into a .NET security principal
-that can be used later within the service implementation. The channel is
-implemented as a RequestInterceptor, one of new features introduced in
-the REST WCF Starter Kit. This interceptor basically captures the
-request at channel level and performs all the validations required by
-OAuth. The following sample illustrates how the interceptors can be
-plugged into an existing service host (service.svc),</p>
-
-<p>&lt;%@ ServiceHost Language=&ldquo;C#&rdquo; Debug=&ldquo;true&rdquo;
-Service=&ldquo;ExampleOAuthChannel.FeedService&rdquo;
-Factory=&ldquo;ExampleOAuthChannel.AppServiceHostFactory&rdquo;%></p>
-
-<p>using System;\
-using System.ServiceModel;\
-using System.ServiceModel.Activation;\
-using Microsoft.ServiceModel.Web;</p>
-
-<p>namespace ExampleOAuthChannel \
-{\
-  class AppServiceHostFactory : ServiceHostFactory\
-  {\
-    protected override ServiceHost CreateServiceHost(Type serviceType,
-Uri[] baseAddresses)\
-    {\
-        WebServiceHost2 result = new WebServiceHost2(serviceType, true,
-baseAddresses);\
-        result.Interceptors.Add(new OAuthChannel.OAuthInterceptor(\
-   OAuthServicesLocator.Provider,
-OAuthServicesLocator.AccessTokenRepository));\
-        return result;\
-    }\
-  }\
-}</p>
-
-<p>OAuthServicesLocator.Provider and
-OAuthServiceLocator.AccessTokenRepository are just part of the OAuth
-implementation.</p>
-
-<p>The interaction (and all the messages interchanged) between the consumer
-and the provider was very well summarized by Alex in this post <a href="http://blog.bittercoder.com/PermaLink,guid,83488336-290d-4c4b-a314-14fe255e5b4e.aspx">&ldquo;OAuth
-for
-beginners&rdquo;</a></p>
-
-<p>The following code illustrates some of the functionality implemented in
-the OAuth interceptor,</p>
-
-<p>Message request = requestContext.RequestMessage;</p>
-
-<p>HttpRequestMessageProperty requestProperty =
-(HttpRequestMessageProperty)request.Properties[HttpRequestMessageProperty.Name];</p>
-
-<p> </p>
-
-<p>OAuthContext context = new
-OAuthContextBuilder().FromUri(requestProperty.Method,
-request.Headers.To);</p>
-
-<p> </p>
-
-<p>try</p>
-
-<p>{</p>
-
-<p>    _provider.AccessProtectedResourceRequest(context);</p>
-
-<p> </p>
-
-<p>    OAuthChannel.Models.AccessToken accessToken =
-_repository.GetToken(context.Token);</p>
-
-<p> </p>
-
-<p>    TokenPrincipal principal = new TokenPrincipal(</p>
-
-<p>        new GenericIdentity(accessToken.UserName, &ldquo;OAuth&rdquo;),</p>
-
-<p>        accessToken.Roles,</p>
-
-<p>        accessToken);</p>
-
-<p> </p>
-
-<p>    InitializeSecurityContext(request, principal);</p>
-
-<p>}</p>
-
-<p>catch (OAuthException authEx)</p>
-
-<p>{</p>
-
-<p>    XElement response = XElement.Load(new StringReader(&ldquo;&lt;?xml
-version=&#34;1.0\&rdquo; encoding=\&ldquo;utf-8\&rdquo;?>&lt;html
-xmlns=\&ldquo;<a href="http://www.w3.org/1999/xhtml\">http://www.w3.org/1999/xhtml\</a>&rdquo; version=\&ldquo;&ndash;//W3C//DTD XHTML
-2.0//EN\&rdquo; xml:lang=\&ldquo;en\&rdquo;
-xmlns:xsi=\&ldquo;<a href="http://www.w3.org/2001/XMLSchema-instance\">http://www.w3.org/2001/XMLSchema-instance\</a>&rdquo;
-xsi:schemaLocation=\&ldquo;<a href="http://www.w3.org/1999/xhtml">http://www.w3.org/1999/xhtml</a>
-<a href="http://www.w3.org/MarkUp/SCHEMA/xhtml2.xsd\">http://www.w3.org/MarkUp/SCHEMA/xhtml2.xsd\</a>&rdquo;>&lt;HEAD>&lt;TITLE>Request
-Error&lt;/TITLE>&lt;/HEAD>&lt;BODY>&lt;DIV id=\&ldquo;content\&rdquo;>&lt;P
-class=\&ldquo;heading1\&rdquo;>&lt;B>&ldquo; +
-HttpUtility.HtmlEncode(authEx.Report.ToString()) +
-&rdquo;&lt;/B>&lt;/P>&lt;/DIV>&lt;/BODY>&lt;/html>&ldquo;));</p>
-
-<p>    Message reply = Message.CreateMessage(MessageVersion.None, null,
-response);</p>
-
-<p>    HttpResponseMessageProperty responseProperty = new
-HttpResponseMessageProperty() { StatusCode = HttpStatusCode.Forbidden,
-StatusDescription = authEx.Report.ToString() };</p>
-
-<p>    responseProperty.Headers[HttpResponseHeader.ContentType] =
-&ldquo;text/html&rdquo;;</p>
-
-<p>    reply.Properties[HttpResponseMessageProperty.Name] =
-responseProperty;</p>
-
-<p>    requestContext.Reply(reply);</p>
-
-<p> </p>
-
-<p>    requestContext = null;</p>
-
-<p>}</p>
-
-<p>It basically validates the OAuth ticket using the library written by
-Alex and initializes a new principal containing the ticket identity. If
-the ticket can not be validated for some reason, it returns a friendly
-exception to the consumer.</p>
-
-<p>UPDATE: Alex has now include the channel as part of the OAuth Library.
-It is available under the following links,</p>
-
-<p><a href="http://devdefined-tools.googlecode.com/svn/trunk/projects/oauth/DevDefined.OAuth.Wcf/">http://devdefined-tools.googlecode.com/svn/trunk/projects/oauth/DevDefined.OAuth.Wcf/</a></p>
-
-<p><a href="http://devdefined-tools.googlecode.com/svn/trunk/projects/oauth/ExampleOAuthChannel/">http://devdefined-tools.googlecode.com/svn/trunk/projects/oauth/ExampleOAuthChannel/</a></p>
-
-<p>Coming next  &ldquo;Using the WCF OAuth channel with an ADO.NET service&rdquo; (The
-complete source code will be available as part of that post)</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/17/">&larr; Older</a>
@@ -2108,6 +2040,10 @@ complete source code will be available as part of that post)</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
@@ -2121,10 +2057,6 @@ complete source code will be available as part of that post)</p>
     
       <li class="post">
         <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
       </li>
     
   </ul>
@@ -2172,7 +2104,7 @@ complete source code will be available as part of that post)</p>
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2013 - Cibrax -
+  Copyright &copy; 2014 - Cibrax -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 

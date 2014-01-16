@@ -9,9 +9,8 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="We have been working a lot lately with PowerShell as part of our star
-product at Tellago Studios, “Moesion”. One of the main features we
-provide in &hellip;">
+  <meta name="description" content="If you are using SQL Azure nowadays, you probably know that there are
+only a few alternatives for making backups of your existing data. You can use &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +80,97 @@ provide in &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/12/09/a-simple-backup-tool-for-sql-azure/">A Simple Backup Tool for SQL Azure</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-12-09T00:00:00-03:00" pubdate data-updated="true">Dec 9<span>th</span>, 2011</time>
+        
+         | <a href="/blog/2011/12/09/a-simple-backup-tool-for-sql-azure/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>If you are using SQL Azure nowadays, you probably know that there are
+only a few alternatives for making backups of your existing data.</p>
+
+<ul>
+<li>You can use SQL Azure Data Sync, which provides bi-directional data
+synchronization and data management capabilities allowing data to be
+easily shared across SQL Azure databases within multiple data
+centers. This implies you need at least one additional database for
+backing up your data, and SQL Azure databases are not necessarily
+cheap to keep them around without any functional use.</li>
+<li>You can use third party tools like the ones offered by Cerebrata or
+RedGate to synchronize SQL Azure databases with On-Premises
+databases or dump your data to files</li>
+</ul>
+
+
+<p>Or you can use
+<a href="http://weblogs.asp.net/bleroy/archive/2011/12/04/source-controlled-database-backups.aspx">Hgdbackup</a>,
+an OS alternative started by <a href="http://weblogs.asp.net/bleroy">Bertrand Le
+Roy</a> that uses the SQL BCP command line
+tool to persist your database data into text-based files.  As this was
+exactly what I was needing for an Azure project, I decided to contribute
+some code to that tool for storing the backup files to the Blob Storage
+in Azure. Therefore, you can now specify in the tool the Azure storage
+account you want to use to store your backup files, or restore your
+database from. </p>
+
+<p>The tool uses the raw REST API for the Blob Storage service so the Azure
+SDK or the binaries included on it are not required. This means the tool
+is very simple to distribute or run in a server with minimal requisites.</p>
+
+<p>The following examples illustrates how you can run the tool for making a
+new backup or restore an existing database.</p>
+
+<p><strong>Backup Example</strong></p>
+
+<p>Hgdbackup.exe /S:tcp:YOUR_Server.database.windows.net /D:YOUR_DB
+/U:YOUR_USER /P:YOUR_PASSWORD /A:YOUR_BLOB_ACCOUNT
+/K:YOUR_BLOB_KEY /T:&ldquo;Server={0},1433;Database={1};User
+Id={2};Password={3};Trusted_Connection=False;Encrypt=True;&rdquo;</p>
+
+<p><strong>Restore Example</strong></p>
+
+<p>Hgdrestore.exe /S:.\SQLExpress /D:YOUR_DB  /C:YOUR_BLOB_CONTAINER
+/A:YOUR_BLOB_ACCOUNT /K:YOUR_BLOB_KEY</p>
+
+<p>The backup tool supports an additional argument “C:” for passing the
+container where you want to store the text files with the data. If you
+don’t provide a container name, the tool will generate a new container
+for you.</p>
+
+<p>The good thing about this tool is that it is an open source initiative
+so you are free to contribute, give feedback or improve it as I did with
+this support for the blob storage.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1550,97 +1640,6 @@ made by Jesus.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2011/06/30/telesharp-an-application-repository-for-net-applications/">Telesharp – an Application Repository for .NET Applications</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-06-30T00:00:00-03:00" pubdate data-updated="true">Jun 30<span>th</span>, 2011</time>
-        
-         | <a href="/blog/2011/06/30/telesharp-an-application-repository-for-net-applications/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>A year ago, we released SO-Aware as our first product in Tellago
-Studios. SO-Aware represented a new way to manage web services and all
-the related artifacts like configuration, tests or monitoring data in
-the Microsoft stack. It was based on the idea of using a lightweight SOA
-governance approach with a central repository exposed through RESTful
-services.</p>
-
-<p>At that point, we thought the same idea could be extended to enterprise
-applications in general by providing a generic repository for many of
-the runtime or design time artifacts generated during the development
-like configuration, application description or topology (a high level
-view of the components that made up a system), logging information or
-binaries. It took us several months to give a form to that idea and
-implement it as a product, but it is finally here and I am very proud to
-announce the release today under the name of “TeleSharp”.</p>
-
-<p>Telesharp provides in a nutshell the following features,</p>
-
-<p>​1. Configure your application topology in a central repository.
-Application topology in this context means that you can decompose your
-application and describe it in terms of components and how they interact
-each other. For example, you can tell that the CRM system is made up of
-a couple of WCF services and a ASP.NET MVC front end.</p>
-
-<p>​2. Centralize configuration for your applications and components.  You
-can import existing .NET configuration sections into the repository and
-associate them to the different components. In addition, environment
-overrides are supported for the configuration sections. We provide
-tooling and extensions in Visual Studio for managing all the
-configuration, and a set of powershell commands for automating the
-configuration deployment.</p>
-
-<p>​3. Browse all the assemblies and types remotely in your application
-servers in a web browser using an interface similar to any of the
-existing .NET reflection tools. You can easily determine this way
-whether the server is running the correct version of your applications.</p>
-
-<p>​4. Centralize logging and exception management into the repository. You
-get different reports and a pivot viewer experience for browsing all the
-different logging information generated by your applications. In
-addition, TeleSharp provides different providers for pushing the logging
-information to the central repository using well-known frameworks like
-ELMAH, Log4Net, EntLib or even Windows ETW. </p>
-
-<p><a href="http://weblogs.asp.net/blogs/cibrax/TeleSharp_07AA69C4.jpg"><img src="http://weblogs.asp.net/blogs/cibrax/TeleSharp_thumb_5AB506E8.jpg" title="TeleSharp" alt="TeleSharp" /></a></p>
-
-<p>The central repository itself is implemented as a set of OData services
-that any application can easily consume using regular Http. You can read
-more details in this introductory
-<a href="http://tellagostudios.com/bringing-true-agility-enterprise-net-tellago-studios-announces-telesharp">post</a></p>
-
-<p>If you think this product can be a good fit in your organization, you
-can request a trial version in our <a href="http://www.tellagostudios.com">Tellago
-Studios</a> website.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/6/">&larr; Older</a>
@@ -1658,6 +1657,10 @@ Studios</a> website.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
@@ -1671,10 +1674,6 @@ Studios</a> website.</p>
     
       <li class="post">
         <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
       </li>
     
   </ul>
@@ -1722,7 +1721,7 @@ Studios</a> website.</p>
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2013 - Cibrax -
+  Copyright &copy; 2014 - Cibrax -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 

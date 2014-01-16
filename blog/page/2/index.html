@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="Most of the Web APIs available out there in the web nowadays use some
-kind of authentication for identifying client applications. Although
-they &hellip;">
+  <meta name="description" content="Some Web APIs use the client IP address to enforce Service Level
+Agreements such as limit the number of calls in a period of time. The
+client IP &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +81,191 @@ they &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2013/05/22/ip-throttling-in-asp-net-web-api/">IP Throttling in ASP.NET Web API</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-22T00:00:00-03:00" pubdate data-updated="true">May 22<span>nd</span>, 2013</time>
+        
+         | <a href="/blog/2013/05/22/ip-throttling-in-asp-net-web-api/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Some Web APIs use the client IP address to enforce Service Level
+Agreements such as limit the number of calls in a period of time. The
+client IP address can be used as a replacement for an authentication key
+sometimes when a previous registration of client applications is not
+required.</p>
+
+<p>This is relatively simple to implement in a message handler,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">IPThrottlingMessageHandler</span> <span class="p">:</span> <span class="n">DelegatingHandler</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">IIPRepository</span> <span class="n">repository</span><span class="p">;</span>
+</span><span class='line'>  <span class="kt">int</span> <span class="n">maxRequestsHour</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">public</span> <span class="nf">IPThrottlingMessageHandler</span><span class="p">(</span><span class="n">IIPRepository</span> <span class="n">repository</span><span class="p">,</span> <span class="kt">int</span> <span class="n">maxRequestsHour</span> <span class="p">=</span> <span class="m">150</span><span class="p">)</span>
+</span><span class='line'>            <span class="p">:</span> <span class="k">base</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="n">repository</span> <span class="p">=</span> <span class="n">repository</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="n">maxRequestsHour</span> <span class="p">=</span> <span class="n">maxRequestsHour</span><span class="p">;</span>
+</span><span class='line'>   <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="k">public</span> <span class="nf">IPThrottlingMessageHandler</span><span class="p">(</span><span class="n">HttpMessageHandler</span> <span class="n">inner</span><span class="p">,</span> <span class="n">IIPRepository</span> <span class="n">repository</span><span class="p">,</span> <span class="kt">int</span> <span class="n">maxRequestsHour</span> <span class="p">=</span> <span class="m">150</span><span class="p">)</span>
+</span><span class='line'>            <span class="p">:</span> <span class="k">base</span><span class="p">(</span><span class="n">inner</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>     <span class="k">this</span><span class="p">.</span><span class="n">repository</span> <span class="p">=</span> <span class="n">repository</span><span class="p">;</span>
+</span><span class='line'>     <span class="k">this</span><span class="p">.</span><span class="n">maxRequestsHour</span> <span class="p">=</span> <span class="n">maxRequestsHour</span><span class="p">;</span>
+</span><span class='line'>   <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="k">protected</span> <span class="k">override</span> <span class="n">System</span><span class="p">.</span><span class="n">Threading</span><span class="p">.</span><span class="n">Tasks</span><span class="p">.</span><span class="n">Task</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;</span> <span class="n">SendAsync</span><span class="p">(</span><span class="n">HttpRequestMessage</span> <span class="n">request</span><span class="p">,</span> <span class="n">System</span><span class="p">.</span><span class="n">Threading</span><span class="p">.</span><span class="n">CancellationToken</span> <span class="n">cancellationToken</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>     <span class="kt">var</span> <span class="n">ip</span> <span class="p">=</span> <span class="n">GetClientIp</span><span class="p">(</span><span class="n">request</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="n">ip</span> <span class="p">==</span> <span class="k">null</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">{</span>
+</span><span class='line'>         <span class="k">return</span> <span class="nf">ToResponse</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">HttpStatusCode</span><span class="p">.</span><span class="n">Forbidden</span><span class="p">,</span> <span class="s">&quot;The client ip couldn&#39;t be found&quot;</span><span class="p">);</span>
+</span><span class='line'>       <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>       <span class="k">if</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">repository</span><span class="p">.</span><span class="n">Increment</span><span class="p">(</span><span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">.</span><span class="n">Hour</span><span class="p">,</span> <span class="n">ip</span><span class="p">)</span> <span class="p">&gt;</span> <span class="k">this</span><span class="p">.</span><span class="n">maxRequestsHour</span><span class="p">)</span>
+</span><span class='line'>       <span class="p">{</span>
+</span><span class='line'>          <span class="k">return</span> <span class="nf">ToResponse</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">HttpStatusCode</span><span class="p">.</span><span class="n">Forbidden</span><span class="p">,</span> <span class="s">&quot;Quota exceeded&quot;</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>       <span class="k">return</span> <span class="k">base</span><span class="p">.</span><span class="n">SendAsync</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">cancellationToken</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">private</span> <span class="kt">string</span> <span class="nf">GetClientIp</span><span class="p">(</span><span class="n">HttpRequestMessage</span> <span class="n">request</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>     <span class="k">if</span> <span class="p">(</span><span class="n">request</span><span class="p">.</span><span class="n">Properties</span><span class="p">.</span><span class="n">ContainsKey</span><span class="p">(</span><span class="s">&quot;MS_HttpContext&quot;</span><span class="p">))</span>
+</span><span class='line'>     <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="p">((</span><span class="n">HttpContextWrapper</span><span class="p">)</span><span class="n">request</span><span class="p">.</span><span class="n">Properties</span><span class="p">[</span><span class="s">&quot;MS_HttpContext&quot;</span><span class="p">]).</span><span class="n">Request</span><span class="p">.</span><span class="n">UserHostAddress</span><span class="p">;</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>     <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">request</span><span class="p">.</span><span class="n">Properties</span><span class="p">.</span><span class="n">ContainsKey</span><span class="p">(</span><span class="n">RemoteEndpointMessageProperty</span><span class="p">.</span><span class="n">Name</span><span class="p">))</span>
+</span><span class='line'>     <span class="p">{</span>
+</span><span class='line'>        <span class="n">RemoteEndpointMessageProperty</span> <span class="n">prop</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">prop</span> <span class="p">=</span> <span class="p">(</span><span class="n">RemoteEndpointMessageProperty</span><span class="p">)</span><span class="n">request</span><span class="p">.</span><span class="n">Properties</span><span class="p">[</span><span class="n">RemoteEndpointMessageProperty</span><span class="p">.</span><span class="n">Name</span><span class="p">];</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">prop</span><span class="p">.</span><span class="n">Address</span><span class="p">;</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>      <span class="k">else</span>
+</span><span class='line'>      <span class="p">{</span>
+</span><span class='line'>          <span class="k">return</span> <span class="k">null</span><span class="p">;</span>
+</span><span class='line'>       <span class="p">}</span>
+</span><span class='line'>   <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="k">private</span> <span class="k">static</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;</span> <span class="n">ToResponse</span><span class="p">(</span><span class="n">HttpRequestMessage</span> <span class="n">request</span><span class="p">,</span> <span class="n">HttpStatusCode</span> <span class="n">code</span><span class="p">,</span> <span class="kt">string</span> <span class="n">message</span><span class="p">)</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'>       <span class="kt">var</span> <span class="n">tsc</span> <span class="p">=</span> <span class="k">new</span> <span class="n">TaskCompletionSource</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;();</span>
+</span><span class='line'>
+</span><span class='line'>       <span class="kt">var</span> <span class="n">response</span> <span class="p">=</span> <span class="n">request</span><span class="p">.</span><span class="n">CreateResponse</span><span class="p">(</span><span class="n">code</span><span class="p">);</span>
+</span><span class='line'>       <span class="n">response</span><span class="p">.</span><span class="n">ReasonPhrase</span> <span class="p">=</span> <span class="n">message</span><span class="p">;</span>
+</span><span class='line'>       <span class="n">response</span><span class="p">.</span><span class="n">Content</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StringContent</span><span class="p">(</span><span class="n">message</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>       <span class="n">tsc</span><span class="p">.</span><span class="n">SetResult</span><span class="p">(</span><span class="n">response</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">return</span> <span class="n">tsc</span><span class="p">.</span><span class="n">Task</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This handler uses a repository to store the number of calls with a given
+IP in one hour. If the number of requests per hour exceeds the quota, an
+error response is returned to the client.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1634,146 +1819,6 @@ mock anything else.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2012/09/12/unit-and-integration-testing-with-the-web-api-httpclient/">Doing Unit and Integration Tests With the Web API HttpClient</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-09-12T00:00:00-03:00" pubdate data-updated="true">Sep 12<span>th</span>, 2012</time>
-        
-         | <a href="/blog/2012/09/12/unit-and-integration-testing-with-the-web-api-httpclient/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>One of the nice things about the new HttpClient in System.Net.Http is
-the support for mocking responses or handling requests in a http server
-hosted in-memory. While the first option is useful for scenarios in
-which we want to test our client code in isolation (unit tests for
-example), the second one enables more complete integration testing
-scenarios that could include some more components in the stack such as
-model binders or message handlers for example.  </p>
-
-<p>The HttpClient can receive a HttpMessageHandler as argument in one of
-its constructors.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">HttpClient</span> <span class="p">:</span> <span class="n">HttpMessageInvoker</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="k">public</span> <span class="nf">HttpClient</span><span class="p">();</span>
-</span><span class='line'>   <span class="k">public</span> <span class="nf">HttpClient</span><span class="p">(</span><span class="n">HttpMessageHandler</span> <span class="n">handler</span><span class="p">);</span>
-</span><span class='line'>   <span class="k">public</span> <span class="nf">HttpClient</span><span class="p">(</span><span class="n">HttpMessageHandler</span> <span class="n">handler</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">disposeHandler</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>For the first scenario, you can create a new HttpMessageHandler that
-fakes the response, which you can use in your unit test. The only
-requirement is that you somehow inject an HttpClient with this custom
-handler in the client code.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">FakeHttpMessageHandler</span> <span class="p">:</span> <span class="n">HttpMessageHandler</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="n">HttpResponseMessage</span> <span class="n">response</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">public</span> <span class="nf">FakeHttpMessageHandler</span><span class="p">(</span><span class="n">HttpResponseMessage</span> <span class="n">response</span><span class="p">)</span>
-</span><span class='line'>  <span class="p">{</span>
-</span><span class='line'>       <span class="k">this</span><span class="p">.</span><span class="n">response</span> <span class="p">=</span> <span class="n">response</span><span class="p">;</span>
-</span><span class='line'>   <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="k">protected</span> <span class="k">override</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;</span> <span class="n">SendAsync</span><span class="p">(</span><span class="n">HttpRequestMessage</span> <span class="n">request</span><span class="p">,</span>
-</span><span class='line'><span class="n">System</span><span class="p">.</span><span class="n">Threading</span><span class="p">.</span><span class="n">CancellationToken</span> <span class="n">cancellationToken</span><span class="p">)</span>
-</span><span class='line'>   <span class="p">{</span>
-</span><span class='line'>      <span class="kt">var</span> <span class="n">tcs</span> <span class="p">=</span> <span class="k">new</span> <span class="n">TaskCompletionSource</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;();</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="n">tcs</span><span class="p">.</span><span class="n">SetResult</span><span class="p">(</span><span class="n">response</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="k">return</span> <span class="n">tcs</span><span class="p">.</span><span class="n">Task</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>In an unit test, you can do something like this.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="kt">var</span> <span class="n">fakeResponse</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpResponse</span><span class="p">();</span>
-</span><span class='line'><span class="kt">var</span> <span class="n">fakeHandler</span> <span class="p">=</span> <span class="k">new</span> <span class="n">FakeHttpMessageHandler</span><span class="p">(</span><span class="n">fakeResponse</span><span class="p">);</span>
-</span><span class='line'><span class="kt">var</span> <span class="n">httpClient</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpClient</span><span class="p">(</span><span class="n">fakeHandler</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">var</span> <span class="n">customerService</span> <span class="p">=</span> <span class="k">new</span> <span class="n">CustomerService</span><span class="p">(</span><span class="n">httpClient</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// Do something</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// Asserts</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>CustomerService in this case is the class under test, and the one that
-receives an HttpClient initialized with our fake handler.</p>
-
-<p>For the second scenario in integration tests, there is a In-Memory host
-“System.Web.Http.HttpServer” that also derives from HttpMessageHandler
-and you can use with a HttpClient instance in your test. This has been
-discussed already in these two great posts from
-<a href="http://pfelix.wordpress.com/2012/03/05/asp-net-web-api-in-memory-hosting/">Pedro</a>
-and
-<a href="http://www.strathweb.com/2012/06/asp-net-web-api-integration-testing-with-in-memory-hosting/">Filip</a>. </p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/3/">&larr; Older</a>
@@ -1791,6 +1836,10 @@ and
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
@@ -1804,10 +1853,6 @@ and
     
       <li class="post">
         <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
       </li>
     
   </ul>
@@ -1855,7 +1900,7 @@ and
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2013 - Cibrax -
+  Copyright &copy; 2014 - Cibrax -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 

@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="A common problem in WCF that many people face is the impossibility of
-loading the client configuration from different configuration files.
-This is a &hellip;">
+  <meta name="description" content="Microsoft has released the first CTP of the synchronization framework,
+it is available to download
+here. The idea of this framework is to provide a &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +81,74 @@ This is a &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2007/11/22/microsoft-synchronization-framework-and-sse/">Microsoft Synchronization Framework and SSE</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-11-22T00:00:00-03:00" pubdate data-updated="true">Nov 22<span>nd</span>, 2007</time>
+        
+         | <a href="/blog/2007/11/22/microsoft-synchronization-framework-and-sse/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Microsoft has released the first CTP of the synchronization framework,
+it is available to download
+<a href="http://www.microsoft.com/downloads/details.aspx?FamilyId=35E8F16E-AAA4-4919-8B3C-1CE4EA1F6552">here</a>.</p>
+
+<p>The idea of this framework is to provide a platform or foundation to
+synchronize data across multiple data stores through an extensible
+architecture based on providers.</p>
+
+<p>This drop comes with three providers out of the box,</p>
+
+<p>​1. Sync provider for ADO.NET, which is the provider for synchronization
+across databases  using ADO.NET.</p>
+
+<p>​2. Sync provider for File System, which can be used to synchronize two
+file system locations.</p>
+
+<p>​3. Sync provider for SSE (Simple Sharing Extensions) for
+synchronization data against SSE feeds. If you are not familiar with
+SSE, it is a lightweight protocol initially defined by <a href="http://rayozzie.spaces.live.com/blog/cns!FB3017FBB9B2E142!285.entry">Ray
+Ozzie</a>
+that mounts on top of RSS or ATOM to allow for two-way synchronization
+among peers. If you are interested in knowing more about this
+technology, <a href="http://www.clariusconsulting.net/blogs/kzu/archive/2007/06/26/28072.aspx">Daniel wrote an excellent
+post</a>
+in his blog a couple of weeks ago. As Daniel mentioned in his post, we
+have been participating of an open-source implementation of SSE,
+<a href="http://www.codeplex.com/sse/Release/ProjectReleases.aspx?ReleaseId=5301">SimpleSharing-NET</a>
+that is available to download in CodePlex.</p>
+
+<p>I will be discussing more about the SimpleSharing-NET architecture in
+future posts.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1118,50 +1186,6 @@ TraceLevel : Information</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2007/06/18/wcf-durable-services/">WCF Durable Services</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2007-06-18T00:00:00-03:00" pubdate data-updated="true">Jun 18<span>th</span>, 2007</time>
-        
-         | <a href="/blog/2007/06/18/wcf-durable-services/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>My friend <a href="http://weblogs.asp.net/gsusx/">Jesus Rodriguez</a> has published
-an excellent article about one the cool features that will be part of
-WCF 3.5 (Orcas timeframe), &ldquo;Durable Services&rdquo;. If you want to know more
-about this feature, take a look at his <a href="http://weblogs.asp.net/gsusx/archive/2007/06/14/orcas-durable-services.aspx">post
-here</a>. </p>
-
-<p>Enjoy!!.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/21/">&larr; Older</a>
@@ -1179,6 +1203,10 @@ here</a>. </p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
@@ -1192,10 +1220,6 @@ here</a>. </p>
     
       <li class="post">
         <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
       </li>
     
   </ul>
@@ -1243,7 +1267,7 @@ here</a>. </p>
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2013 - Cibrax -
+  Copyright &copy; 2014 - Cibrax -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 

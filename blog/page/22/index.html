@@ -9,8 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="These are some useful practices to design message contracts. They are
-based on my experience as developer on different software projects. Do not &hellip;">
+  <meta name="description" content="My friends Sergio Borromei (Microsoft Consulting) and Rodolfo
+Finochietti (Lagash) have recently released the first RTM of their
+Service Invocation &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -80,6 +81,203 @@ based on my experience as developer on different software projects. Do not &h
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/12/11/service-interface-framework-sif/">Service Invocation Framework</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-12-11T00:00:00-03:00" pubdate data-updated="true">Dec 11<span>th</span>, 2006</time>
+        
+         | <a href="/blog/2006/12/11/service-interface-framework-sif/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>My friends Sergio Borromei (Microsoft Consulting) and Rodolfo
+Finochietti (Lagash) have recently released the first RTM of their
+Service Invocation Framework.</p>
+
+<p>This light-weight basically provides a collection of service adapters
+that a client application can use to consume a service with some
+location and implementation transparency.</p>
+
+<p>The client application only need to know the service contract to locate
+and consume the real service implementation, which can actually be a
+remoting object, a web service or an in-proc object to name a few.</p>
+
+<p>In my opinion, this kind of framework can be useful in scenarios
+where you need to interop with different technologies. This helps to
+minimize the dependency between the client application and those
+technologies and facilitate possible changes due to new requirements. </p>
+
+<p>These are some of the adapters that comes by default with the framework:</p>
+
+<ul>
+<li> Web Service Adapter: It can be used to execute any HTTP web service
+compliant with the Basic Profile. This adapter also provides a nice
+feature to generate the web service proxies on the fly using a
+wsdl definition. (Yes, there is not need to manually generate
+the proxies using a tool like wsdl.exe).</li>
+<li>Remoting Adapter: As it name says, it can be used to execute methods
+on a object published with remoting.</li>
+<li>InProc Adapter: This adapter is useful in scenarios where the client
+and service live in the same process, so any inter-process
+communication or data marshaling is not required.</li>
+<li>Pipeline Adapter: It can execute a collection of filters to modify
+the service&rsquo;s inbound or outbound messages.</li>
+</ul>
+
+
+<p>Let&rsquo;s go through a simple quickstart to show the main features of this
+framework:</p>
+
+<p>​1. First of all, we need to define a interface for our service
+implementation. In this sample, I decided to design a extremely complex
+one to return a &ldquo;Hello World&rdquo; message:</p>
+
+<p>public interface IHelloWorld</p>
+
+<p>{</p>
+
+<p>    string HelloWorld();</p>
+
+<p>}</p>
+
+<p>​2. As a second step, our real service implementation needs to implement
+the interface.  I used a web service, but it can be any other service
+implementation.</p>
+
+<p>[WebService(Namespace = &ldquo;<a href="http://tempuri.org/">http://tempuri.org/</a>&rdquo;)]</p>
+
+<p>[WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]</p>
+
+<p>public class Service : System.Web.Services.WebService, IHelloWorld</p>
+
+<p>{</p>
+
+<p>    public Service () {</p>
+
+<p> </p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    [WebMethod]</p>
+
+<p>    public string HelloWorld() {</p>
+
+<p>        return &ldquo;Hello World&rdquo;;</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>​3. Now, it is time to implement the client application. We have to add
+a the following configuration section to the application configuration
+file,</p>
+
+<p> </p>
+
+<p>&lt;configuration></p>
+
+<p>  &lt;configSections></p>
+
+<p>    &lt;section name=&ldquo;servicesInvocationFramework&rdquo;
+type=&ldquo;InvocationFramework.Core.Configuration.SectionHandler,
+InvocationFramework.Core, Version=1.1.0.0, Culture=neutral,
+PublicKeyToken=4396b271bcbb0166&rdquo; /></p>
+
+<p>  &lt;/configSections></p>
+
+<p> </p>
+
+<p>  &lt;servicesInvocationFramework></p>
+
+<p>    &lt;caller></p>
+
+<p>      &lt;serviceAdapters></p>
+
+<p>        &lt;serviceAdapter id=&ldquo;WebServicesAdapter&rdquo; order=&ldquo;0&rdquo;
+enabled=&ldquo;true&rdquo;
+type=&ldquo;InvocationFramework.Adapters.WebServices.WebServicesAdapter,
+InvocationFramework.Adapters.WebServices, Version=1.1.0.0,
+Culture=neutral, PublicKeyToken=4396b271bcbb0166&rdquo;></p>
+
+<p>          &lt;services></p>
+
+<p>            &lt;service name=&ldquo;SampleService&rdquo;
+wsdlLocation=&ldquo;<a href="http://localhost:9300/SampleService/Service.asmx?WSDL">http://localhost:9300/SampleService/Service.asmx?WSDL</a>&rdquo;
+contractType=&ldquo;Contracts.IHelloWorld, Contracts&rdquo;/></p>
+
+<p>          &lt;/services></p>
+
+<p>        &lt;/serviceAdapter></p>
+
+<p>      &lt;/serviceAdapters></p>
+
+<p>    &lt;/caller></p>
+
+<p>  &lt;/servicesInvocationFramework></p>
+
+<p>&lt;/configuration></p>
+
+<p>In a few words, this section says that we are going to use the service
+adapter to consume the service &#8221;SampleService&#8221;. This service also
+implements the contract IHelloWorld.</p>
+
+<p>The WSDL location is required because the adapter will generate the
+proxy to consume the service using that definition.</p>
+
+<p>​4. Finally, some code is required on the client application to locate
+the service and consume it.</p>
+
+<p>ServiceProxyBuilder&lt;IHelloWorld> factory = new
+ServiceProxyBuilder&lt;IHelloWorld>(&ldquo;SampleService&rdquo;);</p>
+
+<p>IHelloWorld service = factory.BuildProxy();</p>
+
+<p> </p>
+
+<p>Console.WriteLine(service.HelloWorld());</p>
+
+<p>It is as simple as that, the client receives a proxy class to consume
+the real service implementation. (All the inter-process communications
+and messages interchanges will be managed by the adapter).</p>
+
+<p>You can find more information about this framework in the <a href="http://weblogs.shockbyte.com.ar/rodolfof/archive/2006/12/08/10650.aspx">Rodolfo&rsquo;s
+blog</a>,
+and the <a href="http://www.codeplex.com/SIF">Service Invocation Framework web site
+(CodePlex)</a></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1532,53 +1730,6 @@ to the ASPNET account:</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2006/07/10/Interoperability-between-WSE-2.0-and-WCF/">Interoperability Between WSE 2.0 and WCF</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2006-07-10T00:00:00-03:00" pubdate data-updated="true">Jul 10<span>th</span>, 2006</time>
-        
-         | <a href="/blog/2006/07/10/Interoperability-between-WSE-2.0-and-WCF/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><a href="http://www.softwaremaker.net/blog">William Tay (Aka Softwaremaker)</a> one
-of the most  knowledgeable WSE guys around has published an excellent
-article about interoperability between WSE 2.0 and WCF.\
-I usually find people concerned about topics like this, the different
-interop issues between WSE 2.0, WSE 3.0 and WCF. \
-Well, this article really helps clarify the required points to make both
-products work together. In addition, it includes some code samples.</p>
-
-<p>You can find the article
-<a href="http://wcf.netfx3.com/content/WindowsCommunicationFoundationWCFInteroperabilityandMigrationwithWSE20.aspx" title="here">here</a> </p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/23/">&larr; Older</a>
@@ -1596,6 +1747,10 @@ products work together. In addition, it includes some code samples.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
@@ -1609,10 +1764,6 @@ products work together. In addition, it includes some code samples.</p>
     
       <li class="post">
         <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
       </li>
     
   </ul>
@@ -1660,7 +1811,7 @@ products work together. In addition, it includes some code samples.</p>
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2013 - Cibrax -
+  Copyright &copy; 2014 - Cibrax -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 

@@ -9,10 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="On May 18th, I will officially become part of
-Tellago.  I will be joining a great team with
-people that I respect immensely like Jesus
-Rodriguez, &hellip;">
+  <meta name="description" content="El proximo miercoles 20 de mayo a las 3 PM (GMT-05:00 Colombia, Panama),
+voy a estar presentando un MSDN webcast acerca de OpenID, OAuth
+y Windows &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -82,6 +81,54 @@ Rodriguez, &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/05/18/webcast-quot-openid-oauth-y-live-id-cual-es-la-diferencia/">Webcast &quot;OpenID, OAuth Y Live ID. Cual Es La Diferencia ?</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-05-18T00:00:00-03:00" pubdate data-updated="true">May 18<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/05/18/webcast-quot-openid-oauth-y-live-id-cual-es-la-diferencia/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>El proximo miercoles 20 de mayo a las 3 PM (GMT-05:00 Colombia, Panama),
+voy a estar presentando un MSDN webcast acerca de OpenID, OAuth
+y Windows Live ID. El evento va a ser transmitido en castellano para la
+comunidad de latinoamerica, y se va a enfocar en las caracteristicas
+principales de estas soluciones/protocolos, como funcionan, y algunos
+escenarios en donde se pueden aplicar con exito.</p>
+
+<p>El link al evento es el siguiente,
+<a href="http://msevents.microsoft.com/CUI/EventDetail.aspx?EventID=1032403625&amp;Culture=es-AR">http://msevents.microsoft.com/CUI/EventDetail.aspx?EventID=1032403625&amp;Culture=es-AR</a> </p>
+
+<p>Los espero.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -989,103 +1036,6 @@ services running in the same app).</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2009/03/21/custom-basic-authentication-for-restful-services/">Custom Basic Authentication for RESTful Services</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2009-03-21T00:00:00-03:00" pubdate data-updated="true">Mar 21<span>st</span>, 2009</time>
-        
-         | <a href="/blog/2009/03/21/custom-basic-authentication-for-restful-services/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>It’s very common when developing RESTful services to authenticate users
-against a proprietary user database. This is generally done with a
-combination of username and password through http basic authentication.
-Unfortunately, basic authentication is tied to windows accounts in IIS,
-which leads us to find out some alternatives or workarounds to support
-this scenario. WCF 3.5 made possible to authenticate transport
-credentials with one of the existing UsernamePasswordValidator
-extensions, however, this approach does not work for IIS hosted
-services.</p>
-
-<p><a href="http://www.leastprivilege.com/CommentView.aspx?guid=f9453fb0-6e2a-4faf-8cf9-62162dc7531e">Dominick</a>
-solved this problem with a module plugged directly in the ASP.NET
-pipeline that works like a charm, but it requires some additional WCF
-settings and a custom IAuthorization policy to flow the user principal
-to the WCF service instance. His solution works for ASP.NET applications
-as well.</p>
-
-<p>This problem can be also solved at a deeper level in the WCF transport
-model using a message interceptor. The message interceptor can receive a
-traditional Membership provider in the constructor class, and use it
-later for authenticating the users. In addition, this message
-interceptor can also automatically pass the user credentials to the WCF
-service instance.</p>
-
-<p>As any other message interceptor, it can be configured directly in the
-WCF service factory with no need of having additional configuration.
-This can be easily done in the “svc” file hosted in IIS.</p>
-
-<p>&lt;%@ ServiceHost Language=&ldquo;C#&rdquo; Debug=&ldquo;true&rdquo; Service=&ldquo;Service&rdquo;
-Factory=&ldquo;AppServiceHostFactory&rdquo; %></p>
-
-<p>class AppServiceHostFactory : ServiceHostFactory</p>
-
-<p>{</p>
-
-<p>   protected override ServiceHost CreateServiceHost(Type serviceType,
-Uri[] baseAddresses)</p>
-
-<p>   {</p>
-
-<p>     WebServiceHost2 result = new WebServiceHost2(serviceType, true,
-baseAddresses);</p>
-
-<p>     result.Interceptors.Add(new BasicAuthenticationInterceptor(</p>
-
-<p>                System.Web.Security.Membership.Provider, &ldquo;foo&rdquo;));</p>
-
-<p>     return result;</p>
-
-<p>   }</p>
-
-<p>}</p>
-
-<p>BasicAuthenticationInterceptor is the message interceptor I built for
-this post, it receives the MembershipProvider and a default realm that
-will be returned together with an 401 http error (Unauthorized) in case
-the user was not correctly authenticated.</p>
-
-<p>The example is available to download from
-<a href="/images/legacy/BasicAuthentication.zip">here</a>.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/14/">&larr; Older</a>
@@ -1103,6 +1053,10 @@ the user was not correctly authenticated.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
@@ -1116,10 +1070,6 @@ the user was not correctly authenticated.</p>
     
       <li class="post">
         <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
       </li>
     
   </ul>
@@ -1167,7 +1117,7 @@ the user was not correctly authenticated.</p>
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2013 - Cibrax -
+  Copyright &copy; 2014 - Cibrax -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 

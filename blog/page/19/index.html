@@ -9,8 +9,8 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="I am so excited, this is third time I received the Microsoft MVP award.
-Thanks to all people involved in the evaluation process and my MVP lead &hellip;">
+  <meta name="description" content="With the boom in social networking, many web sites have started offering
+new tools for building or expanding your initial network of contacts. For &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -80,6 +80,113 @@ Thanks to all people involved in the evaluation process and my MVP lead &hellip;
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/04/09/windows-live-contacts/">Windows Live Contacts API</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-04-09T00:00:00-03:00" pubdate data-updated="true">Apr 9<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/04/09/windows-live-contacts/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>With the boom in social networking, many web sites have started offering
+new tools for building or expanding your initial network of contacts.</p>
+
+<p>For instance, sites like Facebook or Linkedin provide a tool to get your
+Windows Live contacts and use them to more easily find or invite those
+people into your social networks.</p>
+
+<p>Although the idea is very good, the current implementation contains some
+serious security issues from my point of view.  The user has to enter in
+some way his Windows LiveID credentials into those sites (using a custom
+http form), so they can log into Windows Live and get the user&rsquo;s
+contacts.</p>
+
+<p>There is not any particular difference between this approach and a
+phising web site created by a malicious user only with the intention of
+getting your personal information.</p>
+
+<p>Not all people (including me) trust these sites enough to provide them
+with valuable Windows LiveID credentials. These sites are very
+well-known, but we are not certainly sure which will be the final user
+of our credentials. (or even, if they are keeping them somewhere).</p>
+
+<p>This security issue could be basically solved if Windows Live provided
+two fundamental things:</p>
+
+<p>1.  Http REST Services to get the user contacts or other personal
+information.</p>
+
+<p>​2. An authentication mechanism for those services based on security
+tokens. Something similar to what <a href="http://oauth.net/">OAuth</a> provides,
+so the user will never have to enter his credentials in a site different
+from Microsoft again. Another advantage of this protocol is that the
+user will finally decide whether he authorize third party sites to get
+his personal information or not. If you are curious about how OAuth
+works behind scene,  an excellent &ldquo;Begginer&rsquo;s guide&rdquo; is available
+<a href="http://www.hueniverse.com/hueniverse/2007/10/beginners-gui-1.html">here</a>.</p>
+
+<p>Fortunately, the Windows Live team has made an excellent progress in
+these two aspects. One one hand, they have developed an &ldquo;<a href="http://msdn2.microsoft.com/en-us/library/cc287637.aspx">Windows Live
+ID Delegated Authentication
+SDK</a>&rdquo; to
+integrate Application providers through a protocol pretty similar to
+OAuth (I haven&rsquo;t had enough time yet to take a more detailed look at
+this SDK)</p>
+
+<p>From the MSDN site,</p>
+
+<p>&ldquo;<em>Delegated Authentication is based on a block of information, called a
+consent token, that is provided to your Web site by the Windows Live ID
+service for a given resource provider (such as contacts and photos). To
+obtain a consent token for use at a particular resource provider, you
+must first request it from the user by means of the Windows Live ID
+consent service. Your application must then manage the authentication
+data that is returned. For detailed information about how to request and
+manage consent, see the</em><a href="http://msdn.microsoft.com/en-us/library/cc287637.aspx"><em>Windows Live Delegated Authentication
+SDK</em></a>.&rdquo;</p>
+
+<p>On other hand, as part of &ldquo;<a href="http://msdn2.microsoft.com/en-us/library/cc305075.aspx">Windows Live User Data
+APIs</a>&rdquo;, they
+have started providing REST services to allow Windows Live users to
+safely and securely share their information stored in Windows Live
+services. One of this services is what they have called &ldquo;<a href="http://msdn2.microsoft.com/en-us/library/bb463989.aspx">Windows Live
+Contacts API</a>&rdquo;,
+a REST service that enables developers to programmatically submit
+queries to, and retrieve results from, the Windows Live Contacts Address
+Book database service.</p>
+
+<p>Hopefully, it will be a matter of time until <a href="http://dev.live.com/blogs/devlive/archive/2008/03/25/237.aspx">Facebook or Linkedin start
+integrating</a>
+services like these into their sites for the benefit of all :).</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1445,74 +1552,6 @@ blog</a>.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2007/11/22/microsoft-synchronization-framework-and-sse/">Microsoft Synchronization Framework and SSE</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2007-11-22T00:00:00-03:00" pubdate data-updated="true">Nov 22<span>nd</span>, 2007</time>
-        
-         | <a href="/blog/2007/11/22/microsoft-synchronization-framework-and-sse/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Microsoft has released the first CTP of the synchronization framework,
-it is available to download
-<a href="http://www.microsoft.com/downloads/details.aspx?FamilyId=35E8F16E-AAA4-4919-8B3C-1CE4EA1F6552">here</a>.</p>
-
-<p>The idea of this framework is to provide a platform or foundation to
-synchronize data across multiple data stores through an extensible
-architecture based on providers.</p>
-
-<p>This drop comes with three providers out of the box,</p>
-
-<p>​1. Sync provider for ADO.NET, which is the provider for synchronization
-across databases  using ADO.NET.</p>
-
-<p>​2. Sync provider for File System, which can be used to synchronize two
-file system locations.</p>
-
-<p>​3. Sync provider for SSE (Simple Sharing Extensions) for
-synchronization data against SSE feeds. If you are not familiar with
-SSE, it is a lightweight protocol initially defined by <a href="http://rayozzie.spaces.live.com/blog/cns!FB3017FBB9B2E142!285.entry">Ray
-Ozzie</a>
-that mounts on top of RSS or ATOM to allow for two-way synchronization
-among peers. If you are interested in knowing more about this
-technology, <a href="http://www.clariusconsulting.net/blogs/kzu/archive/2007/06/26/28072.aspx">Daniel wrote an excellent
-post</a>
-in his blog a couple of weeks ago. As Daniel mentioned in his post, we
-have been participating of an open-source implementation of SSE,
-<a href="http://www.codeplex.com/sse/Release/ProjectReleases.aspx?ReleaseId=5301">SimpleSharing-NET</a>
-that is available to download in CodePlex.</p>
-
-<p>I will be discussing more about the SimpleSharing-NET architecture in
-future posts.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/20/">&larr; Older</a>
@@ -1530,6 +1569,10 @@ future posts.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
@@ -1543,10 +1586,6 @@ future posts.</p>
     
       <li class="post">
         <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
       </li>
     
   </ul>
@@ -1594,7 +1633,7 @@ future posts.</p>
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2013 - Cibrax -
+  Copyright &copy; 2014 - Cibrax -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 

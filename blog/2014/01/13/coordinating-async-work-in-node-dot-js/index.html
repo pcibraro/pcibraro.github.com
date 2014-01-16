@@ -1,0 +1,467 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Coordinating async work in Node.js - Pablo Cibraro (Cibrax)</title>
+  <meta name="author" content="Cibrax">
+
+  
+  <meta name="description" content="When you first move to Node.js, you need to get used to write asynchronous single thread code that does not block. For some scenarios, writing such &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://cibrax.me/blog/2014/01/13/coordinating-async-work-in-node-dot-js">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="http://feeds.feedburner.com/cibrax" rel="alternate" title="Pablo Cibraro (Cibrax)" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44468149-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Pablo Cibraro (Cibrax)</a></h1>
+  
+    <h2>All about software development.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/cibrax" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:cibrax.me" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Coordinating Async Work in Node.js</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-01-13T10:39:00-03:00" pubdate data-updated="true">Jan 13<span>th</span>, 2014</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>When you first move to Node.js, you need to get used to write asynchronous single thread code that does not block. For some scenarios, writing such kind of code is not trivial, specially when you have to coordinate the execution of multiple async calls in parallel and return a result after all these tasks have been completed. One thing you don&rsquo;t want to do in that scenario is block the main thread to wait for all the calls, which is how you normally do in other platforms. Let&rsquo;s discuss a very trivial example that coordinates two calls for getting information from two different sources, which is subsequently returned as a response message in express.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">index</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">returnResponse</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="p">{};</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">getName</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">data</span><span class="p">.</span><span class="nx">name</span> <span class="o">=</span> <span class="nx">name</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">returnResponse</span><span class="p">)</span>
+</span><span class='line'>          <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">title</span><span class="o">:</span> <span class="s1">&#39;Express&#39;</span><span class="p">,</span> <span class="nx">data</span><span class="o">:</span> <span class="nx">data</span> <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">returnResponse</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">getPhone</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">phone</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">data</span><span class="p">.</span><span class="nx">phone</span> <span class="o">=</span> <span class="nx">phone</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">returnResponse</span><span class="p">)</span>
+</span><span class='line'>          <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">title</span><span class="o">:</span> <span class="s1">&#39;Express&#39;</span><span class="p">,</span> <span class="nx">data</span><span class="o">:</span> <span class="nx">data</span> <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">returnResponse</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The code above calls two functions to retrieve a name and a phone from different places asynchronously. The results of the calls are temporarily stored as members of the &ldquo;data&rdquo; variable. The ugly part is how the &ldquo;returnResponse&rdquo; variable is also used to notify that each function has done its part and a response can be returned. This contains duplicated code, it&rsquo;s error prone and it can easily get more complicated as the number of async calls increase.</p>
+
+<p>As interesting fact, there isn&rsquo;t any built-in or native functionality to handle an scenario like this in Node.js. That&rsquo;s where an module like &ldquo;async&rdquo; comes in place. &ldquo;Async&rdquo; is a swiss knife for async work in Node.js. It provides a ton of functions for coordinating asynchronous tasks such as the ones shown in next examples.</p>
+
+<p>One of the functions you will find useful for an scenario like this is parallel. The parallel function receives an array of async functions to call, and invokes a final callback when all the functions have completed their part.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">index</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">async</span><span class="p">.</span><span class="nx">parallel</span><span class="p">([</span>
+</span><span class='line'>      <span class="kd">function</span><span class="p">(</span><span class="nx">callback</span><span class="p">){</span> <span class="nx">getName</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">name</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">})},</span>
+</span><span class='line'>      <span class="kd">function</span><span class="p">(</span><span class="nx">callback</span><span class="p">){</span> <span class="nx">getPhone</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">phone</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">phone</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">})}</span>
+</span><span class='line'>  <span class="p">],</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">results</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">name</span> <span class="o">:</span> <span class="nx">results</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+</span><span class='line'>          <span class="nx">phone</span><span class="o">:</span> <span class="nx">results</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">title</span><span class="o">:</span> <span class="s1">&#39;Express&#39;</span><span class="p">,</span> <span class="nx">data</span><span class="o">:</span> <span class="nx">data</span> <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Every function in the Array passed to the parallel function receives a callback argument, which must be called after the work is completed. That callback receives two arguments, an error if something went wrong and a result. All the collected results and  errors are later passed to the final callback.</p>
+
+<p>Another useful function is &ldquo;each&rdquo;, which is similar to &ldquo;parallel&rdquo;, but it iterates over an array and invokes a function representing the async work for every element in that array.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">index</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">async</span><span class="p">.</span><span class="nx">each</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="kd">function</span><span class="p">(</span><span class="nx">item</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">getDataForItem</span><span class="p">(</span><span class="nx">item</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>              <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">data</span><span class="p">);</span>
+</span><span class='line'>          <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>       <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;index2&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">title</span><span class="o">:</span> <span class="s1">&#39;Express&#39;</span><span class="p">,</span> <span class="nx">data</span><span class="o">:</span> <span class="nx">data</span> <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In the code above, the function is executed three times with the values &ldquo;1&rdquo;, &ldquo;2&rdquo; and &ldquo;3&rdquo;. A callback is also executed when the work is completed. The final callback is executed after all the functions invoked the callback.</p>
+
+<p>This is a good way to coordinate async work in node.js, but you also have promises, which is not widely adopted yet in the platform as a way to represent async tasks. It&rsquo;s implemented by a lot of modules out there, but it&rsquo;s not something standard yet. A promise is an object that represents an asynchronous task. Among other things, this object represents a way to manipulate the task, determine when it is completed or to chain other tasks for example. The following example illustrates how a promise looks like in the Moongose module (example included in the <a href="http://mongoosejs.com/docs/api.html">Moongose docs</a>),</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">promise</span> <span class="o">=</span> <span class="nx">Meetups</span><span class="p">.</span><span class="nx">find</span><span class="p">({</span> <span class="nx">tags</span><span class="o">:</span> <span class="s1">&#39;javascript&#39;</span> <span class="p">}).</span><span class="nx">select</span><span class="p">(</span><span class="s1">&#39;_id&#39;</span><span class="p">).</span><span class="nx">exec</span><span class="p">();</span>
+</span><span class='line'><span class="nx">promise</span><span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">meetups</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">ids</span> <span class="o">=</span> <span class="nx">meetups</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">m</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">m</span><span class="p">.</span><span class="nx">_id</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">People</span><span class="p">.</span><span class="nx">find</span><span class="p">({</span> <span class="nx">meetups</span><span class="o">:</span> <span class="p">{</span> <span class="nx">$in</span><span class="o">:</span> <span class="nx">ids</span> <span class="p">}).</span><span class="nx">exec</span><span class="p">();</span>
+</span><span class='line'><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">people</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nx">people</span><span class="p">.</span><span class="nx">length</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span> <span class="mi">10000</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Too few people!!!&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Still need more people!!!&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">assert</span><span class="p">.</span><span class="nx">ok</span><span class="p">(</span><span class="nx">err</span> <span class="k">instanceof</span> <span class="nb">Error</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Meetups is a Moongose object for executing queries against a MongoDB collection. &ldquo;exec&rdquo; is a method in the returned promise to start the call, and &ldquo;then&rdquo; is another method to chain other promises when the execution is completed. In this example, another promise to find people is executed after all the meetups have been found.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Cibrax</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-01-13T10:39:00-03:00" pubdate data-updated="true">Jan 13<span>th</span>, 2014</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/node-dot-js/'>node.js</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://cibrax.me/blog/2014/01/13/coordinating-async-work-in-node-dot-js/" data-via="cibrax" data-counturl="http://cibrax.me/blog/2014/01/13/coordinating-async-work-in-node-dot-js/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/" title="Previous Post: OAuth Bridge for ADFS with ThinkTecture Authorization Server">&laquo; OAuth Bridge for ADFS with ThinkTecture Authorization Server</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
+      </li>
+    
+  </ul>
+</section>
+ <a href="http://feeds.feedburner.com/cibrax"><img src="http://feeds.feedburner.com/~fc/cibrax?bg=FF3300&amp;fg=000000&amp;anim=0" style="border:0" alt="" /></a>
+
+ <script type="text/javascript" language="javascript" src="http://twittercounter.com/embed/?username=cibrax&style=white"></script>
+<a href="https://mvp.microsoft.com/en-us/mvp/Pablo%20Cibraro-33800"><img src="/images/mvp.gif" border="0" /></a>
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/pcibraro">@pcibraro</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'pcibraro',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2014 - Cibrax -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'cibrax';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cibrax.me/blog/2014/01/13/coordinating-async-work-in-node-dot-js/';
+        var disqus_url = 'http://cibrax.me/blog/2014/01/13/coordinating-async-work-in-node-dot-js/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

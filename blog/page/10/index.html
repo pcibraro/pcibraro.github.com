@@ -9,10 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="My colleagues Jesus Rodriguez and
-Dwight Goins were talking about many
-of challenges you might find for managing WCF services in the
-enterprise, and &hellip;">
+  <meta name="description" content="WCF Data Services ships with two built-in query providers, a query
+provider for Entity Framework that uses the CSL model to infer all the
+service &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -82,6 +81,191 @@ enterprise, and &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/08/13/nhibernating-a-wcf-data-service/">NHibernating a WCF Data Service</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-08-13T00:00:00-03:00" pubdate data-updated="true">Aug 13<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/08/13/nhibernating-a-wcf-data-service/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>WCF Data Services ships with two built-in query providers, a query
+provider for Entity Framework that uses the CSL model to infer all the
+service metadata for the exposed entities and their associations, and
+another provider, a Reflection Provider that uses .NET reflection over
+the exposed object model to infer the same metadata.</p>
+
+<p>The Entity Framework provider is usually the one that most people use
+for its simplicity. The simplicity of this provider resides on the fact
+that you actually don’t need to do much for getting a data service up
+and running. You only need to define a entity framework model and expose
+it in the data service using the DataService&lt;T> class.</p>
+
+<p>The Reflection Provider on the other hand requires some more work, as
+you also need to implement the IUpdatable provider if you want to make
+your model read-write (otherwise, it’s read-only by default).</p>
+
+<p>While the Entity framework provider is simple to use, the resources you
+want to expose in the data service gets tied to all the limitations you
+find in an Entity Framework model (for instance, you might entities or
+properties you don’t really want to persist in a database). This
+provider also implements IUpdatable and that implementation can not be
+customized, extended or replaced for providing some additional business
+logic functionality in the data service. And although you can use
+interceptors, I find that technique very limited as they represents
+aspects that are applied to a single entity. There is no way to inject
+cross-cutting aspects that affect all the entities (Entity based
+Authorization for instance). You can use the Data Service Pipeline for
+injecting that logic, but you don’t have entities at that point, only
+the messages on the wire (atom feeds or json messages). A technique I
+used in the past was to extend the EF entities with partial classes to
+add some additional business logic to the entities, and attach the data
+service to the Saving event in the Entity framework to run some logic
+before the entities were created, updated or deleted. However, I still
+don’t like this technique much because you end up with a model totally
+limited to what you can define in EF.</p>
+
+<p>The advantage of using the reflection provider is that you can expose a
+much rich object model in your data service, even if you need to write
+some more code. In addition, as you are also writing an IUpdatable
+implementation, you can inject all the business logic or cross-cutting
+concerns that are common for all the entities in that class. However,
+the problem with the reflection provider is to make the service
+implementation efficient enough to resolve the queries in the data
+source and not the memory. It does not make sense at all to use a rich
+object model on top of entity framework for instance, if you still need
+to load all the object in memory to use linq to objects to perform the
+queries (unless the number of entities you manage is really small). So,
+the only possible solution to implement a service that manages a large
+number of entities and expose a rich object model at the same time is to
+use an ORM other than EF, like Linq to SQL or NHibernate.</p>
+
+<p>NHibernate in that sense is a much mature framework, you are not tied to
+a single db implementation (sql server), and the number of features that
+this framework can offer is obviously higher, making NHibernate a good
+technology for implementing data services. In addition, NHibernate 3.0
+already ships with a Linq provider out of the box that works really well
+(Entity Framework Code Only looks promising too but it is a CTP at this
+point).</p>
+
+<p>In order to use NHibernate in a data service, you need to provide an
+IUpdatable implementation for making it read/write (support for POST PUT
+and DELETE). Otherwise it will behave as read only by default (only GETs
+supported).</p>
+
+<p>This is how the IUpdatable implementation looks like,</p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+public abstract class NHibernateDataContext : IUpdatable{    protected ISession Session;    private List<object> entityToUpdate = new List<object>();    private List<object> entityToRemove = new List<object>();    public NHibernateDataContext(ISession session)    {        this.Session = session;    }    /// <summary>    /// Creates the resource of the given type and belonging to the given container    /// </summary>    /// <param name="containerName">container name to which the resource needs to be added</param>    /// <param name="fullTypeName">full type name i.e. Namespace qualified type name of the resource</param>    /// <returns>object representing a resource of given type and belonging to the given container</returns>    object IUpdatable.CreateResource(string containerName, string fullTypeName)    {        Type t = Type.GetType(fullTypeName, true);        object resource = Activator.CreateInstance(t);                entityToUpdate.Add(resource);                return resource;    }    /// <summary>    /// Gets the resource of the given type that the query points to    /// </summary>    /// <param name="query">query pointing to a particular resource</param>    /// <param name="fullTypeName">full type name i.e. Namespace qualified type name of the resource</param>    /// <returns>object representing a resource of given type and as referenced by the query</returns>    object IUpdatable.GetResource(IQueryable query, string fullTypeName)    {        object resource = null;        foreach (object item in query)        {            if (resource != null)            {                throw new DataServiceException(&ldquo;The query must return a single resource&rdquo;);            }            resource = item;        }        if (resource == null)            throw new DataServiceException(404, &ldquo;Resource not found&rdquo;);        // fullTypeName can be null for deletes        if (fullTypeName != null &amp;&amp; resource.GetType().FullName != fullTypeName)            throw new Exception(&ldquo;Unexpected type for resource&rdquo;);        return resource;    }    /// <summary>    /// Resets the value of the given resource to its default value    /// </summary>    /// <param name="resource">resource whose value needs to be reset</param>    /// <returns>same resource with its value reset</returns>    object IUpdatable.ResetResource(object resource)    {        return resource;    }    /// <summary>    /// Sets the value of the given property on the target object    /// </summary>    /// <param name="targetResource">target object which defines the property</param>    /// <param name="propertyName">name of the property whose value needs to be updated</param>    /// <param name="propertyValue">value of the property</param>    void IUpdatable.SetValue(object targetResource, string propertyName, object propertyValue)    {        var propertyInfo = targetResource.GetType().GetProperty(propertyName);        propertyInfo.SetValue(targetResource, propertyValue, null);        if (!entityToUpdate.Contains(targetResource))            entityToUpdate.Add(targetResource);    }    /// <summary>    /// Gets the value of the given property on the target object    /// </summary>    /// <param name="targetResource">target object which defines the property</param>    /// <param name="propertyName">name of the property whose value needs to be updated</param>    /// <returns>the value of the property for the given target resource</returns>    object IUpdatable.GetValue(object targetResource, string propertyName)    {        var propertyInfo = targetResource.GetType().GetProperty(propertyName);        return propertyInfo.GetValue(targetResource, null);    }    /// <summary>    /// Sets the value of the given reference property on the target object    /// </summary>    /// <param name="targetResource">target object which defines the property</param>    /// <param name="propertyName">name of the property whose value needs to be updated</param>    /// <param name="propertyValue">value of the property</param>    void IUpdatable.SetReference(object targetResource, string propertyName, object propertyValue)    {        ((IUpdatable)this).SetValue(targetResource, propertyName, propertyValue);    }    /// <summary>    /// Adds the given value to the collection    /// </summary>    /// <param name="targetResource">target object which defines the property</param>    /// <param name="propertyName">name of the property whose value needs to be updated</param>    /// <param name="resourceToBeAdded">value of the property which needs to be added</param>    void IUpdatable.AddReferenceToCollection(object targetResource, string propertyName, object resourceToBeAdded)    {        PropertyInfo pi = targetResource.GetType().GetProperty(propertyName);        if (pi == null)            throw new Exception(&ldquo;Can&rsquo;t find property&rdquo;);        IList collection = (IList)pi.GetValue(targetResource, null);        collection.Add(resourceToBeAdded);        if (!entityToUpdate.Contains(targetResource))            entityToUpdate.Add(targetResource);    }    /// <summary>    /// Removes the given value from the collection    /// </summary>    /// <param name="targetResource">target object which defines the property</param>    /// <param name="propertyName">name of the property whose value needs to be updated</param>    /// <param name="resourceToBeRemoved">value of the property which needs to be removed</param>    void IUpdatable.RemoveReferenceFromCollection(object targetResource, string propertyName, object resourceToBeRemoved)    {        PropertyInfo pi = targetResource.GetType().GetProperty(propertyName);        if (pi == null)            throw new Exception(&ldquo;Can&rsquo;t find property&rdquo;);        IList collection = (IList)pi.GetValue(targetResource, null);        collection.Remove(resourceToBeRemoved);        if (!entityToUpdate.Contains(targetResource))            entityToUpdate.Add(targetResource);    }    /// <summary>    /// Delete the given resource    /// </summary>    /// <param name="targetResource">resource that needs to be deleted</param>    void IUpdatable.DeleteResource(object targetResource)    {        entityToRemove.Add(targetResource);    }    /// <summary>    /// Saves all the pending changes made till now    /// </summary>    void IUpdatable.SaveChanges()    {        using (var transaction = Session.BeginTransaction())        {            Session.FlushMode = FlushMode.Commit;            foreach (var entity in entityToUpdate)            {                Session.SaveOrUpdate(entity);            }            foreach (var entity in entityToRemove)            {                Session.Delete(entity);            }            transaction.Commit();        }            }    /// <summary>    /// Returns the actual instance of the resource represented by the given resource object    /// </summary>    /// <param name="resource">object representing the resource whose instance needs to be fetched</param>    /// <returns>The actual instance of the resource represented by the given resource object</returns>    object IUpdatable.ResolveResource(object resource)    {        return resource;    }    /// <summary>    /// Revert all the pending changes.    /// </summary>    void IUpdatable.ClearChanges()    {    }}
+</del></p>
+
+<p>\
+This implementation receives an instance of a NHibernate session, and
+implements all the required methods for creating, updating and deleting
+existing entities. As you can see, this is an abstract class that you
+can reuse for any NHibernate Data service. The concrete implementation
+is the one that you will need to expose in the data service, and it is
+tied to your entities. For instance,</p>
+
+<p> </p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+public class MyNHibernateDataContext : NHibernateDataContext{    public MyNHibernateDataContext(ISession session)        : base(session)    {    }    public IQueryable<Customer> Customers    {        get        {            return new NhQueryable<Customer>(Session);                    }    }    public IQueryable<Person> People    {        get        {            return new NhQueryable<Person>(Session);        }    }}
+</del></p>
+
+<p>\</p>
+
+<p>Finally, the data service exposes the concrete implementation of the
+data context, and provides some code to initialize the NHibernate
+session.</p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+[ServiceBehavior(IncludeExceptionDetailInFaults=true)]public class MyDataService : DataService<MyNHibernateDataContext>, IDisposable{    public static void InitializeService(DataServiceConfiguration config)    {        config.SetEntitySetAccessRule(&ldquo;*&rdquo;, EntitySetRights.All);        config.DataServiceBehavior.AcceptCountRequests = true;        config.DataServiceBehavior.AcceptProjectionRequests = true;        config.DataServiceBehavior.MaxProtocolVersion = DataServiceProtocolVersion.V2;        config.UseVerboseErrors = true;    }    ISession session;    protected override MyNHibernateDataContext CreateDataSource()    {        var factory = CreateSessionFactory();        this.session = factory.OpenSession();        this.session.FlushMode = FlushMode.Auto;        return new MyNHibernateDataContext(this.session);    }    private static ISessionFactory CreateSessionFactory()    {        return Fluently.Configure()            .Database(MsSqlConfiguration.MsSql2008            .ConnectionString(&ldquo;Data source=.\SQLExpress;Initial Catalog=Samples;Trusted_Connection=yes&rdquo;)            .Cache(c => c                .UseQueryCache()                .ProviderClass<HashtableCacheProvider>())            .ShowSql())            .Mappings(m => m.FluentMappings.AddFromAssemblyOf<Program>())            .BuildSessionFactory();    }
+</del></p>
+
+<p>\</p>
+
+<p>This example uses Fluent NHibernate for mapping the entities to the
+database structure. All the code for initializing the NHibernate session
+is in the CreateDataSource method that the DataService calls for serving
+any Http Request.  </p>
+
+<p> </p>
+
+<p>The mapping for the entity “Customer” looks using Fluent NHibernate
+looks as follow,</p>
+
+<p> </p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+[DataServiceKey(&ldquo;Id&rdquo;)]public class Customer {    public virtual Guid Id { get; private set; }    public virtual string FullName { get; set; }    public virtual string Country { get; set; }    public virtual IList<Person> People { get; set; }    public virtual void AddPerson(Person p)    {        p.Customer = this;        this.People.Add(p);    }}
+</del></p>
+
+<p>\</p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+public class CustomerMap : ClassMap<Customer>{    public CustomerMap()    {        Id(x => x.Id).GeneratedBy.GuidComb()           .UnsavedValue(&ldquo;00000000-0000-0000-0000-000000000000&rdquo;);          Map(x => x.FullName);        Map(x => x.Country);        HasMany(x => x.People)            .KeyColumn(&ldquo;CustomerId&rdquo;)            .Inverse()            .Cascade.All();    }}
+</del></p>
+
+<p>\</p>
+
+<p>The DataServiceKey in the entity is something required by the reflection
+provider for resolving queries by key (The dataservice will throw
+exceptions if you don’t provide that attribute for your entities).</p>
+
+<p> </p>
+
+<p>UPDATE!!: One colleague asked me an interesting question after I
+submitted this post. How do you deal with lazy properties or collections
+on the client side ?. This is not a problem at all with WCF Data
+services, as the default behavior is to retrieve the entities that you
+only asked for. That means that the associations (the lazy properties
+and collections) are not retrieved unless you ask for them explicitly
+with an expand (You are always in control of what you actually want to
+get). The code on the client side that uses an expand is showed here,</p>
+
+<p> </p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+var context = new MyNHibernateDataContext(new Uri(&ldquo;<a href="http://localhost:8080">http://localhost:8080</a>&rdquo;));var customer = context.Customers  .Expand(&ldquo;People&rdquo;)  .First();
+</del></p>
+
+<p>\</p>
+
+<p>Of course, this technique might not be optimal if you perform several
+expands as you will be reproducing the common N+1 problem. I think the
+only solution in that case is to implement a custom query provider that
+knows how to submit a single query for returning all the associations at
+once rather than performing different queries for each association.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1822,276 +2006,6 @@ service is available or not.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2010/05/11/getting-wcf-bindings-and-behaviors-from-any-config-source/">Getting WCF Bindings and Behaviors From Any Config Source</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2010-05-11T00:00:00-03:00" pubdate data-updated="true">May 11<span>th</span>, 2010</time>
-        
-         | <a href="/blog/2010/05/11/getting-wcf-bindings-and-behaviors-from-any-config-source/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>The need of loading WCF bindings or behaviors from different sources
-such as files in a disk or databases is a common requirement when
-dealing with configuration either on the client side or the service
-side.</p>
-
-<p>The traditional way to accomplish this in WCF is loading everything from
-the standard configuration section (serviceModel section) or creating
-all the bindings and behaviors by hand in code. However, there is a
-solution in the middle that becomes handy when more flexibility is
-needed. This solution involves getting the configuration from any place,
-and use that configuration to automatically configure any existing
-binding or behavior instance created with code. </p>
-
-<p>In order to configure a binding instance
-(System.ServiceModel.Channels.Binding) that you later inject in any
-endpoint on the client channel or the service host, you first need to
-get a binding configuration section from any configuration file (you can
-generate a temp file on the fly if you are using any other source for
-storing the configuration).</p>
-
-<p> </p>
-
-<p><del> {.code}
-private BindingsSection GetBindingsSection(string path)
-{
-  System.Configuration.Configuration config =
-</del></p>
-
-<p>~~~~ {.code}
-System.Configuration.ConfigurationManager.OpenMappedExeConfiguration(</p>
-
-<pre><code>new System.Configuration.ExeConfigurationFileMap() { ExeConfigFilename = path },
-  System.Configuration.ConfigurationUserLevel.None);
-</code></pre>
-
-<p>  var serviceModel = ServiceModelSectionGroup.GetSectionGroup(config);
-  return serviceModel.Bindings;
-}
-~~~~</p>
-
-<p><a href="http://11011.net/software/vspaste"></a></p>
-
-<p> </p>
-
-<p>The BindingsSection contains a list of all the configured bindings in
-the serviceModel configuration section, so you can iterate through all
-the configured binding that get the one you need (You don’t need to have
-a complete serviceModel section, a section with the bindings only
-works).</p>
-
-<p> </p>
-
-<p>~~~~ {.code}
-public Binding ResolveBinding(string name)
-{
-  BindingsSection section = GetBindingsSection(path);</p>
-
-<p>  foreach (var bindingCollection in section.BindingCollections)
-  {</p>
-
-<pre><code>if (bindingCollection.ConfiguredBindings.Count &gt; 0 
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {.code}
-&amp;&amp; bindingCollection.ConfiguredBindings[0].Name == name)</p>
-
-<pre><code>{
-  var bindingElement = bindingCollection.ConfiguredBindings[0];
-  var binding = (Binding)Activator.CreateInstance(bindingCollection.BindingType);
-  binding.Name = bindingElement.Name;
-  bindingElement.ApplyConfiguration(binding);
-
-  return binding;
-}
-</code></pre>
-
-<p>  }</p>
-
-<p>  return null;
-}
-~~~~</p>
-
-<p><a href="http://11011.net/software/vspaste"></a></p>
-
-<p> </p>
-
-<p>The code above does just that, and also instantiates and configures the
-Binding object (System.ServiceModel.Channels.Binding) you are looking
-for. As you can see, the binding configuration element contains a method
-“ApplyConfiguration” that receives the binding instance that needs to be
-configured.</p>
-
-<p>A similar thing can be done for instance with the “Endpoint” behaviors.
-You first get the BehaviorsSection, and then, the behavior you want to
-use.</p>
-
-<p> </p>
-
-<p><del> {.code}
-private BehaviorsSection GetBehaviorsSection(string path)
-{
-  System.Configuration.Configuration config =
-</del></p>
-
-<p>~~~~ {.code}
-System.Configuration.ConfigurationManager.OpenMappedExeConfiguration(</p>
-
-<pre><code>   new System.Configuration.ExeConfigurationFileMap() { ExeConfigFilename = path },
-      System.Configuration.ConfigurationUserLevel.None);
-</code></pre>
-
-<p>  var serviceModel = ServiceModelSectionGroup.GetSectionGroup(config);
-  return serviceModel.Behaviors;</p>
-
-<p>}
-~~~~</p>
-
-<p>~~~~ {.code}
-public List<IEndpointBehavior> ResolveEndpointBehavior(string name)
-{
-  BehaviorsSection section = GetBehaviorsSection(path);
-  List<IEndpointBehavior> endpointBehaviors = new List<IEndpointBehavior>();</p>
-
-<p>  if (section.EndpointBehaviors.Count > 0
-~~~~</p>
-
-<p>~~~~ {.code}
-&amp;&amp; section.EndpointBehaviors[0].Name == name)
-  {</p>
-
-<pre><code>var behaviorCollectionElement = section.EndpointBehaviors[0];
-
-foreach (BehaviorExtensionElement behaviorExtension in behaviorCollectionElement)
-{
-  object extension = behaviorExtension.GetType().InvokeMember("CreateBehavior",
-        BindingFlags.InvokeMethod | BindingFlags.NonPublic | BindingFlags.Instance,
-        null, behaviorExtension, null);
-
-  endpointBehaviors.Add((IEndpointBehavior)extension);
-}
-</code></pre>
-
-<p>   return endpointBehaviors;
- }</p>
-
-<p> return null;
-}
-~~~~</p>
-
-<p><a href="http://11011.net/software/vspaste"></a></p>
-
-<p> </p>
-
-<p>In this case, the code for creating the behavior instance is more
-tricky. First of all, a behavior in the configuration section actually
-represents a set of “IEndpoint” behaviors, and the behavior element you
-get from the configuration does not have any public method to configure
-an existing behavior instance. This last one only contains a protected
-method “CreateBehavior” that you can use for that purpose.</p>
-
-<p>Once you get this code implemented, a client channel can be easily
-configured as follows</p>
-
-<p> </p>
-
-<p>~~~~ {.code}
-var binding = resolver.ResolveBinding(&ldquo;MyBinding&rdquo;);
-var behaviors = resolver.ResolveEndpointBehavior(&ldquo;MyBehavior&rdquo;);</p>
-
-<p>SampleServiceClient client = new SampleServiceClient(binding,</p>
-
-<pre><code>   new EndpointAddress(new Uri("http://localhost:13749/SampleService.svc"),
-   new DnsEndpointIdentity("localhost")));
-</code></pre>
-
-<p>foreach (var behavior in behaviors)
-{
-   if(client.Endpoint.Behaviors.Contains(behavior.GetType()))
-   {</p>
-
-<pre><code> client.Endpoint.Behaviors.Remove(behavior.GetType());
-</code></pre>
-
-<p>   }
-   client.Endpoint.Behaviors.Add(behavior);
-}
-~~~~</p>
-
-<p> </p>
-
-<p>The code above assumes that a configuration file (in any place) with a
-binding “MyBinding” and a behavior “MyBehavior” exists. That file can
-look like this,</p>
-
-<p> </p>
-
-<p>~~~~ {.code}
-&lt;system.serviceModel>
-   <bindings></p>
-
-<pre><code> &lt;basicHttpBinding&gt;
-   &lt;binding name="MyBinding"&gt;
-     &lt;security mode="Transport"&gt;&lt;/security&gt;
-   &lt;/binding&gt;
- &lt;/basicHttpBinding&gt;
-</code></pre>
-
-<p>   </bindings>
-   <behaviors></p>
-
-<pre><code> &lt;endpointBehaviors&gt;
-   &lt;behavior name="MyBehavior"&gt;
-     &lt;clientCredentials&gt;
-       &lt;windows/&gt;
-     &lt;/clientCredentials&gt;
-   &lt;/behavior&gt;
- &lt;/endpointBehaviors&gt;
-</code></pre>
-
-<p>   </behaviors>
- &lt;/system.serviceModel>
-~~~~</p>
-
-<p><a href="http://11011.net/software/vspaste"></a></p>
-
-<p> </p>
-
-<p>The same thing can be done of course in the service host if you want to
-manually configure the bindings and behaviors.</p>
-
-<p><a href="http://11011.net/software/vspaste"></a> </p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/11/">&larr; Older</a>
@@ -2109,6 +2023,10 @@ manually configure the bindings and behaviors.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
@@ -2122,10 +2040,6 @@ manually configure the bindings and behaviors.</p>
     
       <li class="post">
         <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
       </li>
     
   </ul>
@@ -2173,7 +2087,7 @@ manually configure the bindings and behaviors.</p>
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2013 - Cibrax -
+  Copyright &copy; 2014 - Cibrax -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 

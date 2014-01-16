@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="This is probably one of the main concerns for people involved in the
-development of web services using WSE. \
-Unfortunately, WSE 3.0 was designed &hellip;">
+  <meta name="description" content="The Patterns &amp; Practices team has released the web service security
+patterns in the MSDN.\
+This guide provides excellent material about many &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +81,68 @@ Unfortunately, WSE 3.0 was designed &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2005/12/14/433118/">Web Service Security Patterns Released</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2005-12-14T00:00:00-03:00" pubdate data-updated="true">Dec 14<span>th</span>, 2005</time>
+        
+         | <a href="/blog/2005/12/14/433118/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>The Patterns &amp; Practices team has released the web service security
+patterns in the MSDN.\
+This guide provides excellent material about many security patterns and
+how they can be applied in different scenarios. For example, to
+authenticate a client or to validate a message as well.</p>
+
+<p>The patterns are grouped under the following categories:</p>
+
+<p>Authentication patterns</p>
+
+<p>Message protection patterns</p>
+
+<p>Implementing Transport and Message Layer Security</p>
+
+<p>Resource Access Patterns</p>
+
+<p>Service Boundary Protection Patterns</p>
+
+<p>Service Deployment Patterns</p>
+
+<p>If are looking for good security practices or &ldquo;security&rdquo; is one of your
+main concerns, I recommend you to take a look. \
+\
+You can find them under the following link
+<a href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnpag2/html/wssp.asp">http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnpag2/html/wssp.asp</a></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -333,7 +395,7 @@ The only way I found to bind an ADAM principal to Azman was through the
 user’s SID\</p>
 
 <p>//ADAM Provider was configured in the Web.Config file\
-MembershipUser user = Membership.GetUser(&ldquo;<a href="&#x6d;&#x61;&#105;&#108;&#x74;&#x6f;&#x3a;&#109;&#x79;&#117;&#115;&#x65;&#x72;&#x40;&#x4d;&#x79;&#68;&#111;&#x6d;&#x61;&#105;&#110;&#46;&#99;&#x6f;&#109;">&#x6d;&#121;&#x75;&#x73;&#x65;&#x72;&#64;&#77;&#121;&#x44;&#111;&#109;&#97;&#x69;&#x6e;&#x2e;&#x63;&#x6f;&#109;</a>&rdquo;);\
+MembershipUser user = Membership.GetUser(&ldquo;<a href="&#109;&#x61;&#105;&#108;&#116;&#111;&#x3a;&#109;&#121;&#x75;&#115;&#101;&#x72;&#64;&#77;&#121;&#x44;&#111;&#109;&#x61;&#105;&#110;&#x2e;&#x63;&#x6f;&#109;">&#x6d;&#121;&#x75;&#x73;&#101;&#114;&#x40;&#x4d;&#x79;&#68;&#x6f;&#109;&#x61;&#x69;&#x6e;&#x2e;&#99;&#x6f;&#x6d;</a>&rdquo;);\
 \
 AzAuthorizationStoreClass store = new AzAuthorizationStoreClass();\
 \
@@ -1182,90 +1244,6 @@ services, so I&rsquo;ll be blogging a lot more about this topic soon.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2005/04/14/400351/">Writing Managed Custom Actions in an Easy Way</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2005-04-14T00:00:00-03:00" pubdate data-updated="true">Apr 14<span>th</span>, 2005</time>
-        
-         | <a href="/blog/2005/04/14/400351/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>In my last post, I talked about hosting the CRL within a native custom
-action. \
-This week I found an easier way to execute a managed custom action, it
-is based on a hack and not extra C++ code is required.\
-Actually, you can&rsquo;t write a C# custom action because the compiler
-doesn&rsquo;t allow you to create a __stdcall function to be  \
-called from the outside. \
-Well, take a look to this
-<a href="http://www.c-sharpcorner.com/Code/2003/Aug/ExportManagedCodeasUnmanaged.asp">article</a>,
-it shows how to overcome that problem.</p>
-
-<p>Let&rsquo;s use this article to write our managed custom action, I&rsquo;ll start
-writing the custom action&rsquo;s skeleton:</p>
-
-<p>using System;\
-\
-namespace CustomActions\
-{\
-    public class MyCustomAction\
-    {\
-        public static int Execute( long handle )\
-        {\
-            System.Windows.Forms.MessageBox.Show( String.Format( &ldquo;Hello
-World {0}&rdquo;, handle ) );\
-\
-            return 0;\
-\
-        }\
-    }\
-}</p>
-
-<p>When the installer calls to this custom action, it will show a message
-box with the current msi handler number. \
-As next step, you will have to read that article and do the same things,
-but changing the &ldquo;SayHello&rdquo; method by &ldquo;Execute&rdquo;.\
-After finishing the last article step, you will have a managed assembly,
-which exports an &ldquo;Execute&rdquo; method. \
-You will able to use that method as &ldquo;DllEntry&rdquo; when you define the
-custom action in the custom actions table. \</p>
-
-<p>Using wix, the custom action definition should look like this:</p>
-
-<p>&lt;CustomAction Id=&ldquo;CustomActions&rdquo; BinaryKey=&ldquo;CustomActions&rdquo;
-DllEntry=&ldquo;Execute&rdquo; /></p>
-
-<p>I hope this can help you to develop more custom actions in an easy way
-:)</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/26/">&larr; Older</a>
@@ -1283,6 +1261,10 @@ DllEntry=&ldquo;Execute&rdquo; /></p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
@@ -1296,10 +1278,6 @@ DllEntry=&ldquo;Execute&rdquo; /></p>
     
       <li class="post">
         <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/27/unit-testing-improvements-in-asp-dot-net-web-api/">Unit Testing Improvements in ASP.NET Web API</a>
       </li>
     
   </ul>
@@ -1347,7 +1325,7 @@ DllEntry=&ldquo;Execute&rdquo; /></p>
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2013 - Cibrax -
+  Copyright &copy; 2014 - Cibrax -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 
