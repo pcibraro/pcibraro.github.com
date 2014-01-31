@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="The Patterns &amp; Practices team has released the web service security
-patterns in the MSDN.\
-This guide provides excellent material about many &hellip;">
+  <meta name="description" content="I used some of free time last week to write a prototype of
+WS-Polling for WSE 3.0. \
+Unfortunately, I couldn&rsquo;t finish the complete &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +81,409 @@ This guide provides excellent material about many &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/01/24/436334/">WS-Polling Implementation for WSE</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-01-24T00:00:00-03:00" pubdate data-updated="true">Jan 24<span>th</span>, 2006</time>
+        
+         | <a href="/blog/2006/01/24/436334/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I used some of free time last week to write a prototype of
+<a href="http://www.w3.org/Submission/ws-polling/">WS-Polling</a> for WSE 3.0. \
+Unfortunately, I couldn&rsquo;t finish the complete specification but it is
+enough to execute web services asynchronously.\
+If you haven&rsquo;t read anything about WS-Polling before, it is basically a
+specification to execute web services asynchronously and poll to the
+server later in order to get the response.\
+If you take a look to this specification, you probably will able to see
+three main parts:\
+\
+1. A mechanism to execute web services and store the response for later
+retrieval\
+2. Some headers to query information about the status of an execution\
+3. A mailbox implementation\
+\
+For the moment, I only implemented the first part and I&rsquo;m trying to
+finish the second one.\
+\</p>
+
+<h3>Implementation structure</h3>
+
+<p>The diagram below illustrates the classes used by this implementation. \
+\
+<img src="/images/legacy/Classes.gif" alt="" /> \
+\
+I defined a abstract class PollingService that declares a method to get
+messages. This class also uses an IMessageStore provider to store and
+retrieve the request and response messages for the concrete service. \
+The concrete service is a normal service that implements different
+business methods and inherits from the base class PollingService. e.g.
+MyHelloWorldService\
+The IMessageStore is an interface that declares methods to store and
+retrieve messages from an specific store such as Database, MSMQ or a
+file. \
+PollingClient and ConcreteProxy are both proxies to invoke methods in
+the Concrete service, but the last one was created by the tool
+WSEWsdl3.exe and it doesn&rsquo;t know how to invoke the service
+asynchronously.\
+I had to develop a custom PollingClient since the proxy created with
+WSEWsdl3.exe does not offer the following features:\
+\
+1. Access to the WS-Addressing headers. For this implementation, the
+client must change the wsa:ReplyTo header and get access to others
+headers\
+such as wsa:MessageID and wsa:To. \
+2. Make a one-way call. The proxy created by the tool waits for an
+answer from the service in most of the cases.</p>
+
+<h3>How this solution works</h3>
+
+<p><img src="/images/legacy/Sequence.gif" alt="" /></p>
+
+<p>​1. The client application wants to invoke a asynchronous method on the
+webservice so it creates a PollingClient instance and calls to the
+method &ldquo;InvokeService&rdquo;.\
+2. The PollingClient instance sets the value
+&ldquo;<a href="http://www.w3.org/2005/08/ws-polling/HoldResponse">http://www.w3.org/2005/08/ws-polling/HoldResponse</a>&rdquo; for the header
+wsa:ReplyTo and uses the WSE infrastructure to send the request message
+to the server.\
+3. The concrete service receives the request message and checks the
+value for the wsa:ReplyTo header. \
+If this value is &ldquo;<a href="http://www.w3.org/2005/08/ws-polling/HoldResponse">http://www.w3.org/2005/08/ws-polling/HoldResponse</a>&rdquo;, it
+executes the concrete method asynchronously, otherwise it executes the
+concrete method in the usual way.\
+4. If the concrete method was executed asynchronously, the service
+stores the request and response messages by means of the configured
+IStoreProvider. Otherwise, it returns the response message to the
+client.\
+5. The client application can ask later for the response message using
+the GetMessages method on the PollingClient instance. \
+(The GetMessages method will receive the wsa:MessageID for the original
+request message as parameter)</p>
+
+<h3>Some code</h3>
+
+<p>​1. Creating the Concrete service\</p>
+
+<p>[WebService(Namespace = &ldquo;<a href="http://tempuri.org/">http://tempuri.org/</a>&rdquo;)]\
+[WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]\
+[Policy(&ldquo;ServicePolicy&rdquo;)]\
+public class Service : WSEPolling.PollingService\
+{\
+\
+  public Service()\
+  {\
+\
+  }\
+\
+\
+  [SoapMethod(&ldquo;HelloWorld&rdquo;)]\
+  public string HelloWorld(string name)\
+  {\
+    return &ldquo;Hello World &rdquo; + name;\
+  }\
+\
+}\</p>
+
+<p>This class looks like a normal web service but it inherits from the base
+class PollingService.</p>
+
+<p>​2. Creating the client application\</p>
+
+<p>class Program\
+{\
+    static void Main(string[] args)\
+    {\
+      PollingClient client = new PollingClient(new
+Uri(&ldquo;<a href="http://localhost/WSEPollingService/Service.ashx">http://localhost/WSEPollingService/Service.ashx</a>&rdquo;));\
+\
+      client.SetPolicy(&ldquo;ClientPolicy&rdquo;); \
+\
+      string s = &ldquo;Test&rdquo;;\
+\
+      Uri id = client.InvokeService(&ldquo;HelloWorld&rdquo;, s,
+&ldquo;<a href="http://tempuri.org/">http://tempuri.org/</a>&rdquo;);\
+\
+      System.Threading.Thread.Sleep(1000);\
+\
+      WSEPolling.GetMessageRequest request = new
+WSEPolling.GetMessageRequest();\
+      request.MessageID = id.ToString();\
+\
+      //Gets the entire soap envelope\
+      SoapEnvelope response = client.GetMessage(request);\
+\
+      //Gets only the body of the soap envelope\
+      //string message = (string)client.GetMessageBody(request,
+typeof(string), &ldquo;<a href="http://tempuri.org/">http://tempuri.org/</a>&rdquo;);\
+\
+      string message = response.OuterXml;\
+\
+       Console.WriteLine(message);\
+    }\
+}</p>
+
+<p>In the code below, I created a PollingClient instance to invoke the
+&ldquo;HelloWorld&rdquo; service. The InvokeService method returns the wsa:MessageId
+value for the request message, which I keep in the variable &ldquo;id&rdquo;. \
+At the end, I retrieve the response message from the server passing the
+value of the variable &ldquo;id&rdquo; to the GetMessage method.\</p>
+
+<p>​3. The PollingService class</p>
+
+<p>public class PollingService : SoapService\
+{\
+  static IMessageStore _store;\
+\
+  static PollingService()\
+  {\
+    _store = new DatabaseMessageStore();\
+    _store.Init(null);\
+  }\
+\
+  [SoapMethod(WSPolling.Actions.GetMessage)]\
+  public virtual SoapEnvelope GetMessage(GetMessageRequest request)\
+  {\
+    SoapEnvelope envelope = _store.GetResponse(request);\
+\
+    RelatesTo relatesTo = new
+RelatesTo(RequestSoapContext.Current.Addressing.MessageID.Value);\
+    envelope.Context.Addressing.RelatesTo = relatesTo;\
+\
+    return envelope;\
+  }\
+\
+  protected override SoapMethodInvoker RouteRequest(SoapEnvelope
+request)\
+  {\
+    return new AsyncSoapMethodInvoker(this,
+base.RouteRequest(request));\
+  }\
+\
+  protected virtual void StoreResponse(SoapEnvelope response)\
+  {\
+    _store.StoreResponse (response); \
+  }\
+\
+  protected virtual void StoreRequest(SoapEnvelope request)\
+  {\
+     _store.StoreRequest(request);\
+  }\
+\
+  class AsyncSoapMethodInvoker : SoapMethodInvoker\
+  {\
+    private SoapMethodInvoker _invoker;\
+    private PollingService _service;\
+\
+    public AsyncSoapMethodInvoker(PollingService service,
+SoapMethodInvoker invoker)\
+    {\
+      this._invoker = invoker;\
+      this._service = service;\
+    }\
+\
+    public override SoapEnvelope Invoke(SoapEnvelope message)\
+    {\
+      if (message.Context.Addressing.Action !=
+WSPolling.Actions.GetMessage &amp;&amp;\
+        message.Context.Addressing.ReplyTo != null &amp;&amp;\
+        message.Context.Addressing.ReplyTo.Address.Value.ToString() ==
+WSPolling.HoldResponseURI)\
+      {\
+        this._service.StoreRequest(message);\
+        WaitCallback callBack = new WaitCallback(this.Invoke);\
+        ThreadPool.QueueUserWorkItem(callBack, message);\
+        return new SoapEnvelope();\
+      }\
+      else\
+      {\
+        SoapEnvelope response = _invoker.Invoke(message);\
+        return response;\
+      }\
+    }\
+\
+    public override bool OneWay\
+    {\
+      get { return _invoker.OneWay; }\
+    }\
+\
+    private void Invoke(object state)\
+    {\
+      SoapEnvelope request = (SoapEnvelope)state;\
+      SoapEnvelope response = _invoker.Invoke(request);\
+\
+      _service.StoreResponse(response);\
+    }\
+  }\
+}</p>
+
+<p>The RouteRequest is the key method in this implementation. \
+This method returns a SoapMethodInvoker instance, which knows how to
+call a specific method in the concrete service. (WSE provides a default
+implementation of this class)\
+In this case, I developed my own class AsyncSoapMethodInvoker, which
+calls to the SoapMethod synchronously or asynchronously depending on the
+value of wsa:ReplyTo header.\
+As you can see in the code, I used the Thread pool provided by .NET to
+execute the web method asynchronously.</p>
+
+<p>​4. The Database message store implementation</p>
+
+<p>class DatabaseMessageStore : IMessageStore\
+{\
+  private string _connectionString = null;\
+\
+  public void Init(XmlElement configuration)\
+  {\
+    ConnectionStringSettings settings =
+ConfigurationManager.ConnectionStrings[&ldquo;Messages&rdquo;];\
+\
+    if(settings == null)\
+      throw new ConfigurationErrorsException(&ldquo;The connection string
+&lsquo;Messages&rsquo; is not configured&rdquo;);\
+\
+    if(settings.ConnectionString == null)\
+      throw new ConfigurationErrorsException(&ldquo;Invalid value for the
+connection string &lsquo;Messages&rsquo;&rdquo;);\
+\
+    this._connectionString = settings.ConnectionString;\
+  }\
+\
+  public void StoreRequest(SoapEnvelope request)\
+  {\
+    using (SqlConnection connection = new
+SqlConnection(this._connectionString))\
+    {\
+      connection.Open();\
+      using (SqlCommand command = new SqlCommand(&ldquo;InsertMessage&rdquo;,
+connection))\
+      {\
+        command.CommandType = System.Data.CommandType.StoredProcedure;\
+        command.Parameters.Add(new SqlParameter(&ldquo;@MessageID&rdquo;,
+request.Context.Addressing.MessageID.Value.ToString()));\
+        command.Parameters.Add(new SqlParameter(&ldquo;@To&rdquo;,
+request.Context.Addressing.To.Value.ToString()));\
+\
+        command.ExecuteNonQuery();\
+      }\
+      connection.Close();\
+    }\
+  }\
+\
+  public void StoreResponse(SoapEnvelope response)\
+  {\
+    response.Context.Addressing.GetXml(response);\
+    using (SqlConnection connection = new
+SqlConnection(this._connectionString))\
+    {\
+      connection.Open();\
+      using (SqlCommand command = new SqlCommand(&ldquo;UpdateMessage&rdquo;,
+connection))\
+      {\
+        command.CommandType = System.Data.CommandType.StoredProcedure;\
+        command.Parameters.Add(new SqlParameter(&ldquo;@MessageID&rdquo;,
+response.Context.Addressing.RelatesTo.Value.ToString()));\
+        command.Parameters.Add(new SqlParameter(&ldquo;@Message&rdquo;,
+response.OuterXml));\
+        command.ExecuteNonQuery();\
+      }\
+      connection.Close();\
+    }\
+  }\
+\
+  public SoapEnvelope GetResponse(GetMessageRequest request)\
+  {\
+    SoapEnvelope response = new SoapEnvelope();\
+    using (SqlConnection connection = new
+SqlConnection(this._connectionString))\
+    {\
+      connection.Open();\
+      using (SqlCommand command = new SqlCommand(&ldquo;GetMessage&rdquo;,
+connection))\
+      {\
+        command.CommandType = System.Data.CommandType.StoredProcedure;\
+        command.Parameters.Add(new SqlParameter(&ldquo;@MessageID&rdquo;,
+request.MessageID.ToString()));\
+\
+        using (SqlDataReader reader =
+command.ExecuteReader(System.Data.CommandBehavior.CloseConnection))\
+        {\
+          if (reader.Read())\
+          {\
+            if (reader[&ldquo;Message&rdquo;] == DBNull.Value )\
+            {\
+              NoMessageAvailable noMessage = new
+NoMessageAvailable(Reason.ResponseNotReady);\
+              response.Context.Addressing.Action =
+WSPolling.Actions.NoMessageAvailable; \
+              response.SetBodyObject(noMessage);\
+            }\
+            else\
+            {\
+              string message = (string)reader[&ldquo;Message&rdquo;];\
+\
+              response.Load(new StringReader(message));\
+              response.Context.Addressing.RemoveXml(response);\
+            }\
+          }\
+          else\
+          {\
+            NoMessageAvailable noMessage = new
+NoMessageAvailable(Reason.NoMessageFound);\
+            response.Context.Addressing.Action =
+WSPolling.Actions.NoMessageAvailable; \
+            response.SetBodyObject(noMessage);\
+          }\
+\
+          reader.Close();\
+\
+        }\
+      }\
+\
+      connection.Close();\
+    }\
+\
+    return response;\
+  }\
+}</p>
+
+<p>This class is quite simple. It implements the interface IMessageStore
+and contains code to store and query messages from a SQL database. \
+\
+Well, this is all I have for the moment. You can download the code from
+the following <a href="/images/legacy/WSPolling.zip">location</a>.\
+This is a prototype and it should not be used in production
+environments.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -395,7 +798,7 @@ The only way I found to bind an ADAM principal to Azman was through the
 user’s SID\</p>
 
 <p>//ADAM Provider was configured in the Web.Config file\
-MembershipUser user = Membership.GetUser(&ldquo;<a href="&#109;&#x61;&#105;&#108;&#116;&#111;&#x3a;&#109;&#121;&#x75;&#115;&#101;&#x72;&#64;&#77;&#121;&#x44;&#111;&#109;&#x61;&#105;&#110;&#x2e;&#x63;&#x6f;&#109;">&#x6d;&#121;&#x75;&#x73;&#101;&#114;&#x40;&#x4d;&#x79;&#68;&#x6f;&#109;&#x61;&#x69;&#x6e;&#x2e;&#99;&#x6f;&#x6d;</a>&rdquo;);\
+MembershipUser user = Membership.GetUser(&ldquo;<a href="&#109;&#x61;&#x69;&#x6c;&#116;&#111;&#x3a;&#x6d;&#x79;&#x75;&#115;&#101;&#114;&#64;&#77;&#x79;&#68;&#x6f;&#109;&#x61;&#x69;&#x6e;&#46;&#x63;&#111;&#x6d;">&#x6d;&#121;&#117;&#115;&#101;&#x72;&#64;&#77;&#x79;&#68;&#x6f;&#109;&#x61;&#105;&#110;&#46;&#x63;&#111;&#109;</a>&rdquo;);\
 \
 AzAuthorizationStoreClass store = new AzAuthorizationStoreClass();\
 \
@@ -1140,110 +1543,6 @@ End Sub</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2005/04/22/403868/">HTTP Endpoints in SQL Server 2005</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2005-04-22T00:00:00-03:00" pubdate data-updated="true">Apr 22<span>nd</span>, 2005</time>
-        
-         | <a href="/blog/2005/04/22/403868/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>SQL Server 2005 ( Codenamed &ldquo;Yukon&rdquo; )  provides a new interesting
-feature to execute stores procedures or Transact-SQL statements through
-web services published in the server, without need to use IIS.\
-This new feature exposes Http endpoints using the Http Api provided in
-Windows XP SP2 and Windows 2003.\
-These endpoints are published in a specific URI, and they listen for
-incoming soap requests, so they facilitate interoperability because any
-application, which talks soap, can communicate with SQL server without
-requiring additional sql libraries or MDAC.</p>
-
-<p>The syntax to create an endpoint is quite simple, and looks like this:</p>
-
-<p>CREATE ENDPOINT MyEndpoint\
-STATE = STARTED\
-AS HTTP (\
-  AUTHENTICATION = (INTEGRATED),\
-  PATH = &lsquo;/sql/myendpoint&rsquo;,\
-  PORTS = (CLEAR) )\
-FOR SOAP (\
-  BATCHES = ENABLED,\
-  WSDL = DEFAULT\
-)\</p>
-
-<p>In this case I created a new endpoint called MyEndpoint, which listen
-for Transact-SQL statements on <a href="http://localhost/sql/myendpoint.">http://localhost/sql/myendpoint.</a> You can
-test it browsing to <a href="http://localhost/sql/myendpoint?wsdl.%0AThis">http://localhost/sql/myendpoint?wsdl.
-This</a> sentence supports additional parameters, all of them are very well
-described in the SQL online help.\</p>
-
-<p>This sample shows how to execute a Transact-SQL statement from a simple
-java script.</p>
-
-<p>function SendBatchRequest( strServerName, strUrlPath, strQuery )\
-{\
-   var objXmlHttp = null;\
-   var strRequest = &ldquo;&rdquo;;\
-\
-   objXmlHttp = new ActiveXObject( &ldquo;microsoft.xmlhttp&rdquo; );\
-   objXmlHttp.open( &ldquo;POST&rdquo;, &ldquo;<a href="http://">http://</a>&rdquo; + strServerName + strUrlPath,
-false );\
-   objXmlHttp.setrequestheader( &ldquo;Content-Type&rdquo;, &ldquo;text/xml&rdquo; );\
-   objXmlHttp.setRequestHeader( &ldquo;Host&rdquo;, strServerName );\
-\
-   strRequest = &ldquo;&lt;SOAP-ENV:Envelope\
-                           xmlns:SOAP-ENV=&lsquo;<a href="http://schemas.xmlsoap.org/soap/envelope/">http://schemas.xmlsoap.org/soap/envelope/</a>&rsquo;\
-                           xmlns:sql=&lsquo;<a href="http://schemas.microsoft.com/sqlserver/2004/SOAP">http://schemas.microsoft.com/sqlserver/2004/SOAP</a>&rsquo;>\
-                              &lt;SOAP-ENV:Body>\
-                                 &lt;sql:sqlbatch>\
-                                    &lt;sql:BatchCommands>&rdquo; + strQuery +
-&ldquo;&lt;/sql:BatchCommands>\
-                                 &lt;/sql:sqlbatch>\
-                              &lt;/SOAP-ENV:Body>\
-                        &lt;/SOAP-ENV:Envelope>&rdquo;;\
-\
-   objXmlHttp.send( strRequest );\
-\
-   if( objXmlHttp.status == 200 )\
-      return objXmlHttp.responseXML.xml;\
-   else\
-      return &ldquo;&rdquo;;\
-}\
-\
-var response = SendBatchRequest( &lsquo;localhost&rsquo;, &lsquo;/sql/myendpoint&rsquo;, &lsquo;Select
-* from sys.http_endpoints&rsquo; );\</p>
-
-<p>Actually, I&rsquo;m writing a .NET managed data provider to consume these web
-services, so I&rsquo;ll be blogging a lot more about this topic soon.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/26/">&larr; Older</a>
@@ -1261,6 +1560,10 @@ services, so I&rsquo;ll be blogging a lot more about this topic soon.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
       </li>
     
@@ -1274,10 +1577,6 @@ services, so I&rsquo;ll be blogging a lot more about this topic soon.</p>
     
       <li class="post">
         <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
       </li>
     
   </ul>

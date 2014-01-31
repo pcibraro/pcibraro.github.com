@@ -4,7 +4,7 @@
   <title><![CDATA[Category: webapi | Pablo Cibraro (Cibrax)]]></title>
   <link href="http://cibrax.me/blog/categories/webapi/atom.xml" rel="self"/>
   <link href="http://cibrax.me/"/>
-  <updated>2014-01-16T11:40:23-03:00</updated>
+  <updated>2014-01-31T14:32:37-03:00</updated>
   <id>http://cibrax.me/</id>
   <author>
     <name><![CDATA[Cibrax]]></name>
@@ -12,6 +12,95 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Making ajax calls with Hawk authentication to ASP.NET Web API]]></title>
+    <link href="http://cibrax.me/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/"/>
+    <updated>2014-01-31T14:14:00-03:00</updated>
+    <id>http://cibrax.me/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api</id>
+    <content type="html"><![CDATA[<p>Hawk is an authentication protocol initially written by Eran Hammer in javascript for being used in Node.js. Later on, Eran also added support for browsers through a browser.js library, which is also part of the [hawk github project] (<a href="https://github.com/hueniverse/hawk">https://github.com/hueniverse/hawk</a>).</p>
+
+<p>As part of this post, I will show how you can use that browser.js library to make Ajax calls to a ASP.NET Web API that authenticates the calls with Hawk.</p>
+
+<p>The first thing is to define the Web API to be call from javascript. For the sake of simplicity, we will use a very simple &ldquo;Hello World&rdquo; controller that returns the name of the authenticated user.</p>
+
+<p>```csharp
+public class HelloWorldController : ApiController
+{
+  public string Get()
+  {</p>
+
+<pre><code>return "hello " + this.User.Identity.Name;
+</code></pre>
+
+<p>  }
+}
+```</p>
+
+<p>As second step, we will configure the Hawk filter globally to authenticate the calls. This filter is part of the HawkNet integration project with Web API.</p>
+
+<p>```csharp
+public static void Register(HttpConfiguration config)
+{
+  config.Filters.Add(new RequiresHawkAttribute((id) =>
+  {</p>
+
+<pre><code>return new HawkCredential
+{
+  Id = "dh37fgj492je",
+  Key = "werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn",
+  Algorithm = "hmacsha256",
+  User = "steve"
+};
+</code></pre>
+
+<p>  }));
+}
+```</p>
+
+<p>Once we have the Web API configured, we will write the javascript to make the call, which will use browser.js to generate the hawk header on the client.</p>
+
+<p>```html</p>
+
+<script src="~/Scripts/browser.js"></script>
+
+
+<script>
+$(function () {
+    var url = 'http://localhost:28290/api/HelloWorld';
+
+    var credentials = {
+        id: 'dh37fgj492je', // Required by Hawk.client.header
+        key: 'werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn',
+        algorithm: 'sha256',
+        user: 'Steve'
+    };
+
+    $("#helloworld").click(function() {
+                
+        var header = hawk.client.header(url, 'GET', { credentials: credentials });
+
+        $.ajax({
+            dataType: "json",
+            headers: { authorization: header.field },
+            url: url,
+            success: function (error, response, body) {
+                
+                $("#response").html(body.responseText);
+            }
+        });
+    });
+});
+</script>
+
+
+<p>```</p>
+
+<p>As you can see, the part that matters in the sample above is how you generate the hawk header by calling the &ldquo;header&rdquo; method in the client object provided by the browser.js library. That method receives the url, the http method and the credentials. The result of that call is the hawk authentication header, which is attached to the authorization header in the ajax call.</p>
+
+<p>The complete sample can be found in the [HawkNet github project] (<a href="https://github.com/pcibraro/hawknet/tree/master/Example.Web">https://github.com/pcibraro/hawknet/tree/master/Example.Web</a>)</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Unit Testing Improvements in ASP.NET Web API]]></title>

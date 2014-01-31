@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="One of the nice things about the new HttpClient in System.Net.Http is
-the support for mocking responses or handling requests in a http server
-hosted &hellip;">
+  <meta name="description" content="UrlHelper is the class you can use in ASP.NET Web API to automatically
+infer links from the routing table without hardcoding anything. For
+example, &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +81,197 @@ hosted &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/10/10/unit-testing-asp-net-web-api-controllers-that-rely-on-the-urlhelper/">Unit Testing ASP.NET Web API Controllers That Rely on the UrlHelper</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-10-10T00:00:00-03:00" pubdate data-updated="true">Oct 10<span>th</span>, 2012</time>
+        
+         | <a href="/blog/2012/10/10/unit-testing-asp-net-web-api-controllers-that-rely-on-the-urlhelper/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>UrlHelper is the class you can use in ASP.NET Web API to automatically
+infer links from the routing table without hardcoding anything. For
+example, the following code uses the helper to infer the location url
+for a new resource,</p>
+
+<pre><code>public HttpResponseMessage Post(User model)
+</code></pre>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+{
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+  var response = Request.CreateResponse(HttpStatusCode.Created, user);
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+  var link = Url.Link(&ldquo;DefaultApi&rdquo;, new { id = id, controller = &ldquo;Users&rdquo; });
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+  response.Headers.Location = new Uri(link);
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+  return response;
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+}
+</del></p>
+
+<p>That code uses a previously defined route “DefaultApi”, which you might
+configure in the HttpConfiguration object (This is the route generated
+by default when you create a new Web API project).</p>
+
+<p>The problem with UrlHelper is that it requires from some initialization
+code before you can invoking it from a unit test (for testing the Post
+method in this example). If you don’t initialize the HttpConfiguration
+and Request instances associated to the controller from the unit test,
+it will fail miserably.</p>
+
+<p>After digging into the ASP.NET Web API source code a little bit, I could
+figure out what the requirements for using the UrlHelper are. It relies
+on the routing table configuration, and a few properties you need to add
+to the HttpRequestMessage. The following code illustrates what’s needed,</p>
+
+<pre><code>var controller = new UserController();
+</code></pre>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+controller.Configuration = new HttpConfiguration();
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+var route = controller.Configuration.Routes.MapHttpRoute(
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>     name: "DefaultApi",
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>     routeTemplate: "api/{controller}/{id}",
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>     defaults: new { id = RouteParameter.Optional }
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+);
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+var routeData = new HttpRouteData(route,
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>   new HttpRouteValueDictionary 
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>   { 
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>      { "id", "1" },
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>      { "controller", "Users" } 
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>   }
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+);
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+controller.Request = new HttpRequestMessage(HttpMethod.Post, &ldquo;<a href="http://localhost:9091/">http://localhost:9091/</a>&rdquo;);
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+controller.Request.Properties.Add(HttpPropertyKeys.HttpConfigurationKey, controller.Configuration);
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+controller.Request.Properties.Add(HttpPropertyKeys.HttpRouteDataKey, routeData);
+</del></p>
+
+<pre><code> 
+</code></pre>
+
+<p>The HttpRouteData instance should be initialized with the route values
+you will use in the controller method (“id” and “controller” in this
+example). Once you have correctly setup all those properties, you
+shouldn’t have any problem to use the UrlHelper. There is no need to
+mock anything else.</p>
+
+<p>Enjoy!!.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1782,480 +1973,6 @@ can debug the application from there.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2012/03/06/building-hypermedia-web-apis/">Building Hypermedia Web APIs</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-03-06T00:00:00-03:00" pubdate data-updated="true">Mar 6<span>th</span>, 2012</time>
-        
-         | <a href="/blog/2012/03/06/building-hypermedia-web-apis/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Hypermedia is one of those concepts really hard to grasp when building
-Http aware APIs (or Web API’s). As human beings, we are constantly
-dealing with hypermedia in the existing web by following links or
-posting data from some forms that take us to a next level.</p>
-
-<p>We typically remember the entry point or URL for the retrieving the home
-page of web site, and we can move from there on to different sections
-using hypermedia artifacts. Those URL usually tend to be nice and easy
-to remember, but they don’t have to be as it is not something http by
-itself mandates. We could rely on a search engine like Google or Bing to
-find those URLs for us. You can even use some cryptographic URLs for the
-web pages in your website, and still provide a nice experience for the
-user by proving the right links to browse the content.</p>
-
-<p>When you build Http API’s for being consumed for other systems, the
-history is not any different. There is no any reason for client
-applications to remember all the possible resources and their location
-(URLs) if the server can provide those. Hardcoding URL’s on the client
-side is a bad thing for two main reasons,</p>
-
-<ol>
-<li>The server can change the location for an specific resource, so all
-the clients having a hardcoded URL for that resource will break.</li>
-<li>It pushes some knowledge about the application state workflow to the
-client side. What happens if an action in a resource is only
-available for a given state, shall we put that logic in any possible
-API consumer ?. Definitely not, the server should always mandate
-what can be done or not with a resource. For example, if the state
-of a purchase order is canceled, the client application application
-shouldn’t be allowed to submit that PO. If we have an user in front
-of an UI using that API, he shouldn’t see the submit button enabled
-(That logic for enabling or disabling the button could be driven by
-the server using links).</li>
-</ol>
-
-
-<p>This is one of the gray areas that typically differentiates a regular
-Web API’s from a RESTful API, but there are some other constraints that
-also applies, so this discussing about RESTful services probably don’t
-make sense in most cases. What matters in the end is that the API uses
-HTTP correctly as application protocol and leverage hypermedia when it
-is possible. By enabling Hypermedia, you can create self-discoverable
-APIs, which are not an excuse for not providing documentation as I
-usually hear, but are more flexible in terms of updatability.</p>
-
-<p>Many of the media types we use nowadays for building Web API’s such as
-JSON or XML don’t have a built-in concept for representing hypermedia
-links as HTML does with links and forms. You can leverage those media
-types by defining a way to express hypermedia, but again, it requires
-client to understand how the hypermedia semantics are defined on top of
-those. Other media types like XHtml or ATOM already support some of the
-hypermedia concepts like links or forms.</p>
-
-<p>By moving forward with this idea of Hypermedia API on top of JSON or
-XML, Mike Kelly wrote a draft for an specific media type called
-<a href="http://stateless.co/hal_specification.html">“HAL”</a>.   HAL extends JSON
-and XML with all the semantics required to express resources and their
-links. This fragment from the spec draft illustrates how an order can be
-modeled using the xml variant of HAL,</p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-<resource href="/orders">
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-  <link rel="next" href="/orders?page=2" />
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-  <link rel="search" href="/orders?id={order_id}" />
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-  <resource rel="order" href="/orders/123">
-</del></p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>&lt;link rel="customer" href="/customer/bob" title="Bob Jones &amp;lt;bob@jones.com&gt;" /&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>&lt;resource rel="basket" href="/orders/123/basket"&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>  &lt;item&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>    &lt;sku&gt;ABC123&lt;/sku&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>    &lt;quantity&gt;2&lt;/sku&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>    &lt;price&gt;9.50&lt;/price&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>  &lt;/item&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>  &lt;item&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>    &lt;sku&gt;GFZ111&lt;/sku&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>    &lt;quantity&gt;1&lt;/quantity&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>    &lt;price&gt;11.00&lt;/price&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>  &lt;/item&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>&lt;/resource&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>&lt;total&gt;30.00&lt;/total&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>&lt;currency&gt;USD&lt;/currency&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>&lt;status&gt;shipped&lt;/status&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>&lt;placed&gt;2011-01-16&lt;/placed&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-  </resource>
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-  <resource rel="order" href="/orders/124">
-</del></p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>&lt;link rel="customer" href="/customer/jen" title="Jen Harris &amp;lt;jen@internet.com&gt;" /&gt;    
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>&lt;resource rel="basket" href="/orders/124/basket"&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>  &lt;item&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>    &lt;sku&gt;KLM222&lt;/sku&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>    &lt;quantity&gt;1&lt;/sku&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>    &lt;price&gt;9.00&lt;/price&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>  &lt;/item&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>  &lt;item&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>    &lt;sku&gt;HHI50&lt;/sku&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>    &lt;quantity&gt;1&lt;/quantity&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>    &lt;price&gt;11.00&lt;/price&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>  &lt;/item&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>&lt;/resource&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>&lt;total&gt;20.00&lt;/total&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>&lt;currency&gt;USD&lt;/currency&lt;status&gt;processing&lt;/status&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>&lt;placed&gt;2011-01-16&lt;/placed&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-  </resource>
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-</resource>
-</del></p>
-
-<p>You can see the different entities in your system can be modeled and
-represented as resources, which are linked, and attributes like “rel” or
-“href” are used to express the role of the entity and it’s location.
-Steve Michelotti created an specific formatter for HAL in WCF Web API
-available <a href="https://bitbucket.org/smichelotti/hal-media-type">here</a>, but
-it hasn’t be updated to the latest ASP.NET Web API version yet.</p>
-
-<p>I have been able to see two different kinds of hypermedia APIs over the
-years. APIs returning links for representing state transitions or linked
-resources that put some out of band assumptions on the consumer for how
-the transition should be executed. For example, consider the following
-example with the representation of a PO.</p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-<purchaseOrder>
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-  <id>90</id>
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-  <sku>AJJ34</sku><br/>
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-  <link rel="customer" href="/customers/foo"/>
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-  <link rel="approve" href="/po/90/approve"/>
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-  <link rel="cancel" href="/po/90/cancel"/>
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-</purchaseOrder>
-</del></p>
-
-<p>The representation contains a link for retrieving the representation of
-the associated customer (which assumes the client should send an HTTP to
-that URL for getting the representation), and two additional links for
-approving or canceling the PO (which also assumes the client knows how
-to post a message to those URLs). You see, the consumer is still coupled
-to the Web API implementation with some out of band details, but still
-is self-discoverable and the consumer can determine which actions can be
-executed over that resource (See the associated customer details,
-approve it or cancel it).</p>
-
-<p>There are also other kind of APIs that use Forms as you would find them
-in the HTML or XHTML media types. Good part of these APIs are driven by
-forms submissions. Let’s see an example to illustrate the concept.</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<ul id="purchaseOrder">
-~~~~
-
-~~~~ {style=&#8221;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&#8221;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&#8221;}
-  <li id="id">90</li>
-~~~~
-
-~~~~ {style=&#8221;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&#8221;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&#8221;}
-  <li id="sku">AJJ34</li>  
-~~~~
-
-~~~~ {style=&#8221;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&#8221;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&#8221;}
-</ul>
-
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-<a href="/customers/foo" rel="customer"/>
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-<a href="/po/90/approve_form" rel="approve"/>
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-<a href="/po/90/cancel_form" rel="cancel"/>
-</del></p>
-
-<p>The purchase order is returned this time as an XHTML representation and
-contains links which basically supports the HTTP GET semantics. An HTTP
-GET to the “customer” link would return the associated customer
-representation. However, an HTTP GET to the “approve” or “cancel” links
-would return an http form this time for approving or canceling the
-order.</p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-<form action="/po/90/approve" method="POST">
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-  <input type="hidden" id="id">90</input>
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-  <input type="hidden" id="___forgeryToken">XXXXXXXX</input>
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-</form>
-</del></p>
-
-<p>The consumer now has been decoupled of certain details for approving the
-order for example. It only needs to submit this form using an HTTP POST
-to the URL specified in the action attribute. The server can also
-includes additional information in the form as a forgery token for
-example to avoid “Cross-site Request Forgery” (CSRF) attacks.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/4/">&larr; Older</a>
@@ -2273,6 +1990,10 @@ example to avoid “Cross-site Request Forgery” (CSRF) attacks.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
       </li>
     
@@ -2286,10 +2007,6 @@ example to avoid “Cross-site Request Forgery” (CSRF) attacks.</p>
     
       <li class="post">
         <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
       </li>
     
   </ul>

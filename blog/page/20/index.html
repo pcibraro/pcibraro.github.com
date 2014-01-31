@@ -9,9 +9,11 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="Microsoft has released the first CTP of the synchronization framework,
-it is available to download
-here. The idea of this framework is to provide a &hellip;">
+  <meta name="description" content="Since the Gotdot.net site disappeared along with the code of this
+implementation, my friend Jason
+Hogg has kindly published the code
+on his
+blog. &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +83,50 @@ here. The idea of this framework is to provide a &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2007/11/22/saml-sts-implementation-for-wse-3-0-reposted/">SAML STS Implementation for WSE 3.0 (Reposted)</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-11-22T00:00:00-03:00" pubdate data-updated="true">Nov 22<span>nd</span>, 2007</time>
+        
+         | <a href="/blog/2007/11/22/saml-sts-implementation-for-wse-3-0-reposted/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Since the Gotdot.net site disappeared along with the code of this
+implementation, my friend <a href="http://blogs.msdn.com/thehoggblog/">Jason
+Hogg</a> has kindly published the code
+on <a href="http://blogs.msdn.com/thehoggblog/archive/2007/11/20/saml-sts-for-wse-3-0-reposted.aspx">his
+blog</a>.</p>
+
+<p>Thanks Jason!!!</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1066,126 +1112,6 @@ available <a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=ddb
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2007/07/03/wmi-support-in-wcf/">WMI Support in WCF</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2007-07-03T00:00:00-03:00" pubdate data-updated="true">Jul 3<span>rd</span>, 2007</time>
-        
-         | <a href="/blog/2007/07/03/wmi-support-in-wcf/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>A nice thing about the management layer in WCF is the WMI support to
-expose instrumentation at runtime with a well-know interface. That
-instrumentation includes different service characteristics such as
-contracts, services, behaviors, listeners or application hosts, which
-can be accessed by different management tools.</p>
-
-<p>The built-in provider can be activated in the configuration file of the
-application through the &ldquo;wmiProviderEnabled&rdquo; attribute in the
-diagnostics element, as it is shown below,</p>
-
-<p>&lt;system.serviceModel></p>
-
-<p>    &lt;diagnostics <strong>wmiProviderEnabled=&ldquo;true&rdquo;</strong>></p>
-
-<p> </p>
-
-<p>      &lt;messageLogging logEntireMessage=&ldquo;false&rdquo;
-logMalformedMessages=&ldquo;false&rdquo; logMessagesAtTransportLevel=&ldquo;false&rdquo;
-logMessagesAtServiceLevel=&ldquo;false&rdquo;/></p>
-
-<p>    &lt;/diagnostics></p>
-
-<p>    &hellip;&hellip;&hellip;..</p>
-
-<p>&lt;/system.serviceModel></p>
-
-<p>Of course, this can be also be done through the SvcConfigEditor tool,
-which is the way I usually use for simplicity.</p>
-
-<p>Once the WMI provider is enabled, and the service host is running, we
-will able to use a tool like <a href="http://www.microsoft.com/downloads/details.aspx?familyid=6430F853-1120-48DB-8CC5-F2ABDC3ED314&amp;displaylang=en">WMI Object
-Browser</a> to
-see the published information.</p>
-
-<p><img src="/images/legacy/WMI%20Object%20Browser.jpg" alt="" /></p>
-
-<p>As is shown in the image above, if we browse to the objects in the
-namespace &ldquo;root\ServiceModel&rdquo;, we will able to see an AppDomainInfo
-object with information about the WCF settings, and the service
-endpoints as well.</p>
-
-<p>Also we can change some of those settings at runtime (These changes will
-not be saved in the configuration), for instance, to enable message
-logging, which can be ideal to detect sporadic problems on a specific
-server.</p>
-
-<p>Other settings like Performance counters can also be enabled through
-this WMI model, but it requires some programming since it can not easily
-done with tools like this one.</p>
-
-<p>And finally, Powershell scripts can also be used to query information
-about the objects published by the built-in WMI provider.</p>
-
-<p>PS C:\Users\pci> get-wmiobject -class &ldquo;AppDomainInfo&rdquo; -namespace
-&ldquo;root\servicemodel&rdquo; -computername &ldquo;.&rdquo;</p>
-
-<p>__GENUS : 2\
-__CLASS : AppDomainInfo\
-__SUPERCLASS :\
-__DYNASTY : AppDomainInfo\
-__RELPATH :
-AppDomainInfo.AppDomainId=2,Name=&ldquo;b576ed9b-1-128279485591533267&rdquo;,ProcessId=2184\
-__PROPERTY_COUNT : 12\
-__DERIVATION : {}\
-__SERVER : PCI-MOBILE\
-__NAMESPACE : root\servicemodel\
-__PATH :
-&#92;PCI-MOBILE\root\servicemodel:AppDomainInfo.AppDomainId=2,Name=&ldquo;b576ed9b-1-128279485591\
-533267&rdquo;,ProcessId=2184\
-AppDomainId : 2\
-IsDefault : False\
-LogMalformedMessages : False\
-LogMessagesAtServiceLevel : False\
-LogMessagesAtTransportLevel : False\
-MessageLoggingTraceListeners :\
-Name : b576ed9b-1-128279485591533267\
-PerformanceCounters : Off\
-ProcessId : 2184\
-ServiceConfigPath : C:\Projects\Service WMI\service\web.config\
-ServiceModelTraceListeners : {xml}\
-TraceLevel : Information</p>
-
-<p> </p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/21/">&larr; Older</a>
@@ -1203,6 +1129,10 @@ TraceLevel : Information</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
       </li>
     
@@ -1216,10 +1146,6 @@ TraceLevel : Information</p>
     
       <li class="post">
         <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
       </li>
     
   </ul>

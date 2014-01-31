@@ -9,9 +9,8 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="In my last post, I talked about hosting the CRL within a native custom
-action. \
-This week I found an easier way to execute a managed custom action, &hellip;">
+  <meta name="description" content="SQL Server 2005 ( Codenamed &ldquo;Yukon&rdquo; )  provides a new interesting
+feature to execute stores procedures or Transact-SQL statements through &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +80,110 @@ This week I found an easier way to execute a managed custom action, &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2005/04/22/403868/">HTTP Endpoints in SQL Server 2005</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2005-04-22T00:00:00-03:00" pubdate data-updated="true">Apr 22<span>nd</span>, 2005</time>
+        
+         | <a href="/blog/2005/04/22/403868/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>SQL Server 2005 ( Codenamed &ldquo;Yukon&rdquo; )  provides a new interesting
+feature to execute stores procedures or Transact-SQL statements through
+web services published in the server, without need to use IIS.\
+This new feature exposes Http endpoints using the Http Api provided in
+Windows XP SP2 and Windows 2003.\
+These endpoints are published in a specific URI, and they listen for
+incoming soap requests, so they facilitate interoperability because any
+application, which talks soap, can communicate with SQL server without
+requiring additional sql libraries or MDAC.</p>
+
+<p>The syntax to create an endpoint is quite simple, and looks like this:</p>
+
+<p>CREATE ENDPOINT MyEndpoint\
+STATE = STARTED\
+AS HTTP (\
+  AUTHENTICATION = (INTEGRATED),\
+  PATH = &lsquo;/sql/myendpoint&rsquo;,\
+  PORTS = (CLEAR) )\
+FOR SOAP (\
+  BATCHES = ENABLED,\
+  WSDL = DEFAULT\
+)\</p>
+
+<p>In this case I created a new endpoint called MyEndpoint, which listen
+for Transact-SQL statements on <a href="http://localhost/sql/myendpoint.">http://localhost/sql/myendpoint.</a> You can
+test it browsing to <a href="http://localhost/sql/myendpoint?wsdl.%0AThis">http://localhost/sql/myendpoint?wsdl.
+This</a> sentence supports additional parameters, all of them are very well
+described in the SQL online help.\</p>
+
+<p>This sample shows how to execute a Transact-SQL statement from a simple
+java script.</p>
+
+<p>function SendBatchRequest( strServerName, strUrlPath, strQuery )\
+{\
+   var objXmlHttp = null;\
+   var strRequest = &ldquo;&rdquo;;\
+\
+   objXmlHttp = new ActiveXObject( &ldquo;microsoft.xmlhttp&rdquo; );\
+   objXmlHttp.open( &ldquo;POST&rdquo;, &ldquo;<a href="http://">http://</a>&rdquo; + strServerName + strUrlPath,
+false );\
+   objXmlHttp.setrequestheader( &ldquo;Content-Type&rdquo;, &ldquo;text/xml&rdquo; );\
+   objXmlHttp.setRequestHeader( &ldquo;Host&rdquo;, strServerName );\
+\
+   strRequest = &ldquo;&lt;SOAP-ENV:Envelope\
+                           xmlns:SOAP-ENV=&lsquo;<a href="http://schemas.xmlsoap.org/soap/envelope/">http://schemas.xmlsoap.org/soap/envelope/</a>&rsquo;\
+                           xmlns:sql=&lsquo;<a href="http://schemas.microsoft.com/sqlserver/2004/SOAP">http://schemas.microsoft.com/sqlserver/2004/SOAP</a>&rsquo;>\
+                              &lt;SOAP-ENV:Body>\
+                                 &lt;sql:sqlbatch>\
+                                    &lt;sql:BatchCommands>&rdquo; + strQuery +
+&ldquo;&lt;/sql:BatchCommands>\
+                                 &lt;/sql:sqlbatch>\
+                              &lt;/SOAP-ENV:Body>\
+                        &lt;/SOAP-ENV:Envelope>&rdquo;;\
+\
+   objXmlHttp.send( strRequest );\
+\
+   if( objXmlHttp.status == 200 )\
+      return objXmlHttp.responseXML.xml;\
+   else\
+      return &ldquo;&rdquo;;\
+}\
+\
+var response = SendBatchRequest( &lsquo;localhost&rsquo;, &lsquo;/sql/myendpoint&rsquo;, &lsquo;Select
+* from sys.http_endpoints&rsquo; );\</p>
+
+<p>Actually, I&rsquo;m writing a .NET managed data provider to consume these web
+services, so I&rsquo;ll be blogging a lot more about this topic soon.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -589,6 +692,10 @@ can use it to install your database in any machine.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
       </li>
     
@@ -602,10 +709,6 @@ can use it to install your database in any machine.</p>
     
       <li class="post">
         <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
       </li>
     
   </ul>

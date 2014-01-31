@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="William Tay (Aka Softwaremaker) one
-of the most  knowledgeable WSE guys around has published an excellent
-article about interoperability between WSE &hellip;">
+  <meta name="description" content="What certificate to use or where to get one of these, is perhaps is one
+the most common question I read often in the MS newsgroups.\
+Well, for &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +81,420 @@ article about interoperability between WSE &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/08/08/Creating-X509-Certificates-for-WSE-or-WCF/">Creating X509 Certificates for WSE or WCF</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-08-08T00:00:00-03:00" pubdate data-updated="true">Aug 8<span>th</span>, 2006</time>
+        
+         | <a href="/blog/2006/08/08/Creating-X509-Certificates-for-WSE-or-WCF/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>What certificate to use or where to get one of these, is perhaps is one
+the most common question I read often in the MS newsgroups.\
+Well, for starters, there are many kinds of X509 certificates around,
+each one for a different purpose. And to make the matters worse, each
+vendor offers similar certificates with different names.\
+<a href="http://www.verisign.com/" title="Verisign">Verisign</a>,
+<a href="http://www.rsasecurity.com/" title="RSA">RSA</a>,
+<a href="http://www.thawte.com/" title="Thawte">Thawte</a> and others usually offer
+certificates for the following purposes:</p>
+
+<p>+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+| <strong>Purpose</strong>        | <strong>Description</strong>    | <strong>Data Signing     |  </strong>Key Exchange    |
+|                    |                    | Support<strong>          | support</strong>          |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+| Code Signing       | A code signing     | Yes                | No                 |
+|                    | certificate is     |                    |                    |
+|                    | usually            |                    |                    |
+|                    | recommended for    |                    |                    |
+|                    | any publisher who  |                    |                    |
+|                    | plans to           |                    |                    |
+|                    | distribute code or |                    |                    |
+|                    | content over the   |                    |                    |
+|                    | Internet or        |                    |                    |
+|                    | corporate          |                    |                    |
+|                    | extranets and      |                    |                    |
+|                    | needs to assure    |                    |                    |
+|                    | the integrity and  |                    |                    |
+|                    | authorship of that |                    |                    |
+|                    | code               |                    |                    |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+| E-Mail Security    | An e-mail          | Yes                | No                 |
+|                    | certificate can be |                    |                    |
+|                    | used to digitally  |                    |                    |
+|                    | sign email         |                    |                    |
+|                    | messages or        |                    |                    |
+|                    | to encrypt email   |                    |                    |
+|                    | contents and       |                    |                    |
+|                    | attachments.       |                    |                    |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+| SSL                | A SSL certificate  | Yes                | No                 |
+|                    | is usually         |                    |                    |
+|                    | configured in a    |                    |                    |
+|                    | web site to offer  |                    |                    |
+|                    | SSL protection     |                    |                    |
+|                    | (HTTPS)            |                    |                    |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+</p>
+
+<p> </p>
+
+<p> </p>
+
+<p>The WSE&rsquo;s turn-key assertions always require certificates with data
+signing and key exchange support. The data signing support is used to
+generate XML signatures and the key exchange function is used to 
+encrypt data (It actually creates a EncryptedKey, for more information
+about this, read this <a href="/cibrax/archive/2005/10/04/426585.aspx" title="blog entry">blog
+entry</a>). However, a
+custom security assertion can be created to use different certificates
+for data signing and data encryption. I did something like that in one
+of the projects where I worked, you can take a look to the code in this
+<a href="http://www.gotdotnet.com/codegallery/codegallery.aspx?id=0fecd2c7-b2b1-4d85-bd66-9d07a6ecbd86" title="GDN workspace">GDN
+workspace</a>\
+On the other hand, WCF allows to specify different certificates for data
+signing and key interchange by means of the X509 Security Token
+providers. \
+Another approach and probably most attractive in many organizations is
+to create custom X509 certificates using an in-house certificate
+authority. Microsoft comes with two solutions out of the box to generate
+certificates, the tool &ldquo;MakeCert.exe&rdquo; to create test certificates for
+development environments and a more robust solution, Microsoft
+Certificate Server (MCS), to configure a real PKI in the organization.</p>
+
+<p><strong>Creating Certificates with MCS</strong></p>
+
+<p>In a nutshell, Microsoft Certificate Server is a product that allows to
+mount a real PKI in any organization. This product can run in two modes,
+Active directory integrated or stand alone. This last one is
+probably useful for software development organizations or independent
+consultants working on products that require certificates.\
+Microsoft also provides a component <strong>CertEnroll</strong> to automate the
+process of creating and asking certificates to the
+certificate authority.\
+In the following paragraphs I will show how to use this component
+to create a valid X509 certificate to be used in WSE or WCF. </p>
+
+<p>The creation of a certificate in MCS involves two steps:</p>
+
+<p>​1. Send a certificate request to the Certificate Authority\
+2. Obtain the certificate from the Certificate Authority after
+the request was authorized</p>
+
+<p>The CertEnroll COM contains methods to perform both steps, still some
+lines of code are required. The code below illustrates how to request
+and obtain a certificate from a CA (I wrote the code in vbscript).</p>
+
+<hr />
+
+<p>  \
+  Option Explicit \
+  const CERT_SYSTEM_STORE_LOCAL_MACHINE = &amp;H20000\
+  const CRYPT_EXPORTABLE = 1 \
+  \
+  Const AT_KEYEXCHANGE = 1 \
+  Const AT_SIGNATURE = 2 \
+  Const CRYPT_ARCHIVABLE = &amp;H000004000 \
+  Const RSA1024BIT_KEY = &amp;H04000000 \
+  \
+  Const XECR_PKCS10_V2_0 = 1 \
+  Const XECR_PKCS7 = 2 \
+  Const XECR_CMC = 3 \
+  Const XECR_PKCS10_V1_5 = 4 \
+  \
+  Const CR_OUT_BASE64HEADER = 0 \
+  Const CR_OUT_BASE64 = 1 \
+  Const CR_OUT_BINARY = 2 \
+  Const CR_OUT_CHAIN = &amp;h100 \
+  Const CR_IN_BASE64HEADER = 0 \
+  Const CR_IN_BASE64 = &amp;H1 \
+  Const CR_IN_PKCS10 = &amp;H100 \
+  Const CR_IN_KEYGEN = &amp;H200 \
+  Const CR_IN_ENCODEANY = &amp;Hff \
+  Const CR_IN_FORMATANY = 0 \
+  \
+  Const CR_DISP_INCOMPLETE = 0 \
+  Const CR_DISP_ERROR = 1 \
+  Const CR_DISP_DENIED = 2 \
+  Const CR_DISP_ISSUED = 3 \
+  Const CR_DISP_ISSUED_OUT_OF_BAND = 4 \
+  Const CR_DISP_UNDER_SUBMISSION = 5 \
+  Const CR_DISP_REVOKED = 6 \
+  \
+  \
+  Const PROPTYPE_LONG = 1 \
+  Const PROPTYPE_DATE = 2 \
+  Const PROPTYPE_BINARY = 3 \
+  Const PROPTYPE_STRING = 4 \
+  \
+  \
+  Const CR_GEMT_HRESULT_STRING = 1 \
+  \
+  \
+  Const FR_PROP_NONE = 0 &lsquo; Invalid \
+  Const FR_PROP_FULLRESPONSE = 1 &rsquo; Binary \
+  Const FR_PROP_STATUSINFOCOUNT = 2 &lsquo; Long \
+  Const FR_PROP_BODYPARTSTRING = 3 &rsquo; String, Indexed \
+  Const FR_PROP_STATUS = 4 &lsquo; Long, Indexed \
+  Const FR_PROP_STATUSSTRING = 5 &rsquo; String, Indexed \
+  Const FR_PROP_OTHERINFOCHOICE = 6 &lsquo; Long, Indexed \
+  Const FR_PROP_FAILINFO = 7 &rsquo; Long, Indexed \
+  Const FR_PROP_PENDINFOTOKEN = 8 &lsquo; Binary, Indexed \
+  Const FR_PROP_PENDINFOTIME = 9 &rsquo; Date, Indexed \
+  Const FR_PROP_ISSUEDCERTIFICATEHASH =10 &lsquo; Binary, Indexed \
+  Const FR_PROP_ISSUEDCERTIFICATE =11 &rsquo; Binary, Indexed \
+  Const FR_PROP_ISSUEDCERTIFICATECHAIN =12 &lsquo; Binary, Indexed \
+  Const FR_PROP_ISSUEDCERTIFICATECRLCHAIN=13 &rsquo; Binary, Indexed \
+  Const FR_PROP_ENCRYPTEDKEYHASH =14 &lsquo; Binary, Indexed \
+  Const FR_PROP_FULLRESPONSENOPKCS7 =15 &rsquo; Binary \
+  \
+  \
+  Const KeyLength = 1024 \
+  \
+  \
+  Dim CertEnroll \
+  \
+  \
+  Set CertEnroll = CreateObject( &ldquo;CEnroll.CEnroll&rdquo; ) \
+  \
+  \
+  Dim RequestStr, CertRequest, Disposition, ID \
+  \
+  \
+  CertEnroll.ProviderName = &ldquo;Microsoft Enhanced Cryptographic Provider v1.0&rdquo; \
+  CertEnroll.KeySpec = AT_KEYEXCHANGE \
+  CertEnroll.GenKeyFlags = CRYPT_EXPORTABLE \
+  \
+  \
+  RequestStr = CertEnroll.createRequest( XECR_CMC, &ldquo;CN=John Smith&rdquo;, &ldquo;1.3.6.1.5.5.7.3.2&rdquo; ) \
+  \
+  \
+  Set CertRequest = CreateObject( &ldquo;CertificateAuthority.Request&rdquo; ) \
+  Disposition = CertRequest.Submit( _ \
+  CR_IN_ENCODEANY Or CR_IN_FORMATANY, _ \
+  RequestStr, _ \
+  &ldquo;&rdquo;, _ \
+  &ldquo;Localhost\MyCertAuth&rdquo; ) \
+  \
+  \
+  ID = CertRequest.GetRequestId \
+  \
+  \
+  MsgBox ID \
+  \</p>
+
+<hr />
+
+<p> </p>
+
+<p>In a few words, the code above submits a certificate request to a MCS
+service running on &#8221;Localhost\MyCertAuth&#8221;. The certificate distinguish
+name will be &ldquo;CN=Jonh Smith&rdquo; and the long number &ldquo;1.3.6.1.5.5.7.3.2&rdquo;
+only describes the purpose of the certificate. (MCS provides a set of
+templates, each one with a different number identifier). \
+It is important to store the RequestId in some place since it will be
+necessary later to retrieve the certificate from the CA (Once the
+request was authorized by one of the CA administrators).</p>
+
+<p> </p>
+
+<hr />
+
+<p>  Option Explicit \
+  \
+  const CERT_SYSTEM_STORE_LOCAL_MACHINE = &amp;H20000 \
+  const CRYPT_EXPORTABLE = 1 \
+  \
+  Const AT_KEYEXCHANGE = 1 \
+  Const AT_SIGNATURE = 2 \
+  Const CRYPT_ARCHIVABLE = &amp;H000004000 \
+  Const RSA1024BIT_KEY = &amp;H04000000 \
+  \
+  Const XECR_PKCS10_V2_0 = 1 \
+  Const XECR_PKCS7 = 2 \
+  Const XECR_CMC = 3 \
+  Const XECR_PKCS10_V1_5 = 4 \
+  \
+  \
+  Const CR_OUT_BASE64HEADER = 0 \
+  Const CR_OUT_BASE64 = 1 \
+  Const CR_OUT_BINARY = 2 \
+  Const CR_OUT_CHAIN = &amp;h100 \
+  \
+  Const CR_IN_BASE64HEADER = 0 \
+  Const CR_IN_BASE64 = &amp;H1 \
+  Const CR_IN_PKCS10 = &amp;H100 \
+  Const CR_IN_KEYGEN = &amp;H200 \
+  Const CR_IN_ENCODEANY = &amp;Hff \
+  Const CR_IN_FORMATANY = 0 \
+  \
+  \
+  Const CR_DISP_INCOMPLETE = 0 \
+  Const CR_DISP_ERROR = 1 \
+  Const CR_DISP_DENIED = 2 \
+  Const CR_DISP_ISSUED = 3 \
+  Const CR_DISP_ISSUED_OUT_OF_BAND = 4 \
+  Const CR_DISP_UNDER_SUBMISSION = 5 \
+  Const CR_DISP_REVOKED = 6 \
+  \
+  \
+  Const PROPTYPE_LONG = 1 \
+  Const PROPTYPE_DATE = 2 \
+  Const PROPTYPE_BINARY = 3 \
+  Const PROPTYPE_STRING = 4 \
+  \
+  \
+  Const CR_GEMT_HRESULT_STRING = 1 \
+  Const FR_PROP_NONE = 0 &lsquo; Invalid \
+  Const FR_PROP_FULLRESPONSE = 1 &rsquo; Binary \
+  Const FR_PROP_STATUSINFOCOUNT = 2 &lsquo; Long \
+  Const FR_PROP_BODYPARTSTRING = 3 &rsquo; String, Indexed \
+  Const FR_PROP_STATUS = 4 &lsquo; Long, Indexed \
+  Const FR_PROP_STATUSSTRING = 5 &rsquo; String, Indexed \
+  Const FR_PROP_OTHERINFOCHOICE = 6 &lsquo; Long, Indexed \
+  Const FR_PROP_FAILINFO = 7 &rsquo; Long, Indexed \
+  Const FR_PROP_PENDINFOTOKEN = 8 &lsquo; Binary, Indexed \
+  Const FR_PROP_PENDINFOTIME = 9 &rsquo; Date, Indexed \
+  Const FR_PROP_ISSUEDCERTIFICATEHASH =10 &lsquo; Binary, Indexed \
+  Const FR_PROP_ISSUEDCERTIFICATE =11 &rsquo; Binary, Indexed \
+  Const FR_PROP_ISSUEDCERTIFICATECHAIN =12 &lsquo; Binary, Indexed \
+  Const FR_PROP_ISSUEDCERTIFICATECRLCHAIN=13 &rsquo; Binary, Indexed \
+  Const FR_PROP_ENCRYPTEDKEYHASH =14 &lsquo; Binary, Indexed \
+  Const FR_PROP_FULLRESPONSENOPKCS7 =15 &rsquo; Binary \
+  \
+  \
+  Const KeyLength = 1024 \
+  \
+  \
+  Dim CertEnroll, CertRequest \
+  Dim Disposition \
+  \
+  \
+  Set CertEnroll = CreateObject( &ldquo;CEnroll.CEnroll&rdquo; ) \
+  Set CertRequest = CreateObject( &ldquo;CertificateAuthority.Request&rdquo; ) \
+  Disposition = CertRequest.GetIssuedCertificate(&ldquo;localhost\MyCertAuth&rdquo;, 24, &ldquo;&rdquo;) \
+  \
+  \
+  If Disposition = CR_DISP_ISSUED Then \
+  \
+  Dim Cert \
+  \
+  Cert = CertRequest.GetFullResponseProperty( _ \
+  \
+  FR_PROP_FULLRESPONSE, _ \
+  \
+  0, _ \
+  \
+  PROPTYPE_BINARY, _ \
+  \
+  CR_OUT_BASE64 ) \
+  \
+  \
+  \
+  Dim sCert \
+  \
+  sCert = CertEnroll.getCertFromResponse(Cert) \
+  \
+  \
+  \
+  CertEnroll.createFilePFX &ldquo;password&rdquo;, &ldquo;c:\cert.pfx&rdquo; \
+  Else \
+  \
+  WScript.echo &ldquo;Disposition = &rdquo; + cstr( Disposition ) \
+  \
+  If CertRequest.GetLastStatus &lt;> 0 Then \
+  \
+  \
+  \
+  WScript.echo &ldquo;Error : &rdquo; + cstr( CertRequest.GetErrorMessageText( _ \
+  \
+  \
+  \
+  CertRequest.GetLastStatus, CR_GEMT_HRESULT_STRING )) \
+  \
+  \
+  End If \
+  End If \</p>
+
+<hr />
+
+<p> </p>
+
+<p>The code above retrieves the certificate for the request id 24 (It is
+only an example, the real id should be used there) and stores it on the
+file &ldquo;c:\cert.pfx&rdquo; (By the way, this is not a good practice since the
+certificate can be copied).</p>
+
+<p> </p>
+
+<p><strong>Creating Certificates with MakeCert</strong></p>
+
+<p> </p>
+
+<p>MakeCert is a tool provided by Microsoft to create test certificates
+that can be used during the development of a product (For developing and
+testing purposes only). These certificates have also performance
+problems, certain cryptographic operations may perform slowly when they
+are used. Certificates issued from a true Certificate Authority do not
+have this problem, and it is a know issue.</p>
+
+<p>In order to create a certificate with this tool, the following arguments
+must be considered:</p>
+
+<ul>
+<li>sr: Store Location, it can be LocalMachine or CurrentUser\</li>
+<li>ss: Store Folder, it can take different values but these are probably
+the most common, My (Personal) or Trusted (Trusted Folder).\
+- n: Certificate Distinguished name. It is very import to chose a right
+name for the certificate since it will identify it. (This name is also
+used to look for the certificate)</li>
+</ul>
+
+
+<p>For example,</p>
+
+<p>makecert.exe -sr LocalMachine -ss My -a sha1 -n CN=MyServerCert -sky
+exchange -pe </p>
+
+<p>This tool only generates and stores the certificate in the certificate
+store, but it does not assign any permission on that certificate. If you
+planning to use the certificate from WSE or WSE, you may need to give
+read permission to the account running the service, for instance the
+account ASPNET for a normal web service.\
+Microsoft provides another tool to grant permissions on certificates,
+the name of this tool is <strong>winhttpcertcfg</strong>.\
+The following sample, grant permission on the certificate created above
+to the ASPNET account:</p>
+
+<p>winhttpcertcfg -g -c LOCAL_MACHINE\My -s MyServerCert -a ASPNET</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -779,485 +1193,6 @@ available <a href="/images/legacy/WCFCompression-RC1.zip">here</a></p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2006/03/27/441227/">Client-side Token Cache for WCF</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2006-03-27T00:00:00-03:00" pubdate data-updated="true">Mar 27<span>th</span>, 2006</time>
-        
-         | <a href="/blog/2006/03/27/441227/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>WCF by default maintains a cache for security tokens per channel
-instance (A channel is related to a contract). Therefore, it is not
-possible to reuse the same token for different channel instances.</p>
-
-<p>Consider the following sample, a client application that consumes
-different services using a SAML token.</p>
-
-<p> </p>
-
-<p>IHelloWorldChannel helloWorldService = factory.CreateChannel();</p>
-
-<p>string response = helloWorldService.HelloWorld(&ldquo;John Doe&rdquo;);</p>
-
-<p>Console.WriteLine(response);</p>
-
-<p>helloWorldService = factory.CreateChannel();</p>
-
-<p>response = helloWorldService.HelloWorld(&ldquo;John Doe 2&rdquo;);</p>
-
-<p>Console.WriteLine(response);</p>
-
-<p>factory = new ChannelFactory&lt;IAnotherChannel>(&ldquo;anotherService&rdquo;);</p>
-
-<p>helloWorldService = factory.CreateChannel();</p>
-
-<p>response = helloWorldService.HelloWorld(&ldquo;John Doe 3&rdquo;);</p>
-
-<p>Console.WriteLine(response);</p>
-
-<p> </p>
-
-<p>In this case, I used three different channel instances and therefore a
-different SAML token for each service. (Each channel made an addition
-call to the STS in order to ask for a SAML token).</p>
-
-<p>Fortunately, WCF provides a way to cache tokens outside the scope of a
-channel and reuse them later until they expire. </p>
-
-<p>During the course of this post, I will show the required steps to build
-a client-side token cache to reuse tokens obtained from a STS.  </p>
-
-<p> </p>
-
-<p>First of all, I created a custom ClientCredentials class in order to
-return a custom SecurityTokenManager class. The SecurityTokenManager
-class is a kind of entry point to modify the process involved in the
-creation of a security token.</p>
-
-<p> </p>
-
-<p>/// &lt;summary></p>
-
-<p>/// Custom implementation</p>
-
-<p>/// &lt;/summary></p>
-
-<p>class CustomClientCredentials : ClientCredentials</p>
-
-<p>{</p>
-
-<p>  public CustomClientCredentials()</p>
-
-<p>      : base()</p>
-
-<p>  {</p>
-
-<p>  }</p>
-
-<p>  protected CustomClientCredentials(ClientCredentials other)</p>
-
-<p>     : base(other)</p>
-
-<p>  {</p>
-
-<p>  }</p>
-
-<p>  protected override ClientCredentials CloneCore()</p>
-
-<p>  {</p>
-
-<p>    return new CustomClientCredentials(this);</p>
-
-<p>  }</p>
-
-<p>  /// &lt;summary></p>
-
-<p>  /// Returns a custom security token manager</p>
-
-<p>  /// &lt;/summary></p>
-
-<p>  /// &lt;returns>&lt;/returns></p>
-
-<p>  public override System.IdentityModel.Selectors.SecurityTokenManager
-CreateSecurityTokenManager()</p>
-
-<p>  {</p>
-
-<p>    return new CustomClientCredentialsSecurityTokenManager(this);</p>
-
-<p>  }</p>
-
-<p>}</p>
-
-<p> </p>
-
-<p>Secondly, I declared my own SecurityTokenManager.</p>
-
-<p> </p>
-
-<p>class CustomClientCredentialsSecurityTokenManager :
-ClientCredentialsSecurityTokenManager</p>
-
-<p>{</p>
-
-<p>  private static Dictionary&lt;Uri, CustomIssuedSecurityTokenProvider>
-providers = new Dictionary&lt;Uri, CustomIssuedSecurityTokenProvider>();</p>
-
-<p>  public CustomClientCredentialsSecurityTokenManager(ClientCredentials
-credentials)</p>
-
-<p>       : base(credentials)</p>
-
-<p>  {</p>
-
-<p>  }</p>
-
-<p>  /// &lt;summary></p>
-
-<p>  /// Returns a custom token provider when a issued token is required</p>
-
-<p>  /// &lt;/summary></p>
-
-<p>  public override System.IdentityModel.Selectors.SecurityTokenProvider
-CreateSecurityTokenProvider(System.IdentityModel.Selectors.SecurityTokenRequirement
-tokenRequirement)</p>
-
-<p>  {</p>
-
-<p>    if (this.IsIssuedSecurityTokenRequirement(tokenRequirement))</p>
-
-<p>    {</p>
-
-<p>      IssuedSecurityTokenProvider baseProvider =
-(IssuedSecurityTokenProvider)base.CreateSecurityTokenProvider(tokenRequirement);</p>
-
-<p>      CustomIssuedSecurityTokenProvider provider = new
-CustomIssuedSecurityTokenProvider(baseProvider);</p>
-
-<p>      return provider;</p>
-
-<p>    }</p>
-
-<p>    else</p>
-
-<p>    {</p>
-
-<p>      return base.CreateSecurityTokenProvider(tokenRequirement);</p>
-
-<p>    }</p>
-
-<p>  }</p>
-
-<p>}</p>
-
-<p> </p>
-
-<p>For this sample, I only want to cache issued tokens (Tokens obtained
-from a STS) and thefore I am using the IsIssuedSecurityTokenRequeriment
-method to determine if the channel is requesting an issued token or
-not. </p>
-
-<p> </p>
-
-<p>Lastly, I created a simple Cache helper and a custom token provider to
-reuse the issued tokens.</p>
-
-<p> </p>
-
-<p>/// &lt;summary></p>
-
-<p>/// Helper class used as cache for security tokens</p>
-
-<p>/// &lt;/summary></p>
-
-<p>class TokenCache</p>
-
-<p>{</p>
-
-<p>   private const int DefaultTimeout = 1000;</p>
-
-<p>   private static Dictionary&lt;Uri, SecurityToken> tokens = new
-Dictionary&lt;Uri, SecurityToken>();</p>
-
-<p>   private static ReaderWriterLock tokenLock = new ReaderWriterLock();</p>
-
-<p>   private TokenCache()</p>
-
-<p>   {</p>
-
-<p>   }</p>
-
-<p>   public static SecurityToken GetToken(Uri endpoint)</p>
-
-<p>   {</p>
-
-<p>     SecurityToken token = null;</p>
-
-<p>     tokenLock.AcquireReaderLock(DefaultTimeout);</p>
-
-<p>     try</p>
-
-<p>     {</p>
-
-<p>       tokens.TryGetValue(endpoint, out token);</p>
-
-<p>       return token;</p>
-
-<p>     }</p>
-
-<p>     finally</p>
-
-<p>     {</p>
-
-<p>       tokenLock.ReleaseReaderLock();</p>
-
-<p>     }</p>
-
-<p>   }</p>
-
-<p>   public static void AddToken(Uri endpoint, SecurityToken token)</p>
-
-<p>   {</p>
-
-<p>     tokenLock.AcquireWriterLock(DefaultTimeout);</p>
-
-<p>     try</p>
-
-<p>     {</p>
-
-<p>       if (tokens.ContainsKey(endpoint))</p>
-
-<p>         tokens.Remove(endpoint);</p>
-
-<p>         tokens.Add(endpoint, token);</p>
-
-<p>     }</p>
-
-<p>     finally</p>
-
-<p>     {</p>
-
-<p>       tokenLock.ReleaseWriterLock();</p>
-
-<p>     }</p>
-
-<p>   }</p>
-
-<p> }</p>
-
-<p> </p>
-
-<p> /// &lt;summary></p>
-
-<p> /// Custom token provider. This class keeps the tokens outside of the
-channel</p>
-
-<p> /// so they can be reused</p>
-
-<p> /// &lt;/summary></p>
-
-<p> class CustomIssuedSecurityTokenProvider : IssuedSecurityTokenProvider</p>
-
-<p> {</p>
-
-<p>   private IssuedSecurityTokenProvider innerProvider;</p>
-
-<p>   /// &lt;summary></p>
-
-<p>   /// Constructor</p>
-
-<p>   /// &lt;/summary></p>
-
-<p>   public CustomIssuedSecurityTokenProvider(IssuedSecurityTokenProvider
-innerProvider)</p>
-
-<p>            : base()</p>
-
-<p>   {</p>
-
-<p>      this.innerProvider = innerProvider;</p>
-
-<p>      this.CacheIssuedTokens = innerProvider.CacheIssuedTokens;</p>
-
-<p>      this.IdentityVerifier = innerProvider.IdentityVerifier;</p>
-
-<p>      this.IssuedTokenRenewalThresholdPercentage =
-innerProvider.IssuedTokenRenewalThresholdPercentage;</p>
-
-<p>      this.IssuerAddress = innerProvider.IssuerAddress;</p>
-
-<p>      this.IssuerBinding = innerProvider.IssuerBinding;</p>
-
-<p>      foreach (IEndpointBehavior behavior in
-innerProvider.IssuerChannelBehaviors)</p>
-
-<p>      {</p>
-
-<p>        this.IssuerChannelBehaviors.Add(behavior);</p>
-
-<p>      }</p>
-
-<p>      this.KeyEntropyMode = innerProvider.KeyEntropyMode;</p>
-
-<p>      this.MaxIssuedTokenCachingTime =
-innerProvider.MaxIssuedTokenCachingTime;</p>
-
-<p>      this.MessageSecurityVersion =
-innerProvider.MessageSecurityVersion;</p>
-
-<p>      this.SecurityAlgorithmSuite =
-innerProvider.SecurityAlgorithmSuite;</p>
-
-<p>      this.SecurityTokenSerializer =
-innerProvider.SecurityTokenSerializer;</p>
-
-<p>      this.TargetAddress = innerProvider.TargetAddress;</p>
-
-<p>      foreach (XmlElement parameter in
-innerProvider.TokenRequestParameters)</p>
-
-<p>      {</p>
-
-<p>        this.TokenRequestParameters.Add(parameter);</p>
-
-<p>      }</p>
-
-<p>      this.innerProvider.Open();</p>
-
-<p>    }                              </p>
-
-<p> </p>
-
-<p>   /// &lt;summary></p>
-
-<p>   /// Gets the security token</p>
-
-<p>   /// &lt;/summary></p>
-
-<p>   /// &lt;param name=&ldquo;timeout&rdquo;>&lt;/param></p>
-
-<p>   /// &lt;returns>&lt;/returns></p>
-
-<p>   protected override System.IdentityModel.Tokens.SecurityToken
-GetTokenCore(TimeSpan timeout)</p>
-
-<p>   {</p>
-
-<p>     SecurityToken securityToken = null;</p>
-
-<p>     if (this.CacheIssuedTokens)</p>
-
-<p>     {</p>
-
-<p>       securityToken =
-TokenCache.GetToken(this.innerProvider.IssuerAddress.Uri);</p>
-
-<p>       if (securityToken == null ||
-!IsServiceTokenTimeValid(securityToken))</p>
-
-<p>       {</p>
-
-<p>         securityToken = innerProvider.GetToken(timeout);</p>
-
-<p>         TokenCache.AddToken(this.innerProvider.IssuerAddress.Uri,
-securityToken);</p>
-
-<p>       }</p>
-
-<p>     }</p>
-
-<p>     else</p>
-
-<p>     {</p>
-
-<p>       securityToken = innerProvider.GetToken(timeout);</p>
-
-<p>     }</p>
-
-<p>     return securityToken;</p>
-
-<p>   }</p>
-
-<p> </p>
-
-<p>   /// &lt;summary></p>
-
-<p>   /// Checks the token expiration.</p>
-
-<p>   /// A more complex algorithm can be used here to determine whether
-the token is valid or not.</p>
-
-<p>   /// &lt;/summary></p>
-
-<p>   private bool IsServiceTokenTimeValid(SecurityToken serviceToken)</p>
-
-<p>   {</p>
-
-<p>     return (DateTime.UtcNow &lt;=
-serviceToken.ValidTo.ToUniversalTime());</p>
-
-<p>   }</p>
-
-<p> </p>
-
-<p>  \~CustomIssuedSecurityTokenProvider()</p>
-
-<p>  {</p>
-
-<p>    this.innerProvider.Close();</p>
-
-<p>  }</p>
-
-<p> </p>
-
-<p>The provider is quite simple, it caches the tokens by IssuerAddress and
-checks the token expiration before returning it. When the token is
-expired, it gets a new token calling the inner token provider.</p>
-
-<p>In order to register the CustomClientCredentials class, the following
-configuration is required (Using the &ldquo;type&rdquo; attribute)</p>
-
-<p> </p>
-
-<p>&lt;behavior name=&ldquo;ServiceBehavior&rdquo;></p>
-
-<p>  &lt;clientCredentials type=&ldquo;CustomClientCredentials, MyAssembly&rdquo;></p>
-
-<p>  &lt;/clientCredentials></p>
-
-<p>&lt;/behavior></p>
-
-<p> </p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/24/">&larr; Older</a>
@@ -1275,6 +1210,10 @@ configuration is required (Using the &ldquo;type&rdquo; attribute)</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
       </li>
     
@@ -1288,10 +1227,6 @@ configuration is required (Using the &ldquo;type&rdquo; attribute)</p>
     
       <li class="post">
         <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
       </li>
     
   </ul>

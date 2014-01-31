@@ -9,8 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="It’s very common when developing RESTful services to authenticate users
-against a proprietary user database. This is generally done with a &hellip;">
+  <meta name="description" content="Streaming large content such as media content, images or files is a
+common scenario for RESTful services. If a scenario like this is not
+well &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -80,6 +81,110 @@ against a proprietary user database. This is generally done with a &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/03/27/streaming-large-content-from-a-wcf-restful-service/">Streaming Large Content From a WCF RESTFul Service</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-03-27T00:00:00-03:00" pubdate data-updated="true">Mar 27<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/03/27/streaming-large-content-from-a-wcf-restful-service/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Streaming large content such as media content, images or files is a
+common scenario for RESTful services. If a scenario like this is not
+well addressed or implemented on the service side, there is a high risk
+of consuming server resources like memory or CPU in a matter of seconds.
+This usually happens when the complete content is loaded in memory
+before it is transferred to the service consumer.</p>
+
+<p>The WCF REST Starter kit introduced a new mechanism for addressing this
+scenario, an “AdapterStream” utility class, which basically pushes small
+pieces of content (and thus, only small memory buffers are used) to the
+client application as it becomes necessary.</p>
+
+<p>The kit also comes with an example “PushStyleStreaming” that shows this
+class in action</p>
+
+<p>Stream GetImage(string text)</p>
+
+<p>{</p>
+
+<p>    if (string.IsNullOrEmpty(text))</p>
+
+<p>    {</p>
+
+<p>        throw new WebProtocolException(HttpStatusCode.BadRequest, &ldquo;text
+must be specified&rdquo;, null);</p>
+
+<p>    }</p>
+
+<p>    Bitmap theBitmap = GenerateImage(text);</p>
+
+<p>    WebOperationContext.Current.OutgoingResponse.ContentType =
+&ldquo;image/jpeg&rdquo;;</p>
+
+<p>    return new AdapterStream((stream) => theBitmap.Save(stream,
+ImageFormat.Jpeg));</p>
+
+<p>}</p>
+
+<p>In the code above, the AdapterStream is used to transfer an image to a
+service consumer. As you can also notice in that code, that class
+receives a lambda  expression or Action&lt;T> delegate in the
+constructor. That provides some flexibility at the moment of generating
+the final stream that will be sent to the client application.</p>
+
+<p>Another example that uses an TextWriter for generating text content,</p>
+
+<p>  new AdapterStream((writer) =></p>
+
+<p>    {</p>
+
+<p>        writer.WriteLine(&ldquo;You said: &rdquo;);</p>
+
+<p>        writer.WriteLine(text);</p>
+
+<p>        writer.WriteLine(&ldquo;Didn&rsquo;t you?&rdquo;);</p>
+
+<p>        writer.Flush();</p>
+
+<p>    }, Encoding.UTF8);</p>
+
+<p>In addition to this feature, you might also want to have a better
+control of service usage by restricting the <a href="http://kennyw.com/indigo/150">throttling
+settings</a>. This is a good thing about REST
+services implemented with the WCF stack. Other implementations such as
+the ASP.NET MVC rely on the ASP.NET for handling this aspect, where
+these settings are applied only at application domain level (For all
+services running in the same app).</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1748,158 +1853,6 @@ in the forums some time ago, I haven&rsquo;t received any feedback yet.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2009/02/18/contract-projections-in-wcf-declarative-services/">Contract Projections in WCF Declarative Services</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2009-02-18T00:00:00-03:00" pubdate data-updated="true">Feb 18<span>th</span>, 2009</time>
-        
-         | <a href="/blog/2009/02/18/contract-projections-in-wcf-declarative-services/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>As my friend Jesus mentioned in the post &ldquo;<a href="http://weblogs.asp.net/gsusx/archive/2008/12/17/using-xaml-serialization-in-wcf-4-0.aspx">Using XAML serialization in
-WCF
-4.0</a>&rdquo;,
-WCF 4.0 introduces a new way to implement services that are totally
-defined in XAML, which receive the name of &ldquo;declarative services&rdquo;. In
-the past, creating a simple service involved three basic steps,</p>
-
-<ol>
-<li>Define the service contract</li>
-<li>Implement the service contract</li>
-<li>Host the service implementation</li>
-</ol>
-
-
-<p>#1 and #2 were all done in an imperative .NET programming language
-such as C# or VB.NET. Today, thanks to this new feature, we will able
-to define the service interface (#1) using XAML and implement the
-service (#2) using a declarative workflow (XAML too).</p>
-
-<p>This was announced as part of the Microsoft&rsquo;s Oslo modeling vision in
-the last PDC.</p>
-
-<p>Aaron Skonnard has recently written an excellent article for the MSDN,
-&ldquo;WCF and WF Services in the .NET framework 4.0, and Dublin&rdquo;, where he
-discusses all these new features more in detail, and the role of dublin
-in that vision. Something I found interesting in that article was the
-fact that he mentioned &ldquo;Contract Projections&rdquo; as part of &ldquo;declarative
-services&rdquo;.</p>
-
-<p>A contract projection allows separating the logical contract definition
-from the representation of the messages that are sent or received. We
-will able to have a single contract definition and specify different
-messaging styles like &ldquo;SOAP&rdquo; or &ldquo;REST/POX&rdquo; using a contract projection.</p>
-
-<p>As in the example shown in the article, a regular WCF service definition
-for a calculator service made in C# would look like this,</p>
-
-<p>~~~~ {#ctl00_mainContentContainer_ctl15 .libCScode style=&ldquo;WORD-BREAK: break-all; WORD-WRAP: break-word&rdquo; space=&ldquo;preserve&rdquo;}
-[ServiceContract]
-public interface ICalculator
-{</p>
-
-<pre><code>[OperationContract]
-int Add(int Op1, int Op2);
-[OperationContract]
-int Subtract(int Op1, int Op2);
-</code></pre>
-
-<p>};
-~~~~</p>
-
-<p>The equivalent representation in XAML (using declarative services) would
-look like this,</p>
-
-<p>~~~~ {#ctl00_mainContentContainer_ctl16 .libCScode style=&ldquo;WORD-BREAK: break-all; WORD-WRAP: break-word&rdquo; space=&ldquo;preserve&rdquo;}
-<ServiceContract Name="ICalculator"></p>
-
-<pre><code>&lt;OperationContract Name="Add"&gt;
-    &lt;OperationArgument Name="Op1" Type="p:Int32" /&gt;
-    &lt;OperationArgument Name="Op2" Type="p:Int32" /&gt;
-    &lt;OperationArgument Direction="Out" Name="res1" Type="p:Int32" /&gt;
-</code></pre>
-
-<p>   </OperationContract>
-   <OperationContract Name="Subtract"></p>
-
-<pre><code>    &lt;OperationArgument Name="Op3" Type="p:Int32" /&gt;
-    &lt;OperationArgument Name="Op4" Type="p:Int32" /&gt;
-    &lt;OperationArgument Direction="Out" Name="res2" Type="p:Int32" /&gt;
-</code></pre>
-
-<p>   </OperationContract>
-</ServiceContract>
-~~~~</p>
-
-<p>And finally, the projection of that contract at wire level like SOAP,</p>
-
-<p>~~~~ {#ctl00_mainContentContainer_ctl17 .libCScode style=&ldquo;WORD-BREAK: break-all; WORD-WRAP: break-word&rdquo; space=&ldquo;preserve&rdquo;}
-&lt;Service.KnownProjections></p>
-
-<pre><code>&lt;SoapContractProjection Name="ICalculatorSoapProjection"&gt;
-    &lt;!-- service contract definition goes here --&gt;
-&lt;/SoapContractProjection&gt;
-</code></pre>
-
-<p>&lt;/Service.KnownProjections>
-~~~~</p>
-
-<p>As you can see, we will able to have a single service implementation (or
-XAML workflow), and multiple contract projections or &ldquo;KnownProjections&rdquo;
-(for the different messaging styles) to get access to that service.</p>
-
-<p>With this new feature, it looks like REST/POX will be officially
-supported for consuming declarative services. (I talked in <a href="http://weblogs.asp.net/cibrax/archive/2008/10/24/rest-and-workflow-services-play-well-together.aspx">the
-past</a>
-about exposing workflow services with REST).</p>
-
-<p>As part of the PDC bits (The code that was distributed in a VPC), there
-is a interface &ldquo;IContractProjection&rdquo; for defining new kind of
-projections,</p>
-
-<p>public interface IContractProjection \
-{ \
-    // Methods \
-    void ApplyEndpointBehavior(ServiceEndpoint endpoint); \
-    ContractDescription GetContractDescription();</p>
-
-<p>    // Properties \
-    string ConfigurationName { get; } \
-    ServiceContract Contract { get; set; } \
-}</p>
-
-<p>For the moment, there is single implementation for Soap,
-&ldquo;SoapContractProjection&rdquo;. I do not know, we will see if the WCF/WF team
-provide more implementations in the future.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/15/">&larr; Older</a>
@@ -1917,6 +1870,10 @@ provide more implementations in the future.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
       </li>
     
@@ -1930,10 +1887,6 @@ provide more implementations in the future.</p>
     
       <li class="post">
         <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
       </li>
     
   </ul>

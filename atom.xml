@@ -4,7 +4,7 @@
   <title><![CDATA[Pablo Cibraro (Cibrax)]]></title>
   <link href="http://cibrax.me/atom.xml" rel="self"/>
   <link href="http://cibrax.me/"/>
-  <updated>2014-01-16T11:40:23-03:00</updated>
+  <updated>2014-01-31T14:32:37-03:00</updated>
   <id>http://cibrax.me/</id>
   <author>
     <name><![CDATA[Cibrax]]></name>
@@ -12,6 +12,135 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Making ajax calls with Hawk authentication to ASP.NET Web API]]></title>
+    <link href="http://cibrax.me/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/"/>
+    <updated>2014-01-31T14:14:00-03:00</updated>
+    <id>http://cibrax.me/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api</id>
+    <content type="html"><![CDATA[<p>Hawk is an authentication protocol initially written by Eran Hammer in javascript for being used in Node.js. Later on, Eran also added support for browsers through a browser.js library, which is also part of the [hawk github project] (<a href="https://github.com/hueniverse/hawk">https://github.com/hueniverse/hawk</a>).</p>
+
+<p>As part of this post, I will show how you can use that browser.js library to make Ajax calls to a ASP.NET Web API that authenticates the calls with Hawk.</p>
+
+<p>The first thing is to define the Web API to be call from javascript. For the sake of simplicity, we will use a very simple &ldquo;Hello World&rdquo; controller that returns the name of the authenticated user.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">HelloWorldController</span> <span class="p">:</span> <span class="n">ApiController</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="k">public</span> <span class="kt">string</span> <span class="nf">Get</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="s">&quot;hello &quot;</span> <span class="p">+</span> <span class="k">this</span><span class="p">.</span><span class="n">User</span><span class="p">.</span><span class="n">Identity</span><span class="p">.</span><span class="n">Name</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>As second step, we will configure the Hawk filter globally to authenticate the calls. This filter is part of the HawkNet integration project with Web API.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">static</span> <span class="k">void</span> <span class="nf">Register</span><span class="p">(</span><span class="n">HttpConfiguration</span> <span class="n">config</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">config</span><span class="p">.</span><span class="n">Filters</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="k">new</span> <span class="n">RequiresHawkAttribute</span><span class="p">((</span><span class="n">id</span><span class="p">)</span> <span class="p">=&gt;</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">new</span> <span class="n">HawkCredential</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>      <span class="n">Id</span> <span class="p">=</span> <span class="s">&quot;dh37fgj492je&quot;</span><span class="p">,</span>
+</span><span class='line'>      <span class="n">Key</span> <span class="p">=</span> <span class="s">&quot;werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn&quot;</span><span class="p">,</span>
+</span><span class='line'>      <span class="n">Algorithm</span> <span class="p">=</span> <span class="s">&quot;hmacsha256&quot;</span><span class="p">,</span>
+</span><span class='line'>      <span class="n">User</span> <span class="p">=</span> <span class="s">&quot;steve&quot;</span>
+</span><span class='line'>    <span class="p">};</span>
+</span><span class='line'>  <span class="p">}));</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Once we have the Web API configured, we will write the javascript to make the call, which will use browser.js to generate the hawk header on the client.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;~/Scripts/browser.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span><span class='line'><span class="nt">&lt;script&gt;</span>
+</span><span class='line'><span class="nx">$</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="s1">&#39;http://localhost:28290/api/HelloWorld&#39;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">credentials</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">id</span><span class="o">:</span> <span class="s1">&#39;dh37fgj492je&#39;</span><span class="p">,</span> <span class="c1">// Required by Hawk.client.header</span>
+</span><span class='line'>        <span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn&#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">algorithm</span><span class="o">:</span> <span class="s1">&#39;sha256&#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">user</span><span class="o">:</span> <span class="s1">&#39;Steve&#39;</span>
+</span><span class='line'>    <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#helloworld&quot;</span><span class="p">).</span><span class="nx">click</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>              
+</span><span class='line'>      <span class="kd">var</span> <span class="nx">header</span> <span class="o">=</span> <span class="nx">hawk</span><span class="p">.</span><span class="nx">client</span><span class="p">.</span><span class="nx">header</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">credentials</span><span class="o">:</span> <span class="nx">credentials</span> <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
+</span><span class='line'>          <span class="nx">dataType</span><span class="o">:</span> <span class="s2">&quot;json&quot;</span><span class="p">,</span>
+</span><span class='line'>          <span class="nx">headers</span><span class="o">:</span> <span class="p">{</span> <span class="nx">authorization</span><span class="o">:</span> <span class="nx">header</span><span class="p">.</span><span class="nx">field</span> <span class="p">},</span>
+</span><span class='line'>          <span class="nx">url</span><span class="o">:</span> <span class="nx">url</span><span class="p">,</span>
+</span><span class='line'>          <span class="nx">success</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">response</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  
+</span><span class='line'>              <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#response&quot;</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span><span class="nx">body</span><span class="p">.</span><span class="nx">responseText</span><span class="p">);</span>
+</span><span class='line'>          <span class="p">}</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'><span class="nt">&lt;/script&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>As you can see, the part that matters in the sample above is how you generate the hawk header by calling the &ldquo;header&rdquo; method in the client object provided by the browser.js library. That method receives the url, the http method and the credentials. The result of that call is the hawk authentication header, which is attached to the authorization header in the ajax call.</p>
+
+<p>The complete sample can be found in the [HawkNet github project] (<a href="https://github.com/pcibraro/hawknet/tree/master/Example.Web">https://github.com/pcibraro/hawknet/tree/master/Example.Web</a>)</p>
+]]></content>
+    
+      <category scheme="http://cibrax.me/categories/" term="webapi" />
+    
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Coordinating async work in Node.js]]></title>
@@ -3494,171 +3623,6 @@ Parallel work starts&hellip; \
 2009ms has been elapsed.</p>
 
 <p>The await keyword in a loop does not really make the calls in parallel.</p>
-]]></content>
-    
-      <category scheme="http://cibrax.me/categories/" term=".net" />
-    
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Unit testing ASP.NET Web API controllers that rely on the UrlHelper]]></title>
-    <link href="http://cibrax.me/blog/2012/10/10/unit-testing-asp-net-web-api-controllers-that-rely-on-the-urlhelper/"/>
-    <updated>2012-10-10T00:00:00-03:00</updated>
-    <id>http://cibrax.me/blog/2012/10/10/unit-testing-asp-net-web-api-controllers-that-rely-on-the-urlhelper</id>
-    <content type="html"><![CDATA[<p>UrlHelper is the class you can use in ASP.NET Web API to automatically
-infer links from the routing table without hardcoding anything. For
-example, the following code uses the helper to infer the location url
-for a new resource,</p>
-
-<pre><code>public HttpResponseMessage Post(User model)
-</code></pre>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-{
-</del></p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-  var response = Request.CreateResponse(HttpStatusCode.Created, user);
-</del></p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-  var link = Url.Link(&ldquo;DefaultApi&rdquo;, new { id = id, controller = &ldquo;Users&rdquo; });
-</del></p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-  response.Headers.Location = new Uri(link);
-</del></p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-  return response;
-</del></p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-}
-</del></p>
-
-<p>That code uses a previously defined route “DefaultApi”, which you might
-configure in the HttpConfiguration object (This is the route generated
-by default when you create a new Web API project).</p>
-
-<p>The problem with UrlHelper is that it requires from some initialization
-code before you can invoking it from a unit test (for testing the Post
-method in this example). If you don’t initialize the HttpConfiguration
-and Request instances associated to the controller from the unit test,
-it will fail miserably.</p>
-
-<p>After digging into the ASP.NET Web API source code a little bit, I could
-figure out what the requirements for using the UrlHelper are. It relies
-on the routing table configuration, and a few properties you need to add
-to the HttpRequestMessage. The following code illustrates what’s needed,</p>
-
-<pre><code>var controller = new UserController();
-</code></pre>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-controller.Configuration = new HttpConfiguration();
-</del></p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-var route = controller.Configuration.Routes.MapHttpRoute(
-</del></p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>     name: "DefaultApi",
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>     routeTemplate: "api/{controller}/{id}",
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>     defaults: new { id = RouteParameter.Optional }
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-);
-</del></p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-</del></p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-var routeData = new HttpRouteData(route,
-</del></p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>   new HttpRouteValueDictionary 
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>   { 
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>      { "id", "1" },
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>      { "controller", "Users" } 
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>   }
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-);
-</del></p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-</del></p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-controller.Request = new HttpRequestMessage(HttpMethod.Post, &ldquo;<a href="http://localhost:9091/">http://localhost:9091/</a>&rdquo;);
-</del></p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-controller.Request.Properties.Add(HttpPropertyKeys.HttpConfigurationKey, controller.Configuration);
-</del></p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-controller.Request.Properties.Add(HttpPropertyKeys.HttpRouteDataKey, routeData);
-</del></p>
-
-<pre><code> 
-</code></pre>
-
-<p>The HttpRouteData instance should be initialized with the route values
-you will use in the controller method (“id” and “controller” in this
-example). Once you have correctly setup all those properties, you
-shouldn’t have any problem to use the UrlHelper. There is no need to
-mock anything else.</p>
-
-<p>Enjoy!!.</p>
 ]]></content>
     
       <category scheme="http://cibrax.me/categories/" term=".net" />

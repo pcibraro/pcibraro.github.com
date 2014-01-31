@@ -9,9 +9,10 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="The other day, my team and I ran into some design issues while trying to
-split a big Entity Framework model into smaller pieces according to
-areas of &hellip;">
+  <meta name="description" content="As my friend Jesus mentioned in the post &ldquo;Using XAML serialization in
+WCF
+4.0&rdquo;,
+WCF 4.0 introduces a new way to implement services that &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +82,158 @@ areas of &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/02/18/contract-projections-in-wcf-declarative-services/">Contract Projections in WCF Declarative Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-02-18T00:00:00-03:00" pubdate data-updated="true">Feb 18<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/02/18/contract-projections-in-wcf-declarative-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As my friend Jesus mentioned in the post &ldquo;<a href="http://weblogs.asp.net/gsusx/archive/2008/12/17/using-xaml-serialization-in-wcf-4-0.aspx">Using XAML serialization in
+WCF
+4.0</a>&rdquo;,
+WCF 4.0 introduces a new way to implement services that are totally
+defined in XAML, which receive the name of &ldquo;declarative services&rdquo;. In
+the past, creating a simple service involved three basic steps,</p>
+
+<ol>
+<li>Define the service contract</li>
+<li>Implement the service contract</li>
+<li>Host the service implementation</li>
+</ol>
+
+
+<p>#1 and #2 were all done in an imperative .NET programming language
+such as C# or VB.NET. Today, thanks to this new feature, we will able
+to define the service interface (#1) using XAML and implement the
+service (#2) using a declarative workflow (XAML too).</p>
+
+<p>This was announced as part of the Microsoft&rsquo;s Oslo modeling vision in
+the last PDC.</p>
+
+<p>Aaron Skonnard has recently written an excellent article for the MSDN,
+&ldquo;WCF and WF Services in the .NET framework 4.0, and Dublin&rdquo;, where he
+discusses all these new features more in detail, and the role of dublin
+in that vision. Something I found interesting in that article was the
+fact that he mentioned &ldquo;Contract Projections&rdquo; as part of &ldquo;declarative
+services&rdquo;.</p>
+
+<p>A contract projection allows separating the logical contract definition
+from the representation of the messages that are sent or received. We
+will able to have a single contract definition and specify different
+messaging styles like &ldquo;SOAP&rdquo; or &ldquo;REST/POX&rdquo; using a contract projection.</p>
+
+<p>As in the example shown in the article, a regular WCF service definition
+for a calculator service made in C# would look like this,</p>
+
+<p>~~~~ {#ctl00_mainContentContainer_ctl15 .libCScode style=&ldquo;WORD-BREAK: break-all; WORD-WRAP: break-word&rdquo; space=&ldquo;preserve&rdquo;}
+[ServiceContract]
+public interface ICalculator
+{</p>
+
+<pre><code>[OperationContract]
+int Add(int Op1, int Op2);
+[OperationContract]
+int Subtract(int Op1, int Op2);
+</code></pre>
+
+<p>};
+~~~~</p>
+
+<p>The equivalent representation in XAML (using declarative services) would
+look like this,</p>
+
+<p>~~~~ {#ctl00_mainContentContainer_ctl16 .libCScode style=&ldquo;WORD-BREAK: break-all; WORD-WRAP: break-word&rdquo; space=&ldquo;preserve&rdquo;}
+<ServiceContract Name="ICalculator"></p>
+
+<pre><code>&lt;OperationContract Name="Add"&gt;
+    &lt;OperationArgument Name="Op1" Type="p:Int32" /&gt;
+    &lt;OperationArgument Name="Op2" Type="p:Int32" /&gt;
+    &lt;OperationArgument Direction="Out" Name="res1" Type="p:Int32" /&gt;
+</code></pre>
+
+<p>   </OperationContract>
+   <OperationContract Name="Subtract"></p>
+
+<pre><code>    &lt;OperationArgument Name="Op3" Type="p:Int32" /&gt;
+    &lt;OperationArgument Name="Op4" Type="p:Int32" /&gt;
+    &lt;OperationArgument Direction="Out" Name="res2" Type="p:Int32" /&gt;
+</code></pre>
+
+<p>   </OperationContract>
+</ServiceContract>
+~~~~</p>
+
+<p>And finally, the projection of that contract at wire level like SOAP,</p>
+
+<p>~~~~ {#ctl00_mainContentContainer_ctl17 .libCScode style=&ldquo;WORD-BREAK: break-all; WORD-WRAP: break-word&rdquo; space=&ldquo;preserve&rdquo;}
+&lt;Service.KnownProjections></p>
+
+<pre><code>&lt;SoapContractProjection Name="ICalculatorSoapProjection"&gt;
+    &lt;!-- service contract definition goes here --&gt;
+&lt;/SoapContractProjection&gt;
+</code></pre>
+
+<p>&lt;/Service.KnownProjections>
+~~~~</p>
+
+<p>As you can see, we will able to have a single service implementation (or
+XAML workflow), and multiple contract projections or &ldquo;KnownProjections&rdquo;
+(for the different messaging styles) to get access to that service.</p>
+
+<p>With this new feature, it looks like REST/POX will be officially
+supported for consuming declarative services. (I talked in <a href="http://weblogs.asp.net/cibrax/archive/2008/10/24/rest-and-workflow-services-play-well-together.aspx">the
+past</a>
+about exposing workflow services with REST).</p>
+
+<p>As part of the PDC bits (The code that was distributed in a VPC), there
+is a interface &ldquo;IContractProjection&rdquo; for defining new kind of
+projections,</p>
+
+<p>public interface IContractProjection \
+{ \
+    // Methods \
+    void ApplyEndpointBehavior(ServiceEndpoint endpoint); \
+    ContractDescription GetContractDescription();</p>
+
+<p>    // Properties \
+    string ConfigurationName { get; } \
+    ServiceContract Contract { get; set; } \
+}</p>
+
+<p>For the moment, there is single implementation for Soap,
+&ldquo;SoapContractProjection&rdquo;. I do not know, we will see if the WCF/WF team
+provide more implementations in the future.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -933,566 +1086,6 @@ isOptional =&ldquo;true&rdquo;/></p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2009/01/19/running-a-partial-ssl-website-in-asp-net-mvc/">Running a Partial SSL Website With ASP.NET MVC</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2009-01-19T00:00:00-03:00" pubdate data-updated="true">Jan 19<span>th</span>, 2009</time>
-        
-         | <a href="/blog/2009/01/19/running-a-partial-ssl-website-in-asp-net-mvc/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><a href="http://www.pluralsight.com/community/blogs/keith/archive/2009/01/17/sslhelper-get-help-running-a-partial-ssl-website-in-asp-net.aspx">Keith
-Brown</a>
-has just released a helper class (Based on an <a href="http://www.leastprivilege.com/CommentView.aspx?guid=50a39e64-caab-4fbd-b8e1-2be06b2e6081">original
-implementation</a>
-made by Dominick Baier) with very useful methods for mixing Http and
-Https in a regular asp.net application. Before jumping in this post,
-make sure to read his post (And Dominick&rsquo;s) to understand all the
-problems you may have to deal with when implementing a partial SSL
-website.</p>
-
-<p>Running a partial SSL website in ASP.NET MVC is not much different,
-however, in MVC, we can leverage the existing and powerful routing
-mechanism to implement similar features.</p>
-
-<p><strong>Switching to SSL through an ASP.NET Module</strong></p>
-
-<p>This module  basically inspects the URL and does a redirect based on
-some configuration where you specify routes that should be SSL
-protected.</p>
-
-<p>public void ProcessRequest(HttpContext context)</p>
-
-<p>{</p>
-
-<p>    if(Authentication.IsSslRequired() &amp;&amp;
-context.Request.HttpMethod.Equals(&ldquo;get&rdquo;,
-StringComparison.OrdinalIgnoreCase))</p>
-
-<p>    {</p>
-
-<p>        var data = RouteTable.Routes.GetRouteData(new
-HttpContextWrapper(context));</p>
-
-<p>        if (data != null)</p>
-
-<p>        {</p>
-
-<p>            if (!context.Request.IsSecureConnection)</p>
-
-<p>            {</p>
-
-<p>                if(data.DataTokens[&ldquo;isSecure&rdquo;] != null &amp;&amp;
-(bool)data.DataTokens[&ldquo;isSecure&rdquo;])</p>
-
-<p>                {</p>
-
-<p>                    //Do redirect to https</p>
-
-<p>                    var secureUrl =
-context.Request.Url.ToString().ToSslUrl();</p>
-
-<p>                    context.Response.Redirect(secureUrl, true);</p>
-
-<p>                }</p>
-
-<p>            }</p>
-
-<p>            else</p>
-
-<p>            {</p>
-
-<p>                if (data.DataTokens[&ldquo;isSecure&rdquo;] == null ||
-!((bool)data.DataTokens[&ldquo;isSecure&rdquo;]))</p>
-
-<p>                {</p>
-
-<p>                    //Do redirect to http</p>
-
-<p>                    var unsecureUrl =
-context.Request.Url.ToString().ToUnsecureUrl();</p>
-
-<p>                    context.Response.Redirect(unsecureUrl, true);</p>
-
-<p>                }</p>
-
-<p>            }</p>
-
-<p>        }</p>
-
-<p>    }</p>
-
-<p>}</p>
-
-<p>As you can see in the code above, the module checks whether the page
-should be ssl protected using a custom data token (IsSecure) that was
-previously configured for the route, and afterwards, it redirects the
-request according to that setting. For instance, if the route requires
-to be the secure (IsSecure = true), and the request was actually made
-through http, the module will redirect the request to https.</p>
-
-<p>The absolute URLs are built using some extensions methods (ToSslUrl and
-ToUnsecureUrl) that I will show later in this post.</p>
-
-<p>Authentication.IsSslRequired is just an configuration setting that we
-can use to skip all these checks during development.</p>
-
-<p>public class Authentication</p>
-
-<p>{</p>
-
-<p>    public static bool IsSslRequired()</p>
-
-<p>    {</p>
-
-<p>        var setting = ConfigurationManager.AppSettings[&ldquo;RequireSSL&rdquo;];</p>
-
-<p>        if (setting != null)</p>
-
-<p>        {</p>
-
-<p>            return bool.Parse(setting);</p>
-
-<p>        }</p>
-
-<p> </p>
-
-<p>        return false;</p>
-
-<p>    }</p>
-
-<p>}</p>
-
-<p> </p>
-
-<p>&lt;appSettings></p>
-
-<p>  &lt;add key=&ldquo;RequireSSL&rdquo; value=&ldquo;True&rdquo;/></p>
-
-<p>&lt;/appSettings></p>
-
-<p>The code for setting the custom data token in the MVC route looks as
-follow,</p>
-
-<p>routes.MapRoute(</p>
-
-<p>    &ldquo;MyAccount/PasswordChange&rdquo;,</p>
-
-<p>    &ldquo;MyAccount/PasswordChange&rdquo;,</p>
-
-<p>    new { controller = &ldquo;Accounts&rdquo;, action = &ldquo;PasswordChange&rdquo; }</p>
-
-<p>).DataTokens = new RouteValueDictionary(new { isSecure = true });</p>
-
-<p>**** </p>
-
-<p><strong>Extension methods for generating absolute URLs</strong></p>
-
-<p>As I showed before in the ASP.NET Module, two extensions methods were
-used to generate absolute URLs. I just based their implementation on
-some code originally written by Troy Goode in this
-<a href="http://www.squaredroot.com/post/2008/06/MVC-and-SSL.aspx">post</a>. \</p>
-
-<p>/// &lt;summary></p>
-
-<p>/// Provides helper extensions for turning strings into fully-qualified
-and SSL-enabled Urls.</p>
-
-<p>/// &lt;/summary></p>
-
-<p>public static class UrlStringExtensions</p>
-
-<p>{</p>
-
-<p>    /// &lt;summary></p>
-
-<p>    /// Takes a relative or absolute url and returns the fully-qualified
-url path.</p>
-
-<p>    /// &lt;/summary></p>
-
-<p>    /// &lt;param name=&ldquo;text&rdquo;>The url to make fully-qualified. Ex:
-Home/About&lt;/param></p>
-
-<p>    /// &lt;returns>The absolute url plus protocol, server, &amp; port. Ex:
-<a href="http://localhost:1234/Home/About&lt;/returns>&#8220;>http://localhost:1234/Home/About&lt;/returns></a></p>
-
-<p>    public static string ToFullyQualifiedUrl( this string text )</p>
-
-<p>    {</p>
-
-<p>        var oldUrl = text;</p>
-
-<p>        var oldUrlArray = ( oldUrl.Contains( &ldquo;?&rdquo; ) ? oldUrl.Split( &lsquo;?&rsquo; )
-: new[]{ oldUrl, &ldquo;&rdquo; } );</p>
-
-<p> </p>
-
-<p>        var requestUri = HttpContext.Current.Request.Url;</p>
-
-<p>        var localPathAndQuery = requestUri.LocalPath + requestUri.Query;</p>
-
-<p>        var urlBase = requestUri.AbsoluteUri.Substring( 0,
-requestUri.AbsoluteUri.Length &ndash; localPathAndQuery.Length );</p>
-
-<p> </p>
-
-<p>        var newUrl = VirtualPathUtility.ToAbsolute( oldUrlArray[0] );</p>
-
-<p>        if( !string.IsNullOrEmpty( oldUrlArray[1] ) )</p>
-
-<p>            newUrl += &ldquo;?&rdquo; + oldUrlArray[1];</p>
-
-<p> </p>
-
-<p>        return urlBase + newUrl;</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    /// &lt;summary></p>
-
-<p>    /// Looks for Html links in the passed string and turns each
-relative or absolute url and returns the fully-qualified url path.</p>
-
-<p>    /// &lt;/summary></p>
-
-<p>    /// &lt;param name=&ldquo;text&rdquo;>The url to make fully-qualified. Ex: &lt;a
-href=&ldquo;Home/About&rdquo;>Blah&lt;/a>&lt;/param></p>
-
-<p>    /// &lt;returns>The absolute url plus protocol, server, &amp; port. Ex:
-&lt;a href=&ldquo;<a href="http://localhost:1234/Home/About">http://localhost:1234/Home/About</a>&rdquo;>Blah&lt;/a>&lt;/returns></p>
-
-<p>    public static string ToFullyQualifiedLink( this string text )</p>
-
-<p>    {</p>
-
-<p>        var regex = new Regex(</p>
-
-<p>           
-&ldquo;(?&lt;Before>&lt;a.*href=\&rdquo;)(?!http)(?&lt;Url>.*?)(?&lt;After>\&ldquo;.+>)&rdquo;,</p>
-
-<p>            RegexOptions.Multiline | RegexOptions.IgnoreCase</p>
-
-<p>            );</p>
-
-<p> </p>
-
-<p>        return regex.Replace( text, ( Match m ) =></p>
-
-<p>                                    m.Groups[&ldquo;Before&rdquo;].Value +</p>
-
-<p>                                    ToFullyQualifiedUrl(
-m.Groups[&ldquo;Url&rdquo;].Value ) +</p>
-
-<p>                                    m.Groups[&ldquo;After&rdquo;].Value</p>
-
-<p>            );</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    /// &lt;summary></p>
-
-<p>    /// Takes a relative or absolute url and returns the fully-qualified
-url path using the Https protocol.</p>
-
-<p>    /// &lt;/summary></p>
-
-<p>    /// &lt;param name=&ldquo;text&rdquo;>The url to make fully-qualified. Ex:
-Home/About&lt;/param></p>
-
-<p>    /// &lt;returns>The absolute url plus server, &amp; port using the Https
-protocol. Ex: <a href="https://localhost:1234/Home/About&lt;/returns>&#8220;>https://localhost:1234/Home/About&lt;/returns></a></p>
-
-<p>    public static string ToSslUrl( this string text )</p>
-
-<p>    {</p>
-
-<p>        if (IsSslRequired())</p>
-
-<p>        {</p>
-
-<p>            string absoluteUrl = null;</p>
-
-<p>            if (text.StartsWith(&ldquo;<a href="http://">http://</a>&rdquo;,
-StringComparison.OrdinalIgnoreCase) || text.StartsWith(&ldquo;<a href="https://">https://</a>&rdquo;,
-StringComparison.OrdinalIgnoreCase))</p>
-
-<p>                absoluteUrl = text;</p>
-
-<p>            else</p>
-
-<p>                absoluteUrl = ToFullyQualifiedUrl(text);</p>
-
-<p> </p>
-
-<p>            return absoluteUrl.Replace(&ldquo;<a href="http:">http:</a>&rdquo;, &ldquo;<a href="https:">https:</a>&rdquo;);</p>
-
-<p>        }</p>
-
-<p>        else</p>
-
-<p>        {</p>
-
-<p>            return text;</p>
-
-<p>        }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    /// &lt;summary></p>
-
-<p>    /// Takes a relative or absolute url and returns the fully-qualified
-url path using the Http protocol.</p>
-
-<p>    /// &lt;/summary></p>
-
-<p>    /// &lt;param name=&ldquo;text&rdquo;>The url to make fully-qualified. Ex:
-Home/About&lt;/param></p>
-
-<p>    /// &lt;returns>The absolute url plus server, &amp; port using the Http
-protocol. Ex: <a href="http://localhost:1234/Home/About&lt;/returns>&#8220;>http://localhost:1234/Home/About&lt;/returns></a></p>
-
-<p>    public static string ToUnsecureUrl(this string text)</p>
-
-<p>    {</p>
-
-<p>        string absoluteUrl = null;</p>
-
-<p>        if (text.StartsWith(&ldquo;<a href="http://">http://</a>&rdquo;,
-StringComparison.OrdinalIgnoreCase) || text.StartsWith(&ldquo;<a href="https://">https://</a>&rdquo;,
-StringComparison.OrdinalIgnoreCase))</p>
-
-<p>            absoluteUrl = text;</p>
-
-<p>        else</p>
-
-<p>            absoluteUrl = ToFullyQualifiedUrl(text);</p>
-
-<p> </p>
-
-<p>        return absoluteUrl.Replace(&ldquo;<a href="https:">https:</a>&rdquo;, &ldquo;<a href="http:">http:</a>&rdquo;);</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    /// &lt;summary></p>
-
-<p>    /// Looks for Html links in the passed string and turns each
-relative or absolute url into a fully-qualified url path using the Https
-protocol.</p>
-
-<p>    /// &lt;/summary></p>
-
-<p>    /// &lt;param name=&ldquo;text&rdquo;>The url to make fully-qualified. Ex: &lt;a
-href=&ldquo;Home/About&rdquo;>Blah&lt;/a>&lt;/param></p>
-
-<p>    /// &lt;returns>The absolute url plus server, &amp; port using the Https
-protocol. Ex: &lt;a
-href=&ldquo;<a href="https://localhost:1234/Home/About">https://localhost:1234/Home/About</a>&rdquo;>Blah&lt;/a>&lt;/returns></p>
-
-<p>    public static string ToSslLink( this string text )</p>
-
-<p>    {</p>
-
-<p>        if (IsSslRequired())</p>
-
-<p>        {</p>
-
-<p>            return ToFullyQualifiedLink(text).Replace(&ldquo;<a href="http:">http:</a>&rdquo;,
-&ldquo;<a href="https:">https:</a>&rdquo;);</p>
-
-<p>        }</p>
-
-<p>        else</p>
-
-<p>        {</p>
-
-<p>            return ToFullyQualifiedLink(text);</p>
-
-<p>        }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    private static bool IsSslRequired()</p>
-
-<p>    {</p>
-
-<p>        return Authentication.IsSslRequired();</p>
-
-<p>    }</p>
-
-<p>}</p>
-
-<p>\
-They can be used from a view as well to generate links with complete
-Urls,</p>
-
-<p>&lt;a href=&lsquo;&lt;% =Url.Action(&ldquo;PasswordChange&rdquo;, &ldquo;Accounts&rdquo;).ToSslUrl()
-%>&rsquo;>Change your password&lt;/a></p>
-
-<p><strong>Gettting an absolute URL within a controller</strong></p>
-
-<p>For some scenarios, we might need to redirect the user from a secure
-route to a regular route or viceversa within a controller. In those
-cases, we should have a way to generate a complete URL from a controller
-method and used it later with a RedirectResult (This is also useful when
-you want to include a link to a web page in an email sent by your
-website).</p>
-
-<p>For instance, it would be very helpful to have something like this,</p>
-
-<p>return new RedirectResult(this.FullActionUrl&lt;MyController>(c =>
-c.SecureMethod(), &ldquo;https&rdquo;));</p>
-
-<p>Where &ldquo;FullActionUrl&rdquo; is an extension method for the Controller class.
-In addition to the controller method we want to use to get the absolute
-route (&ldquo;SecureMethod&rdquo;), we can also specify the scheme to be used with
-that route.</p>
-
-<p>The code for doing that is shown bellow (They are part of the .NETfx
-project,
-<a href="http://code.google.com/p/netfx/">http://code.google.com/p/netfx/</a>)</p>
-
-<p>/// &lt;summary></p>
-
-<p>/// Returns the full URL for performing an invocation to an action based</p>
-
-<p>/// on an expression representing an invocation to a controller method</p>
-
-<p>/// that may include arguments.</p>
-
-<p>/// &lt;/summary></p>
-
-<p>/// &lt;typeparam name=&ldquo;T&rdquo;>Type of the controller to call to. Can be
-omitted as it can be inferred from the action type.&lt;/typeparam></p>
-
-<p>/// &lt;param name=&ldquo;controller&rdquo;>The controller performing the
-call.&lt;/param></p>
-
-<p>/// &lt;param name=&ldquo;action&rdquo;>The action containing the call.&lt;/param></p>
-
-<p>public static string FullActionUrl&lt;T>(this Controller controller,
-Expression&lt;Action&lt;T>> action, string scheme)</p>
-
-<p>    where T : Controller</p>
-
-<p>{</p>
-
-<p>    string host = controller.HttpContext.Request.Url.Authority;</p>
-
-<p>    string virtualPath = ActionUrl(controller, action);</p>
-
-<p> </p>
-
-<p>    return string.Format(&ldquo;{0}://{1}{2}&rdquo;, scheme, host, virtualPath);</p>
-
-<p>}</p>
-
-<p> </p>
-
-<p>/// &lt;summary></p>
-
-<p>/// Returns the URL for performing an invokation to an action based</p>
-
-<p>/// on an expression representing an invocation to a controller method</p>
-
-<p>/// that may include arguments.</p>
-
-<p>/// &lt;/summary></p>
-
-<p>/// &lt;typeparam name=&ldquo;T&rdquo;>Type of the controller to call to. Can be
-omitted as it can be inferred from the action type.&lt;/typeparam></p>
-
-<p>/// &lt;param name=&ldquo;controller&rdquo;>The controller performing the
-call.&lt;/param></p>
-
-<p>/// &lt;param name=&ldquo;action&rdquo;>The action containing the call.&lt;/param></p>
-
-<p>public static string ActionUrl&lt;T>(this ControllerBase controller,
-Expression&lt;Action&lt;T>> action)</p>
-
-<p>    where T : Controller</p>
-
-<p>{</p>
-
-<p>    var call = ControllerExpression.GetMethodCall&lt;T>(action);</p>
-
-<p> </p>
-
-<p>    string actionName = call.Method.Name;</p>
-
-<p>    string controllerName =
-ControllerExpression.GetControllerName&lt;T>();</p>
-
-<p> </p>
-
-<p>    var values = LinkBuilder.BuildParameterValuesFromExpression(call);</p>
-
-<p>    values.Add(&ldquo;action&rdquo;, actionName);</p>
-
-<p>    values.Add(&ldquo;controller&rdquo;, controllerName);</p>
-
-<p> </p>
-
-<p>    var vpd =
-RouteTable.Routes.GetVirtualPath(controller.ControllerContext, values);</p>
-
-<p>    string target = null;</p>
-
-<p>    if (vpd != null)</p>
-
-<p>    {</p>
-
-<p>        target = vpd.VirtualPath;</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    return target;</p>
-
-<p>}</p>
-
-<p>The complete code is available to download from
-<a href="/images/legacy/MVC.SSL.zip">here</a>. </p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/16/">&larr; Older</a>
@@ -1510,6 +1103,10 @@ RouteTable.Routes.GetVirtualPath(controller.ControllerContext, values);</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
       </li>
     
@@ -1523,10 +1120,6 @@ RouteTable.Routes.GetVirtualPath(controller.ControllerContext, values);</p>
     
       <li class="post">
         <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
       </li>
     
   </ul>

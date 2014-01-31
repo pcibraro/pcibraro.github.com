@@ -9,8 +9,8 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="With the boom in social networking, many web sites have started offering
-new tools for building or expanding your initial network of contacts. For &hellip;">
+  <meta name="description" content="One of the discussions that we had during the last summit with the rest
+of &ldquo;Connected Systems&rdquo; MVPs was the possibility of supporting a &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -80,6 +80,193 @@ new tools for building or expanding your initial network of contacts. For &helli
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/04/21/federation-over-tcp-with-wcf/">Federation Over TCP With WCF</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-04-21T00:00:00-03:00" pubdate data-updated="true">Apr 21<span>st</span>, 2008</time>
+        
+         | <a href="/blog/2008/04/21/federation-over-tcp-with-wcf/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>One of the discussions that we had during the last summit with the rest
+of &ldquo;Connected Systems&rdquo; MVPs was the possibility of supporting a
+Federation Scenario over TCP in WCF. For many of us that scenario was
+possible in theory, but unfortunately no documentation or samples
+existed to support it. In fact, WCF only comes with pre-built binding
+for federation scenarios, the &ldquo;WsFederationHttpBinding&rdquo; binding, which
+is completely tied to Http.</p>
+
+<p>For that reason, I decided to give it a shot and try to manipulate some
+custom bindings to use tcp instead of the common used http transport.
+One curios thing about TCP is that it requires security sessions
+(SecureConversation with requireSecurityContextCancellation equals to
+&ldquo;True&rdquo;) in order to work fine. If you do not configure the binding with
+those security settings, WCF will throw a nice error message saying that
+the order of the binding elements is not correct. At the beginning I did
+not configure it in that way, and it took me sometime to figure out what
+the problem was, I would save some time with a better error
+description. </p>
+
+<p>The resulting bindings for client, STS and the sample service were the
+following (In this sample, the client is authenticating against the
+service with a client certificate).</p>
+
+<p>​1. Client</p>
+
+<p>&lt;bindings></p>
+
+<p>  &lt;customBinding></p>
+
+<p>    &lt;binding name=&ldquo;STSBinding&rdquo;></p>
+
+<p>      &lt;security authenticationMode=&ldquo;SecureConversation&rdquo;
+requireSecurityContextCancellation=&ldquo;true&rdquo;></p>
+
+<p>        &lt;secureConversationBootstrap
+authenticationMode=&ldquo;MutualCertificate&rdquo;/></p>
+
+<p>      &lt;/security></p>
+
+<p>      &lt;binaryMessageEncoding/></p>
+
+<p>      &lt;tcpTransport /></p>
+
+<p>    &lt;/binding></p>
+
+<p>    &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>       &lt;security authenticationMode=&ldquo;SecureConversation&rdquo;></p>
+
+<p>         &lt;secureConversationBootstrap
+authenticationMode=&ldquo;IssuedToken&rdquo;></p>
+
+<p>           &lt;issuedTokenParameters
+tokenType=<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>></p>
+
+<p>             &lt;issuer address=&ldquo;net.tcp://localhost:8000/sts&rdquo;
+bindingConfiguration=&ldquo;STSBinding&rdquo; binding=&ldquo;customBinding&rdquo;></p>
+
+<p>               &lt;identity></p>
+
+<p>                 &lt;dns value=&ldquo;STSAuthority&rdquo;/> &lt;!&mdash;Sample Cert for the
+STS &mdash;></p>
+
+<p>               &lt;/identity></p>
+
+<p>             &lt;/issuer></p>
+
+<p>           &lt;/issuedTokenParameters></p>
+
+<p>        &lt;/secureConversationBootstrap></p>
+
+<p>      &lt;/security></p>
+
+<p>      &lt;binaryMessageEncoding/></p>
+
+<p>      &lt;tcpTransport /></p>
+
+<p>    &lt;/binding></p>
+
+<p>  &lt;/customBinding></p>
+
+<p>&lt;/bindings></p>
+
+<p>​2. STS</p>
+
+<p>&lt;bindings></p>
+
+<p>  &lt;customBinding></p>
+
+<p>    &lt;binding name=&ldquo;MutualCertificateBinding&rdquo;></p>
+
+<p>      &lt;security authenticationMode=&ldquo;SecureConversation&rdquo;
+requireSecurityContextCancellation=&ldquo;true&rdquo;></p>
+
+<p>        &lt;secureConversationBootstrap
+authenticationMode=&ldquo;MutualCertificate&rdquo;/></p>
+
+<p>      &lt;/security></p>
+
+<p>      &lt;binaryMessageEncoding/></p>
+
+<p>      &lt;tcpTransport /></p>
+
+<p>    &lt;/binding>    &lt;/customBinding></p>
+
+<p>&lt;/bindings></p>
+
+<p>​3. Sample Service</p>
+
+<p>&lt;bindings></p>
+
+<p>  &lt;customBinding></p>
+
+<p>    &lt;binding name=&ldquo;SampleService&rdquo;></p>
+
+<p>      &lt;security authenticationMode=&ldquo;SecureConversation&rdquo;
+requireSecurityContextCancellation=&ldquo;true&rdquo;></p>
+
+<p>        &lt;secureConversationBootstrap authenticationMode=&ldquo;IssuedToken&rdquo;></p>
+
+<p>           &lt;issuedTokenParameters
+tokenType=<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>></p>
+
+<p>        &lt;/issuedTokenParameters></p>
+
+<p>       &lt;/secureConversationBootstrap></p>
+
+<p>     &lt;/security></p>
+
+<p>     &lt;binaryMessageEncoding/></p>
+
+<p>    &lt;tcpTransport /></p>
+
+<p>   &lt;/binding></p>
+
+<p>  &lt;/customBinding></p>
+
+<p>&lt;/bindings></p>
+
+<p>It is not required that the STS and service use both TCP transport for
+communicating with the client, which is a cool thing because now we can
+combine different transports in a whole federation scenario. For
+instance, we can have a Http communication between the client and the
+STS, and a TCP communication with between the client and the final
+service.</p>
+
+<p>The complete sample is available to download from
+<a href="/images/legacy/FederationOverTcp.zip">here</a>.</p>
+
+<p> </p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1508,50 +1695,6 @@ scenario, go ahead and take a look at this project :&ndash;).</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2007/11/22/saml-sts-implementation-for-wse-3-0-reposted/">SAML STS Implementation for WSE 3.0 (Reposted)</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2007-11-22T00:00:00-03:00" pubdate data-updated="true">Nov 22<span>nd</span>, 2007</time>
-        
-         | <a href="/blog/2007/11/22/saml-sts-implementation-for-wse-3-0-reposted/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Since the Gotdot.net site disappeared along with the code of this
-implementation, my friend <a href="http://blogs.msdn.com/thehoggblog/">Jason
-Hogg</a> has kindly published the code
-on <a href="http://blogs.msdn.com/thehoggblog/archive/2007/11/20/saml-sts-for-wse-3-0-reposted.aspx">his
-blog</a>.</p>
-
-<p>Thanks Jason!!!</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/20/">&larr; Older</a>
@@ -1569,6 +1712,10 @@ blog</a>.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
       </li>
     
@@ -1582,10 +1729,6 @@ blog</a>.</p>
     
       <li class="post">
         <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
       </li>
     
   </ul>

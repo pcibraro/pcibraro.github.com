@@ -9,9 +9,11 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="I decided to write this post to show how cool is Autofac for doing
-dependency injection in the ASP.NET MVC framework. Autofac, for me the
-Moq &hellip;">
+  <meta name="description" content="Zermatt is the framework recently released by Microsoft to develop
+claim-aware applications. You can find some announcements
+here
+and
+here. This &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +83,228 @@ Moq &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/09/01/implementing-an-identity-provider-and-relying-party-with-zermatt-and-asp-net-mvc/">Implementing an Identity Provider and Relying Party With Zermatt and ASP.NET MVC</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-09-01T00:00:00-03:00" pubdate data-updated="true">Sep 1<span>st</span>, 2008</time>
+        
+         | <a href="/blog/2008/09/01/implementing-an-identity-provider-and-relying-party-with-zermatt-and-asp-net-mvc/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Zermatt is the framework recently released by Microsoft to develop
+claim-aware applications. You can find some announcements
+<a href="http://blogs.msdn.com/vbertocci/archive/2008/07/09/announcing-the-beta-release-of-zermatt-developer-identity-framework.aspx">here</a>
+and
+<a href="http://www.leastprivilege.com/TryQuotZermattquotAndGiveFeedback.aspx">here</a>.</p>
+
+<p>This framework supports the WS-Federation active and passive profiles.
+This last one was initially designed with an unique purpose in mind,
+allow the integration of &ldquo;dumb clients&rdquo; into the <a href="http://en.wikipedia.org/wiki/Identity_Metasystem">identity
+metasystem</a>. As &ldquo;dumb
+clients&rdquo;, I am talking about clients like web browsers that do not have
+the ability to handle cryptographic material.</p>
+
+<p>All the magic is done through some consecutive Http redirects, and today
+we will see how develop an identity provider and a relying party web
+(with ASP.NET MVC) that are involved in the whole process.</p>
+
+<p>The identity provider is based on the quickstart that is automatically
+generated in Visual Studio when you create a new MVC web application.
+This quickstart uses FormsAuthentication to authenticate the application
+users and also provides an Account controller (that internally uses
+ASP.NET Membership) to manage all those users. In order to integrate
+Zermatt in this application, I added a new controller STSController that
+knows to process messages for getting issue tokens with the user&rsquo;s
+claims.</p>
+
+<p><img src="/images/legacy/Zermatt-MVC.gif" alt="" /></p>
+
+<p>For the relying party, Zermatt provides some web controls to
+authenticate the user against the identity provider using the passive
+profile. Unfortunately, for the simple fact that ASP.NET MVC does not
+support controls with view state, we can not use them here. As
+workaround, I created a couple of extensions methods that generate the
+Urls for sending the corresponding messages to the identity provider
+(Login and Logout).</p>
+
+<p>public static class LoginUrlExtensions</p>
+
+<p>{</p>
+
+<p>   public static string LoginUrl(this UrlHelper helper, string
+actionName, string controllerName, string stsUrl)</p>
+
+<p>   {</p>
+
+<p>       string host =
+helper.ViewContext.HttpContext.Request.Url.Authority;</p>
+
+<p>       string schema =
+helper.ViewContext.HttpContext.Request.Url.Scheme;</p>
+
+<p> </p>
+
+<p>       string realm = string.Format(&ldquo;{0}://{1}&rdquo;, schema, host);</p>
+
+<p>       string reply = helper.Action(actionName,
+controllerName).Substring(1);</p>
+
+<p> </p>
+
+<p>       return
+string.Format(&ldquo;{0}?wa=wsignin1.0&amp;wtrealm={1}&amp;wreply={2}&amp;wctx=rm=0&amp;id=FederatedPassiveSignIn1&amp;wct={3}&rdquo;,</p>
+
+<p>          stsUrl, realm, reply, XmlConvert.ToString(DateTime.Now));</p>
+
+<p>   }</p>
+
+<p> </p>
+
+<p>   public static string LogoutUrl(this UrlHelper helper, string
+actionName, string controllerName, string stsUrl)</p>
+
+<p>   {</p>
+
+<p>       string host =
+helper.ViewContext.HttpContext.Request.Url.Authority;</p>
+
+<p>       string schema =
+helper.ViewContext.HttpContext.Request.Url.Scheme;</p>
+
+<p> </p>
+
+<p>       string realm = string.Format(&ldquo;{0}://{1}&rdquo;, schema, host);</p>
+
+<p>       string reply = string.Format(&ldquo;{0}{1}&rdquo;, realm,
+helper.Action(actionName, controllerName));</p>
+
+<p> </p>
+
+<p>       return string.Format(&ldquo;{0}?wa=wsignout1.0&amp;wreply={1}&rdquo;, stsUrl,
+reply);</p>
+
+<p>   }</p>
+
+<p>}</p>
+
+<p>The &ldquo;actionName&rdquo; and &ldquo;controllerName&rdquo; are just used to generate the
+reply address where the user must be redirect after being authenticated
+in the identity provider. These extension methods can be used in the
+view as follow,</p>
+
+<p>&lt;a href=&ldquo;&lt;%=Url.LoginUrl(&#8220;Login&rdquo;, &ldquo;Home&rdquo;,
+&ldquo;localhost://STS&rdquo;)%>&ldquo;>Login&lt;/a></p>
+
+<p>We also need a method in the relying party to parse the RRST message and
+generate a cookie with the user credentials and claims.</p>
+
+<p> </p>
+
+<p>public interface IFederatedAuthentication</p>
+
+<p>{</p>
+
+<p>   IClaimsPrincipal Authenticate();</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public class FederatedAuthentication : IFederatedAuthentication</p>
+
+<p>{</p>
+
+<p>     private string logoutUrl;</p>
+
+<p> </p>
+
+<p>     public FederatedAuthentication(string logoutUrl)</p>
+
+<p>     {</p>
+
+<p>         this.logoutUrl = logoutUrl;</p>
+
+<p>     }</p>
+
+<p> </p>
+
+<p>     public IClaimsPrincipal Authenticate()</p>
+
+<p>     {</p>
+
+<p>         string securityTokenXml =
+FederatedAuthenticationModule.Current.GetXmlTokenFromPassiveSignInResponse(System.Web.HttpContext.Current.Request,
+null);</p>
+
+<p> </p>
+
+<p>         FederatedAuthenticationModule current =
+FederatedAuthenticationModule.Current;</p>
+
+<p> </p>
+
+<p>         SecurityToken token = null;</p>
+
+<p>         IClaimsPrincipal authContext =
+current.AuthenticateUser(securityTokenXml, out token);</p>
+
+<p> </p>
+
+<p>         TicketGenerationContext context = new
+TicketGenerationContext(authContext, false, logoutUrl,
+typeof(SignInControl).Name);</p>
+
+<p>         current.IssueTicket(context);</p>
+
+<p> </p>
+
+<p>         return authContext;</p>
+
+<p>     }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>As you can see in the code above, the Zermatt module
+(FederatedAuthenticationModule) that parses the response message is tied
+to the Request object, something that we do not have direct access from
+a MVC controller (Well, it is bad practice if we want to test our code).
+That&rsquo;s the reason I decided to put all that code in a pluggin that can
+be injected later in the controller.</p>
+
+<p>The complete solution is available to download from <a href="/images/legacy/MVC.Zermatt.zip">this
+location</a>. Any feedback
+would be great!!. Enjoy!!.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -2331,193 +2555,6 @@ samples that you can find around) to name a few.  </p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2008/04/21/federation-over-tcp-with-wcf/">Federation Over TCP With WCF</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2008-04-21T00:00:00-03:00" pubdate data-updated="true">Apr 21<span>st</span>, 2008</time>
-        
-         | <a href="/blog/2008/04/21/federation-over-tcp-with-wcf/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>One of the discussions that we had during the last summit with the rest
-of &ldquo;Connected Systems&rdquo; MVPs was the possibility of supporting a
-Federation Scenario over TCP in WCF. For many of us that scenario was
-possible in theory, but unfortunately no documentation or samples
-existed to support it. In fact, WCF only comes with pre-built binding
-for federation scenarios, the &ldquo;WsFederationHttpBinding&rdquo; binding, which
-is completely tied to Http.</p>
-
-<p>For that reason, I decided to give it a shot and try to manipulate some
-custom bindings to use tcp instead of the common used http transport.
-One curios thing about TCP is that it requires security sessions
-(SecureConversation with requireSecurityContextCancellation equals to
-&ldquo;True&rdquo;) in order to work fine. If you do not configure the binding with
-those security settings, WCF will throw a nice error message saying that
-the order of the binding elements is not correct. At the beginning I did
-not configure it in that way, and it took me sometime to figure out what
-the problem was, I would save some time with a better error
-description. </p>
-
-<p>The resulting bindings for client, STS and the sample service were the
-following (In this sample, the client is authenticating against the
-service with a client certificate).</p>
-
-<p>​1. Client</p>
-
-<p>&lt;bindings></p>
-
-<p>  &lt;customBinding></p>
-
-<p>    &lt;binding name=&ldquo;STSBinding&rdquo;></p>
-
-<p>      &lt;security authenticationMode=&ldquo;SecureConversation&rdquo;
-requireSecurityContextCancellation=&ldquo;true&rdquo;></p>
-
-<p>        &lt;secureConversationBootstrap
-authenticationMode=&ldquo;MutualCertificate&rdquo;/></p>
-
-<p>      &lt;/security></p>
-
-<p>      &lt;binaryMessageEncoding/></p>
-
-<p>      &lt;tcpTransport /></p>
-
-<p>    &lt;/binding></p>
-
-<p>    &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
-
-<p>       &lt;security authenticationMode=&ldquo;SecureConversation&rdquo;></p>
-
-<p>         &lt;secureConversationBootstrap
-authenticationMode=&ldquo;IssuedToken&rdquo;></p>
-
-<p>           &lt;issuedTokenParameters
-tokenType=<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>></p>
-
-<p>             &lt;issuer address=&ldquo;net.tcp://localhost:8000/sts&rdquo;
-bindingConfiguration=&ldquo;STSBinding&rdquo; binding=&ldquo;customBinding&rdquo;></p>
-
-<p>               &lt;identity></p>
-
-<p>                 &lt;dns value=&ldquo;STSAuthority&rdquo;/> &lt;!&mdash;Sample Cert for the
-STS &mdash;></p>
-
-<p>               &lt;/identity></p>
-
-<p>             &lt;/issuer></p>
-
-<p>           &lt;/issuedTokenParameters></p>
-
-<p>        &lt;/secureConversationBootstrap></p>
-
-<p>      &lt;/security></p>
-
-<p>      &lt;binaryMessageEncoding/></p>
-
-<p>      &lt;tcpTransport /></p>
-
-<p>    &lt;/binding></p>
-
-<p>  &lt;/customBinding></p>
-
-<p>&lt;/bindings></p>
-
-<p>​2. STS</p>
-
-<p>&lt;bindings></p>
-
-<p>  &lt;customBinding></p>
-
-<p>    &lt;binding name=&ldquo;MutualCertificateBinding&rdquo;></p>
-
-<p>      &lt;security authenticationMode=&ldquo;SecureConversation&rdquo;
-requireSecurityContextCancellation=&ldquo;true&rdquo;></p>
-
-<p>        &lt;secureConversationBootstrap
-authenticationMode=&ldquo;MutualCertificate&rdquo;/></p>
-
-<p>      &lt;/security></p>
-
-<p>      &lt;binaryMessageEncoding/></p>
-
-<p>      &lt;tcpTransport /></p>
-
-<p>    &lt;/binding>    &lt;/customBinding></p>
-
-<p>&lt;/bindings></p>
-
-<p>​3. Sample Service</p>
-
-<p>&lt;bindings></p>
-
-<p>  &lt;customBinding></p>
-
-<p>    &lt;binding name=&ldquo;SampleService&rdquo;></p>
-
-<p>      &lt;security authenticationMode=&ldquo;SecureConversation&rdquo;
-requireSecurityContextCancellation=&ldquo;true&rdquo;></p>
-
-<p>        &lt;secureConversationBootstrap authenticationMode=&ldquo;IssuedToken&rdquo;></p>
-
-<p>           &lt;issuedTokenParameters
-tokenType=<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>></p>
-
-<p>        &lt;/issuedTokenParameters></p>
-
-<p>       &lt;/secureConversationBootstrap></p>
-
-<p>     &lt;/security></p>
-
-<p>     &lt;binaryMessageEncoding/></p>
-
-<p>    &lt;tcpTransport /></p>
-
-<p>   &lt;/binding></p>
-
-<p>  &lt;/customBinding></p>
-
-<p>&lt;/bindings></p>
-
-<p>It is not required that the STS and service use both TCP transport for
-communicating with the client, which is a cool thing because now we can
-combine different transports in a whole federation scenario. For
-instance, we can have a Http communication between the client and the
-STS, and a TCP communication with between the client and the final
-service.</p>
-
-<p>The complete sample is available to download from
-<a href="/images/legacy/FederationOverTcp.zip">here</a>.</p>
-
-<p> </p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/19/">&larr; Older</a>
@@ -2535,6 +2572,10 @@ service.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
       </li>
     
@@ -2548,10 +2589,6 @@ service.</p>
     
       <li class="post">
         <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
       </li>
     
   </ul>

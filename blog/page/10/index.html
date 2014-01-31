@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="WCF Data Services ships with two built-in query providers, a query
-provider for Entity Framework that uses the CSL model to infer all the
-service &hellip;">
+  <meta name="description" content="Configuring a WCF service to use federated authentication in an
+organization is not something trivial as it requires some good knowledge
+of the &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +81,140 @@ service &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/08/27/centralizing-federated-services-configuration-with-so-aware/">Centralizing Federated Services Configuration With SO-Aware</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-08-27T00:00:00-03:00" pubdate data-updated="true">Aug 27<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/08/27/centralizing-federated-services-configuration-with-so-aware/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Configuring a WCF service to use federated authentication in an
+organization is not something trivial as it requires some good knowledge
+of the available security settings, and more precisely, how to talk to
+the existing security token services with the right WCF bindings.</p>
+
+<p>This is something that usually only a few people in the organization
+knows how to do it right, so having a way to centralize all this
+configuration in a central location and have the rest of the developers
+to use becomes really important.    </p>
+
+<p>SO-Aware plays an important role in that sense, allowing the security
+experts to configure and store the bindings and behaviors that the
+organization will use to secure the services in the service repository.</p>
+
+<p>Developers can later reference, reuse and configure their services and
+client applications with those bindings from the repository using a
+simple OData API, or the WCF specific classes that SO-Aware also
+provides for configuring services and proxies.</p>
+
+<p>A WCF binding for configuring a service with federated authentication
+usually looks as follow,</p>
+
+<p><del> {#codeSnippet style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+<customBinding><binding name="echoClaimsBinding">  <security authenticationMode="IssuedToken"            messageSecurityVersion="WSSecurity11WSTrust13WSSecureConversation13WSSecurityPolicy12BasicSecurityProfile10"            requireSecurityContextCancellation="false">    <issuedTokenParameters tokenType="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV2.0">      <claimTypeRequirements>        <add claimType="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name" isOptional="false"/>        <add claimType="http://SOAwareSamples/2008/05/AgeClaim" isOptional="false"/>              </claimTypeRequirements>      <issuer address="http://localhost:6000/SOAwareSTS"                                               bindingConfiguration="stsBinding"                binding="ws2007HttpBinding">        <identity>          <dns value="WCFSTS"/>        </identity>      </issuer>      <issuerMetadata address="http://localhost:6000/mex"></issuerMetadata>    </issuedTokenParameters>  </security>  <httpTransport/></binding></customBinding>
+</del></p>
+
+<p>\</p>
+
+<p>You basically have there, the information required by WCF to connect to
+the STS (or token issuer), and the claims that the service is expecting.
+This binding is also referencing another existing binding “stsBinding”,
+that the client will use to connect and secure the communication with
+the STS. if you want to store the same thing in SO-Aware, you will need
+a way to configure a binding in a way that can reference existing
+bindings. That can be done using the “Parent” property as you can see in
+the image below,  </p>
+
+<p><a href="http://www.tellagostudios.com/blogEntries/federation/parentBinding.png"><img src="http://weblogs.asp.net/blogs/cibrax/parentBinding1_566F70B3.png" title="parentBinding[1]" alt="parentBinding[1]" /></a></p>
+
+<p>Once you have the binding stored and correctly configured in the the
+repository, it’s a matter of using the SO-Aware service host for
+configuring existing services with that binding.</p>
+
+<p><del> {#codeSnippet style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+[ServiceContract()]public interface IEchoClaims{    [OperationContract]    List<string> Echo();}public class EchoClaims : IEchoClaims{    public List<string> Echo()    {        List<string> claims = new List<string>();        IClaimsPrincipal principal = Thread.CurrentPrincipal as IClaimsPrincipal;                foreach (IClaimsIdentity identity in principal.Identities)        {            foreach (Claim claim in identity.Claims)            {                claims.Add(string.Format(&ldquo;{0} &ndash; {1}&rdquo;,                    claim.ClaimType, claim.Value));            }        }        return claims;    }}
+</del></p>
+
+<p>\</p>
+
+<p><del> {#codeSnippet style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+<serviceRepository url="http://localhost/SoAware/ServiceRepository.svc">     <services>       <service name="ref:EchoClaims(1.0)@dev" type="SOAware.Samples.EchoClaims, Service"/>     </services> </serviceRepository>
+</del></p>
+
+<p>\
+As you can see, the configuration is very straightforward. The developer
+configuring the service does not need to know anything about how to
+configure the WCF bindings or federated security. He only needs to
+reference an existing service configuration in the repository. This
+assumes the service was already configured in the Portal or using the
+OData API.</p>
+
+<p> </p>
+
+<p><a href="http://www.tellagostudios.com/blogEntries/federation/ServiceConfig.png"><img src="http://weblogs.asp.net/blogs/cibrax/ServiceConfig1_0D694EED.png" title="ServiceConfig[1]" alt="ServiceConfig[1]" /></a></p>
+
+<p> </p>
+
+<p>The same thing happens on the client side, no configuration is needed at
+all. The developer can use the “ConfigurableProxyFactory” and the
+“ConfigurationResolver” classes that SO-Aware provides to automatically
+discover and resolve all the service configuration (service address,
+bindings and behaviors). In fact, the developer does not know anything
+about where the STS is, which binding uses, or which certificates are
+used to secure the communication. All that is stored in the repository,
+and automatically resolved by the SO-Aware configuration classes.</p>
+
+<p> </p>
+
+<p><del> {#codeSnippet style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+static void ExecuteServiceWithMetadataResolution(){    ConfigurableProxyFactory<IEchoClaims> factory = new ConfigurableProxyFactory<IEchoClaims>(        ServiceUri,        &ldquo;EchoClaims(1.0)&rdquo;,        &ldquo;dev&rdquo;);    var endpointBehaviors = resolver.ResolveEndpointBehavior(&ldquo;echoClaimsEndpointBehavior&rdquo;);    foreach (var endpointBehavior in endpointBehaviors.Behaviors)    {        if (factory.Endpoint.Behaviors.Contains(endpointBehavior.GetType()))        {            factory.Endpoint.Behaviors.Remove(endpointBehavior.GetType());        }        factory.Endpoint.Behaviors.Add(endpointBehavior);    }    factory.Credentials.UserName.UserName = &ldquo;joe&rdquo;;    factory.Credentials.UserName.Password = &ldquo;bar&rdquo;;    IEchoClaims client = factory.CreateProxy();    try    {        string[] claims = client.Echo();        foreach (string claim in claims)        {            Console.WriteLine(claim);        }    }    catch (TimeoutException exception)    {        Console.WriteLine(&ldquo;Got {0}&rdquo;, exception.ToString());        ((IContextChannel)client).Abort();    }    catch (CommunicationException exception)    {        Console.WriteLine(&ldquo;Got {0}&rdquo;, exception.ToString());        IContextChannel channel = (IContextChannel)client;        ((IContextChannel)client).Abort();    }    finally    {        ((IContextChannel)client).Close();    }}
+</del></p>
+
+<p>\</p>
+
+<p>In addition, as the Secure Token Service could also be implemented with
+WCF and WIF, you can also resolve the configuration for that service
+from the repository by reusing the “stsBinding” in the given example
+(WSTrustServiceContract is one of the service contracts that WIF
+provides for implementing a STS).</p>
+
+<p> </p>
+
+<p><del> {#codeSnippet style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
+<serviceRepository url="http://localhost/SoAware/ServiceRepository.svc">    <services>      <service name="ref:STS(1.0)@dev"         type="Microsoft.IdentityModel.Protocols.WSTrust.WSTrustServiceContract,         Microsoft.IdentityModel, Version=3.5.0.0, Culture=neutral,         PublicKeyToken=31bf3856ad364e35"/>    </services></serviceRepository>
+</del></p>
+
+<p>\</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1638,374 +1772,6 @@ LastNameEqualsTo(string lastName) \
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2010/05/17/enabling-service-availability-in-wcf-services/">Enabling Service Availability in WCF Services</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2010-05-17T00:00:00-03:00" pubdate data-updated="true">May 17<span>th</span>, 2010</time>
-        
-         | <a href="/blog/2010/05/17/enabling-service-availability-in-wcf-services/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>It is very important for the enterprise to know which services are
-operational at any given point. There are many factors that can affect
-the availability of the services, some of them are external like a
-database not responding or any dependant service not working. However,
-in some cases, you only want to know whether a service is up or down, so
-a simple heart-beat mechanism with “Ping” messages would do the trick.
-Unfortunately, WCF does not provide a built-in mechanism to support this
-functionality, and you probably don’t to implement a “Ping” operation in
-any service that you have out there. For solving this in a generic way,
-there is a WCF extensibility point that comes to help us, the “Operation
-Invokers”. In a nutshell, an operation invoker is the class responsible
-invoking the service method with a set of parameters and generate the
-output parameters with the return value.</p>
-
-<p>What I am going to do here is to implement a custom operation invoker
-that intercepts any call to the service, and detects whether a “Ping”
-header was attached to the message. If the “Ping” header is detected,
-the operation invoker returns a new header to tell the client that the
-service is alive, and the real operation execution is omitted. In that
-way, we have a simple heart beat mechanism based on the messages that
-include a &ldquo;Ping” header, so the client application can determine at any
-point whether the service is up or down.</p>
-
-<p>My operation invoker wraps the default implementation attached by
-default to any operation by WCF.</p>
-
-<p>~~~~ {.code}
-internal class PingOperationInvoker : IOperationInvoker
-{
-  IOperationInvoker innerInvoker;
-  object[] outputs = null;
-  object returnValue = null;</p>
-
-<p>  public const string PingHeaderName = &ldquo;Ping&rdquo;;
-  public const string PingHeaderNamespace = &ldquo;<a href="http://tellago.serviceModel">http://tellago.serviceModel</a>&rdquo;;</p>
-
-<p>  public PingOperationInvoker(IOperationInvoker innerInvoker, OperationDescription description)
-  {</p>
-
-<pre><code>this.innerInvoker = innerInvoker;
-outputs = description.SyncMethod.GetParameters()
-      .Where(p =&gt; p.IsOut)
-      .Select(p =&gt; DefaultForType(p.ParameterType)).ToArray();
-
-var returnValue = DefaultForType(description.SyncMethod.ReturnType);
-</code></pre>
-
-<p>  }</p>
-
-<p>  private static object DefaultForType(Type targetType)
-  {</p>
-
-<pre><code>return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
-</code></pre>
-
-<p>  }</p>
-
-<p>  public object Invoke(object instance, object[] inputs, out object[] outputs)
-  {</p>
-
-<pre><code>object returnValue;
-
-if (Invoke(out returnValue, out outputs))
-{
-  return returnValue;
-}
-else
-{
-  return this.innerInvoker.Invoke(instance, inputs, out outputs);
-}
-</code></pre>
-
-<p>  }</p>
-
-<p>  private bool Invoke(out object returnValue, out object[] outputs)
-  {</p>
-
-<pre><code>object untypedProperty = null;
-if (OperationContext.Current
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {.code}
-.IncomingMessageProperties.TryGetValue(HttpRequestMessageProperty.Name, out untypedProperty))</p>
-
-<pre><code>{
-  var httpRequestProperty = untypedProperty as HttpRequestMessageProperty;
-  if (httpRequestProperty != null)
-  {
-    if (httpRequestProperty.Headers[PingHeaderName] != null)
-    {
-      outputs = this.outputs;
-
-      if (OperationContext.Current
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {.code}
-.IncomingMessageProperties.TryGetValue(HttpRequestMessageProperty.Name, out untypedProperty))</p>
-
-<pre><code>      {
-         var httpResponseProperty = untypedProperty as HttpResponseMessageProperty;
-
-         httpResponseProperty.Headers.Add(PingHeaderName, "Ok");
-      }
-
-      returnValue = this.returnValue;
-
-      return true;
-   }
-}
-</code></pre>
-
-<p>   }</p>
-
-<p>   var headers = OperationContext.Current.IncomingMessageHeaders;
-   if (headers.FindHeader(PingHeaderName, PingHeaderNamespace) > -1)
-   {</p>
-
-<pre><code> outputs = this.outputs;
-
- MessageHeader&lt;string&gt; header = new MessageHeader&lt;string&gt;("Ok");
- var untyped = header.GetUntypedHeader(PingHeaderName, PingHeaderNamespace);
-
- OperationContext.Current.OutgoingMessageHeaders.Add(untyped);
-
- returnValue = this.returnValue;
-
- return true;
-</code></pre>
-
-<p>   }</p>
-
-<p>   returnValue = null;
-   outputs = null;</p>
-
-<p>   return false;
- }
-}
-~~~~</p>
-
-<p><a href="http://11011.net/software/vspaste"></a></p>
-
-<p>The implementation above looks for the “Ping” header either in the Http
-Request or the Soap message. \
-The next step is to implement a behavior for attaching this operation
-invoker to the services we want to monitor.</p>
-
-<p>~~~~ {.code}
-[AttributeUsage(AttributeTargets.Method
-  | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
- public class PingBehavior : Attribute, IServiceBehavior, IOperationBehavior
- {
-   public void AddBindingParameters(ServiceDescription serviceDescription,</p>
-
-<pre><code>   ServiceHostBase serviceHostBase, Collection&lt;ServiceEndpoint&gt; endpoints, 
-   BindingParameterCollection bindingParameters)
-</code></pre>
-
-<p>   {
-   }</p>
-
-<p>   public void ApplyDispatchBehavior(ServiceDescription serviceDescription,</p>
-
-<pre><code>    ServiceHostBase serviceHostBase)
-</code></pre>
-
-<p>   {
-   }</p>
-
-<p>   public void Validate(ServiceDescription serviceDescription,</p>
-
-<pre><code>    ServiceHostBase serviceHostBase)
-</code></pre>
-
-<p>   {</p>
-
-<pre><code> foreach (var endpoint in serviceDescription.Endpoints)
- {
-   foreach (var operation in endpoint.Contract.Operations)
-   {
-     if (operation.Behaviors.Find&lt;PingBehavior&gt;() == null)
-          operation.Behaviors.Add(this);
-   }
- }
-</code></pre>
-
-<p>   }</p>
-
-<p>   public void AddBindingParameters(OperationDescription operationDescription,</p>
-
-<pre><code>    BindingParameterCollection bindingParameters)
-</code></pre>
-
-<p>   {
-   }</p>
-
-<p>   public void ApplyClientBehavior(OperationDescription operationDescription,</p>
-
-<pre><code>      ClientOperation clientOperation)
-</code></pre>
-
-<p>   {
-   }</p>
-
-<p>   public void ApplyDispatchBehavior(OperationDescription operationDescription,</p>
-
-<pre><code>    DispatchOperation dispatchOperation)
-</code></pre>
-
-<p>   {</p>
-
-<pre><code>  dispatchOperation.Invoker = 
-      new PingOperationInvoker(dispatchOperation.Invoker, operationDescription);
-</code></pre>
-
-<p>   }</p>
-
-<p>   public void Validate(OperationDescription operationDescription)
-   {</p>
-
-<p>   }
- }
-~~~~</p>
-
-<p>As an operation invoker can only be added in an “operation behavior”, a
-trick I learned in the past is that you can implement a service behavior
-as well and use the “Validate” method to inject it in all the
-operations, so the final configuration is much easier and cleaner. You
-only need to decorate the service with a simple attribute to enable the
-“Ping” functionality.</p>
-
-<p>~~~~ {.code}
-[PingBehavior]
-public class HelloWorldService : IHelloWorld
-{
-  public string Hello(string name)
-  {</p>
-
-<pre><code>return "Hello " + name;
-</code></pre>
-
-<p>  }
-}
-~~~~</p>
-
-<p><a href="http://11011.net/software/vspaste"></a></p>
-
-<p>On the other hand, the client application needs to send a dummy message
-with a “Ping” header to detect whether the service is available or not.
-In order to simplify this task, I created a extension method in the WCF
-client channel to do this work.</p>
-
-<p>~~~~ {.code}
-public static class ClientChannelExtensions
-{
-  const string PingNamespace = &ldquo;<a href="http://tellago.serviceModel">http://tellago.serviceModel</a>&rdquo;;
-  const string PingName = &ldquo;Ping&rdquo;;</p>
-
-<p>  public static bool IsAvailable<TChannel>(this IClientChannel channel,</p>
-
-<pre><code>   Action&lt;TChannel&gt; operation)
-</code></pre>
-
-<p>  {</p>
-
-<pre><code>try
-{
-  using (OperationContextScope scope = new OperationContextScope(channel))
-  {
-    MessageHeader&lt;string&gt; header = new MessageHeader&lt;string&gt;(PingName);
-    var untyped = header.GetUntypedHeader(PingName, PingNamespace);
-    OperationContext.Current.OutgoingMessageHeaders.Add(untyped);
-
-    try
-    {
-      operation((TChannel)channel);
-      var headers = OperationContext.Current.IncomingMessageHeaders;
-      if (headers.Any(h =&gt; h.Name == PingName &amp;&amp; h.Namespace == PingNamespace))
-      {
-        return true;
-      }
-      else
-      {
-        return false;
-      }
-    }
-    catch (CommunicationException)
-    {
-      return false;
-    }
-   }
- }
- catch (Exception)
- {
-   return false;
- }
-</code></pre>
-
-<p>   }
-  }
-~~~~</p>
-
-<p><a href="http://11011.net/software/vspaste"></a></p>
-
-<p>This extension method basically adds a “Ping” header to the request
-message, executes the operation passed as argument (Action&lt;TChannel>
-operation), and looks for the corresponding “Ping” header in the
-response to see the results.</p>
-
-<p>The client application can use this extension with a single line of
-code,</p>
-
-<p><del> {.code}
-var client = new ServiceReference.HelloWorldClient();
-var isAvailable = client.InnerChannel.IsAvailable<IHelloWorld>(&copy; => c.Hello(null));
-</del></p>
-
-<p><a href="http://11011.net/software/vspaste"></a></p>
-
-<p>The “isAvailable” variable will tell the client application whether the
-service is available or not.</p>
-
-<p>You can download the complete implementation from this
-<a href="/images/legacy/Ping.zip">location</a>.</p>
-
-<p> </p>
-
-<p><a href="http://11011.net/software/vspaste"> </a></p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/11/">&larr; Older</a>
@@ -2023,6 +1789,10 @@ service is available or not.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
       </li>
     
@@ -2036,10 +1806,6 @@ service is available or not.</p>
     
       <li class="post">
         <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
       </li>
     
   </ul>

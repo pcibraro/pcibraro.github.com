@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="As most of you know, Pair programming is one of practices included in
-Extreme Programming. It is a programming technique that provides
-line-of-sight- &hellip;">
+  <meta name="description" content="WCF by default maintains a cache for security tokens per channel
+instance (A channel is related to a contract). Therefore, it is not
+possible to &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +81,485 @@ line-of-sight- &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/03/27/441227/">Client-side Token Cache for WCF</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-03-27T00:00:00-03:00" pubdate data-updated="true">Mar 27<span>th</span>, 2006</time>
+        
+         | <a href="/blog/2006/03/27/441227/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>WCF by default maintains a cache for security tokens per channel
+instance (A channel is related to a contract). Therefore, it is not
+possible to reuse the same token for different channel instances.</p>
+
+<p>Consider the following sample, a client application that consumes
+different services using a SAML token.</p>
+
+<p> </p>
+
+<p>IHelloWorldChannel helloWorldService = factory.CreateChannel();</p>
+
+<p>string response = helloWorldService.HelloWorld(&ldquo;John Doe&rdquo;);</p>
+
+<p>Console.WriteLine(response);</p>
+
+<p>helloWorldService = factory.CreateChannel();</p>
+
+<p>response = helloWorldService.HelloWorld(&ldquo;John Doe 2&rdquo;);</p>
+
+<p>Console.WriteLine(response);</p>
+
+<p>factory = new ChannelFactory&lt;IAnotherChannel>(&ldquo;anotherService&rdquo;);</p>
+
+<p>helloWorldService = factory.CreateChannel();</p>
+
+<p>response = helloWorldService.HelloWorld(&ldquo;John Doe 3&rdquo;);</p>
+
+<p>Console.WriteLine(response);</p>
+
+<p> </p>
+
+<p>In this case, I used three different channel instances and therefore a
+different SAML token for each service. (Each channel made an addition
+call to the STS in order to ask for a SAML token).</p>
+
+<p>Fortunately, WCF provides a way to cache tokens outside the scope of a
+channel and reuse them later until they expire. </p>
+
+<p>During the course of this post, I will show the required steps to build
+a client-side token cache to reuse tokens obtained from a STS.  </p>
+
+<p> </p>
+
+<p>First of all, I created a custom ClientCredentials class in order to
+return a custom SecurityTokenManager class. The SecurityTokenManager
+class is a kind of entry point to modify the process involved in the
+creation of a security token.</p>
+
+<p> </p>
+
+<p>/// &lt;summary></p>
+
+<p>/// Custom implementation</p>
+
+<p>/// &lt;/summary></p>
+
+<p>class CustomClientCredentials : ClientCredentials</p>
+
+<p>{</p>
+
+<p>  public CustomClientCredentials()</p>
+
+<p>      : base()</p>
+
+<p>  {</p>
+
+<p>  }</p>
+
+<p>  protected CustomClientCredentials(ClientCredentials other)</p>
+
+<p>     : base(other)</p>
+
+<p>  {</p>
+
+<p>  }</p>
+
+<p>  protected override ClientCredentials CloneCore()</p>
+
+<p>  {</p>
+
+<p>    return new CustomClientCredentials(this);</p>
+
+<p>  }</p>
+
+<p>  /// &lt;summary></p>
+
+<p>  /// Returns a custom security token manager</p>
+
+<p>  /// &lt;/summary></p>
+
+<p>  /// &lt;returns>&lt;/returns></p>
+
+<p>  public override System.IdentityModel.Selectors.SecurityTokenManager
+CreateSecurityTokenManager()</p>
+
+<p>  {</p>
+
+<p>    return new CustomClientCredentialsSecurityTokenManager(this);</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>Secondly, I declared my own SecurityTokenManager.</p>
+
+<p> </p>
+
+<p>class CustomClientCredentialsSecurityTokenManager :
+ClientCredentialsSecurityTokenManager</p>
+
+<p>{</p>
+
+<p>  private static Dictionary&lt;Uri, CustomIssuedSecurityTokenProvider>
+providers = new Dictionary&lt;Uri, CustomIssuedSecurityTokenProvider>();</p>
+
+<p>  public CustomClientCredentialsSecurityTokenManager(ClientCredentials
+credentials)</p>
+
+<p>       : base(credentials)</p>
+
+<p>  {</p>
+
+<p>  }</p>
+
+<p>  /// &lt;summary></p>
+
+<p>  /// Returns a custom token provider when a issued token is required</p>
+
+<p>  /// &lt;/summary></p>
+
+<p>  public override System.IdentityModel.Selectors.SecurityTokenProvider
+CreateSecurityTokenProvider(System.IdentityModel.Selectors.SecurityTokenRequirement
+tokenRequirement)</p>
+
+<p>  {</p>
+
+<p>    if (this.IsIssuedSecurityTokenRequirement(tokenRequirement))</p>
+
+<p>    {</p>
+
+<p>      IssuedSecurityTokenProvider baseProvider =
+(IssuedSecurityTokenProvider)base.CreateSecurityTokenProvider(tokenRequirement);</p>
+
+<p>      CustomIssuedSecurityTokenProvider provider = new
+CustomIssuedSecurityTokenProvider(baseProvider);</p>
+
+<p>      return provider;</p>
+
+<p>    }</p>
+
+<p>    else</p>
+
+<p>    {</p>
+
+<p>      return base.CreateSecurityTokenProvider(tokenRequirement);</p>
+
+<p>    }</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>For this sample, I only want to cache issued tokens (Tokens obtained
+from a STS) and thefore I am using the IsIssuedSecurityTokenRequeriment
+method to determine if the channel is requesting an issued token or
+not. </p>
+
+<p> </p>
+
+<p>Lastly, I created a simple Cache helper and a custom token provider to
+reuse the issued tokens.</p>
+
+<p> </p>
+
+<p>/// &lt;summary></p>
+
+<p>/// Helper class used as cache for security tokens</p>
+
+<p>/// &lt;/summary></p>
+
+<p>class TokenCache</p>
+
+<p>{</p>
+
+<p>   private const int DefaultTimeout = 1000;</p>
+
+<p>   private static Dictionary&lt;Uri, SecurityToken> tokens = new
+Dictionary&lt;Uri, SecurityToken>();</p>
+
+<p>   private static ReaderWriterLock tokenLock = new ReaderWriterLock();</p>
+
+<p>   private TokenCache()</p>
+
+<p>   {</p>
+
+<p>   }</p>
+
+<p>   public static SecurityToken GetToken(Uri endpoint)</p>
+
+<p>   {</p>
+
+<p>     SecurityToken token = null;</p>
+
+<p>     tokenLock.AcquireReaderLock(DefaultTimeout);</p>
+
+<p>     try</p>
+
+<p>     {</p>
+
+<p>       tokens.TryGetValue(endpoint, out token);</p>
+
+<p>       return token;</p>
+
+<p>     }</p>
+
+<p>     finally</p>
+
+<p>     {</p>
+
+<p>       tokenLock.ReleaseReaderLock();</p>
+
+<p>     }</p>
+
+<p>   }</p>
+
+<p>   public static void AddToken(Uri endpoint, SecurityToken token)</p>
+
+<p>   {</p>
+
+<p>     tokenLock.AcquireWriterLock(DefaultTimeout);</p>
+
+<p>     try</p>
+
+<p>     {</p>
+
+<p>       if (tokens.ContainsKey(endpoint))</p>
+
+<p>         tokens.Remove(endpoint);</p>
+
+<p>         tokens.Add(endpoint, token);</p>
+
+<p>     }</p>
+
+<p>     finally</p>
+
+<p>     {</p>
+
+<p>       tokenLock.ReleaseWriterLock();</p>
+
+<p>     }</p>
+
+<p>   }</p>
+
+<p> }</p>
+
+<p> </p>
+
+<p> /// &lt;summary></p>
+
+<p> /// Custom token provider. This class keeps the tokens outside of the
+channel</p>
+
+<p> /// so they can be reused</p>
+
+<p> /// &lt;/summary></p>
+
+<p> class CustomIssuedSecurityTokenProvider : IssuedSecurityTokenProvider</p>
+
+<p> {</p>
+
+<p>   private IssuedSecurityTokenProvider innerProvider;</p>
+
+<p>   /// &lt;summary></p>
+
+<p>   /// Constructor</p>
+
+<p>   /// &lt;/summary></p>
+
+<p>   public CustomIssuedSecurityTokenProvider(IssuedSecurityTokenProvider
+innerProvider)</p>
+
+<p>            : base()</p>
+
+<p>   {</p>
+
+<p>      this.innerProvider = innerProvider;</p>
+
+<p>      this.CacheIssuedTokens = innerProvider.CacheIssuedTokens;</p>
+
+<p>      this.IdentityVerifier = innerProvider.IdentityVerifier;</p>
+
+<p>      this.IssuedTokenRenewalThresholdPercentage =
+innerProvider.IssuedTokenRenewalThresholdPercentage;</p>
+
+<p>      this.IssuerAddress = innerProvider.IssuerAddress;</p>
+
+<p>      this.IssuerBinding = innerProvider.IssuerBinding;</p>
+
+<p>      foreach (IEndpointBehavior behavior in
+innerProvider.IssuerChannelBehaviors)</p>
+
+<p>      {</p>
+
+<p>        this.IssuerChannelBehaviors.Add(behavior);</p>
+
+<p>      }</p>
+
+<p>      this.KeyEntropyMode = innerProvider.KeyEntropyMode;</p>
+
+<p>      this.MaxIssuedTokenCachingTime =
+innerProvider.MaxIssuedTokenCachingTime;</p>
+
+<p>      this.MessageSecurityVersion =
+innerProvider.MessageSecurityVersion;</p>
+
+<p>      this.SecurityAlgorithmSuite =
+innerProvider.SecurityAlgorithmSuite;</p>
+
+<p>      this.SecurityTokenSerializer =
+innerProvider.SecurityTokenSerializer;</p>
+
+<p>      this.TargetAddress = innerProvider.TargetAddress;</p>
+
+<p>      foreach (XmlElement parameter in
+innerProvider.TokenRequestParameters)</p>
+
+<p>      {</p>
+
+<p>        this.TokenRequestParameters.Add(parameter);</p>
+
+<p>      }</p>
+
+<p>      this.innerProvider.Open();</p>
+
+<p>    }                              </p>
+
+<p> </p>
+
+<p>   /// &lt;summary></p>
+
+<p>   /// Gets the security token</p>
+
+<p>   /// &lt;/summary></p>
+
+<p>   /// &lt;param name=&ldquo;timeout&rdquo;>&lt;/param></p>
+
+<p>   /// &lt;returns>&lt;/returns></p>
+
+<p>   protected override System.IdentityModel.Tokens.SecurityToken
+GetTokenCore(TimeSpan timeout)</p>
+
+<p>   {</p>
+
+<p>     SecurityToken securityToken = null;</p>
+
+<p>     if (this.CacheIssuedTokens)</p>
+
+<p>     {</p>
+
+<p>       securityToken =
+TokenCache.GetToken(this.innerProvider.IssuerAddress.Uri);</p>
+
+<p>       if (securityToken == null ||
+!IsServiceTokenTimeValid(securityToken))</p>
+
+<p>       {</p>
+
+<p>         securityToken = innerProvider.GetToken(timeout);</p>
+
+<p>         TokenCache.AddToken(this.innerProvider.IssuerAddress.Uri,
+securityToken);</p>
+
+<p>       }</p>
+
+<p>     }</p>
+
+<p>     else</p>
+
+<p>     {</p>
+
+<p>       securityToken = innerProvider.GetToken(timeout);</p>
+
+<p>     }</p>
+
+<p>     return securityToken;</p>
+
+<p>   }</p>
+
+<p> </p>
+
+<p>   /// &lt;summary></p>
+
+<p>   /// Checks the token expiration.</p>
+
+<p>   /// A more complex algorithm can be used here to determine whether
+the token is valid or not.</p>
+
+<p>   /// &lt;/summary></p>
+
+<p>   private bool IsServiceTokenTimeValid(SecurityToken serviceToken)</p>
+
+<p>   {</p>
+
+<p>     return (DateTime.UtcNow &lt;=
+serviceToken.ValidTo.ToUniversalTime());</p>
+
+<p>   }</p>
+
+<p> </p>
+
+<p>  \~CustomIssuedSecurityTokenProvider()</p>
+
+<p>  {</p>
+
+<p>    this.innerProvider.Close();</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>The provider is quite simple, it caches the tokens by IssuerAddress and
+checks the token expiration before returning it. When the token is
+expired, it gets a new token calling the inner token provider.</p>
+
+<p>In order to register the CustomClientCredentials class, the following
+configuration is required (Using the &ldquo;type&rdquo; attribute)</p>
+
+<p> </p>
+
+<p>&lt;behavior name=&ldquo;ServiceBehavior&rdquo;></p>
+
+<p>  &lt;clientCredentials type=&ldquo;CustomClientCredentials, MyAssembly&rdquo;></p>
+
+<p>  &lt;/clientCredentials></p>
+
+<p>&lt;/behavior></p>
+
+<p> </p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -2334,409 +2813,6 @@ parameters)</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2006/01/24/436334/">WS-Polling Implementation for WSE</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2006-01-24T00:00:00-03:00" pubdate data-updated="true">Jan 24<span>th</span>, 2006</time>
-        
-         | <a href="/blog/2006/01/24/436334/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>I used some of free time last week to write a prototype of
-<a href="http://www.w3.org/Submission/ws-polling/">WS-Polling</a> for WSE 3.0. \
-Unfortunately, I couldn&rsquo;t finish the complete specification but it is
-enough to execute web services asynchronously.\
-If you haven&rsquo;t read anything about WS-Polling before, it is basically a
-specification to execute web services asynchronously and poll to the
-server later in order to get the response.\
-If you take a look to this specification, you probably will able to see
-three main parts:\
-\
-1. A mechanism to execute web services and store the response for later
-retrieval\
-2. Some headers to query information about the status of an execution\
-3. A mailbox implementation\
-\
-For the moment, I only implemented the first part and I&rsquo;m trying to
-finish the second one.\
-\</p>
-
-<h3>Implementation structure</h3>
-
-<p>The diagram below illustrates the classes used by this implementation. \
-\
-<img src="/images/legacy/Classes.gif" alt="" /> \
-\
-I defined a abstract class PollingService that declares a method to get
-messages. This class also uses an IMessageStore provider to store and
-retrieve the request and response messages for the concrete service. \
-The concrete service is a normal service that implements different
-business methods and inherits from the base class PollingService. e.g.
-MyHelloWorldService\
-The IMessageStore is an interface that declares methods to store and
-retrieve messages from an specific store such as Database, MSMQ or a
-file. \
-PollingClient and ConcreteProxy are both proxies to invoke methods in
-the Concrete service, but the last one was created by the tool
-WSEWsdl3.exe and it doesn&rsquo;t know how to invoke the service
-asynchronously.\
-I had to develop a custom PollingClient since the proxy created with
-WSEWsdl3.exe does not offer the following features:\
-\
-1. Access to the WS-Addressing headers. For this implementation, the
-client must change the wsa:ReplyTo header and get access to others
-headers\
-such as wsa:MessageID and wsa:To. \
-2. Make a one-way call. The proxy created by the tool waits for an
-answer from the service in most of the cases.</p>
-
-<h3>How this solution works</h3>
-
-<p><img src="/images/legacy/Sequence.gif" alt="" /></p>
-
-<p>​1. The client application wants to invoke a asynchronous method on the
-webservice so it creates a PollingClient instance and calls to the
-method &ldquo;InvokeService&rdquo;.\
-2. The PollingClient instance sets the value
-&ldquo;<a href="http://www.w3.org/2005/08/ws-polling/HoldResponse">http://www.w3.org/2005/08/ws-polling/HoldResponse</a>&rdquo; for the header
-wsa:ReplyTo and uses the WSE infrastructure to send the request message
-to the server.\
-3. The concrete service receives the request message and checks the
-value for the wsa:ReplyTo header. \
-If this value is &ldquo;<a href="http://www.w3.org/2005/08/ws-polling/HoldResponse">http://www.w3.org/2005/08/ws-polling/HoldResponse</a>&rdquo;, it
-executes the concrete method asynchronously, otherwise it executes the
-concrete method in the usual way.\
-4. If the concrete method was executed asynchronously, the service
-stores the request and response messages by means of the configured
-IStoreProvider. Otherwise, it returns the response message to the
-client.\
-5. The client application can ask later for the response message using
-the GetMessages method on the PollingClient instance. \
-(The GetMessages method will receive the wsa:MessageID for the original
-request message as parameter)</p>
-
-<h3>Some code</h3>
-
-<p>​1. Creating the Concrete service\</p>
-
-<p>[WebService(Namespace = &ldquo;<a href="http://tempuri.org/">http://tempuri.org/</a>&rdquo;)]\
-[WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]\
-[Policy(&ldquo;ServicePolicy&rdquo;)]\
-public class Service : WSEPolling.PollingService\
-{\
-\
-  public Service()\
-  {\
-\
-  }\
-\
-\
-  [SoapMethod(&ldquo;HelloWorld&rdquo;)]\
-  public string HelloWorld(string name)\
-  {\
-    return &ldquo;Hello World &rdquo; + name;\
-  }\
-\
-}\</p>
-
-<p>This class looks like a normal web service but it inherits from the base
-class PollingService.</p>
-
-<p>​2. Creating the client application\</p>
-
-<p>class Program\
-{\
-    static void Main(string[] args)\
-    {\
-      PollingClient client = new PollingClient(new
-Uri(&ldquo;<a href="http://localhost/WSEPollingService/Service.ashx">http://localhost/WSEPollingService/Service.ashx</a>&rdquo;));\
-\
-      client.SetPolicy(&ldquo;ClientPolicy&rdquo;); \
-\
-      string s = &ldquo;Test&rdquo;;\
-\
-      Uri id = client.InvokeService(&ldquo;HelloWorld&rdquo;, s,
-&ldquo;<a href="http://tempuri.org/">http://tempuri.org/</a>&rdquo;);\
-\
-      System.Threading.Thread.Sleep(1000);\
-\
-      WSEPolling.GetMessageRequest request = new
-WSEPolling.GetMessageRequest();\
-      request.MessageID = id.ToString();\
-\
-      //Gets the entire soap envelope\
-      SoapEnvelope response = client.GetMessage(request);\
-\
-      //Gets only the body of the soap envelope\
-      //string message = (string)client.GetMessageBody(request,
-typeof(string), &ldquo;<a href="http://tempuri.org/">http://tempuri.org/</a>&rdquo;);\
-\
-      string message = response.OuterXml;\
-\
-       Console.WriteLine(message);\
-    }\
-}</p>
-
-<p>In the code below, I created a PollingClient instance to invoke the
-&ldquo;HelloWorld&rdquo; service. The InvokeService method returns the wsa:MessageId
-value for the request message, which I keep in the variable &ldquo;id&rdquo;. \
-At the end, I retrieve the response message from the server passing the
-value of the variable &ldquo;id&rdquo; to the GetMessage method.\</p>
-
-<p>​3. The PollingService class</p>
-
-<p>public class PollingService : SoapService\
-{\
-  static IMessageStore _store;\
-\
-  static PollingService()\
-  {\
-    _store = new DatabaseMessageStore();\
-    _store.Init(null);\
-  }\
-\
-  [SoapMethod(WSPolling.Actions.GetMessage)]\
-  public virtual SoapEnvelope GetMessage(GetMessageRequest request)\
-  {\
-    SoapEnvelope envelope = _store.GetResponse(request);\
-\
-    RelatesTo relatesTo = new
-RelatesTo(RequestSoapContext.Current.Addressing.MessageID.Value);\
-    envelope.Context.Addressing.RelatesTo = relatesTo;\
-\
-    return envelope;\
-  }\
-\
-  protected override SoapMethodInvoker RouteRequest(SoapEnvelope
-request)\
-  {\
-    return new AsyncSoapMethodInvoker(this,
-base.RouteRequest(request));\
-  }\
-\
-  protected virtual void StoreResponse(SoapEnvelope response)\
-  {\
-    _store.StoreResponse (response); \
-  }\
-\
-  protected virtual void StoreRequest(SoapEnvelope request)\
-  {\
-     _store.StoreRequest(request);\
-  }\
-\
-  class AsyncSoapMethodInvoker : SoapMethodInvoker\
-  {\
-    private SoapMethodInvoker _invoker;\
-    private PollingService _service;\
-\
-    public AsyncSoapMethodInvoker(PollingService service,
-SoapMethodInvoker invoker)\
-    {\
-      this._invoker = invoker;\
-      this._service = service;\
-    }\
-\
-    public override SoapEnvelope Invoke(SoapEnvelope message)\
-    {\
-      if (message.Context.Addressing.Action !=
-WSPolling.Actions.GetMessage &amp;&amp;\
-        message.Context.Addressing.ReplyTo != null &amp;&amp;\
-        message.Context.Addressing.ReplyTo.Address.Value.ToString() ==
-WSPolling.HoldResponseURI)\
-      {\
-        this._service.StoreRequest(message);\
-        WaitCallback callBack = new WaitCallback(this.Invoke);\
-        ThreadPool.QueueUserWorkItem(callBack, message);\
-        return new SoapEnvelope();\
-      }\
-      else\
-      {\
-        SoapEnvelope response = _invoker.Invoke(message);\
-        return response;\
-      }\
-    }\
-\
-    public override bool OneWay\
-    {\
-      get { return _invoker.OneWay; }\
-    }\
-\
-    private void Invoke(object state)\
-    {\
-      SoapEnvelope request = (SoapEnvelope)state;\
-      SoapEnvelope response = _invoker.Invoke(request);\
-\
-      _service.StoreResponse(response);\
-    }\
-  }\
-}</p>
-
-<p>The RouteRequest is the key method in this implementation. \
-This method returns a SoapMethodInvoker instance, which knows how to
-call a specific method in the concrete service. (WSE provides a default
-implementation of this class)\
-In this case, I developed my own class AsyncSoapMethodInvoker, which
-calls to the SoapMethod synchronously or asynchronously depending on the
-value of wsa:ReplyTo header.\
-As you can see in the code, I used the Thread pool provided by .NET to
-execute the web method asynchronously.</p>
-
-<p>​4. The Database message store implementation</p>
-
-<p>class DatabaseMessageStore : IMessageStore\
-{\
-  private string _connectionString = null;\
-\
-  public void Init(XmlElement configuration)\
-  {\
-    ConnectionStringSettings settings =
-ConfigurationManager.ConnectionStrings[&ldquo;Messages&rdquo;];\
-\
-    if(settings == null)\
-      throw new ConfigurationErrorsException(&ldquo;The connection string
-&lsquo;Messages&rsquo; is not configured&rdquo;);\
-\
-    if(settings.ConnectionString == null)\
-      throw new ConfigurationErrorsException(&ldquo;Invalid value for the
-connection string &lsquo;Messages&rsquo;&rdquo;);\
-\
-    this._connectionString = settings.ConnectionString;\
-  }\
-\
-  public void StoreRequest(SoapEnvelope request)\
-  {\
-    using (SqlConnection connection = new
-SqlConnection(this._connectionString))\
-    {\
-      connection.Open();\
-      using (SqlCommand command = new SqlCommand(&ldquo;InsertMessage&rdquo;,
-connection))\
-      {\
-        command.CommandType = System.Data.CommandType.StoredProcedure;\
-        command.Parameters.Add(new SqlParameter(&ldquo;@MessageID&rdquo;,
-request.Context.Addressing.MessageID.Value.ToString()));\
-        command.Parameters.Add(new SqlParameter(&ldquo;@To&rdquo;,
-request.Context.Addressing.To.Value.ToString()));\
-\
-        command.ExecuteNonQuery();\
-      }\
-      connection.Close();\
-    }\
-  }\
-\
-  public void StoreResponse(SoapEnvelope response)\
-  {\
-    response.Context.Addressing.GetXml(response);\
-    using (SqlConnection connection = new
-SqlConnection(this._connectionString))\
-    {\
-      connection.Open();\
-      using (SqlCommand command = new SqlCommand(&ldquo;UpdateMessage&rdquo;,
-connection))\
-      {\
-        command.CommandType = System.Data.CommandType.StoredProcedure;\
-        command.Parameters.Add(new SqlParameter(&ldquo;@MessageID&rdquo;,
-response.Context.Addressing.RelatesTo.Value.ToString()));\
-        command.Parameters.Add(new SqlParameter(&ldquo;@Message&rdquo;,
-response.OuterXml));\
-        command.ExecuteNonQuery();\
-      }\
-      connection.Close();\
-    }\
-  }\
-\
-  public SoapEnvelope GetResponse(GetMessageRequest request)\
-  {\
-    SoapEnvelope response = new SoapEnvelope();\
-    using (SqlConnection connection = new
-SqlConnection(this._connectionString))\
-    {\
-      connection.Open();\
-      using (SqlCommand command = new SqlCommand(&ldquo;GetMessage&rdquo;,
-connection))\
-      {\
-        command.CommandType = System.Data.CommandType.StoredProcedure;\
-        command.Parameters.Add(new SqlParameter(&ldquo;@MessageID&rdquo;,
-request.MessageID.ToString()));\
-\
-        using (SqlDataReader reader =
-command.ExecuteReader(System.Data.CommandBehavior.CloseConnection))\
-        {\
-          if (reader.Read())\
-          {\
-            if (reader[&ldquo;Message&rdquo;] == DBNull.Value )\
-            {\
-              NoMessageAvailable noMessage = new
-NoMessageAvailable(Reason.ResponseNotReady);\
-              response.Context.Addressing.Action =
-WSPolling.Actions.NoMessageAvailable; \
-              response.SetBodyObject(noMessage);\
-            }\
-            else\
-            {\
-              string message = (string)reader[&ldquo;Message&rdquo;];\
-\
-              response.Load(new StringReader(message));\
-              response.Context.Addressing.RemoveXml(response);\
-            }\
-          }\
-          else\
-          {\
-            NoMessageAvailable noMessage = new
-NoMessageAvailable(Reason.NoMessageFound);\
-            response.Context.Addressing.Action =
-WSPolling.Actions.NoMessageAvailable; \
-            response.SetBodyObject(noMessage);\
-          }\
-\
-          reader.Close();\
-\
-        }\
-      }\
-\
-      connection.Close();\
-    }\
-\
-    return response;\
-  }\
-}</p>
-
-<p>This class is quite simple. It implements the interface IMessageStore
-and contains code to store and query messages from a SQL database. \
-\
-Well, this is all I have for the moment. You can download the code from
-the following <a href="/images/legacy/WSPolling.zip">location</a>.\
-This is a prototype and it should not be used in production
-environments.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/25/">&larr; Older</a>
@@ -2754,6 +2830,10 @@ environments.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
       </li>
     
@@ -2767,10 +2847,6 @@ environments.</p>
     
       <li class="post">
         <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
       </li>
     
   </ul>

@@ -9,9 +9,10 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="El proximo miercoles 20 de mayo a las 3 PM (GMT-05:00 Colombia, Panama),
-voy a estar presentando un MSDN webcast acerca de OpenID, OAuth
-y Windows &hellip;">
+  <meta name="description" content="After having playing with the current bits of
+OpenRasta
+(OR) for a while, I  am now able to see great advantages in using this
+framework over other &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +82,177 @@ y Windows &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/05/29/what-i-like-about-openrasta/">What I Like About OpenRasta</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-05-29T00:00:00-03:00" pubdate data-updated="true">May 29<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/05/29/what-i-like-about-openrasta/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>After having playing with the current bits of
+<a href="http://serialseb.blogspot.com/2008/10/openrasta-status-update.html">OpenRasta</a>
+(OR) for a while, I  am now able to see great advantages in using this
+framework over other existing frameworks for building RESTful services
+such as WCF or the ASP.NET MVC.</p>
+
+<p>Let’s explore some of the good features that make OpenRasta an excellent
+alternative at the moment of developing RESTful services.</p>
+
+<p>​1. Clean separation of resource representation from service
+implementation</p>
+
+<p>If we take a look at a service implementation in OR, the operations in a
+handler receive or return a resource, but they never specify the final
+representation of that resource. Resource representation is a pure
+responsibility of the encoders configured for service implementation (a
+handler in OR).</p>
+
+<p>In that way, we have a service implementation completely reusable for
+different resource representations.</p>
+
+<p>public class CustomerHandler</p>
+
+<p>{</p>
+
+<p>    public OperationResult Get(int customerId)</p>
+
+<p>    {</p>
+
+<p>        return new OperationResult.OK</p>
+
+<p>        {  </p>
+
+<p>            ResponseResource = &ldquo;Customer with id &rdquo; + customerId</p>
+
+<p>        };</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>Once we have the service implementation, we only need to configure the
+encoders for that service, which could be encoders for Xml, Json, Atom
+or any other representation. You are free to configure all the encoders
+you want for the same handler.</p>
+
+<p>ConfigureServer(() => ResourceSpace.Has.ResourcesOfType&lt;Customer>()</p>
+
+<p>    .AtUri(&ldquo;/customer/{customerId}&rdquo;)</p>
+
+<p>    .HandledBy&lt;CustomerHandler>()</p>
+
+<p>    .AndTranscodedBy&lt;OpenRasta.Codecs.JsonDataContractCodec>(null));</p>
+
+<p>This is a different story in WCF. First of all, the content type (Xml or
+Json) has to be specified as part of the operation definition. If we
+want to support different content types, we need to replicate the same
+operation only to change the content type. Although this point has been
+improved considerably in WCF 4.0, some service implementations are still
+absolutely tied to the resource representation. For example, an
+operation that returns syndications feeds. In WCF, we have to return a
+concrete implementation of
+System.ServiceModel.Syndication.SyndicationFeedFormatter. It is not a
+simple as return a collection of entities or resources and specify
+somewhere that we want to represent them as entries in a feed.</p>
+
+<p>This works much better in ADO.NET data services, where you can just
+return a resource or a collection of resources, and the framework itself
+will chose the best representation according to what the client
+initially sent in the “Accept” header. That representation could be Json
+or Atom, nothing changes in the service implementation (which is also
+automatically implemented). However, ADO.NET data services provide few
+extensibility points today for injecting custom code, and that is
+probably a good reason to move to OpenRasta.</p>
+
+<p>​2. URI resolution</p>
+
+<p>In OpenRasta, the URI resolution to a handler is also part of the
+service configuration. This gives a great flexibility to have many URIs
+that resolve to the same resource instance.</p>
+
+<p>A typical example is a parent-child relationship, for instance, a
+customer/orders relationship.</p>
+
+<p>You might want to have different URIs to get access to the orders,</p>
+
+<p>Customer/1/Orders/1 => Give me the order number 1 for the customer with
+ID 1</p>
+
+<p>Or you might want to access to the order directly</p>
+
+<p>Orders/1 => Give me the order number 1</p>
+
+<p>In OR, you have a single handler implementation for orders (order is the
+resource in this case), and multiple URIs that resolve to an operation
+in that particular handler.</p>
+
+<p>ConfigureServer(() => ResourceSpace.Has.ResourcesOfType&lt;Order>()</p>
+
+<p>    .AtUri(&ldquo;/customer/{customerId}/Orders/{orderId}&rdquo;)</p>
+
+<p>    .AndAt(&ldquo;/orders/{orderId}&rdquo;)</p>
+
+<p>    .HandledBy&lt;OrderHandler>()</p>
+
+<p>    .AndTranscodedBy&lt;OpenRasta.Codecs.JsonDataContractCodec>(null));</p>
+
+<p>This is a problem in WCF because the URI template is tied to the
+operation definition, if you want to have different URIs for the same
+resource, you basically have to copy/paste the same operation just to
+change the URIs.</p>
+
+<p>[WebGet(UriTemplate=&ldquo;/Orders/{orderId}&rdquo;)]</p>
+
+<p>public Order GetOrderById(int orderId)</p>
+
+<p>{</p>
+
+<p>  //implementation</p>
+
+<p>}</p>
+
+<p>[WebGet(UriTemplate = &ldquo;/Customers/{customerId}/Orders/{orderId}&rdquo;)]</p>
+
+<p>public Order GetCustomerOrder(int customerId, int orderId)</p>
+
+<p>{</p>
+
+<p>  //implementation</p>
+
+<p>}</p>
+
+<p>So, you will have as many operations as URI and content types you want
+to support in the service.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -932,110 +1104,6 @@ community worthy of recognition.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2009/03/27/streaming-large-content-from-a-wcf-restful-service/">Streaming Large Content From a WCF RESTFul Service</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2009-03-27T00:00:00-03:00" pubdate data-updated="true">Mar 27<span>th</span>, 2009</time>
-        
-         | <a href="/blog/2009/03/27/streaming-large-content-from-a-wcf-restful-service/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Streaming large content such as media content, images or files is a
-common scenario for RESTful services. If a scenario like this is not
-well addressed or implemented on the service side, there is a high risk
-of consuming server resources like memory or CPU in a matter of seconds.
-This usually happens when the complete content is loaded in memory
-before it is transferred to the service consumer.</p>
-
-<p>The WCF REST Starter kit introduced a new mechanism for addressing this
-scenario, an “AdapterStream” utility class, which basically pushes small
-pieces of content (and thus, only small memory buffers are used) to the
-client application as it becomes necessary.</p>
-
-<p>The kit also comes with an example “PushStyleStreaming” that shows this
-class in action</p>
-
-<p>Stream GetImage(string text)</p>
-
-<p>{</p>
-
-<p>    if (string.IsNullOrEmpty(text))</p>
-
-<p>    {</p>
-
-<p>        throw new WebProtocolException(HttpStatusCode.BadRequest, &ldquo;text
-must be specified&rdquo;, null);</p>
-
-<p>    }</p>
-
-<p>    Bitmap theBitmap = GenerateImage(text);</p>
-
-<p>    WebOperationContext.Current.OutgoingResponse.ContentType =
-&ldquo;image/jpeg&rdquo;;</p>
-
-<p>    return new AdapterStream((stream) => theBitmap.Save(stream,
-ImageFormat.Jpeg));</p>
-
-<p>}</p>
-
-<p>In the code above, the AdapterStream is used to transfer an image to a
-service consumer. As you can also notice in that code, that class
-receives a lambda  expression or Action&lt;T> delegate in the
-constructor. That provides some flexibility at the moment of generating
-the final stream that will be sent to the client application.</p>
-
-<p>Another example that uses an TextWriter for generating text content,</p>
-
-<p>  new AdapterStream((writer) =></p>
-
-<p>    {</p>
-
-<p>        writer.WriteLine(&ldquo;You said: &rdquo;);</p>
-
-<p>        writer.WriteLine(text);</p>
-
-<p>        writer.WriteLine(&ldquo;Didn&rsquo;t you?&rdquo;);</p>
-
-<p>        writer.Flush();</p>
-
-<p>    }, Encoding.UTF8);</p>
-
-<p>In addition to this feature, you might also want to have a better
-control of service usage by restricting the <a href="http://kennyw.com/indigo/150">throttling
-settings</a>. This is a good thing about REST
-services implemented with the WCF stack. Other implementations such as
-the ASP.NET MVC rely on the ASP.NET for handling this aspect, where
-these settings are applied only at application domain level (For all
-services running in the same app).</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/14/">&larr; Older</a>
@@ -1053,6 +1121,10 @@ services running in the same app).</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
       </li>
     
@@ -1066,10 +1138,6 @@ services running in the same app).</p>
     
       <li class="post">
         <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/01/full-text-searches-in-sql-azure-with-solr/">Full-Text Searches in SQL Azure With Solr</a>
       </li>
     
   </ul>
