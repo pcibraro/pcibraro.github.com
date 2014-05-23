@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="One of the common problems that you might find when using the generated
-DataServiceContext for consuming an existing WCF data service is that
-you &hellip;">
+  <meta name="description" content="One of the things that caught my attention when WCF Data Service was
+released a couple of years ago was the ability of using URI segments for
+passing &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +81,187 @@ you &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/11/01/new-iqueryable-support-for-http-services-in-wcf/">New IQueryable Support for Http Services in WCF</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-11-01T00:00:00-03:00" pubdate data-updated="true">Nov 1<span>st</span>, 2010</time>
+        
+         | <a href="/blog/2010/11/01/new-iqueryable-support-for-http-services-in-wcf/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>One of the things that caught my attention when WCF Data Service was
+released a couple of years ago was the ability of using URI segments for
+passing queries directly to an underline linq provider. This represented
+a very powerful feature for allowing clients to filter and manipulate a
+large data result set on the server side with a simple API and without
+incurring in any unnecessary performance penalty (the queries are
+performed and resolved in the data source itself most of the times) and
+having all that logic implemented in the service itself.</p>
+
+<p>I’ve always thought that this cool feature should be something that
+anyone could reuse in any service, and not something available in WCF
+data services only. For example, If you already had an existing REST
+service implementation, moving that logic to a WCF data service with
+OData support was only the option you had if you wanted to reuse that
+query support.  By moving your service to a WCF Data Service, you were
+also limiting your service to the content types supported by OData (Xml
+Atom and JSON), and it would only makes sense with services centered
+around the concepts of CRUD for manipulating data.</p>
+
+<p>Fortunately, this functionality has been moved to a separated library
+and released as part of the new WCF Web APIs in
+<a href="http://wcf.codeplex.com/">wcf.codeplex.com</a>. This means that you can
+now use the IQueryable support with almost the same linq operators that
+you already have in WCF Data Service as part of any existing WCF Http
+Service.</p>
+
+<p>There is a new “QueryComposition” behavior that you can associate to one
+of the service operations to support querying over the response data.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+private static List<Contact> contacts = new List<Contact>()
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>new Contact { Name = "First Contact", Id = totalContacts++ },
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>new Contact { Name = "Second Contact", Id = totalContacts++ },
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>new Contact { Name = "Third Contact", Id = totalContacts++ },
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>new Contact { Name = "Fourth Contact", Id = totalContacts++ },
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+};
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+ 
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+[WebGet(UriTemplate = &ldquo;&rdquo;)]
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+[QueryComposition]
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+public IEnumerable<Contact> Get()
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+{
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code>return contacts.AsQueryable();
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+}
+</del></p>
+
+<p>In the example above, the service operation “Get” is returning a list of
+contacts in which some of the Linq query operators can be passed as part
+of the request URL as the “QueryComposition” attribute has been
+associated to the operation.</p>
+
+<p>Therefore, you can do some of the following things,</p>
+
+<p>Use the &ldquo;#filter” segment to filter some of the data in the response
+resulset &ndash; <a href="http://localhost:8081/contacts/?$filter=Name">http://localhost:8081/contacts/?$filter=Name</a> eq &lsquo;First
+Contact&rsquo;</p>
+
+<p>Use the “#top” or “#skip” to get a subset of entries in the response &ndash;
+<a href="http://localhost:8081/contacts/?$skip=2&amp;$top=1">http://localhost:8081/contacts/?$skip=2&amp;$top=1</a></p>
+
+<p>And of course, many of the other supported operators available today as
+part of the OData spec can also be used.</p>
+
+<p>In addition to what you can do on the server side, there is also a nice
+support on the client side with a new IQueryable implementation that
+knows how to pass many of the linq operators as part of the URL to the
+service. This new implementation is “WebQuery&lt;T>” and it is part now
+of the HttpClient library also available as part of this WCF drop in
+codeplex.</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+string address = &ldquo;<a href="http://localhost:8081/contacts/">http://localhost:8081/contacts/</a>&rdquo;;
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+HttpClient client = new HttpClient(address);
+</del></p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+IQueryable<Contact> contacts = client.CreateQuery<Contact>().Where(c => c.Name == &ldquo;First Contact&rdquo;);
+</del></p>
+
+<p>In the example above, the client library will submit the following
+request to the service, <a href="http://localhost:8081/contacts/?$filter=Name">http://localhost:8081/contacts/?$filter=Name</a>
+eq &lsquo;First Contact&rsquo;. Several extensions methods have been added for the
+HttpClient class for creating new instances of WebQuery&lt;T>.</p>
+
+<p>This is only one of the cool features that the WCF team has added to the
+Http Stack, so I will explore the rest more in detail in following
+posts.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1893,137 +2074,6 @@ leveraging their scripting knowledge.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2010/08/27/some-wif-interop-gotchas/">Some WIF Interop Gotchas</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2010-08-27T00:00:00-03:00" pubdate data-updated="true">Aug 27<span>th</span>, 2010</time>
-        
-         | <a href="/blog/2010/08/27/some-wif-interop-gotchas/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>WIF is an excellent framework that allows you to develop an STS in just
-a few minutes if you know exactly what you are doing of course :). In my
-role as consultant and architect in Tellago, I went through several
-projects in which some level of customization was required at wire level
-to accomplish some interoperability between a STS built with WIF and
-existing federation solutions like ADFS 1.x and OpenSSO.</p>
-
-<p>The idea of this post is to show some of extensibility points that you
-will find in WIF to customize the WS-Trust messages, and issued tokens.</p>
-
-<p><strong>1. Making WIF to speak WS-Trust Feb 2005</strong></p>
-
-<p>WIF uses by default WS-Trust 1.3, which means that all the generated
-WS-Trust messages will use that spec unless you specify a different one.
-ADFS 1.x and OpenSSO both uses WS-Trust Feb 2005
-(<a href="http://schemas.xmlsoap.org/ws/2005/02/trust">http://schemas.xmlsoap.org/ws/2005/02/trust</a>)
-for the passive profile to support single sign on over the web.
-Therefore, if you want to generate WS-Trust messages that follow that
-spec version in your WIF passive STS, you need to modify a little bit
-the code you use for processing the RST messages.</p>
-
-<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-class FederatedPassiveSecurityTokenServiceOperations{    public static void ProcessRequest(HttpRequest request, IPrincipal principal,         SecurityTokenService sts, HttpResponse response,         WSFederationSerializer federationSerializer);    public static SignInResponseMessage ProcessSignInRequest(SignInRequestMessage requestMessage,         IPrincipal principal, SecurityTokenService sts,         WSFederationSerializer federationSerializer);}
-</del></p>
-
-<p>\</p>
-
-<p>The methods ProcessRequest and ProcessSignRequest in the
-FederatedPassiveSecurityTokenServiceOperations class both support an
-additional overload for passing the WS-Trust version
-(WSFederationSerializer instance).</p>
-
-<p>You can force another WS-Trust version by passing the right serializer
-instance. For example, the following code uses the WS-Trust Feb 2005
-specification.</p>
-
-<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-SignInResponseMessage responseMessage = FederatedPassiveSecurityTokenServiceOperations.ProcessSignInRequest(    requestMessage, User, sts,         new WSFederationSerializer(new WSTrustFeb2005RequestSerializer(),             new WSTrustFeb2005ResponseSerializer()));
-</del></p>
-
-<p>\</p>
-
-<p><strong>2. Changing the SAML token’s signature algorithms</strong></p>
-
-<p>WIF uses by default a combination of RSA and SHA 256 for generating the
-SAML signature. You can notice this in the generated SAML token,</p>
-
-<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-&lt;saml:Attribute AttributeName=&ldquo;name&rdquo; AttributeNamespace=&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/05/identity/claims">http://schemas.xmlsoap.org/ws/2005/05/identity/claims</a>&rdquo;>    &lt;saml:AttributeValue>MyName&lt;/saml:AttributeValue>  &lt;/saml:Attribute>&lt;/saml:AttributeStatement>&lt;ds:Signature xmlns:ds=&ldquo;<a href="http://www.w3.org/2000/09/xmldsig#">http://www.w3.org/2000/09/xmldsig#</a>&rdquo;>  &lt;ds:SignedInfo>    &lt;ds:CanonicalizationMethod Algorithm=&ldquo;<a href="http://www.w3.org/2001/10/xml-exc-c14n#">http://www.w3.org/2001/10/xml-exc-c14n#</a>&rdquo; />    &lt;ds:SignatureMethod Algorithm=&ldquo;<a href="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256">http://www.w3.org/2001/04/xmldsig-more#rsa-sha256</a>&rdquo; />    &lt;ds:Reference URI=&ldquo;#_cecf3c23-824e-4064-846c-b90c03d29700&rdquo;>      &lt;ds:Transforms>        &lt;ds:Transform Algorithm=&ldquo;<a href="http://www.w3.org/2000/09/xmldsig#enveloped-signature">http://www.w3.org/2000/09/xmldsig#enveloped-signature</a>&rdquo; />        &lt;ds:Transform Algorithm=&ldquo;<a href="http://www.w3.org/2001/10/xml-exc-c14n#">http://www.w3.org/2001/10/xml-exc-c14n#</a>&rdquo; />      &lt;/ds:Transforms>      &lt;ds:DigestMethod Algorithm=&ldquo;<a href="http://www.w3.org/2001/04/xmlenc#sha256">http://www.w3.org/2001/04/xmlenc#sha256</a>&rdquo; />      &lt;ds:DigestValue>1flG08Axm71C0isY2wLR0C9jqgfIebNoG2nlIO+jO+s=&lt;/ds:DigestValue>    &lt;/ds:Reference> &lt;/ds:SignedInfo>
-</del></p>
-
-<p>\
-ADFS 1.x and OpenSSO use a combination of RSA and SHA, so that’s also
-something else you need to customize. The “X509SigningCredentials”
-instance that you pass in the constructor of the Secure token service
-configuration also contains an overload to change the signature
-algorithm. The following code creates a new instance of
-“X509SigningCredentials” that uses SHA rather than SHA 256.</p>
-
-<p> </p>
-
-<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-new X509SigningCredentials(    CertificateUtil.GetCertificate(StoreName.TrustedPeople,         StoreLocation.LocalMachine,         &ldquo;CN=Test&rdquo;),     &ldquo;<a href="http://www.w3.org/2000/09/xmldsig#rsa-sha1">http://www.w3.org/2000/09/xmldsig#rsa-sha1</a>&rdquo;,     &ldquo;<a href="http://www.w3.org/2000/09/xmldsig#sha1">http://www.w3.org/2000/09/xmldsig#sha1</a>&rdquo;))
-</del></p>
-
-<p>\</p>
-
-<p><strong>3. Adding an authentication statement to the issued SAML token</strong></p>
-
-<p> </p>
-
-<p>This part is very tricky, as WIF does not add by default an
-authentication statement in the SAML token unless you use an specific
-claim type (NameIdentifier) with some custom properties.</p>
-
-<p> </p>
-
-<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-Claim nameIdentifier = new Claim(System.IdentityModel.Claims.ClaimTypes.NameIdentifier,     &ldquo;<a href="&#109;&#97;&#105;&#108;&#x74;&#111;&#x3a;&#x66;&#x6f;&#111;&#x40;&#x74;&#x65;&#x73;&#x74;&#46;&#99;&#x6f;&#109;">&#x66;&#111;&#x6f;&#x40;&#116;&#101;&#x73;&#116;&#x2e;&#x63;&#111;&#x6d;</a>&rdquo;);nameIdentifier.Properties[&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/05/identity/claimproperties/format">http://schemas.xmlsoap.org/ws/2005/05/identity/claimproperties/format</a>&rdquo;]     = &ldquo;<a href="http://schemas.xmlsoap.org/claims/UPN">http://schemas.xmlsoap.org/claims/UPN</a>&rdquo;;outputIdentity.Claims.Add(nameIdentifier);outputIdentity.Claims.Add(new Claim(ClaimTypes.AuthenticationMethod, &ldquo;<a href="http://microsoft/geneva">http://microsoft/geneva</a>&rdquo;));outputIdentity.Claims.Add(new Claim(ClaimTypes.AuthenticationInstant, XmlConvert.ToString(DateTime.Now, XmlDateTimeSerializationMode.Utc)));
-</del></p>
-
-<p>\</p>
-
-<p>The code above will generate an authentication statement like this in
-the SAML token, which is something equivalent to what ADFS 1.x or
-OpenSSO would generate.</p>
-
-<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-&lt;saml:AttributeStatement>  &lt;saml:Subject>    &lt;saml:NameIdentifier Format=&ldquo;<a href="http://schemas.xmlsoap.org/claims/UPN">http://schemas.xmlsoap.org/claims/UPN</a>&rdquo;>        <a href="&#x6d;&#x61;&#105;&#108;&#116;&#x6f;&#58;&#x66;&#x6f;&#111;&#64;&#x74;&#x65;&#x73;&#x74;&#x2e;&#x63;&#x6f;&#109;">&#102;&#111;&#x6f;&#64;&#116;&#x65;&#x73;&#116;&#46;&#x63;&#x6f;&#x6d;</a>    &lt;/saml:NameIdentifier>    &lt;saml:SubjectConfirmation>      &lt;saml:ConfirmationMethod>            urn:oasis:names:tc:SAML:1.0:cm:bearer        &lt;/saml:ConfirmationMethod>    &lt;/saml:SubjectConfirmation>  &lt;/saml:Subject>    &lt;/saml:AttributeStatement>
-</del></p>
-
-<p>\</p>
-
-<p> </p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/10/">&larr; Older</a>
@@ -2041,6 +2091,10 @@ OpenSSO would generate.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
       </li>
     
@@ -2054,10 +2108,6 @@ OpenSSO would generate.</p>
     
       <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
       </li>
     
   </ul>

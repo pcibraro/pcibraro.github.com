@@ -9,7 +9,7 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="Hawk is an authentication protocol initially written by Eran Hammer in javascript for being used in Node.js. Later on, Eran also added support for &hellip;">
+  <meta name="description" content="ASP.NET Web API does not provide any output caching capabilities out of the box other than the ones you would traditionally find in the ASP.NET &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +79,240 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-05-23T14:36:00-03:00" pubdate data-updated="true">May 23<span>rd</span>, 2014</time>
+        
+         | <a href="/blog/2014/05/23/appfabric-outputcaching/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>ASP.NET Web API does not provide any output caching capabilities out of the box other than the ones you would traditionally find in the ASP.NET caching module.
+Fortunately, Filip [wrote a very nice library] (<a href="http://www.strathweb.com/2012/05/output-caching-in-asp-net-web-api/">http://www.strathweb.com/2012/05/output-caching-in-asp-net-web-api/</a>) that you can use to decorate your Web API controller methods with an [OutputCaching] attribute, which is similar to the one you can find in ASP.NET MVC.
+This library provides a way to configure different persistence storages for the cached data, which uses memory by default. As part of this post, I will show how you can implement your own persistence provider for AppFabric in order to support distributed caching on web applications running on premises.</p>
+
+<p>The first thing is to install AppFabric Caching. Wade Wegner wrote a very useful post describing all the required steps [here] (<a href="http://www.wadewegner.com/2010/08/getting-started-with-windows-server-appfabric-cache/">http://www.wadewegner.com/2010/08/getting-started-with-windows-server-appfabric-cache/</a>).</p>
+
+<p>Once AppFabric Cache is installed, you need to start the cluster and configure a new cache that will be used by our extension. Open up the Cache PowerShell console (Caching Administration Windows PowerShell in programs). Run the following command in the PowerShell console:</p>
+
+<p>Start-CacheCluster</p>
+
+<p>Create a new cache for our extension. Run the following command in the PowerShell console:</p>
+
+<p>New-Cache OutputCache</p>
+
+<p>At that point, we are ready to jump into the implementation of the extension. Before writing any code, we will use the AppFabric Caching client library, which is available as a Nuget package. You can find it in the repository under the name of &ldquo;ServerAppFabric.Client&rdquo;.
+The library written by Filip provides an extension point for the persistence providers called IApiOutputCache, so we will have to implement that interface.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">AppFabricCachingProvider</span> <span class="p">:</span> <span class="n">IApiOutputCache</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">readonly</span> <span class="k">static</span> <span class="n">DataCacheFactory</span> <span class="n">Factory</span> <span class="p">=</span> <span class="k">new</span> <span class="n">DataCacheFactory</span><span class="p">();</span>
+</span><span class='line'>    <span class="k">const</span> <span class="kt">string</span> <span class="n">Region</span> <span class="p">=</span> <span class="s">&quot;OutputCache&quot;</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">readonly</span> <span class="n">DataCache</span> <span class="n">cache</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="nf">AppFabricCachingProvider</span><span class="p">(</span><span class="kt">string</span> <span class="n">cacheName</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="k">this</span><span class="p">.</span><span class="n">cache</span> <span class="p">=</span> <span class="n">Factory</span><span class="p">.</span><span class="n">GetCache</span><span class="p">(</span><span class="n">cacheName</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">this</span><span class="p">.</span><span class="n">cache</span><span class="p">.</span><span class="n">CreateRegion</span><span class="p">(</span><span class="n">Region</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">Add</span><span class="p">(</span><span class="kt">string</span> <span class="n">key</span><span class="p">,</span> <span class="kt">object</span> <span class="n">o</span><span class="p">,</span> <span class="n">DateTimeOffset</span> <span class="n">expiration</span><span class="p">,</span> <span class="kt">string</span> <span class="n">dependsOnKey</span> <span class="p">=</span> <span class="k">null</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">exp</span> <span class="p">=</span> <span class="n">expiration</span> <span class="p">-</span> <span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">dependsOnKey</span> <span class="p">==</span> <span class="k">null</span><span class="p">)</span>
+</span><span class='line'>        <span class="p">{</span>
+</span><span class='line'>            <span class="n">dependsOnKey</span> <span class="p">=</span> <span class="n">key</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">cache</span><span class="p">.</span><span class="n">Put</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">o</span><span class="p">,</span> <span class="k">new</span><span class="p">[]</span> <span class="p">{</span> <span class="k">new</span> <span class="n">DataCacheTag</span><span class="p">(</span><span class="n">dependsOnKey</span><span class="p">)</span> <span class="p">},</span> <span class="n">Region</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="kt">bool</span> <span class="nf">Contains</span><span class="p">(</span><span class="kt">string</span> <span class="n">key</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">result</span> <span class="p">=</span> <span class="k">this</span><span class="p">.</span><span class="n">cache</span><span class="p">.</span><span class="n">Get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">Region</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">result</span> <span class="p">!=</span> <span class="k">null</span><span class="p">)</span> <span class="k">return</span> <span class="k">true</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">return</span> <span class="k">false</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="kt">object</span> <span class="nf">Get</span><span class="p">(</span><span class="kt">string</span> <span class="n">key</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">result</span> <span class="p">=</span> <span class="k">this</span><span class="p">.</span><span class="n">cache</span><span class="p">.</span><span class="n">Get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">Region</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="n">T</span> <span class="n">Get</span><span class="p">&lt;</span><span class="n">T</span><span class="p">&gt;(</span><span class="kt">string</span> <span class="n">key</span><span class="p">)</span> <span class="k">where</span> <span class="n">T</span> <span class="p">:</span> <span class="k">class</span>
+</span><span class='line'>    <span class="err">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">result</span> <span class="p">=</span> <span class="k">this</span><span class="p">.</span><span class="n">cache</span><span class="p">.</span><span class="n">Get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">Region</span><span class="p">)</span> <span class="k">as</span> <span class="n">T</span><span class="p">;</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">Remove</span><span class="p">(</span><span class="kt">string</span> <span class="n">key</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="k">this</span><span class="p">.</span><span class="n">cache</span><span class="p">.</span><span class="n">Remove</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">Region</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">RemoveStartsWith</span><span class="p">(</span><span class="kt">string</span> <span class="n">key</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">objs</span> <span class="p">=</span> <span class="k">this</span><span class="p">.</span><span class="n">cache</span><span class="p">.</span><span class="n">GetObjectsByTag</span><span class="p">(</span><span class="k">new</span> <span class="n">DataCacheTag</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">Region</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">foreach</span><span class="p">(</span><span class="kt">var</span> <span class="n">o</span> <span class="k">in</span> <span class="n">objs</span><span class="p">)</span>
+</span><span class='line'>        <span class="p">{</span>
+</span><span class='line'>            <span class="k">this</span><span class="p">.</span><span class="n">cache</span><span class="p">.</span><span class="n">Remove</span><span class="p">(</span><span class="n">o</span><span class="p">.</span><span class="n">Key</span><span class="p">,</span> <span class="n">Region</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This implementation is pretty straightforward and uses the AppFabric client library for getting or storing data in the cache. All the data is stored as part of a region, which groups all the entries together to facilitate management. The name of the cache is passed as part of the constructor, so it will be provided at the moment of instantiating and configuring this extension.</p>
+
+<p>The following code shows how the extension is configured,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="kt">var</span> <span class="n">config</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpSelfHostConfiguration</span><span class="p">(</span><span class="s">&quot;http://localhost:999&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="n">config</span><span class="p">.</span><span class="n">Routes</span><span class="p">.</span><span class="n">MapHttpRoute</span><span class="p">(</span>
+</span><span class='line'>      <span class="n">name</span><span class="p">:</span> <span class="s">&quot;DefaultApi&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">routeTemplate</span><span class="p">:</span> <span class="s">&quot;api/{controller}/{id}&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">defaults</span><span class="p">:</span> <span class="k">new</span> <span class="p">{</span> <span class="n">id</span> <span class="p">=</span> <span class="n">RouteParameter</span><span class="p">.</span><span class="n">Optional</span> <span class="p">}</span>
+</span><span class='line'><span class="p">);</span>
+</span><span class='line'><span class="kt">var</span> <span class="n">server</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HttpSelfHostServer</span><span class="p">(</span><span class="n">config</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">config</span><span class="p">.</span><span class="n">CacheOutputConfiguration</span><span class="p">().</span><span class="n">RegisterCacheOutputProvider</span><span class="p">(()</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="n">AppFabricCachingProvider</span><span class="p">(</span><span class="s">&quot;OutputCache&quot;</span><span class="p">));</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">server</span><span class="p">.</span><span class="n">OpenAsync</span><span class="p">().</span><span class="n">Wait</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">Console</span><span class="p">.</span><span class="n">ReadKey</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">server</span><span class="p">.</span><span class="n">CloseAsync</span><span class="p">().</span><span class="n">Wait</span><span class="p">();</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The name of the cache must be the same that we used before in the powershell console with the New-Cache command.</p>
+
+<p>Finally, output caching can be configured in any existing controller using the [OutputCaching] attribute distributed with the Filip&rsquo;s library.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">TeamsController</span> <span class="p">:</span> <span class="n">ApiController</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'><span class="na">    [CacheOutput(ClientTimeSpan = 50, ServerTimeSpan = 50)]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="n">IEnumerable</span><span class="p">&lt;</span><span class="n">Team</span><span class="p">&gt;</span> <span class="n">Get</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">Teams</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The implementation of this provider is available as a <a href="https://github.com/pcibraro/CacheOutput.AppFabric">separate project in GitHub</a>.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -2004,290 +2238,6 @@ the <a href="https://github.com/pcibraro/hawknet">HawkNet github project</a>.</p
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/07/22/getting-started-with-owin-and-katana/">Getting Started With Owin and Katana</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-07-22T00:00:00-03:00" pubdate data-updated="true">Jul 22<span>nd</span>, 2013</time>
-        
-         | <a href="/blog/2013/07/22/getting-started-with-owin-and-katana/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h2>Introduction</h2>
-
-<p>The .NET ecosystem offers today a lot of alternatives for developing web
-applications. You can either use any of the frameworks supported by
-Microsoft with ASP.NET such as Forms, MVC or Web API, or any other open
-source alternative like FubuMVC, ServiceStack, NancyFx or OpenRasta to
-name a few. From an architecture standpoint, all these frameworks have
-three main layers in common (in spite of the difference with the
-implementation details), hosting, middleware, and application.</p>
-
-<p>The hosting layer is responsible for managing the underline process,
-where the http connections are established and managed, and also to
-materialize those connections into request/response objects that are
-sent to the upper layers. For example, the hosting layer could be
-ASP.NET running in IIS, or it could also be a console application that
-uses the http listener directly.</p>
-
-<p>The middleware layer provides common infrastructure services, which runs
-at low level in the http stack, such as security, caching, or any other
-concern that can be handled at this level.</p>
-
-<p>The application layer is where the applications or services are
-implemented using the features available in the framework.</p>
-
-<p>However, the distinction between the middleware and application layers
-is not always clear, which causes that many of the middleware services
-end up being implemented in the application layer. For example, you
-could implement middleware services for security in ASP.NET MVC using
-filters, which rely on features specific to the application level in
-that framework. This make almost impossible to reuse all these services
-across all the available frameworks, so you will find different
-implementations of the same services for the different frameworks. To
-give an example, basic authentication is something that could be
-implemented as middleware service and reused, but today is implemented
-differently in each framework.</p>
-
-<p>Someone would suggest that a ASP.NET Http Module could be a good option
-for implementing a middleware service, but that’s not necessarily true
-as it would only work when the hosting layer uses ASP.NET.</p>
-
-<p>This exact problem is what <a href="http://owin.org/spec/owin-1.0.0.html">OWIN
-specification</a> tries to address by
-providing a common abstraction for any http-aware service or application
-with minimal dependencies on existing frameworks or implementations.  At
-very core level, OWIN defines a handler, which is represented as an
-application delegate,</p>
-
-<p>using AppFunc = Func&lt; \
-        IDictionary&lt;string, object>, // Environment \
-        Task>; // Done</p>
-
-<p>The idea is to represent the three layers discussed above as a set of
-handlers using the “chain of responsibility” pattern. The environment
-argument is a dictionary that the different handlers use to exchange
-values, and the next handler in the chain is represented with the task
-argument. Having said that, the first handler in the chain would be
-responsible for the hosting layer, and it should populate the
-environment with keys that describe the received http request message,
-such as scheme, port, request path, headers, etc. All those common
-headers are discussed as part of the specification.</p>
-
-<p>Katana is a Microsoft implementation of the OWIN specification, which
-includes handlers for the hosting and middleware layers. It’s an open
-source project, which can be found in this
-<a href="http://katanaproject.codeplex.com/SourceControl/latest">location</a>. All
-the investment that Microsoft has done so far for ASP.NET in the
-different application frameworks (i.e. MVC or Web API), it’s now being
-refactored as OWIN handlers that can be reused across different
-application frameworks. For example, cookie authentication or even OAuth
-are being implemented as middleware services that can be reused not only
-by ASP.NET web apps but also for other application frameworks in the
-open source world.</p>
-
-<p>The application layer is also implemented as another OWIN handler, which
-is responsible for setting up all the infrastructure required to handle
-the request/response at the application level. You will find application
-handlers for ASP.NET MVC, ASP.NET Web API, SignalR, or NancyFx to give
-an example. </p>
-
-<h2>Gettting Started with OWIN and Katana</h2>
-
-<p>The easiest way to get started with OWIN is to use the assembly
-distributed as nuget package. You will find a single nuget package for
-this called “OWIN”. This assembly only contains an interface
-IAppBuilder, which can be used to configure all the handlers that you
-want to use in your web application. This is a very low level interface
-that you won’t have to implement yourself if you use Katana.</p>
-
-<p>In addition to the “OWIN” assembly, you will find two additional nuget
-packages</p>
-
-<ul>
-<li>Owin.Extensions: Provides a set of very useful extensions methods
-for the IAppBuilder interface that you can use to configure the
-handlers.</li>
-<li>Owin.Types: Provides a set of wrappers to represent the environment
-dictionary as a typed object representing the request and response
-messages.</li>
-</ul>
-
-
-<p>You can implement your first OWIN handler using these three packages
-(You will not able to run it without the hosting handlers provided by
-Katana).</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">MyMiddleware</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="n">Func</span><span class="p">&lt;</span><span class="n">IDictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">object</span><span class="p">&gt;,</span> <span class="n">Task</span><span class="p">&gt;</span> <span class="n">next</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">public</span> <span class="nf">MyMiddleware</span><span class="p">(</span><span class="n">Func</span><span class="p">&lt;</span><span class="n">IDictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">object</span><span class="p">&gt;,</span> <span class="n">Task</span><span class="p">&gt;</span> <span class="n">next</span><span class="p">)</span>
-</span><span class='line'>  <span class="p">{</span>
-</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="n">next</span> <span class="p">=</span> <span class="n">next</span><span class="p">;</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">public</span> <span class="n">Task</span> <span class="nf">Invoke</span><span class="p">(</span><span class="n">IDictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">object</span><span class="p">&gt;</span> <span class="n">env</span><span class="p">)</span>
-</span><span class='line'>  <span class="p">{</span>
-</span><span class='line'>    <span class="kt">var</span> <span class="n">headers</span> <span class="p">=</span> <span class="p">(</span><span class="n">IDictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">[]&gt;)</span><span class="n">env</span><span class="p">[</span><span class="s">&quot;owin.RequestHeaders&quot;</span><span class="p">];</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">var</span> <span class="n">url</span> <span class="p">=</span> <span class="kt">string</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span><span class="s">&quot;{0}://{1}{2}{3}&quot;</span><span class="p">,</span>
-</span><span class='line'>                <span class="p">(</span><span class="kt">string</span><span class="p">)</span><span class="n">env</span><span class="p">[</span><span class="s">&quot;owin.RequestScheme&quot;</span><span class="p">],</span>
-</span><span class='line'>                <span class="n">headers</span><span class="p">[</span><span class="s">&quot;host&quot;</span><span class="p">].</span><span class="n">First</span><span class="p">(),</span>
-</span><span class='line'>                <span class="p">(</span><span class="kt">string</span><span class="p">)</span><span class="n">env</span><span class="p">[</span><span class="s">&quot;owin.RequestPathBase&quot;</span><span class="p">],</span>
-</span><span class='line'>                <span class="p">(</span><span class="kt">string</span><span class="p">)</span><span class="n">env</span><span class="p">[</span><span class="s">&quot;owin.RequestPath&quot;</span><span class="p">]);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">if</span> <span class="p">((</span><span class="kt">string</span><span class="p">)</span><span class="n">env</span><span class="p">[</span><span class="s">&quot;owin.RequestQueryString&quot;</span><span class="p">]</span> <span class="p">!=</span> <span class="s">&quot;&quot;</span><span class="p">)</span>
-</span><span class='line'>      <span class="n">url</span> <span class="p">+=</span> <span class="s">&quot;?&quot;</span> <span class="p">+</span> <span class="p">(</span><span class="kt">string</span><span class="p">)</span><span class="n">env</span><span class="p">[</span><span class="s">&quot;owin.RequestQueryString&quot;</span><span class="p">];</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;The received URL is {0}&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="n">next</span><span class="p">(</span><span class="n">env</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This is a low level handler that sends the request url to the console.
-As you can see, it relies on some existing properties in the
-environment, which should have been set by Katana in the hosting layer.
-The handler also receives the next handler to call in the chain as part
-of the constructor.</p>
-
-<p>The entry point in any Katana application must be a class that receives
-the IAppBuilder interface as argument to configure all the handlers, as
-it is shown below,</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'> <span class="k">public</span> <span class="k">class</span> <span class="nc">Startup</span>
-</span><span class='line'> <span class="p">{</span>
-</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">Configuration</span><span class="p">(</span><span class="n">IAppBuilder</span> <span class="n">app</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>       <span class="n">app</span><span class="p">.</span><span class="n">UseType</span><span class="p">&lt;</span><span class="n">MyMiddleware</span><span class="p">&gt;();</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'> <span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>UseType is one the extension methods provided by “Owin.Extensions” to
-configure a new handler in the pipeline. You can also other extension
-methods to define a handler on the fly using delegates as this one,</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="n">app</span><span class="p">.</span><span class="n">UseHandlerAsync</span><span class="p">(</span><span class="k">async</span> <span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="n">res</span><span class="p">)</span> <span class="p">=&gt;</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">res</span><span class="p">.</span><span class="n">ContentType</span> <span class="p">=</span> <span class="s">&quot;text/plain&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">await</span> <span class="n">res</span><span class="p">.</span><span class="n">WriteAsync</span><span class="p">(</span><span class="s">&quot;Hello World&quot;</span><span class="p">);</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>There is one more nuget package that you will find useful to create OWIN
-handlers, which is “Microsoft.Owin”. This is a package provided as part
-of Katana (It’s still a pre-release), which extends the Owin Request and
-Response classes with more properties and methods, and also helper
-methods to deal with these classes.</p>
-
-<h2>Hosting an application with Katana</h2>
-
-<p>Katana provides three options to host a web application.</p>
-
-<p>​1. OwinHost.exe. It’s a command tool that you can use to run the
-application. You can use multiple command arguments to specify the
-assembly with the entry point for configuring the IAppBuilder or other
-configuration settings such as the port number or tracing. This is tool
-is available as part of the nuget package “OwinHost”.</p>
-
-<p>​2. .NET application. There is a WebApp class that you can use to
-self-host a web application in any regular .NET application such as
-console app or a windows service. This class is available as part of the
-“Microsoft.Owin.Hosting” assembly.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">using</span> <span class="p">(</span><span class="n">WebApp</span><span class="p">.</span><span class="n">Start</span><span class="p">&lt;</span><span class="n">Startup</span><span class="p">&gt;(</span><span class="k">new</span> <span class="n">StartOptions</span> <span class="p">{</span> <span class="n">Port</span> <span class="p">=</span> <span class="m">5000</span> <span class="p">}))</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;Press Enter to quit.&quot;</span><span class="p">);</span>
-</span><span class='line'>   <span class="n">Console</span><span class="p">.</span><span class="n">ReadKey</span><span class="p">();</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>You need to pass the startup entry as argument to the static method
-“Start”.</p>
-
-<p>​3. ASP.NET. You need to reference the nuget package
-“Microsoft.Owin.Hosting.SystemWeb” (Pre-Release) from your web
-application project, and include the Startup class in that project as
-well.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -2303,6 +2253,10 @@ well.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
       </li>
     
@@ -2316,10 +2270,6 @@ well.</p>
     
       <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
       </li>
     
   </ul>

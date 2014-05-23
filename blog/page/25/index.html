@@ -9,9 +9,8 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="I used some of free time last week to write a prototype of
-WS-Polling for WSE 3.0. \
-Unfortunately, I couldn&rsquo;t finish the complete &hellip;">
+  <meta name="description" content="This post describes how to implement a behavior to route messages by
+means of the body element in the soap envelope. Routing messages in this way is &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +80,418 @@ Unfortunately, I couldn&rsquo;t finish the complete &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/01/31/436973/">Routing Messages by Means of the Body Element in WCF</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-01-31T00:00:00-03:00" pubdate data-updated="true">Jan 31<span>st</span>, 2006</time>
+        
+         | <a href="/blog/2006/01/31/436973/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>This post describes how to implement a behavior to route messages by
+means of the body element in the soap envelope.</p>
+
+<p>Routing messages in this way is useful in some scenarios where
+the action is not available in the addressing headers or the SoapAction
+http header.</p>
+
+<p>The WCF SDK contains a sample that shows how to do something like that
+but I don&rsquo;t like it very much since it depends on the service contract.
+ </p>
+
+<p>In that sample, the service itself is responsible to dispatch the
+message to the right method.</p>
+
+<p>\</p>
+
+<p>[ServiceContract(Namespace = &ldquo;<a href="http://Microsoft.ServiceModel.Samples">http://Microsoft.ServiceModel.Samples</a>&rdquo;),
+XmlSerializerFormat]</p>
+
+<p>public interface IUntypedCalculator</p>
+
+<p>{</p>
+
+<p>   [OperationContract(Action=&ldquo;*&rdquo;)]</p>
+
+<p>   Message Calculate(Message request);</p>
+
+<p>}</p>
+
+<p>\</p>
+
+<p>That operation accepts any message and dispatch according to the body
+element in that message.</p>
+
+<p>This implementation is mainly based on the interface
+&ldquo;IDispathOperationSelector&rdquo;. This interface allows you to optionally
+inspect the message and return the name for the operation that will be
+executed.</p>
+
+<p>It contains the following methods:</p>
+
+<p>\</p>
+
+<p>public interface IDispatchOperationSelector</p>
+
+<p>{</p>
+
+<p>  string SelectOperation(ref Message message);</p>
+
+<p>}</p>
+
+<p>\</p>
+
+<p>You can specify the name for the operation in the contract definition.  </p>
+
+<p>\</p>
+
+<p>[ServiceContract()]</p>
+
+<p>interface IHelloWorld</p>
+
+<p>{</p>
+
+<p>  [OperationContract(Name=&ldquo;helloWorld&rdquo;), XmlSerializerFormat()]</p>
+
+<p>  HelloWorldResponseMessage HelloWorld(HelloWorldRequestMessage
+message);</p>
+
+<p>}</p>
+
+<p>\</p>
+
+<p>In the sample above, the operation name is &ldquo;helloWorld&rdquo;. If you don&rsquo;t
+specify the Name parameter for the OperationContract attribute, it takes
+the method name as default name (&ldquo;HelloWorld&rdquo;).</p>
+
+<p>\</p>
+
+<p>The IServiceBehavior implementation provides an opportunity to set the
+operation selector in the service processing pipeline. The easiest way
+to add a behavior to service is via code as shown below. The service can
+have more than one endpoint. This example sets the
+IDispatchOperationSelector on all those endpoints.</p>
+
+<p>\</p>
+
+<p>/// &lt;summary></p>
+
+<p>/// Sets this class as operation selector for all dispatch behaviors in
+the service</p>
+
+<p>/// &lt;/summary></p>
+
+<p>public void ApplyBehavior(ServiceDescription description,
+ServiceHostBase serviceHostBase,
+System.Collections.ObjectModel.Collection&lt;DispatchBehavior> behaviors,
+System.Collections.ObjectModel.Collection&lt;BindingParameterCollection>
+parameters)</p>
+
+<p>{</p>
+
+<p>  foreach (DispatchBehavior dispatchBehavior in behaviors)</p>
+
+<p>    dispatchBehavior.OperationSelector = this;</p>
+
+<p>}</p>
+
+<p>\</p>
+
+<p><strong>Complete code</strong></p>
+
+<p>\</p>
+
+<hr />
+
+<p>+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+| <strong>HelloWorld.cs</strong>                                                        |
+|                                                                          |
+| \                                                                        |
+|                                                                          |
+| ****                                                                     |
+|                                                                          |
+| using System;                                                            |
+|                                                                          |
+| using System.Collections.Generic;                                        |
+|                                                                          |
+| using System.Text;                                                       |
+|                                                                          |
+| using System.Xml.Serialization;                                          |
+|                                                                          |
+| using System.Runtime.Serialization;                                      |
+|                                                                          |
+| using System.ServiceModel;                                               |
+|                                                                          |
+| \                                                                        |
+| namespace Service                                                        |
+|                                                                          |
+| {                                                                        |
+|                                                                          |
+|   [XmlRoot(ElementName=&ldquo;helloWorld&rdquo;)]                                    |
+|                                                                          |
+|   public class HelloWorldRequest                                         |
+|                                                                          |
+|   {                                                                      |
+|                                                                          |
+|     [XmlElement(&ldquo;value&rdquo;)]                                                |
+|                                                                          |
+|     public string Value;                                                 |
+|                                                                          |
+|   }                                                                      |
+|                                                                          |
+| \                                                                        |
+|   [XmlRoot(ElementName = &ldquo;helloWorldResponse&rdquo;)]                          |
+|                                                                          |
+|   public class HelloWorldResponse                                        |
+|                                                                          |
+|   {                                                                      |
+|                                                                          |
+|     [XmlElement(&ldquo;value&rdquo;)]                                                |
+|                                                                          |
+|     public string Value;                                                 |
+|                                                                          |
+|   }                                                                      |
+|                                                                          |
+| \                                                                        |
+|   [MessageContract()]                                                    |
+|                                                                          |
+|   public class HelloWorldRequestMessage                                  |
+|                                                                          |
+|   {                                                                      |
+|                                                                          |
+|     [MessageBody(Name=&ldquo;helloWorld&rdquo;)]                                     |
+|                                                                          |
+|     public HelloWorldRequest request;                                    |
+|                                                                          |
+|   }                                                                      |
+|                                                                          |
+| \                                                                        |
+|   [MessageContract()]                                                    |
+|                                                                          |
+|   public class HelloWorldResponseMessage                                 |
+|                                                                          |
+|   {                                                                      |
+|                                                                          |
+|     [MessageBody(Name=&ldquo;helloWorldResponse&rdquo;)]                             |
+|                                                                          |
+|     public HelloWorldResponse response;                                  |
+|                                                                          |
+|   }                                                                      |
+|                                                                          |
+| \                                                                        |
+|   [ServiceContract()]                                                    |
+|                                                                          |
+|   interface IHelloWorld                                                  |
+|                                                                          |
+|   {                                                                      |
+|                                                                          |
+|     [OperationContract(Name=&ldquo;helloWorld&rdquo;), XmlSerializerFormat()]        |
+|                                                                          |
+|     HelloWorldResponseMessage HelloWorld(HelloWorldRequestMessage        |
+| message);                                                                |
+|                                                                          |
+|   }                                                                      |
+|                                                                          |
+| \                                                                        |
+|   [RouteByBodyElementBehavior()]                                         |
+|                                                                          |
+|   class HelloWorldService : IHelloWorld                                  |
+|                                                                          |
+|   {                                                                      |
+|                                                                          |
+|     #region IHelloWorld Members                                         |
+|                                                                          |
+|                                                                          |
+|                                                                          |
+|     public HelloWorldResponseMessage HelloWorld(HelloWorldRequestMessage |
+| message)                                                                 |
+|                                                                          |
+|     {                                                                    |
+|                                                                          |
+|       HelloWorldResponse response = new HelloWorldResponse();            |
+|                                                                          |
+|       response.Value = &ldquo;Hello World &rdquo; + message.request.Value;           |
+|                                                                          |
+|                                                                          |
+|                                                                          |
+|       HelloWorldResponseMessage responseMessage = new                    |
+| HelloWorldResponseMessage();                                             |
+|                                                                          |
+|       responseMessage.response = response;                               |
+|                                                                          |
+|       return responseMessage;                                            |
+|                                                                          |
+|    }                                                                     |
+|                                                                          |
+|    #endregion                                                           |
+|                                                                          |
+|   }                                                                      |
+|                                                                          |
+| }                                                                        |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+</p>
+
+<p>\</p>
+
+<p>+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+| <strong>RouteByBodyElementBehavior.cs</strong>                                        |
+|                                                                          |
+| \                                                                        |
+|                                                                          |
+| ****                                                                     |
+|                                                                          |
+| using System;                                                            |
+|                                                                          |
+| using System.Collections.Generic;                                        |
+|                                                                          |
+| using System.Text;                                                       |
+|                                                                          |
+| using System.Xml;                                                        |
+|                                                                          |
+| using System.Reflection;                                                 |
+|                                                                          |
+| using System.IO;                                                         |
+|                                                                          |
+| using System.ServiceModel;                                               |
+|                                                                          |
+| \                                                                        |
+| namespace Service                                                        |
+|                                                                          |
+| {                                                                        |
+|                                                                          |
+|   /// &lt;summary>                                                        |
+|                                                                          |
+|   /// This behavior routes messages by means of the body element         |
+|                                                                          |
+|   /// &lt;/summary>                                                       |
+|                                                                          |
+|   [AttributeUsage(AttributeTargets.Class, AllowMultiple=false)]          |
+|                                                                          |
+|   class RouteByBodyElementBehavior : Attribute, IServiceBehavior,        |
+| IDispatchOperationSelector                                               |
+|                                                                          |
+|   {                                                                      |
+|                                                                          |
+|     #region IDispatchOperationSelector Members                          |
+|                                                                          |
+|     /// &lt;summary>                                                      |
+|                                                                          |
+|     /// Selects the operation according to first element in the body     |
+| element                                                                  |
+|                                                                          |
+|     /// &lt;/summary>                                                     |
+|                                                                          |
+|     /// &lt;param name=&ldquo;message&rdquo;>&lt;/param>                               |
+|                                                                          |
+|     /// &lt;returns>&lt;/returns>                                          |
+|                                                                          |
+|     public string SelectOperation(ref Message message)                   |
+|                                                                          |
+|     {                                                                    |
+|                                                                          |
+|       XmlDocument document = new XmlDocument();                          |
+|                                                                          |
+|       document.Load(message.GetReaderAtBodyContents());                  |
+|                                                                          |
+|                                                                          |
+|                                                                          |
+|       //Get the body element operation                                   |
+|                                                                          |
+|       string bodyElement = document.DocumentElement.LocalName;           |
+|                                                                          |
+|                                                                          |
+|                                                                          |
+|      // Create new message                                               |
+|                                                                          |
+|      XmlNodeReader reader = new XmlNodeReader(document.DocumentElement); |
+|                                                                          |
+|      Message newMsg = Message.CreateMessage(message.Version, null,       |
+| reader);                                                                 |
+|                                                                          |
+| \                                                                        |
+|      // Preserve the headers of the original message                     |
+|                                                                          |
+|      newMsg.Headers.CopyHeadersFrom(message);                            |
+|                                                                          |
+|      foreach (string propertyKey in message.Properties.Keys)             |
+|                                                                          |
+|        newMsg.Properties.Add(propertyKey,                                |
+| message.Properties[propertyKey]);                                        |
+|                                                                          |
+| \                                                                        |
+|      // Close the original message and return new message                |
+|                                                                          |
+|      message.Close();                                                    |
+|                                                                          |
+|      message = newMsg;                                                   |
+|                                                                          |
+| \                                                                        |
+|      return bodyElement;                                                 |
+|                                                                          |
+|    }                                                                     |
+|                                                                          |
+|    #endregion                                                           |
+|                                                                          |
+| \                                                                        |
+|                                                                          |
+|    #region IServiceBehavior Members                                     |
+|                                                                          |
+|    /// &lt;summary>                                                       |
+|                                                                          |
+|    /// Sets this class as operation selector for all dispatch behaviors  |
+| in the service                                                           |
+|                                                                          |
+|    /// &lt;/summary>                                                      |
+|                                                                          |
+|    public void ApplyBehavior(ServiceDescription description,             |
+| ServiceHostBase serviceHostBase,                                         |
+| System.Collections.ObjectModel.Collection&lt;DispatchBehavior>            |
+| behaviors,                                                               |
+| System.Collections.ObjectModel.Collection&lt;BindingParameterCollection>  |
+| parameters)                                                              |
+|                                                                          |
+|    {                                                                     |
+|                                                                          |
+|      foreach (DispatchBehavior dispatchBehavior in behaviors)            |
+|                                                                          |
+|        dispatchBehavior.OperationSelector = this;                        |
+|                                                                          |
+|    }                                                                     |
+|                                                                          |
+|    #endregion                                                           |
+|                                                                          |
+|  }                                                                       |
+|                                                                          |
+| }                                                                        |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -798,7 +1209,7 @@ The only way I found to bind an ADAM principal to Azman was through the
 user’s SID\</p>
 
 <p>//ADAM Provider was configured in the Web.Config file\
-MembershipUser user = Membership.GetUser(&ldquo;<a href="&#109;&#97;&#x69;&#108;&#116;&#111;&#x3a;&#109;&#x79;&#x75;&#115;&#x65;&#114;&#x40;&#x4d;&#x79;&#68;&#x6f;&#109;&#97;&#x69;&#x6e;&#46;&#x63;&#x6f;&#x6d;">&#x6d;&#x79;&#117;&#x73;&#x65;&#x72;&#64;&#x4d;&#x79;&#x44;&#111;&#x6d;&#x61;&#x69;&#110;&#46;&#x63;&#111;&#x6d;</a>&rdquo;);\
+MembershipUser user = Membership.GetUser(&ldquo;<a href="&#x6d;&#97;&#x69;&#108;&#x74;&#111;&#x3a;&#109;&#121;&#x75;&#x73;&#101;&#x72;&#64;&#77;&#121;&#68;&#x6f;&#x6d;&#x61;&#x69;&#x6e;&#x2e;&#x63;&#x6f;&#x6d;">&#109;&#x79;&#x75;&#x73;&#x65;&#114;&#64;&#77;&#121;&#68;&#111;&#109;&#97;&#105;&#110;&#x2e;&#99;&#x6f;&#x6d;</a>&rdquo;);\
 \
 AzAuthorizationStoreClass store = new AzAuthorizationStoreClass();\
 \
@@ -1440,109 +1851,6 @@ That is all for now, I will blog more about WSE and WSI soon.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2005/06/23/414787/">Creating a Virtual Directory With ASP.NET 2.0 Support</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2005-06-23T00:00:00-03:00" pubdate data-updated="true">Jun 23<span>rd</span>, 2005</time>
-        
-         | <a href="/blog/2005/06/23/414787/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>This script is helpful when you have different versions of the .NET
-framework running in your computer and you need to setup a virtual
-directory in IIS targeting one of them.\
-If you have the versions 1.1 and 2.0, when you create a virtual
-directory in IIS, it takes a version by default, usually 1.1.</p>
-
-<p>The script is very simple, it creates a virtual directory using WMI and
-then it uses the tool &ldquo;aspnet_regiis.exe&rdquo; to setup the .NET framework
-scriptmaps.</p>
-
-<p><strong>Note</strong>: It is using the version 2.0, you should change the following
-line to use another version:</p>
-
-<p>netPath = fso.BuildPath( winPath, &ldquo;Microsoft.NET\Framework\v2.0.50215&rdquo;
-)</p>
-
-<p>The script looks as follow:</p>
-
-<p>Sub CreateWebFolder( folderPath, folderName, createApp )\
-   Dim vRoot, vDir, tempDir\
-\
-   Set vRoot = GetObject(&ldquo;IIS://localhost/W3svc/1/Root&rdquo; )\
-\
-   On Error Resume Next\
-   Set vDir = GetObject( &ldquo;IIS://localhost/W3svc/1/Root/&rdquo; + folderName )\
-\
-   If( vDir is Nothing ) Then\
-      Set vDir = vRoot.Create(&ldquo;IIsWebVirtualDir&rdquo;, folderName)\
-   End If\
-\
-   vDir.AccessRead = true\
-   vDir.Path = folderPath\
-   vDir.AuthFlags = 5\
-\
-   vDir.DirBrowseFlags = &amp;H4000003E\
-\
-   vDir.EnableDirBrowsing = False\
-   If createApp then vDir.AppCreate( true )\
-   vDir.AccessScript = True\
-\
-   vDir.SetInfo\
-\
-   UpdateScriptMaps folderName\
-End Sub\
-\
-Sub UpdateScriptMaps( folderName )\
-\
-   Dim winPath, netPath, toolPath\
-   Dim wsShell\
-   Dim fso\
-\
-   Set wsShell = CreateObject(&ldquo;WScript.Shell&rdquo;)\
-   Set fso = CreateObject(&ldquo;Scripting.FileSystemObject&rdquo;)\
-\
-   winPath = wsShell.ExpandEnvironmentStrings( &ldquo;%windir%&rdquo; )\
-   netPath = fso.BuildPath( winPath,
-&ldquo;Microsoft.NET\Framework\v2.0.50215&rdquo; )\
-   toolPath = fso.BuildPath( netPath, &ldquo;aspnet_regiis.exe&rdquo; )\
-\
-   wsShell.Run toolPath &amp; &ldquo; -sn W3SVC/1/Root/&rdquo;&ldquo;&rdquo; &amp; folderName &amp; &ldquo;&rdquo;&ldquo;&rdquo;, 1,
-true\
-End Sub</p>
-
-<p>The following line shows how to use this script :</p>
-
-<p>CreateWebFolder &ldquo;c:\temp\SampleVDir&rdquo;, &ldquo;SampleVDir&rdquo;, false</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/26/">&larr; Older</a>
@@ -1560,6 +1868,10 @@ End Sub</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
       </li>
     
@@ -1573,10 +1885,6 @@ End Sub</p>
     
       <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
       </li>
     
   </ul>

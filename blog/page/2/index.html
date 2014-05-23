@@ -9,9 +9,8 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="ETW or Event Tracing for Windows is a very efficient pub/sub built-in
-mechanism that runs in Kernel Mode for doing event tracing. That implies
-there &hellip;">
+  <meta name="description" content="Introduction The .NET ecosystem offers today a lot of alternatives for developing web
+applications. You can either use any of the frameworks &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +80,290 @@ there &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2013/07/22/getting-started-with-owin-and-katana/">Getting Started With Owin and Katana</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-07-22T00:00:00-03:00" pubdate data-updated="true">Jul 22<span>nd</span>, 2013</time>
+        
+         | <a href="/blog/2013/07/22/getting-started-with-owin-and-katana/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>Introduction</h2>
+
+<p>The .NET ecosystem offers today a lot of alternatives for developing web
+applications. You can either use any of the frameworks supported by
+Microsoft with ASP.NET such as Forms, MVC or Web API, or any other open
+source alternative like FubuMVC, ServiceStack, NancyFx or OpenRasta to
+name a few. From an architecture standpoint, all these frameworks have
+three main layers in common (in spite of the difference with the
+implementation details), hosting, middleware, and application.</p>
+
+<p>The hosting layer is responsible for managing the underline process,
+where the http connections are established and managed, and also to
+materialize those connections into request/response objects that are
+sent to the upper layers. For example, the hosting layer could be
+ASP.NET running in IIS, or it could also be a console application that
+uses the http listener directly.</p>
+
+<p>The middleware layer provides common infrastructure services, which runs
+at low level in the http stack, such as security, caching, or any other
+concern that can be handled at this level.</p>
+
+<p>The application layer is where the applications or services are
+implemented using the features available in the framework.</p>
+
+<p>However, the distinction between the middleware and application layers
+is not always clear, which causes that many of the middleware services
+end up being implemented in the application layer. For example, you
+could implement middleware services for security in ASP.NET MVC using
+filters, which rely on features specific to the application level in
+that framework. This make almost impossible to reuse all these services
+across all the available frameworks, so you will find different
+implementations of the same services for the different frameworks. To
+give an example, basic authentication is something that could be
+implemented as middleware service and reused, but today is implemented
+differently in each framework.</p>
+
+<p>Someone would suggest that a ASP.NET Http Module could be a good option
+for implementing a middleware service, but that’s not necessarily true
+as it would only work when the hosting layer uses ASP.NET.</p>
+
+<p>This exact problem is what <a href="http://owin.org/spec/owin-1.0.0.html">OWIN
+specification</a> tries to address by
+providing a common abstraction for any http-aware service or application
+with minimal dependencies on existing frameworks or implementations.  At
+very core level, OWIN defines a handler, which is represented as an
+application delegate,</p>
+
+<p>using AppFunc = Func&lt; \
+        IDictionary&lt;string, object>, // Environment \
+        Task>; // Done</p>
+
+<p>The idea is to represent the three layers discussed above as a set of
+handlers using the “chain of responsibility” pattern. The environment
+argument is a dictionary that the different handlers use to exchange
+values, and the next handler in the chain is represented with the task
+argument. Having said that, the first handler in the chain would be
+responsible for the hosting layer, and it should populate the
+environment with keys that describe the received http request message,
+such as scheme, port, request path, headers, etc. All those common
+headers are discussed as part of the specification.</p>
+
+<p>Katana is a Microsoft implementation of the OWIN specification, which
+includes handlers for the hosting and middleware layers. It’s an open
+source project, which can be found in this
+<a href="http://katanaproject.codeplex.com/SourceControl/latest">location</a>. All
+the investment that Microsoft has done so far for ASP.NET in the
+different application frameworks (i.e. MVC or Web API), it’s now being
+refactored as OWIN handlers that can be reused across different
+application frameworks. For example, cookie authentication or even OAuth
+are being implemented as middleware services that can be reused not only
+by ASP.NET web apps but also for other application frameworks in the
+open source world.</p>
+
+<p>The application layer is also implemented as another OWIN handler, which
+is responsible for setting up all the infrastructure required to handle
+the request/response at the application level. You will find application
+handlers for ASP.NET MVC, ASP.NET Web API, SignalR, or NancyFx to give
+an example. </p>
+
+<h2>Gettting Started with OWIN and Katana</h2>
+
+<p>The easiest way to get started with OWIN is to use the assembly
+distributed as nuget package. You will find a single nuget package for
+this called “OWIN”. This assembly only contains an interface
+IAppBuilder, which can be used to configure all the handlers that you
+want to use in your web application. This is a very low level interface
+that you won’t have to implement yourself if you use Katana.</p>
+
+<p>In addition to the “OWIN” assembly, you will find two additional nuget
+packages</p>
+
+<ul>
+<li>Owin.Extensions: Provides a set of very useful extensions methods
+for the IAppBuilder interface that you can use to configure the
+handlers.</li>
+<li>Owin.Types: Provides a set of wrappers to represent the environment
+dictionary as a typed object representing the request and response
+messages.</li>
+</ul>
+
+
+<p>You can implement your first OWIN handler using these three packages
+(You will not able to run it without the hosting handlers provided by
+Katana).</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">MyMiddleware</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">Func</span><span class="p">&lt;</span><span class="n">IDictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">object</span><span class="p">&gt;,</span> <span class="n">Task</span><span class="p">&gt;</span> <span class="n">next</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">public</span> <span class="nf">MyMiddleware</span><span class="p">(</span><span class="n">Func</span><span class="p">&lt;</span><span class="n">IDictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">object</span><span class="p">&gt;,</span> <span class="n">Task</span><span class="p">&gt;</span> <span class="n">next</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="n">next</span> <span class="p">=</span> <span class="n">next</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">public</span> <span class="n">Task</span> <span class="nf">Invoke</span><span class="p">(</span><span class="n">IDictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">object</span><span class="p">&gt;</span> <span class="n">env</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>    <span class="kt">var</span> <span class="n">headers</span> <span class="p">=</span> <span class="p">(</span><span class="n">IDictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">[]&gt;)</span><span class="n">env</span><span class="p">[</span><span class="s">&quot;owin.RequestHeaders&quot;</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">var</span> <span class="n">url</span> <span class="p">=</span> <span class="kt">string</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span><span class="s">&quot;{0}://{1}{2}{3}&quot;</span><span class="p">,</span>
+</span><span class='line'>                <span class="p">(</span><span class="kt">string</span><span class="p">)</span><span class="n">env</span><span class="p">[</span><span class="s">&quot;owin.RequestScheme&quot;</span><span class="p">],</span>
+</span><span class='line'>                <span class="n">headers</span><span class="p">[</span><span class="s">&quot;host&quot;</span><span class="p">].</span><span class="n">First</span><span class="p">(),</span>
+</span><span class='line'>                <span class="p">(</span><span class="kt">string</span><span class="p">)</span><span class="n">env</span><span class="p">[</span><span class="s">&quot;owin.RequestPathBase&quot;</span><span class="p">],</span>
+</span><span class='line'>                <span class="p">(</span><span class="kt">string</span><span class="p">)</span><span class="n">env</span><span class="p">[</span><span class="s">&quot;owin.RequestPath&quot;</span><span class="p">]);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="p">((</span><span class="kt">string</span><span class="p">)</span><span class="n">env</span><span class="p">[</span><span class="s">&quot;owin.RequestQueryString&quot;</span><span class="p">]</span> <span class="p">!=</span> <span class="s">&quot;&quot;</span><span class="p">)</span>
+</span><span class='line'>      <span class="n">url</span> <span class="p">+=</span> <span class="s">&quot;?&quot;</span> <span class="p">+</span> <span class="p">(</span><span class="kt">string</span><span class="p">)</span><span class="n">env</span><span class="p">[</span><span class="s">&quot;owin.RequestQueryString&quot;</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;The received URL is {0}&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="n">next</span><span class="p">(</span><span class="n">env</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is a low level handler that sends the request url to the console.
+As you can see, it relies on some existing properties in the
+environment, which should have been set by Katana in the hosting layer.
+The handler also receives the next handler to call in the chain as part
+of the constructor.</p>
+
+<p>The entry point in any Katana application must be a class that receives
+the IAppBuilder interface as argument to configure all the handlers, as
+it is shown below,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'> <span class="k">public</span> <span class="k">class</span> <span class="nc">Startup</span>
+</span><span class='line'> <span class="p">{</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">Configuration</span><span class="p">(</span><span class="n">IAppBuilder</span> <span class="n">app</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>       <span class="n">app</span><span class="p">.</span><span class="n">UseType</span><span class="p">&lt;</span><span class="n">MyMiddleware</span><span class="p">&gt;();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>UseType is one the extension methods provided by “Owin.Extensions” to
+configure a new handler in the pipeline. You can also other extension
+methods to define a handler on the fly using delegates as this one,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="n">app</span><span class="p">.</span><span class="n">UseHandlerAsync</span><span class="p">(</span><span class="k">async</span> <span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="n">res</span><span class="p">)</span> <span class="p">=&gt;</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">res</span><span class="p">.</span><span class="n">ContentType</span> <span class="p">=</span> <span class="s">&quot;text/plain&quot;</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">await</span> <span class="n">res</span><span class="p">.</span><span class="n">WriteAsync</span><span class="p">(</span><span class="s">&quot;Hello World&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>There is one more nuget package that you will find useful to create OWIN
+handlers, which is “Microsoft.Owin”. This is a package provided as part
+of Katana (It’s still a pre-release), which extends the Owin Request and
+Response classes with more properties and methods, and also helper
+methods to deal with these classes.</p>
+
+<h2>Hosting an application with Katana</h2>
+
+<p>Katana provides three options to host a web application.</p>
+
+<p>​1. OwinHost.exe. It’s a command tool that you can use to run the
+application. You can use multiple command arguments to specify the
+assembly with the entry point for configuring the IAppBuilder or other
+configuration settings such as the port number or tracing. This is tool
+is available as part of the nuget package “OwinHost”.</p>
+
+<p>​2. .NET application. There is a WebApp class that you can use to
+self-host a web application in any regular .NET application such as
+console app or a windows service. This class is available as part of the
+“Microsoft.Owin.Hosting” assembly.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">using</span> <span class="p">(</span><span class="n">WebApp</span><span class="p">.</span><span class="n">Start</span><span class="p">&lt;</span><span class="n">Startup</span><span class="p">&gt;(</span><span class="k">new</span> <span class="n">StartOptions</span> <span class="p">{</span> <span class="n">Port</span> <span class="p">=</span> <span class="m">5000</span> <span class="p">}))</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>   <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;Press Enter to quit.&quot;</span><span class="p">);</span>
+</span><span class='line'>   <span class="n">Console</span><span class="p">.</span><span class="n">ReadKey</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You need to pass the startup entry as argument to the static method
+“Start”.</p>
+
+<p>​3. ASP.NET. You need to reference the nuget package
+“Microsoft.Owin.Hosting.SystemWeb” (Pre-Release) from your web
+application project, and include the Startup class in that project as
+well.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1564,454 +1847,6 @@ enforced programmatically with federations.</li>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2012/11/15/await-whenall-waitall-oh-my/">Await, WhenAll, WaitAll, Oh My!!</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-11-15T00:00:00-03:00" pubdate data-updated="true">Nov 15<span>th</span>, 2012</time>
-        
-         | <a href="/blog/2012/11/15/await-whenall-waitall-oh-my/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>If you are dealing with asynchronous work in .NET, you might know that
-the Task class has become the main driver for wrapping asynchronous
-calls. Although this class was officially introduced in .NET 4.0, the
-programming model for consuming tasks was much more simplified in C#
-5.0 in .NET 4.5 with the addition of the new async/await keywords. In a
-nutshell, you can use these keywords to make asynchronous calls as if
-they were sequential, and avoiding in that way any fork or callback in
-the code. The compiler takes care of the rest.</p>
-
-<p>I was yesterday writing some code for making multiple asynchronous calls
-to backend services in parallel. The code looked as follow,</p>
-
-<pre><code>var allResults = new List&lt;Result&gt;();
-</code></pre>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-foreach(var provider in providers)
-</del></p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-{
-</del></p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-  var results = await provider.GetResults();
-</del></p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-  allResults.AddRange(results);
-</del></p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-}
-</del></p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-</del></p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-return allResults;
-</del></p>
-
-<p>You see, I was using the await keyword to make multiple calls in
-parallel. Something I did not consider was the overhead this code
-implied after being compiled. I started an interesting discussion with
-some smart folks in twitter. One of them, <a href="https://twitter.com/tourismgeek">Tugberk
-Ugurlu</a>, had the brilliant idea of
-actually write some code to make a performance comparison with another
-approach using Task.WhenAll.</p>
-
-<p>There are two additional methods you can use to wait for the results of
-multiple calls in parallel, WhenAll and WaitAll.</p>
-
-<p>WhenAll creates a new task and waits for results in that new task, so it
-does not block the calling thread. WaitAll, on the other hand, blocks
-the calling thread. This is the code Tugberk initially wrote, and I
-modified afterwards to also show the results of WaitAll.</p>
-
-<pre><code> class Program
-</code></pre>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>{
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-</del></p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>    private static Func&lt;Stopwatch, Task&gt;[] funcs = new Func&lt;Stopwatch, Task&gt;[] { 
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>        async (watch) =&gt; { watch.Start(); await Task.Delay(1000); 
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>            Console.WriteLine("1000 one has been completed."); },
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>        async (watch) =&gt; { await Task.Delay(1500); 
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>            Console.WriteLine("1500 one has been completed."); },
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>        async (watch) =&gt; { await Task.Delay(2000); 
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>            Console.WriteLine("2000 one has been completed."); watch.Stop(); 
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>            Console.WriteLine(watch.ElapsedMilliseconds + "ms has been elapsed."); }
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>    };
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-</del></p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>    static void Main(string[] args)
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>    {
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>        Console.WriteLine("Await in loop work starts...");
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-</del></p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>        DoWorkAsync().ContinueWith(task =&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>        {
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>            Console.WriteLine("Parallel work starts...");
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>            DoWorkInParallelAsync().ContinueWith(t =&gt;
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>                {
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>                    Console.WriteLine("WaitAll work starts...");
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-</del></p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>                    WaitForAll();
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-</del></p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>                });
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>        });
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>        Console.ReadLine();
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>    }
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-</del></p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>    static async Task DoWorkAsync()
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>    {
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>        Stopwatch watch = new Stopwatch();
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-</del></p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>        foreach (var func in funcs)
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>        {
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>            await func(watch);
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>        }
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>    }
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-</del></p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>    static async Task DoWorkInParallelAsync()
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>    {
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>        Stopwatch watch = new Stopwatch();
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>        await Task.WhenAll(funcs[0](watch), funcs[1](watch), funcs[2](watch));
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>    }
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
-</del></p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>    static void WaitForAll()
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>    {
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>        Stopwatch watch = new Stopwatch();
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>        Task.WaitAll(funcs[0](watch), funcs[1](watch), funcs[2](watch));
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>    }
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
-
-<pre><code>}
-</code></pre>
-
-<p>~~~~</p>
-
-<p>After running this code, the results were very concluding.</p>
-
-<p>Await in loop work starts&hellip; \
-1000 one has been completed. \
-1500 one has been completed. \
-2000 one has been completed. \
-4532ms has been elapsed.</p>
-
-<p>\
-Parallel work starts&hellip; \
-1000 one has been completed. \
-1500 one has been completed. \
-2000 one has been completed. \
-2007ms has been elapsed. \</p>
-
-<p>WaitAll work starts&hellip; \
-1000 one has been completed. \
-1500 one has been completed. \
-2000 one has been completed. \
-2009ms has been elapsed.</p>
-
-<p>The await keyword in a loop does not really make the calls in parallel.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/3/">&larr; Older</a>
@@ -2029,6 +1864,10 @@ Parallel work starts&hellip; \
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
       </li>
     
@@ -2042,10 +1881,6 @@ Parallel work starts&hellip; \
     
       <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
       </li>
     
   </ul>

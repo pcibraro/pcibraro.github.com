@@ -9,11 +9,10 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="Since the Gotdot.net site disappeared along with the code of this
-implementation, my friend Jason
-Hogg has kindly published the code
-on his
-blog. &hellip;">
+  <meta name="description" content="As I mentioned in a previous post, I have been very busy lately working
+with Daniel,
+Mariano and other guys here in
+Clarius on an open-source &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -83,6 +82,110 @@ blog. &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2007/11/30/simple-sharing-extensions-for-net/">Simple Sharing Extensions for .NET</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-11-30T00:00:00-03:00" pubdate data-updated="true">Nov 30<span>th</span>, 2007</time>
+        
+         | <a href="/blog/2007/11/30/simple-sharing-extensions-for-net/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As I mentioned in a previous post, I have been very busy lately working
+with <a href="http://weblogs.asp.net/cazzu">Daniel</a>,
+<a href="http://weblogs.asp.net/marianor/">Mariano</a> and other guys here in
+Clarius on an open-source implementation of <a href="http://www.codeplex.com/sse">Simple Sharing Extensions
+for .NET</a>. The architecture of the project
+is still evolving, many changes have been introduced since the the first
+release, and it will continue this way as long as we find things to
+improve or new features are added. For this reason is that your feedback
+is quite important for us at this point.</p>
+
+<p> </p>
+
+<p><img src="/images/legacy/SSE_Framework.jpg" alt="" /></p>
+
+<p> </p>
+
+<p>As the diagram above shows, we basically have three main parts or
+components that conforms to our architecture:</p>
+
+<p>​1. SSE Model Classes: They represent the classes needed to parse and
+maintain the SSE metadata. In this group, you can find classes such as
+Sync to represent the synchronization history, XmlItem that contains the
+item xml payload or Item, which is a combination of a payload with sync
+metadata.</p>
+
+<p>​2. Sync Engine: It represents the synchronization engine that process
+and applies the SSE rules to the items at runtime. It basically receives
+items from two different sources or repositories and makes a complete
+merge, determining new item additions, deletions, modifications or
+conflicts, when an item was modified in both sources according to the
+SSE rules.</p>
+
+<p>​3. Repositories: This is the part of the architecture that can be
+extended, and where the developers can have an opportunity to get their
+hands dirty. In a few words, a repository represents a source of Items
+that contains an xml payload and sync metadata. It is responsible to
+provide and maintain that information in a underline storage, which can
+be memory, files, databases, or any other kind of storage. Here, you can
+also find an specific kind of repository, a CompoundRepository, which
+implements the Repository API and delegates the work to two new classes,
+XmlRepository and SyncRepository. The first one is only responsible for
+maintaining application specific data or payloads, and the second one
+for the sync metadata, the CompoundRepository then, knows how to
+correlate both parts (the payload and the sync info) through the SSE
+identifier that they have in common.</p>
+
+<p>So, depending on the sync scenario, you can just implement a part of a
+repository (Deriving from XmlRepository or SyncRepository) or a complete
+repository (Deriving from Repository).</p>
+
+<p>For the moment, there is only a SyncRepository that keeps the sync
+metadata in a database (Access, SQL Server or SQL CE), but more
+repositories will be available soon.</p>
+
+<p>Just to have an idea of how a synchronization scenario looks like, we
+could have for example two repositories, one that knows to how to read
+and maintain information about outlook contacts and another repository 
+that knows how to publish and retrieve items from the Microsoft Live
+Personal SSE service
+(<a href="http://sse.mslivelabs.com/">http://sse.mslivelabs.com/</a>). This will
+allow us a bidirectional synchronization of outlook contacts using
+perhaps the SSE service only as a relay agent.</p>
+
+<p><img src="/images/legacy/SSE_Scenario.jpg" alt="" /></p>
+
+<p>If you are interested in implementing any kind of synchronization
+scenario, go ahead and take a look at this project :&ndash;).</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1063,55 +1166,6 @@ protectionLevel=&ldquo;EncryptAndSign&rdquo; /></p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2007/07/23/microsoft-sharedview-beta/">Microsoft SharedView Beta</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2007-07-23T00:00:00-03:00" pubdate data-updated="true">Jul 23<span>rd</span>, 2007</time>
-        
-         | <a href="/blog/2007/07/23/microsoft-sharedview-beta/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>If you haven&rsquo;t taken a look yet, Microsoft SharedView is a fast and easy
-way to share documents and screen views with small groups of friends or
-coworkers; anytime, anywhere, and what is most important, it is
-completely free. This version is available up to 15 people in different
-locations.</p>
-
-<p>Although it is still in beta version, I have been using this product for
-a while to show the progress of my work to other off-site teams, and it
-works pretty well with a standard internet connection.</p>
-
-<p>If you want to try it, it is
-available <a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=ddbf048d-db67-4c56-9335-6964e15975d2&amp;DisplayLang=en">here</a>.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/21/">&larr; Older</a>
@@ -1129,6 +1183,10 @@ available <a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=ddb
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
       </li>
     
@@ -1142,10 +1200,6 @@ available <a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=ddb
     
       <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
       </li>
     
   </ul>

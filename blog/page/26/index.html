@@ -9,8 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="SQL Server 2005 ( Codenamed &ldquo;Yukon&rdquo; )  provides a new interesting
-feature to execute stores procedures or Transact-SQL statements through &hellip;">
+  <meta name="description" content="This script is helpful when you have different versions of the .NET
+framework running in your computer and you need to setup a virtual
+directory in &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -80,6 +81,109 @@ feature to execute stores procedures or Transact-SQL statements through &hell
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2005/06/23/414787/">Creating a Virtual Directory With ASP.NET 2.0 Support</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2005-06-23T00:00:00-03:00" pubdate data-updated="true">Jun 23<span>rd</span>, 2005</time>
+        
+         | <a href="/blog/2005/06/23/414787/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>This script is helpful when you have different versions of the .NET
+framework running in your computer and you need to setup a virtual
+directory in IIS targeting one of them.\
+If you have the versions 1.1 and 2.0, when you create a virtual
+directory in IIS, it takes a version by default, usually 1.1.</p>
+
+<p>The script is very simple, it creates a virtual directory using WMI and
+then it uses the tool &ldquo;aspnet_regiis.exe&rdquo; to setup the .NET framework
+scriptmaps.</p>
+
+<p><strong>Note</strong>: It is using the version 2.0, you should change the following
+line to use another version:</p>
+
+<p>netPath = fso.BuildPath( winPath, &ldquo;Microsoft.NET\Framework\v2.0.50215&rdquo;
+)</p>
+
+<p>The script looks as follow:</p>
+
+<p>Sub CreateWebFolder( folderPath, folderName, createApp )\
+   Dim vRoot, vDir, tempDir\
+\
+   Set vRoot = GetObject(&ldquo;IIS://localhost/W3svc/1/Root&rdquo; )\
+\
+   On Error Resume Next\
+   Set vDir = GetObject( &ldquo;IIS://localhost/W3svc/1/Root/&rdquo; + folderName )\
+\
+   If( vDir is Nothing ) Then\
+      Set vDir = vRoot.Create(&ldquo;IIsWebVirtualDir&rdquo;, folderName)\
+   End If\
+\
+   vDir.AccessRead = true\
+   vDir.Path = folderPath\
+   vDir.AuthFlags = 5\
+\
+   vDir.DirBrowseFlags = &amp;H4000003E\
+\
+   vDir.EnableDirBrowsing = False\
+   If createApp then vDir.AppCreate( true )\
+   vDir.AccessScript = True\
+\
+   vDir.SetInfo\
+\
+   UpdateScriptMaps folderName\
+End Sub\
+\
+Sub UpdateScriptMaps( folderName )\
+\
+   Dim winPath, netPath, toolPath\
+   Dim wsShell\
+   Dim fso\
+\
+   Set wsShell = CreateObject(&ldquo;WScript.Shell&rdquo;)\
+   Set fso = CreateObject(&ldquo;Scripting.FileSystemObject&rdquo;)\
+\
+   winPath = wsShell.ExpandEnvironmentStrings( &ldquo;%windir%&rdquo; )\
+   netPath = fso.BuildPath( winPath,
+&ldquo;Microsoft.NET\Framework\v2.0.50215&rdquo; )\
+   toolPath = fso.BuildPath( netPath, &ldquo;aspnet_regiis.exe&rdquo; )\
+\
+   wsShell.Run toolPath &amp; &ldquo; -sn W3SVC/1/Root/&rdquo;&ldquo;&rdquo; &amp; folderName &amp; &ldquo;&rdquo;&ldquo;&rdquo;, 1,
+true\
+End Sub</p>
+
+<p>The following line shows how to use this script :</p>
+
+<p>CreateWebFolder &ldquo;c:\temp\SampleVDir&rdquo;, &ldquo;SampleVDir&rdquo;, false</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -692,6 +796,10 @@ can use it to install your database in any machine.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
       </li>
     
@@ -705,10 +813,6 @@ can use it to install your database in any machine.</p>
     
       <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
       </li>
     
   </ul>

@@ -9,8 +9,8 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="One of the discussions that we had during the last summit with the rest
-of &ldquo;Connected Systems&rdquo; MVPs was the possibility of supporting a &hellip;">
+  <meta name="description" content="As a MVP rookie, the only thing I can say is that the event met all the
+expectations I had before traveling to Seattle, the wait was worth it. I &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -80,6 +80,56 @@ of &ldquo;Connected Systems&rdquo; MVPs was the possibility of supporting a &hel
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/04/21/my-first-mvp-summit/">My First MVP Summit</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-04-21T00:00:00-03:00" pubdate data-updated="true">Apr 21<span>st</span>, 2008</time>
+        
+         | <a href="/blog/2008/04/21/my-first-mvp-summit/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As a MVP rookie, the only thing I can say is that the event met all the
+expectations I had before traveling to Seattle, the wait was worth it. I
+could attend a lot of interesting sessions about WCF, WWF, and OSLO
+among others, which gave me a complete picture about where Microsoft is
+headed in the future with respect to Service oriented applications.</p>
+
+<p>Another interesting aspect of the summit was the opportunity to meet
+other MVPs in person, very smart people and community leaders like Scott
+Hanselman, Roy Osherove (IXMLSerializable), Sam Gentile, Jesus Rodriguez
+or Roman Kiss (The brain behind many of the cool WSE, WWF and WCF cool
+samples that you can find around) to name a few.  </p>
+
+<p>I look forward to attending the summit again next year :).</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1591,110 +1641,6 @@ property setters).</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2007/11/30/simple-sharing-extensions-for-net/">Simple Sharing Extensions for .NET</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2007-11-30T00:00:00-03:00" pubdate data-updated="true">Nov 30<span>th</span>, 2007</time>
-        
-         | <a href="/blog/2007/11/30/simple-sharing-extensions-for-net/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>As I mentioned in a previous post, I have been very busy lately working
-with <a href="http://weblogs.asp.net/cazzu">Daniel</a>,
-<a href="http://weblogs.asp.net/marianor/">Mariano</a> and other guys here in
-Clarius on an open-source implementation of <a href="http://www.codeplex.com/sse">Simple Sharing Extensions
-for .NET</a>. The architecture of the project
-is still evolving, many changes have been introduced since the the first
-release, and it will continue this way as long as we find things to
-improve or new features are added. For this reason is that your feedback
-is quite important for us at this point.</p>
-
-<p> </p>
-
-<p><img src="/images/legacy/SSE_Framework.jpg" alt="" /></p>
-
-<p> </p>
-
-<p>As the diagram above shows, we basically have three main parts or
-components that conforms to our architecture:</p>
-
-<p>​1. SSE Model Classes: They represent the classes needed to parse and
-maintain the SSE metadata. In this group, you can find classes such as
-Sync to represent the synchronization history, XmlItem that contains the
-item xml payload or Item, which is a combination of a payload with sync
-metadata.</p>
-
-<p>​2. Sync Engine: It represents the synchronization engine that process
-and applies the SSE rules to the items at runtime. It basically receives
-items from two different sources or repositories and makes a complete
-merge, determining new item additions, deletions, modifications or
-conflicts, when an item was modified in both sources according to the
-SSE rules.</p>
-
-<p>​3. Repositories: This is the part of the architecture that can be
-extended, and where the developers can have an opportunity to get their
-hands dirty. In a few words, a repository represents a source of Items
-that contains an xml payload and sync metadata. It is responsible to
-provide and maintain that information in a underline storage, which can
-be memory, files, databases, or any other kind of storage. Here, you can
-also find an specific kind of repository, a CompoundRepository, which
-implements the Repository API and delegates the work to two new classes,
-XmlRepository and SyncRepository. The first one is only responsible for
-maintaining application specific data or payloads, and the second one
-for the sync metadata, the CompoundRepository then, knows how to
-correlate both parts (the payload and the sync info) through the SSE
-identifier that they have in common.</p>
-
-<p>So, depending on the sync scenario, you can just implement a part of a
-repository (Deriving from XmlRepository or SyncRepository) or a complete
-repository (Deriving from Repository).</p>
-
-<p>For the moment, there is only a SyncRepository that keeps the sync
-metadata in a database (Access, SQL Server or SQL CE), but more
-repositories will be available soon.</p>
-
-<p>Just to have an idea of how a synchronization scenario looks like, we
-could have for example two repositories, one that knows to how to read
-and maintain information about outlook contacts and another repository 
-that knows how to publish and retrieve items from the Microsoft Live
-Personal SSE service
-(<a href="http://sse.mslivelabs.com/">http://sse.mslivelabs.com/</a>). This will
-allow us a bidirectional synchronization of outlook contacts using
-perhaps the SSE service only as a relay agent.</p>
-
-<p><img src="/images/legacy/SSE_Scenario.jpg" alt="" /></p>
-
-<p>If you are interested in implementing any kind of synchronization
-scenario, go ahead and take a look at this project :&ndash;).</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/20/">&larr; Older</a>
@@ -1712,6 +1658,10 @@ scenario, go ahead and take a look at this project :&ndash;).</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
       </li>
     
@@ -1725,10 +1675,6 @@ scenario, go ahead and take a look at this project :&ndash;).</p>
     
       <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
       </li>
     
   </ul>

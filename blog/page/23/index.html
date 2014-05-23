@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="What certificate to use or where to get one of these, is perhaps is one
-the most common question I read often in the MS newsgroups.\
-Well, for &hellip;">
+  <meta name="description" content="This post discusses first the most important aspects to consider
+regarding security, and then, how these aspects are implemented with web
+services. &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +81,191 @@ Well, for &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/08/23/Securing-web-services/">Securing Web Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-08-23T00:00:00-03:00" pubdate data-updated="true">Aug 23<span>rd</span>, 2006</time>
+        
+         | <a href="/blog/2006/08/23/Securing-web-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>This post discusses first the most important aspects to consider
+regarding security, and then, how these aspects are implemented with web
+services.</p>
+
+<h3>Security Aspects</h3>
+
+<p>Sending and receiving plain text messages through unsecured networks can
+lead to attacks performed by an attacker who potentially can intercept
+these messages and modify them for malicious purposes.</p>
+
+<p>By using some security mechanisms, the sensitive data can be protected
+against threats such as eavesdropping or data tampering.</p>
+
+<p>Usually, the following security aspects are considered for any
+application:</p>
+
+<ul>
+<li><strong><em>Authentication</em></strong>: Is the process of identifying the user, and
+making sure that the user is who he says he is.</li>
+<li><strong><em>Authorization</em></strong>: Defines the rights and permissions of users.</li>
+<li><strong><em>Message Integrity</em></strong>: Guarantees that a message has not been
+changed in transit.</li>
+<li><strong><em>Message Confidentiality</em></strong>: Encrypts a message so that
+unauthorized entities cannot view its content.</li>
+<li><strong><em>Non-Repudiation</em></strong>: Guarantees that the sender of a message
+cannot later deny having sent the message and that the recipient
+cannot deny having received it.</li>
+</ul>
+
+
+<h3>Transport security vs. Message layer security</h3>
+
+<p>This is worth mentioning since the difference between these two modes to
+assure security between two endpoints is not generally known.</p>
+
+<h4><strong>Transport security</strong></h4>
+
+<p>Transport security represents an approach where the underlying transport
+or application servers are used to handle security features. When the
+message leaves the transport, it is no longer secure. For example,
+Secure Sockets Layer (SSL) is a common transport layer approach that is
+used to provide encryption.</p>
+
+<p>This approach does not support multiple intermediates, if a message
+needs to go through multiple endpoints to reach its destination, each
+intermediate point must forward the message over a new SSL connection
+(the original message from the client is not protected on each
+intermediary).</p>
+
+<p> </p>
+
+<h4><strong>Message security</strong></h4>
+
+<p>Message layer security represents an approach where all the information
+related to security is encapsulated in the message. Securing the message
+using this approach instead of using transport security has several
+advantages that include:</p>
+
+<p> </p>
+
+<ul>
+<li><strong>Increased flexibility</strong>: Parts of the message, instead of the
+entire message, can be encrypted or signed. This means that
+intermediaries can view parts of the message that are intended for
+them.</li>
+<li><strong>Support for multiple transports</strong>: The secured messages can be
+sent over many different transports, such as Simple Mail Transfer
+(SMTP), HTTP, Message Queues, without having to rely on the protocol
+for security. The message is still secure after taking it out from
+the underlying transport.</li>
+</ul>
+
+
+<h3><strong><em>Web Services</em></strong></h3>
+
+<p>The web services by themselves do not provide the quality of service
+required by many business applications these days. (e.g. transactions,
+security, and reliability).</p>
+
+<p>Due to that reason, different vendors such as Microsoft, Oracle, IBM,
+Sun and others have coordinated their efforts to improve that quality of
+service, and as result of this work, they developed the WS-* protocols.</p>
+
+<p>WS-* is the name for a set of protocols that extend the normal web
+service functionality modifying the SOAP messages (They work at message
+level).</p>
+
+<p>For the moment, these are some of the available protocols that can be
+used to provide a better quality of service:</p>
+
+<p> </p>
+
+<ul>
+<li><strong>WS-Security</strong>: Describes enhancements to SOAP messaging to provide
+message integrity, message confidentiality, and single message
+authentication. The specified mechanisms can be used to accommodate
+a wide variety of security models and encryption technologies.</li>
+<li><strong>WS-Addressing:</strong>Provides transport-neutral mechanisms to address
+web services and messages. Specifically, this specification defines
+XML elements to identify web services endpoints and to secure
+end-to-end endpoint identification in messages. In other words, it
+enables message transmission in a transport-neutral manner.
+Therefore, HTTP is no longer required as unique transport for web
+services, and other kinds of transports can be used, such as SMTP,
+TCP, and even MSMQ.</li>
+<li><strong>MTOM:</strong>Provides a mechanism for optimizing the transmission and/or
+wire format of a SOAP message when file attachments need to be
+included.</li>
+<li><strong>WS-ReliableMessaging</strong>:  Describes a protocol that allows messages
+to be delivered reliably between distributed applications in the
+presence of software components, system, or network failures. This
+protocol can be implemented using different network transport
+technologies.</li>
+<li><strong>WS-Transaction:</strong>Provides a mechanism to establish short-lived
+distributed transactions between applications that have
+all-or-nothing semantics.</li>
+</ul>
+
+
+<hr />
+
+<p>Microsoft already implemented WS-Security, WS-Addressing and MTOM in the
+Microsoft WSE framework, but it is planning to implement all of them in
+WCF (Windows Communication Foundation). WCF is a messaging framework to
+build distributed application that will be available in a couple of
+months.</p>
+
+<p> </p>
+
+<p>Below, a summary about the advantages of using web services.</p>
+
+<p> </p>
+
+<p><strong>Advantages</strong></p>
+
+<hr />
+
+<ul>
+<li>It is highly interoperable. Almost all the application vendors
+support basic web services and the WS-* specifications as well.</li>
+<li>It works in a transport-neutral manner, any transport can be used.</li>
+<li>It is based on XML and other open standards. The application does
+not need to provide a custom mechanism to parse or transport the
+messages.</li>
+<li>They can provide message authentication, integrity and
+confidentiality.</li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1127,72 +1312,6 @@ ServiceInterfaces.Client&rdquo;</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2006/03/29/WS_2D00_Compression-for-WCF/">WS-Compression for WCF</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2006-03-29T00:00:00-03:00" pubdate data-updated="true">Mar 29<span>th</span>, 2006</time>
-        
-         | <a href="/blog/2006/03/29/WS_2D00_Compression-for-WCF/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>I have developed a new WS-Compression implementation for WCF.  This code
-is based on the <a href="http://weblogs.shockbyte.com.ar/rodolfof/archive/2006/02/07/4585.aspx" title="WSE 3.0 implementation">WSE 3.0
-implementation</a> 
-made by my partner <a href="http://weblogs.shockbyte.com.ar/rodolfof" title="Rodolfo Finochieti">Rodolfo
-Finochieti</a>.</p>
-
-<p> </p>
-
-<p>Some features provided by this implementation:</p>
-
-<p> </p>
-
-<ul>
-<li>Message body compression</li>
-<li>Different compression algorithms (GZIP, Deflate)</li>
-<li>Different compression levels</li>
-<li>Support to enable compression by means of configuration or code</li>
-</ul>
-
-
-<p> </p>
-
-<p>You can download it from
-<a href="/images/legacy/WSCompression.zip" title="here">here</a></p>
-
-<p>UPDATED: A new version for the WCF september RC is
-available <a href="/images/legacy/WCFCompression-RC1.zip">here</a></p>
-
-<p>Enjoy :)</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/24/">&larr; Older</a>
@@ -1210,6 +1329,10 @@ available <a href="/images/legacy/WCFCompression-RC1.zip">here</a></p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
       </li>
     
@@ -1223,10 +1346,6 @@ available <a href="/images/legacy/WCFCompression-RC1.zip">here</a></p>
     
       <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
       </li>
     
   </ul>

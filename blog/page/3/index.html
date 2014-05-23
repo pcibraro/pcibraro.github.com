@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="UrlHelper is the class you can use in ASP.NET Web API to automatically
-infer links from the routing table without hardcoding anything. For
-example, &hellip;">
+  <meta name="description" content="If you are dealing with asynchronous work in .NET, you might know that
+the Task class has become the main driver for wrapping asynchronous
+calls. &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +81,454 @@ example, &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/11/15/await-whenall-waitall-oh-my/">Await, WhenAll, WaitAll, Oh My!!</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-11-15T00:00:00-03:00" pubdate data-updated="true">Nov 15<span>th</span>, 2012</time>
+        
+         | <a href="/blog/2012/11/15/await-whenall-waitall-oh-my/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>If you are dealing with asynchronous work in .NET, you might know that
+the Task class has become the main driver for wrapping asynchronous
+calls. Although this class was officially introduced in .NET 4.0, the
+programming model for consuming tasks was much more simplified in C#
+5.0 in .NET 4.5 with the addition of the new async/await keywords. In a
+nutshell, you can use these keywords to make asynchronous calls as if
+they were sequential, and avoiding in that way any fork or callback in
+the code. The compiler takes care of the rest.</p>
+
+<p>I was yesterday writing some code for making multiple asynchronous calls
+to backend services in parallel. The code looked as follow,</p>
+
+<pre><code>var allResults = new List&lt;Result&gt;();
+</code></pre>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+foreach(var provider in providers)
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+{
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+  var results = await provider.GetResults();
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+  allResults.AddRange(results);
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+}
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+return allResults;
+</del></p>
+
+<p>You see, I was using the await keyword to make multiple calls in
+parallel. Something I did not consider was the overhead this code
+implied after being compiled. I started an interesting discussion with
+some smart folks in twitter. One of them, <a href="https://twitter.com/tourismgeek">Tugberk
+Ugurlu</a>, had the brilliant idea of
+actually write some code to make a performance comparison with another
+approach using Task.WhenAll.</p>
+
+<p>There are two additional methods you can use to wait for the results of
+multiple calls in parallel, WhenAll and WaitAll.</p>
+
+<p>WhenAll creates a new task and waits for results in that new task, so it
+does not block the calling thread. WaitAll, on the other hand, blocks
+the calling thread. This is the code Tugberk initially wrote, and I
+modified afterwards to also show the results of WaitAll.</p>
+
+<pre><code> class Program
+</code></pre>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>{
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    private static Func&lt;Stopwatch, Task&gt;[] funcs = new Func&lt;Stopwatch, Task&gt;[] { 
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        async (watch) =&gt; { watch.Start(); await Task.Delay(1000); 
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>            Console.WriteLine("1000 one has been completed."); },
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        async (watch) =&gt; { await Task.Delay(1500); 
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>            Console.WriteLine("1500 one has been completed."); },
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        async (watch) =&gt; { await Task.Delay(2000); 
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>            Console.WriteLine("2000 one has been completed."); watch.Stop(); 
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>            Console.WriteLine(watch.ElapsedMilliseconds + "ms has been elapsed."); }
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    };
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    static void Main(string[] args)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        Console.WriteLine("Await in loop work starts...");
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        DoWorkAsync().ContinueWith(task =&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>            Console.WriteLine("Parallel work starts...");
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>            DoWorkInParallelAsync().ContinueWith(t =&gt;
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>                {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>                    Console.WriteLine("WaitAll work starts...");
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>                    WaitForAll();
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>                });
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        });
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        Console.ReadLine();
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    }
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    static async Task DoWorkAsync()
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        Stopwatch watch = new Stopwatch();
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        foreach (var func in funcs)
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>            await func(watch);
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        }
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    }
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    static async Task DoWorkInParallelAsync()
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        Stopwatch watch = new Stopwatch();
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        await Task.WhenAll(funcs[0](watch), funcs[1](watch), funcs[2](watch));
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    }
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}
+</del></p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    static void WaitForAll()
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    {
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        Stopwatch watch = new Stopwatch();
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>        Task.WaitAll(funcs[0](watch), funcs[1](watch), funcs[2](watch));
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>    }
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;font-size: 12px; font-family: consolas,&lsquo;Courier New&rsquo;,courier,monospace; margin: 0em; width: 100%; background-color: #ffffff&rdquo;}</p>
+
+<pre><code>}
+</code></pre>
+
+<p>~~~~</p>
+
+<p>After running this code, the results were very concluding.</p>
+
+<p>Await in loop work starts&hellip; \
+1000 one has been completed. \
+1500 one has been completed. \
+2000 one has been completed. \
+4532ms has been elapsed.</p>
+
+<p>\
+Parallel work starts&hellip; \
+1000 one has been completed. \
+1500 one has been completed. \
+2000 one has been completed. \
+2007ms has been elapsed. \</p>
+
+<p>WaitAll work starts&hellip; \
+1000 one has been completed. \
+1500 one has been completed. \
+2000 one has been completed. \
+2009ms has been elapsed.</p>
+
+<p>The await keyword in a loop does not really make the calls in parallel.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1877,102 +2325,6 @@ in this GitHub repository,</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2012/03/22/debugging-node-js-applications-for-windows-azure/">Debugging Node.js Applications for Windows Azure</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-03-22T00:00:00-03:00" pubdate data-updated="true">Mar 22<span>nd</span>, 2012</time>
-        
-         | <a href="/blog/2012/03/22/debugging-node-js-applications-for-windows-azure/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>In case you are developing a new web application with Node.js for
-Windows Azure, you might notice there is no easy way to debug the
-application unless you are developing in an integrated IDE like Cloud9.
-For those that develop applications locally using a text editor (or
-WebMatrix) and Windows Azure Powershell for Node.js, it requires some
-steps not documented anywhere for the moment.</p>
-
-<p>I spent a few hours on this the other day I practically got nowhere
-until I received some help from <a href="http://tomasz.janczuk.org">Tomek</a> and
-the rest of them. The IISNode version that currently ships with the
-Windows Azure for Node.js SDK does not support debugging by default, so
-you need to install the IISNode full version available in the <a href="https://github.com/windowsazure/iisnode/downloads">github
-repository</a>. </p>
-
-<p>Once you have installed the full version, you need to enable debugging
-for the web application by modifying the web.config file</p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
-&lt;iisnode
-</del></p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code> debuggingEnabled="true"
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code> loggingEnabled="true"
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code> devErrorsEnabled="true"
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
-   />
-</del></p>
-
-<p>The xml above needs to be inserted within the existing
-“&lt;system.webServer/>” section.</p>
-
-<p>The last step is to open a WebKit browser (e.g. Chrome) and navigate to
-the URL where your application is hosted but adding the segment “/debug”
-to  the end. The full URL to the node.js application must be used, for
-example,
-<a href="http://localhost:81/myserver.js/debug">http://localhost:81/myserver.js/debug</a></p>
-
-<p>That should open a new instance of Node inspector on the browser, so you
-can debug the application from there.</p>
-
-<p>Enjoy!!</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/4/">&larr; Older</a>
@@ -1990,6 +2342,10 @@ can debug the application from there.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
       </li>
     
@@ -2003,10 +2359,6 @@ can debug the application from there.</p>
     
       <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
       </li>
     
   </ul>

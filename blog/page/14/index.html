@@ -9,9 +9,8 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="Streaming large content such as media content, images or files is a
-common scenario for RESTful services. If a scenario like this is not
-well &hellip;">
+  <meta name="description" content="I just got great news!  MVP in Connected Systems for another year. I want to thank Ed Hickey, my MVP lead Fernando Garcia
+Loera, and the rest of &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +80,51 @@ well &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/04/01/mvp-again-2009/">MVP Again 2009!!</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-04-01T00:00:00-03:00" pubdate data-updated="true">Apr 1<span>st</span>, 2009</time>
+        
+         | <a href="/blog/2009/04/01/mvp-again-2009/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I just got great news!  MVP in Connected Systems for another year.</p>
+
+<p>I want to thank Ed Hickey, my MVP lead <a href="http://blogs.msdn.com/mvplead">Fernando Garcia
+Loera</a>, and the rest of people involved
+in the evaluation process for once again considering my efforts in the
+community worthy of recognition.</p>
+
+<p>Thanks again Microsoft!!!</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1738,121 +1782,6 @@ with the framework).</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2009/02/24/carrying-sensitive-information-in-saml-assertions/">Carrying Sensitive Information in SAML Assertions</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2009-02-24T00:00:00-03:00" pubdate data-updated="true">Feb 24<span>th</span>, 2009</time>
-        
-         | <a href="/blog/2009/02/24/carrying-sensitive-information-in-saml-assertions/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>When SAML is used in conjunction with WS-Security, only an small piece
-of the token is encrypted, the proof key for the relying party. The rest
-of the token goes in plain text, that also includes the user&rsquo;s claims.</p>
-
-<p>&lt;saml:Assertion> </p>
-
-<p>  &lt;saml:Conditions NotBefore=&ldquo;2009-02-24T19:48:20.500Z&rdquo;
-NotOnOrAfter=&ldquo;2009-02-24T19:53:20.500Z&rdquo;>&lt;/saml:Conditions></p>
-
-<p>  &lt;saml:AttributeStatement></p>
-
-<p>  &lt;saml:Subject></p>
-
-<p>    &lt;saml:NameIdentifier>&lt;/saml:NameIdentifier></p>
-
-<p>    &lt;saml:SubjectConfirmation></p>
-
-<p>     
-&lt;saml:ConfirmationMethod>urn:oasis:names:tc:SAML:1.0:cm:holder-of-key&lt;/saml:ConfirmationMethod></p>
-
-<p>        &lt;KeyInfo
-xmlns=&ldquo;<a href="http://www.w3.org/2000/09/xmldsig#">http://www.w3.org/2000/09/xmldsig#</a>&rdquo;>&hellip;&lt;/KeyInfo></p>
-
-<p>   &lt;/saml:SubjectConfirmation></p>
-
-<p>  &lt;/saml:Subject></p>
-
-<p>  &lt;saml:Attribute AttributeName=&ldquo;displayName&rdquo;
-AttributeNamespace=&ldquo;<a href="http://schemas.microsoft.com/xsi/2005/05/role">http://schemas.microsoft.com/xsi/2005/05/role</a>&rdquo;></p>
-
-<p><strong>      &lt;</strong><strong>saml:AttributeValue>John Foo&lt;/saml:AttributeValue</strong><strong>>
-&lt;&mdash;Attribute value&mdash;></strong></p>
-
-<p>  &lt;/saml:Attribute></p>
-
-<p>  &lt;/saml:AttributeStatement></p>
-
-<p>  &lt;Signature
-xmlns=&ldquo;<a href="http://www.w3.org/2000/09/xmldsig#">http://www.w3.org/2000/09/xmldsig#</a>&rdquo;>&hellip;&lt;/Signature></p>
-
-<p>&lt;/saml:Assertion></p>
-
-<p>Knowing this, you should never include sensitive information as claims
-in a SAML token. This is also related to the <a href="http://www.identityblog.com/stories/2004/12/09/thelaws.html">identity law #2, &ldquo;Minimal
-Disclosure for a Constrained
-Use&rdquo;</a>. The
-Identity provider should only disclose the least amount of identifiying
-information for executing the operation on the relying party.</p>
-
-<p>Some examples are,</p>
-
-<ul>
-<li><em>A winery only needs to know whether the customer is in a legal age
-for buying alcohol according to the<strong>law, a claim like &ldquo;over21&rdquo;
-should be enough for that purpose, there is not need to know the
-customer birth</strong>date at all.</em></li>
-<li><em>An online store that sells products does not necessary need to know
-the number of every credit card owned by a customer, a friendly name
-representing the card and optionally the available balance could be
-enough for completing a purchase.</em></li>
-</ul>
-
-
-<p>SAML 2.0 introduces the concept of &ldquo;encrypted attribute&rdquo;, which clearly
-states its purpose, encrypt individual assertions in a SAML token. In
-this way, a token can now carry the encrypted proof key and optionally
-one or more encrypted assertions with sensitive information.</p>
-
-<p>You can take a look at <a href="https://spaces.internet2.edu/display/SHIB/SAMLDiffs">this
-page</a> for more
-information about the differences between SAML 1.1 and 2.0.</p>
-
-<p>Geneva Framework Beta 1 already implements a subset of SAML 2.0,
-however, it looks like this feature has been left out in the current
-release. Not sure either whether this feature will be included as part
-of the final release (Last quarter of 2009). I created <a href="http://social.msdn.microsoft.com/Forums/en-US/Geneva/thread/a63e31cb-a109-4e99-8538-2eb084ed3827">a
-post</a>
-in the forums some time ago, I haven&rsquo;t received any feedback yet.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/15/">&larr; Older</a>
@@ -1870,6 +1799,10 @@ in the forums some time ago, I haven&rsquo;t received any feedback yet.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
       </li>
     
@@ -1883,10 +1816,6 @@ in the forums some time ago, I haven&rsquo;t received any feedback yet.</p>
     
       <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
       </li>
     
   </ul>

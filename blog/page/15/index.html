@@ -9,10 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="As my friend Jesus mentioned in the post &ldquo;Using XAML serialization in
-WCF
-4.0&rdquo;,
-WCF 4.0 introduces a new way to implement services that &hellip;">
+  <meta name="description" content="When SAML is used in conjunction with WS-Security, only an small piece
+of the token is encrypted, the proof key for the relying party. The rest
+of &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -82,6 +81,121 @@ WCF 4.0 introduces a new way to implement services that &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/02/24/carrying-sensitive-information-in-saml-assertions/">Carrying Sensitive Information in SAML Assertions</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-02-24T00:00:00-03:00" pubdate data-updated="true">Feb 24<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/02/24/carrying-sensitive-information-in-saml-assertions/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>When SAML is used in conjunction with WS-Security, only an small piece
+of the token is encrypted, the proof key for the relying party. The rest
+of the token goes in plain text, that also includes the user&rsquo;s claims.</p>
+
+<p>&lt;saml:Assertion> </p>
+
+<p>  &lt;saml:Conditions NotBefore=&ldquo;2009-02-24T19:48:20.500Z&rdquo;
+NotOnOrAfter=&ldquo;2009-02-24T19:53:20.500Z&rdquo;>&lt;/saml:Conditions></p>
+
+<p>  &lt;saml:AttributeStatement></p>
+
+<p>  &lt;saml:Subject></p>
+
+<p>    &lt;saml:NameIdentifier>&lt;/saml:NameIdentifier></p>
+
+<p>    &lt;saml:SubjectConfirmation></p>
+
+<p>     
+&lt;saml:ConfirmationMethod>urn:oasis:names:tc:SAML:1.0:cm:holder-of-key&lt;/saml:ConfirmationMethod></p>
+
+<p>        &lt;KeyInfo
+xmlns=&ldquo;<a href="http://www.w3.org/2000/09/xmldsig#">http://www.w3.org/2000/09/xmldsig#</a>&rdquo;>&hellip;&lt;/KeyInfo></p>
+
+<p>   &lt;/saml:SubjectConfirmation></p>
+
+<p>  &lt;/saml:Subject></p>
+
+<p>  &lt;saml:Attribute AttributeName=&ldquo;displayName&rdquo;
+AttributeNamespace=&ldquo;<a href="http://schemas.microsoft.com/xsi/2005/05/role">http://schemas.microsoft.com/xsi/2005/05/role</a>&rdquo;></p>
+
+<p><strong>      &lt;</strong><strong>saml:AttributeValue>John Foo&lt;/saml:AttributeValue</strong><strong>>
+&lt;&mdash;Attribute value&mdash;></strong></p>
+
+<p>  &lt;/saml:Attribute></p>
+
+<p>  &lt;/saml:AttributeStatement></p>
+
+<p>  &lt;Signature
+xmlns=&ldquo;<a href="http://www.w3.org/2000/09/xmldsig#">http://www.w3.org/2000/09/xmldsig#</a>&rdquo;>&hellip;&lt;/Signature></p>
+
+<p>&lt;/saml:Assertion></p>
+
+<p>Knowing this, you should never include sensitive information as claims
+in a SAML token. This is also related to the <a href="http://www.identityblog.com/stories/2004/12/09/thelaws.html">identity law #2, &ldquo;Minimal
+Disclosure for a Constrained
+Use&rdquo;</a>. The
+Identity provider should only disclose the least amount of identifiying
+information for executing the operation on the relying party.</p>
+
+<p>Some examples are,</p>
+
+<ul>
+<li><em>A winery only needs to know whether the customer is in a legal age
+for buying alcohol according to the<strong>law, a claim like &ldquo;over21&rdquo;
+should be enough for that purpose, there is not need to know the
+customer birth</strong>date at all.</em></li>
+<li><em>An online store that sells products does not necessary need to know
+the number of every credit card owned by a customer, a friendly name
+representing the card and optionally the available balance could be
+enough for completing a purchase.</em></li>
+</ul>
+
+
+<p>SAML 2.0 introduces the concept of &ldquo;encrypted attribute&rdquo;, which clearly
+states its purpose, encrypt individual assertions in a SAML token. In
+this way, a token can now carry the encrypted proof key and optionally
+one or more encrypted assertions with sensitive information.</p>
+
+<p>You can take a look at <a href="https://spaces.internet2.edu/display/SHIB/SAMLDiffs">this
+page</a> for more
+information about the differences between SAML 1.1 and 2.0.</p>
+
+<p>Geneva Framework Beta 1 already implements a subset of SAML 2.0,
+however, it looks like this feature has been left out in the current
+release. Not sure either whether this feature will be included as part
+of the final release (Last quarter of 2009). I created <a href="http://social.msdn.microsoft.com/Forums/en-US/Geneva/thread/a63e31cb-a109-4e99-8538-2eb084ed3827">a
+post</a>
+in the forums some time ago, I haven&rsquo;t received any feedback yet.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -839,253 +953,6 @@ identity solutions for roaming scenarios.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2009/01/28/claims-negotiation-between-a-consumer-sts-and-relying-party-in-wcf/">Claims Negotiation Between a Consumer, STS and Relying Party in WCF</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2009-01-28T00:00:00-03:00" pubdate data-updated="true">Jan 28<span>th</span>, 2009</time>
-        
-         | <a href="/blog/2009/01/28/claims-negotiation-between-a-consumer-sts-and-relying-party-in-wcf/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>According to the WS-Trust specification, a service consumer has a way to
-negotiate or ask for specific claims to the STS. Those claims (or some
-of them) will be generally used by  the service implementation running
-on the relying party.</p>
-
-<p>They are negotiated through an &ldquo;claims&rdquo; element in the RST message,</p>
-
-<p>&lt;wst:RequestSecurityToken xmlns:wst=&ldquo;&hellip;&rdquo;></p>
-
-<p>        &lt;wst:TokenType>&hellip;&lt;/wst:TokenType></p>
-
-<p>        &lt;wst:RequestType>&hellip;&lt;/wst:RequestType></p>
-
-<p>        &hellip;</p>
-
-<p>        &lt;wsp:AppliesTo>&hellip;&lt;/wsp:AppliesTo></p>
-
-<p>        <strong>&lt;wst:Claims Dialect=&ldquo;&hellip;&rdquo;>&hellip;&lt;/wst:Claims></strong></p>
-
-<p>        &lt;wst:Entropy></p>
-
-<p>              &lt;wst:BinarySecret>&hellip;&lt;/wst:BinarySecret></p>
-
-<p>         &lt;/wst:Entropy></p>
-
-<p>        &lt;wst:Lifetime></p>
-
-<p>            &lt;wsu:Created>&hellip;&lt;/wsu:Created></p>
-
-<p>            &lt;wsu:Expires>&hellip;&lt;/wsu:Expires></p>
-
-<p>        &lt;/wst:Lifetime></p>
-
-<p>&lt;/wst:RequestSecurityToken></p>
-
-<p><em>The &ldquo;wst:claims&rdquo; is an optional element for requesting a specific set
-of claims. Typically, this element contains required and/or optional
-claim information identified in a service&rsquo;s policy.</em></p>
-
-<p>Based on these facts, we can elaborate some possible scenarios for
-claims negotiation between these three parties.</p>
-
-<p>​1. <strong>No negotiation at all</strong></p>
-
-<p>The STS might just ignore these claims requirements in the RST message
-and always returns a fixed claim set according to the consumer identity,
-or the service might not express what claims it expects at all. This
-scenario might be suitable for a local STS in small-sized or
-medium-sized organizations, where the IT department has a complete
-control over the client applications and services that interact with
-that STS. This kind of solution is easier to implement, and quite rigid
-too, a change in the claims required by the service will also require
-changes in the STS implementation. As you see, this solution does not
-scale at all for a high number of applications or relying party
-services.</p>
-
-<p>Many of the STS examples you will find today are implemented like this.</p>
-
-<p>​2. <strong>Negotiation based on the AppliesTo header</strong>.</p>
-
-<p>This solution present a subtle difference with the one discussed before,
-the claims vary according the relying party that will make use of them.
-The STS ignores the claims requirements in the RST messages and returns
-a claim set based on the received AppliesTo header. An existing
-agreement must exist between the STS and the relying party, which will
-include in addition to the key for encrypting the tokens, a number of
-expected claims.  Again, easy to implement, difficult to scale up.</p>
-
-<p>​3. <strong>Manual negotiation based on the &ldquo;Claims&rdquo; header</strong>.</p>
-
-<p>In this scenario, the consumer sends the expected claims in the &ldquo;claims&rdquo;
-header and the STS makes use of them for generating the resulting token.
-However, the negotiation of those claims between the consumer and the
-relying party is manual, a previous agreement must exist, the service
-does not express those requirements through metadata. This means that
-the claims are hard-coded during development in the client
-configuration.  If the service requires additional claims, only the
-client configuration will have to be changed, the STS does not have to
-be touched at all.</p>
-
-<p>If you are implementing a custom STS with the latest Microsoft Geneva
-bits, there is a property &ldquo;Claims&rdquo; in the RequestSecurityToken for
-getting access to these values.</p>
-
-<p>protected override IClaimsIdentity
-GetOutputClaimsIdentity(IClaimsPrincipal principal, RequestSecurityToken
-request, Scope scope)</p>
-
-<p>{</p>
-
-<p>    IClaimsIdentity outputIdentity = new ClaimsIdentity();</p>
-
-<p> </p>
-
-<p>    foreach (Claim claim in request.Claims)</p>
-
-<p>    {</p>
-
-<p>        //Do something&hellip;</p>
-
-<p> </p>
-
-<p>        outputIdentity.Claims.Add(&hellip;);</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    return outputIdentity;</p>
-
-<p>}</p>
-
-<p>The client can specify those claims through configuration as well,</p>
-
-<p>&lt;wsFederationHttpBinding></p>
-
-<p>  &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
-
-<p>    &lt;security mode=&ldquo;Message&rdquo;></p>
-
-<p>      &lt;message
-issuedTokenType=&ldquo;<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>&rdquo;
-negotiateServiceCredential=&ldquo;false&rdquo;></p>
-
-<p>        &lt;claimTypeRequirements></p>
-
-<p>          &lt;add claimType
-=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress">http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress</a>&rdquo;/></p>
-
-<p>          &lt;add claimType
-=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName">http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName</a>&rdquo;/></p>
-
-<p>          &lt;add claimType
-=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname">http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname</a>&rdquo;
-isOptional =&ldquo;true&rdquo;/></p>
-
-<p>        &lt;/claimTypeRequirements></p>
-
-<p>        &lt;issuer>&lt;/issuer></p>
-
-<p>      &lt;/message></p>
-
-<p>    &lt;/security></p>
-
-<p>  &lt;/binding></p>
-
-<p>&lt;/wsFederationHttpBinding></p>
-
-<p>Once they are added to the binding configuration, WCF will automatically
-include them as part of the RST message to the STS.</p>
-
-<p>​4. <strong>Automatic negotiation based on the &ldquo;Claims&rdquo; header</strong>.</p>
-
-<p>This is by far the best solution we can find. The three parties
-automatically negotiates the claims at runtime,</p>
-
-<ol type="a">
-<li>The service exposes the claim requirements through metadata
-(WS-Policy)</li>
-</ol>
-
-
-<p>​II. The client acquires the service&rsquo;s policy and requirements using
-some mechanism that could be WS-MetatadaExchange.  Later,  the client
-includes some claim requirements into the RST message that will be send
-to the STS.</p>
-
-<p>​III. The STS extracts those requirements from the RST message, and
-then, it makes use of them for generating the resulting token.</p>
-
-<p>The Cardspace identity selector on the consumer side works like this. It
-first detects what claims are needed by the Relying Party, and then,
-displays all the possible cards (From different Identity providers) that
-satisfy those requirements to the user.</p>
-
-<p>Exposing the claim requirements on the relying party through WCF is
-equivalent to do it on the client side (same binding configuration),</p>
-
-<p>&lt;wsFederationHttpBinding></p>
-
-<p>  &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
-
-<p>    &lt;security mode=&ldquo;Message&rdquo;></p>
-
-<p>      &lt;message
-issuedTokenType=&ldquo;<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>&rdquo;></p>
-
-<p>        &lt;claimTypeRequirements></p>
-
-<p>          &lt;add claimType
-=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress">http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress</a>&rdquo;/></p>
-
-<p>          &lt;add claimType
-=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName">http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName</a>&rdquo;/></p>
-
-<p>          &lt;add claimType
-=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname">http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname</a>&rdquo;
-isOptional =&ldquo;true&rdquo;/></p>
-
-<p>        &lt;/claimTypeRequirements></p>
-
-<p>        &lt;issuer>&lt;/issuer></p>
-
-<p>      &lt;/message></p>
-
-<p>    &lt;/security></p>
-
-<p>  &lt;/binding></p>
-
-<p>&lt;/wsFederationHttpBinding></p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/16/">&larr; Older</a>
@@ -1103,6 +970,10 @@ isOptional =&ldquo;true&rdquo;/></p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
       </li>
     
@@ -1116,10 +987,6 @@ isOptional =&ldquo;true&rdquo;/></p>
     
       <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
       </li>
     
   </ul>

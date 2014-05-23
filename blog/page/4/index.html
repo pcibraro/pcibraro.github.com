@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="Hypermedia is one of those concepts really hard to grasp when building
-Http aware APIs (or Web API’s). As human beings, we are constantly
-dealing &hellip;">
+  <meta name="description" content="In case you are developing a new web application with Node.js for
+Windows Azure, you might notice there is no easy way to debug the
+application &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +81,102 @@ dealing &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/03/22/debugging-node-js-applications-for-windows-azure/">Debugging Node.js Applications for Windows Azure</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-03-22T00:00:00-03:00" pubdate data-updated="true">Mar 22<span>nd</span>, 2012</time>
+        
+         | <a href="/blog/2012/03/22/debugging-node-js-applications-for-windows-azure/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>In case you are developing a new web application with Node.js for
+Windows Azure, you might notice there is no easy way to debug the
+application unless you are developing in an integrated IDE like Cloud9.
+For those that develop applications locally using a text editor (or
+WebMatrix) and Windows Azure Powershell for Node.js, it requires some
+steps not documented anywhere for the moment.</p>
+
+<p>I spent a few hours on this the other day I practically got nowhere
+until I received some help from <a href="http://tomasz.janczuk.org">Tomek</a> and
+the rest of them. The IISNode version that currently ships with the
+Windows Azure for Node.js SDK does not support debugging by default, so
+you need to install the IISNode full version available in the <a href="https://github.com/windowsazure/iisnode/downloads">github
+repository</a>. </p>
+
+<p>Once you have installed the full version, you need to enable debugging
+for the web application by modifying the web.config file</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+&lt;iisnode
+</del></p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code> debuggingEnabled="true"
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code> loggingEnabled="true"
+</code></pre>
+
+<p>~~~~</p>
+
+<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: #f4f4f4; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}</p>
+
+<pre><code> devErrorsEnabled="true"
+</code></pre>
+
+<p>~~~~</p>
+
+<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; background-color: white; margin: 0em; border-left-style: none; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; border-right-style: none; font-size: 8pt; overflow: visible; padding-top: 0px&rdquo;}
+   />
+</del></p>
+
+<p>The xml above needs to be inserted within the existing
+“&lt;system.webServer/>” section.</p>
+
+<p>The last step is to open a WebKit browser (e.g. Chrome) and navigate to
+the URL where your application is hosted but adding the segment “/debug”
+to  the end. The full URL to the node.js application must be used, for
+example,
+<a href="http://localhost:81/myserver.js/debug">http://localhost:81/myserver.js/debug</a></p>
+
+<p>That should open a new instance of Node inspector on the browser, so you
+can debug the application from there.</p>
+
+<p>Enjoy!!</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -3969,72 +4065,6 @@ following code shows how to do that using a JQuery Ajax call.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2012/01/02/the-liike-project-mobile-web-guidance-from-microsoft-p-amp-p/">The “Liike” Project. Mobile Web Guidance From Microsoft P&amp;P</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-01-02T00:00:00-03:00" pubdate data-updated="true">Jan 2<span>nd</span>, 2012</time>
-        
-         | <a href="/blog/2012/01/02/the-liike-project-mobile-web-guidance-from-microsoft-p-amp-p/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Microsoft Patterns &amp; Practices has recently started a new project whose
-codename is “Liike” (pronounced as LEEE-keh) for delivering guidance and
-a reference application in the mobile web space. As many of the recent
-initiatives started by different teams in Microsoft, this project will
-also be hosted in GitHub under
-<a href="http://liike.github.com/">http://liike.github.com/</a>. All the artifacts,
-patterns and code generated during the project will be shared as part of
-that project.</p>
-
-<p>Html5 and the rise of mobile devices have contributed to make Web Mobile
-one of the hot topics nowadays. Embarking in a new project for
-implementing a web mobile application can be a bit cumbersome without
-proper documentation or knowledge of proven practices. This project will
-try to address many of the concerns you might have by showing different
-patterns or solutions that can be applied in the context of web mobile,
-and how those solutions get reflected in real code with the Microsoft
-stack. The idea is not produce reusable code, but a reference
-application that people can explore.</p>
-
-<p>As any of projects in MS Patterns &amp; Practices, Microsoft does not have
-the final word on any of the discussed topics and a lot of feedback is
-received. They also have a team of external advisors with a bunch of
-talented people that have an extensive background working in this space.</p>
-
-<p>Your help is always very valuable, so you can also contribute to the
-project by joining to the <a href="http://liike.github.com/advisors/">advisory
-team</a> or giving feedback through user
-voice
-<a href="http://liike.uservoice.com/forums/136038-mobile-web-dev-guidance">here</a>.  </p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/5/">&larr; Older</a>
@@ -4052,6 +4082,10 @@ voice
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
       </li>
     
@@ -4065,10 +4099,6 @@ voice
     
       <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
       </li>
     
   </ul>

@@ -9,11 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="The other day, Ron Jacobs made
-public a
-template
-in the Visual Studio Gallery for enabling monitoring capabilities to any
-existing WCF Http service &hellip;">
+  <meta name="description" content="I happy to announce today a new addition to our SO-Aware service
+repository toolset, SO-Aware Test Workbench, a WPF desktop application
+for doing &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -83,6 +81,71 @@ existing WCF Http service &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/03/10/service-testing-made-easy-with-so-aware-test-workbench/">Service Testing Made Easy With SO-Aware Test Workbench</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-03-10T00:00:00-03:00" pubdate data-updated="true">Mar 10<span>th</span>, 2011</time>
+        
+         | <a href="/blog/2011/03/10/service-testing-made-easy-with-so-aware-test-workbench/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I happy to announce today a new addition to our SO-Aware service
+repository toolset, SO-Aware Test Workbench, a WPF desktop application
+for doing functional and load testing against existing WCF Services.</p>
+
+<p>This tool is completely integrated to the SO-Aware service repository,
+which makes configuring new load and functional tests for WCF Soap and
+REST services a breeze. From now on, the service repository can play a
+very important role in an organization by facilitating collaboration
+between developers and testers.</p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/testing_tool_59D708E2.jpg"><img src="http://weblogs.asp.net/blogs/cibrax/testing_tool_thumb_1BADC864.jpg" title="testing_tool" alt="testing_tool" /></a></p>
+
+<p>Developers can create and register new services in the repository with
+all the related artifacts like configuration. On the other hand, Testers
+can just pick one of the existing services in the repository and create
+functional or load tests from there, with no need to deal with specific
+details of the service implementation, location or configuration
+settings. Developers and Testers can later use the result of those tests
+to modify the services or adjust different settings on the tests or
+service configuration.</p>
+
+<p>Gustavo Machado, one of the developers behind this project, has written
+an <a href="http://thegsharp.wordpress.com/2011/03/10/wcf-load-testing-with-so-aware-test-workbench/">excellent
+post</a>
+describing all the functionality that can find today in the tool. You
+can also see the tool in action in this <a href="http://channel9.msdn.com/Shows/Endpoint/endpointtv-Performance-Testing-with-SO-Aware">Endpoint Tv
+episode</a>
+with Jesus and Ron Jacobs.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -4028,187 +4091,6 @@ configuration is quite different as you can see.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2010/11/01/new-iqueryable-support-for-http-services-in-wcf/">New IQueryable Support for Http Services in WCF</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2010-11-01T00:00:00-03:00" pubdate data-updated="true">Nov 1<span>st</span>, 2010</time>
-        
-         | <a href="/blog/2010/11/01/new-iqueryable-support-for-http-services-in-wcf/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>One of the things that caught my attention when WCF Data Service was
-released a couple of years ago was the ability of using URI segments for
-passing queries directly to an underline linq provider. This represented
-a very powerful feature for allowing clients to filter and manipulate a
-large data result set on the server side with a simple API and without
-incurring in any unnecessary performance penalty (the queries are
-performed and resolved in the data source itself most of the times) and
-having all that logic implemented in the service itself.</p>
-
-<p>I’ve always thought that this cool feature should be something that
-anyone could reuse in any service, and not something available in WCF
-data services only. For example, If you already had an existing REST
-service implementation, moving that logic to a WCF data service with
-OData support was only the option you had if you wanted to reuse that
-query support.  By moving your service to a WCF Data Service, you were
-also limiting your service to the content types supported by OData (Xml
-Atom and JSON), and it would only makes sense with services centered
-around the concepts of CRUD for manipulating data.</p>
-
-<p>Fortunately, this functionality has been moved to a separated library
-and released as part of the new WCF Web APIs in
-<a href="http://wcf.codeplex.com/">wcf.codeplex.com</a>. This means that you can
-now use the IQueryable support with almost the same linq operators that
-you already have in WCF Data Service as part of any existing WCF Http
-Service.</p>
-
-<p>There is a new “QueryComposition” behavior that you can associate to one
-of the service operations to support querying over the response data.</p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-private static List<Contact> contacts = new List<Contact>()
-</del></p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-{
-</del></p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>new Contact { Name = "First Contact", Id = totalContacts++ },
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>new Contact { Name = "Second Contact", Id = totalContacts++ },
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>new Contact { Name = "Third Contact", Id = totalContacts++ },
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>new Contact { Name = "Fourth Contact", Id = totalContacts++ },
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-};
-</del></p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
- 
-</del></p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-[WebGet(UriTemplate = &ldquo;&rdquo;)]
-</del></p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-[QueryComposition]
-</del></p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-public IEnumerable<Contact> Get()
-</del></p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-{
-</del></p>
-
-<p>~~~~ {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}</p>
-
-<pre><code>return contacts.AsQueryable();
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-}
-</del></p>
-
-<p>In the example above, the service operation “Get” is returning a list of
-contacts in which some of the Linq query operators can be passed as part
-of the request URL as the “QueryComposition” attribute has been
-associated to the operation.</p>
-
-<p>Therefore, you can do some of the following things,</p>
-
-<p>Use the &ldquo;#filter” segment to filter some of the data in the response
-resulset &ndash; <a href="http://localhost:8081/contacts/?$filter=Name">http://localhost:8081/contacts/?$filter=Name</a> eq &lsquo;First
-Contact&rsquo;</p>
-
-<p>Use the “#top” or “#skip” to get a subset of entries in the response &ndash;
-<a href="http://localhost:8081/contacts/?$skip=2&amp;$top=1">http://localhost:8081/contacts/?$skip=2&amp;$top=1</a></p>
-
-<p>And of course, many of the other supported operators available today as
-part of the OData spec can also be used.</p>
-
-<p>In addition to what you can do on the server side, there is also a nice
-support on the client side with a new IQueryable implementation that
-knows how to pass many of the linq operators as part of the URL to the
-service. This new implementation is “WebQuery&lt;T>” and it is part now
-of the HttpClient library also available as part of this WCF drop in
-codeplex.</p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-string address = &ldquo;<a href="http://localhost:8081/contacts/">http://localhost:8081/contacts/</a>&rdquo;;
-</del></p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-HttpClient client = new HttpClient(address);
-</del></p>
-
-<p><del> {style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
-IQueryable<Contact> contacts = client.CreateQuery<Contact>().Where(c => c.Name == &ldquo;First Contact&rdquo;);
-</del></p>
-
-<p>In the example above, the client library will submit the following
-request to the service, <a href="http://localhost:8081/contacts/?$filter=Name">http://localhost:8081/contacts/?$filter=Name</a>
-eq &lsquo;First Contact&rsquo;. Several extensions methods have been added for the
-HttpClient class for creating new instances of WebQuery&lt;T>.</p>
-
-<p>This is only one of the cool features that the WCF team has added to the
-Http Stack, so I will explore the rest more in detail in following
-posts.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/9/">&larr; Older</a>
@@ -4226,6 +4108,10 @@ posts.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
       </li>
     
@@ -4239,10 +4125,6 @@ posts.</p>
     
       <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
       </li>
     
   </ul>

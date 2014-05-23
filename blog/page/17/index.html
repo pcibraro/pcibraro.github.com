@@ -9,8 +9,8 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="As I promised in my previous post &ldquo;OAuth Channel for WCF RESTful
-services&rdquo;, it is now time to show this new channel in action with a real &hellip;">
+  <meta name="description" content="Usually all my posts about REST are about WCF or mention this technology
+in some parts. Today, I decided to take a different approach and discuss &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -80,6 +80,313 @@ services&rdquo;, it is now time to show this new channel in action with a real &
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/11/19/open-source-alternatives-in-net-for-building-restful-services/">Open Source Alternatives in .NET for Building RESTful Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-11-19T00:00:00-03:00" pubdate data-updated="true">Nov 19<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/11/19/open-source-alternatives-in-net-for-building-restful-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Usually all my posts about REST are about WCF or mention this technology
+in some parts. Today, I decided to take a different approach and discuss
+some of the projects available today for building REST services, 
+<a href="http://www.codeplex.com/resourceful">Resourceful</a> and <a href="http://wiki.developer.mindtouch.com/Dream">Dream
+framework</a> (Both available
+for mono as well).\
+It is worth mentioning however that the WCF team has made an excellent
+work introducing the new Web Model in .NET 3.5, it has definitively
+helped a lot to adopt this kind of service in the .NET platform. In my
+opinion, there are still some aspects in WCF that could be improved,</p>
+
+<ol>
+<li>WCF services are hard to unit test. It is possible but requires some
+extra work. I already mentioned some techniques  based on
+integration tests and mocks in this post <a href="http://weblogs.asp.net/cibrax/archive/2008/05/16/unit-tests-for-wcf.aspx">&ldquo;Unit tests for
+WCF&rdquo;</a></li>
+<li>Poor support for defining multiple resource representations/formats
+within a single operation definition.</li>
+<li>Any aspect you would like to add here ?</li>
+</ol>
+
+
+<p>Ok, I will try now to summarize some of available features or
+implementation details in these two projects.</p>
+
+<p><strong>Resourceful</strong></p>
+
+<ul>
+<li>Service definitions are totally imperative. Whereas a service
+definition (and operations) in WCF is made declaratively through
+attributes (annotating classes with WCF attributes), the service
+definition in Resourceful is totally imperative, it has to be made
+through several lines of code.</li>
+</ul>
+
+
+<blockquote><p>LocalApplicationDescription app = new LocalApplicationDescription();</p>
+
+<p>// get-user</p>
+
+<p>LocalApplicationMethod getUser = app.NewMethod(&ldquo;getUser&rdquo;,
+HttpMethod.Get, _usersController.GetUser);</p>
+
+<p>getUser.NewResponseRepresentation(MediaType.ApplicationXml);</p>
+
+<p>getUser.NewResponseRepresentation(MediaType.ApplicationExWwwFormUrlencoded);</p>
+
+<p> </p>
+
+<p>ApplicationResource userResource = app.NewResource(&ldquo;users/{username}&rdquo;,
+new TemplateParameter(&ldquo;username&rdquo;, &ldquo;xsd:string&rdquo;));</p>
+
+<p>app.Bind(userResource, getUser);</p>
+
+<p>The developer has to perform two things, first define the operation
+itself specifying a friendly name along with the supported Http
+methods and resource representations and afterwards, create a resource
+mapping (&ldquo;users/{username}&rdquo; in this case). {username} is a URI
+template hole, equivalent to the Uri Templates in WCF.</p>
+
+<p>The method signature for the NewMethod is the following,</p>
+
+<p>NewMethod(string id, string name,Action&lt;IRepresentationContext>
+handler)</p>
+
+<p>As you can see, the last argument is a delegate that points to the
+operation implementation. IRepresentationContext is equivalent to the
+WebOperationContext class in WCF, it contains all the runtime context
+settings that a service can use. This actually better than WCF because
+IRepresentationContext can be mocked for unit tests.</p>
+
+<p>In the example above, _usersController is a simple class with the
+service implementation (This separation of concerns definitively helps
+a lot for unit testing). Some code for the GetUser operation
+implementation looks as follow,</p>
+
+<p>public void GetUser(IRepresentationContext context)</p>
+
+<p>{</p>
+
+<p>    string username = context.TemplateParameters[&ldquo;username&rdquo;];</p>
+
+<p> </p>
+
+<p>    UserAccount user = this.Engine.FindUser(username);</p>
+
+<p> </p>
+
+<p>    if (user == null)</p>
+
+<p>    {</p>
+
+<p>        this.RenderStatus(context, HttpStatus.NotFound);</p>
+
+<p>        return;</p>
+
+<p>    }</p>
+
+<p> </p></blockquote>
+
+<ul>
+<li>Support for WADL. The framework uses the service definition (the
+LocalApplicationDescription class in the example above) to publish
+all the available operations in the service.</li>
+</ul>
+
+
+<blockquote><p> <img src="/images/legacy/wadl.jpg" alt="" /></p></blockquote>
+
+<ul>
+<li>Support for multiple resource representations in a single operation.
+This is possible because the framework does not support the concept
+of channels (Or aspects) that can be plugged into the service to
+perform additional work, all the translation must be done in the
+operation implementation itself. The service operation can only get
+the resource representation as an stream from the
+IRepresentationContext (Same thing can be done in WCF if the input
+parameter for the operation method is an stream or a message),</li>
+</ul>
+
+
+<blockquote><p>public void CreateUser(IRepresentationContext context)</p>
+
+<p>{</p>
+
+<p>    if (context.Request.MediaType != MediaType.ApplicationXml)</p>
+
+<p>    {</p>
+
+<p>        this.RenderStatus(context, HttpStatus.UnsupportedMediaType);</p>
+
+<p>        return;</p>
+
+<p>    }</p></blockquote>
+
+<p>     UserAccount user = UserAccount.FromXml(new
+StreamReader(context.Request.GetEntityStream()));</p>
+
+<blockquote><p>In the example above, CreateUser only supports POX (Plain old xml)
+representation for the users, so it also makes the translation from
+XML to an user entity.</p></blockquote>
+
+<ul>
+<li>There is not support for channels or aspects to perform additional
+work before a message arrives/leaves a service. There is, however,
+an special class for hosting service instances, it can be used from
+a console application or IIS as an http handler.</li>
+</ul>
+
+
+<blockquote><p>Uri rootUri = new Uri(string.Format(&ldquo;<a href="http://localhost:3000/v1/">http://localhost:3000/v1/</a>&rdquo;,
+address));</p>
+
+<p> </p>
+
+<p>BookmarkService service = new BookmarkService();</p>
+
+<p> </p>
+
+<p>HttpServer host = new HttpServer(rootUri);</p>
+
+<p> </p>
+
+<p>host.ReceiveWebRequest += delegate(HttpListenerContext context)</p>
+
+<p>{</p>
+
+<p>    service.Process(new HttpListenerContextAdapter(context, rootUri));</p>
+
+<p>};</p>
+
+<p> </p>
+
+<p>host.Start();</p></blockquote>
+
+<ul>
+<li>Rich and fluent client API for consuming existing REST services.
+This is probably one of the nicest things about this framework, a
+lot of examples are provided for consuming well-know REST services
+on the web such as Amazon S3,  ADO.NET services, Simple DB or
+Delicious to name a few. This client API can be used from
+Silverlight applications as well.</li>
+</ul>
+
+
+<p><strong>Dream Framework</strong> </p>
+
+<ul>
+<li>Service definitions are declarative as in WCF. Two attributes are
+used, one for the service definition &ldquo;DreamService&rdquo; and another for
+each operation in that service, &ldquo;DreamFeature&rdquo;.   </li>
+</ul>
+
+
+<blockquote><p>[DreamService(&ldquo;Dream Tutorial Address-Book&rdquo;, &ldquo;Copyright &copy; 2006, 2007
+MindTouch, Inc.&rdquo;,</p>
+
+<p>      Info =
+&ldquo;<a href="http://doc.opengarden.org/Dream_SDK/Tutorials/Address_Book">http://doc.opengarden.org/Dream_SDK/Tutorials/Address_Book</a>&rdquo;,</p>
+
+<p>      SID = new string[] {
+&ldquo;<a href="http://services.mindtouch.com/dream/tutorial/2007/03/addressbook">http://services.mindtouch.com/dream/tutorial/2007/03/addressbook</a>&rdquo; }</p>
+
+<p>    )]</p>
+
+<p>    public class AddressBookService : DreamService {</p>
+
+<p>        [DreamFeature(&ldquo;GET:firstname/{name}&rdquo;, &ldquo;Get list of all
+addresses matching first name&rdquo;)]</p>
+
+<p>        public Yield GetFirstName(DreamContext context, DreamMessage
+request, Result&lt;DreamMessage> response) {</p>
+
+<p> </p>
+
+<p>I will not enter much in detail here, but the &ldquo;DreamFeature&rdquo; supports
+almost the same things as WCF and Resourceful, an Http verb and the
+URI template for the resource. For more information about how to
+create an Dream service from scratch, take a look at <a href="http://wiki.developer.mindtouch.com/Dream/Tutorials/Creating_a_Magic_8-Ball_service">this
+page</a>.</p></blockquote>
+
+<ul>
+<li>Every operation implementation should receive three arguments and
+return an enumerator. The arguments are basically the runtime
+context (Equivalent to WebOperationContext in WCF), the request
+message and a handler to send responses to the client.</li>
+</ul>
+
+
+<blockquote><blockquote><p>using Yield = System.Collections.Generic.IEnumerator&lt;IYield>;</p>
+
+<p>public Yield GetFirstName(DreamContext context, DreamMessage
+request, Result&lt;DreamMessage> response) {</p></blockquote>
+
+<p>They implement a weird mechanism based on custom enumerators to
+execute callbacks on the service host. The service can basically
+returns IYield objects representing callbacks with the C# keyword
+&ldquo;yield&rdquo;. The response is automatically sent to the client application
+when the service invokes &ldquo;yield break&rdquo;.</p>
+
+<p>[DreamFeature(&ldquo;GET:addresses&rdquo;, &ldquo;Get all addresses&rdquo;)]</p>
+
+<p>public Yield GetAddresses(DreamContext context, DreamMessage request,
+Result&lt;DreamMessage> response) {</p>
+
+<p> </p>
+
+<p>    // send back the entire address book</p>
+
+<p>    lock(_addresses) {</p>
+
+<p>        response.Return(DreamMessage.Ok(_addresses));</p>
+
+<p>    }</p>
+
+<p>    yield break;</p>
+
+<p>}</p></blockquote>
+
+<ul>
+<li>Supports for long running services with durable state, it&rsquo;s not
+clear to me however how they restore that state between calls. The
+fields must be annotated with the attribute &ldquo;DreamServiceState&rdquo; in
+order to use this feature.</li>
+</ul>
+
+
+<blockquote><p>[DreamServiceState]private XDoc _addresses;</p>
+
+<p> </p></blockquote>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -156,16 +463,16 @@ with the ADO.NET data service</strong></p>
 
 <p>        _contacts = new Contact[]{</p>
 
-<p>          new Contact(){ Id=0, Name=&ldquo;Mike&rdquo;, Email=&ldquo;<a href="&#109;&#97;&#105;&#108;&#116;&#111;&#x3a;&#109;&#x69;&#x6b;&#101;&#64;&#99;&#111;&#x6e;&#116;&#x6f;&#x73;&#111;&#46;&#x63;&#111;&#x6d;">&#x6d;&#105;&#x6b;&#x65;&#x40;&#x63;&#111;&#110;&#x74;&#111;&#115;&#111;&#46;&#x63;&#x6f;&#109;</a>&rdquo;,
+<p>          new Contact(){ Id=0, Name=&ldquo;Mike&rdquo;, Email=&ldquo;<a href="&#x6d;&#x61;&#x69;&#108;&#x74;&#111;&#x3a;&#x6d;&#x69;&#107;&#x65;&#x40;&#x63;&#x6f;&#110;&#x74;&#x6f;&#115;&#x6f;&#x2e;&#x63;&#x6f;&#x6d;">&#x6d;&#x69;&#x6b;&#x65;&#x40;&#x63;&#111;&#110;&#x74;&#x6f;&#x73;&#111;&#46;&#x63;&#111;&#109;</a>&rdquo;,
 Owner = &ldquo;jane&rdquo; },</p>
 
-<p>          new Contact(){ Id=1, Name=&ldquo;Saaid&rdquo;, Email=&ldquo;<a href="&#x6d;&#97;&#105;&#x6c;&#x74;&#x6f;&#58;&#x53;&#x61;&#x61;&#105;&#100;&#x40;&#x68;&#111;&#116;&#x6d;&#x61;&#x69;&#108;&#x2e;&#x63;&#111;&#x6d;">&#x53;&#97;&#x61;&#x69;&#x64;&#64;&#104;&#x6f;&#116;&#109;&#x61;&#x69;&#108;&#x2e;&#99;&#x6f;&#x6d;</a>&rdquo;,
+<p>          new Contact(){ Id=1, Name=&ldquo;Saaid&rdquo;, Email=&ldquo;<a href="&#x6d;&#x61;&#x69;&#x6c;&#116;&#x6f;&#x3a;&#83;&#x61;&#97;&#105;&#x64;&#64;&#x68;&#x6f;&#x74;&#109;&#x61;&#x69;&#x6c;&#46;&#x63;&#x6f;&#x6d;">&#83;&#x61;&#x61;&#x69;&#100;&#x40;&#104;&#x6f;&#116;&#x6d;&#x61;&#105;&#108;&#x2e;&#99;&#x6f;&#109;</a>&rdquo;,
 Owner = &ldquo;jane&rdquo;},</p>
 
-<p>          new Contact(){ Id=2, Name=&ldquo;John&rdquo;, Email=&ldquo;<a href="&#109;&#x61;&#x69;&#108;&#116;&#x6f;&#58;&#106;&#x31;&#x32;&#51;&#x40;&#x6c;&#x69;&#x76;&#x65;&#46;&#99;&#x6f;&#x6d;">&#106;&#x31;&#x32;&#51;&#64;&#108;&#105;&#x76;&#x65;&#46;&#99;&#111;&#109;</a>&rdquo;, Owner
+<p>          new Contact(){ Id=2, Name=&ldquo;John&rdquo;, Email=&ldquo;<a href="&#x6d;&#x61;&#105;&#108;&#x74;&#111;&#x3a;&#106;&#49;&#50;&#51;&#64;&#x6c;&#105;&#x76;&#x65;&#x2e;&#x63;&#111;&#x6d;">&#x6a;&#x31;&#50;&#x33;&#x40;&#108;&#x69;&#118;&#x65;&#x2e;&#x63;&#111;&#109;</a>&rdquo;, Owner
 = &ldquo;john&rdquo;},</p>
 
-<p>          new Contact(){ Id=3, Name=&ldquo;Pablo&rdquo;, Email=&ldquo;<a href="&#x6d;&#x61;&#105;&#x6c;&#x74;&#111;&#x3a;&#80;&#x61;&#98;&#108;&#x6f;&#x40;&#x6d;&#97;&#x69;&#108;&#x2e;&#x63;&#111;&#109;">&#80;&#97;&#x62;&#x6c;&#111;&#x40;&#x6d;&#97;&#105;&#x6c;&#46;&#99;&#x6f;&#109;</a>&rdquo;,
+<p>          new Contact(){ Id=3, Name=&ldquo;Pablo&rdquo;, Email=&ldquo;<a href="&#109;&#x61;&#105;&#108;&#116;&#x6f;&#x3a;&#x50;&#97;&#x62;&#108;&#x6f;&#x40;&#x6d;&#x61;&#105;&#108;&#46;&#x63;&#x6f;&#x6d;">&#x50;&#x61;&#98;&#108;&#111;&#64;&#109;&#97;&#x69;&#108;&#46;&#x63;&#111;&#x6d;</a>&rdquo;,
 Owner = &ldquo;john&rdquo;}};</p>
 
 <p>    }</p>
@@ -1810,56 +2117,6 @@ HttpStatusCode.NotModified;</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2008/09/12/codecamp-buenos-aires-2008/">Codecamp Buenos Aires 2008</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2008-09-12T00:00:00-03:00" pubdate data-updated="true">Sep 12<span>th</span>, 2008</time>
-        
-         | <a href="/blog/2008/09/12/codecamp-buenos-aires-2008/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>The next Microsoft Codecamp will take place in Buenos Aires on Saturday,
-October 4th.</p>
-
-<p>The agenda looks very promising, be sure to register if you want to
-attend! (The complete agenda is available in the <a href="http://blogs.msdn.com/masaez/">Miguel Saenz&rsquo;s
-blog</a> , almost 10 sessions in parallel,
-WOW)</p>
-
-<p>I will be presenting an introductory session about the ASP.NET MVC
-framework and another a little more interesting about building RESTfull
-services with WCF. </p>
-
-<p>I hope to see there !!. Thanks</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/18/">&larr; Older</a>
@@ -1877,6 +2134,10 @@ services with WCF. </p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
       </li>
     
@@ -1890,10 +2151,6 @@ services with WCF. </p>
     
       <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
       </li>
     
   </ul>

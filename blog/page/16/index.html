@@ -9,11 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="Keith
-Brown
-has just released a helper class (Based on an original
-implementation
-made by Dominick Baier) with very useful methods for mixing Http &hellip;">
+  <meta name="description" content="According to the WS-Trust specification, a service consumer has a way to
+negotiate or ask for specific claims to the STS. Those claims (or some
+of &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -83,6 +81,253 @@ made by Dominick Baier) with very useful methods for mixing Http &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/01/28/claims-negotiation-between-a-consumer-sts-and-relying-party-in-wcf/">Claims Negotiation Between a Consumer, STS and Relying Party in WCF</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-01-28T00:00:00-03:00" pubdate data-updated="true">Jan 28<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/01/28/claims-negotiation-between-a-consumer-sts-and-relying-party-in-wcf/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>According to the WS-Trust specification, a service consumer has a way to
+negotiate or ask for specific claims to the STS. Those claims (or some
+of them) will be generally used by  the service implementation running
+on the relying party.</p>
+
+<p>They are negotiated through an &ldquo;claims&rdquo; element in the RST message,</p>
+
+<p>&lt;wst:RequestSecurityToken xmlns:wst=&ldquo;&hellip;&rdquo;></p>
+
+<p>        &lt;wst:TokenType>&hellip;&lt;/wst:TokenType></p>
+
+<p>        &lt;wst:RequestType>&hellip;&lt;/wst:RequestType></p>
+
+<p>        &hellip;</p>
+
+<p>        &lt;wsp:AppliesTo>&hellip;&lt;/wsp:AppliesTo></p>
+
+<p>        <strong>&lt;wst:Claims Dialect=&ldquo;&hellip;&rdquo;>&hellip;&lt;/wst:Claims></strong></p>
+
+<p>        &lt;wst:Entropy></p>
+
+<p>              &lt;wst:BinarySecret>&hellip;&lt;/wst:BinarySecret></p>
+
+<p>         &lt;/wst:Entropy></p>
+
+<p>        &lt;wst:Lifetime></p>
+
+<p>            &lt;wsu:Created>&hellip;&lt;/wsu:Created></p>
+
+<p>            &lt;wsu:Expires>&hellip;&lt;/wsu:Expires></p>
+
+<p>        &lt;/wst:Lifetime></p>
+
+<p>&lt;/wst:RequestSecurityToken></p>
+
+<p><em>The &ldquo;wst:claims&rdquo; is an optional element for requesting a specific set
+of claims. Typically, this element contains required and/or optional
+claim information identified in a service&rsquo;s policy.</em></p>
+
+<p>Based on these facts, we can elaborate some possible scenarios for
+claims negotiation between these three parties.</p>
+
+<p>​1. <strong>No negotiation at all</strong></p>
+
+<p>The STS might just ignore these claims requirements in the RST message
+and always returns a fixed claim set according to the consumer identity,
+or the service might not express what claims it expects at all. This
+scenario might be suitable for a local STS in small-sized or
+medium-sized organizations, where the IT department has a complete
+control over the client applications and services that interact with
+that STS. This kind of solution is easier to implement, and quite rigid
+too, a change in the claims required by the service will also require
+changes in the STS implementation. As you see, this solution does not
+scale at all for a high number of applications or relying party
+services.</p>
+
+<p>Many of the STS examples you will find today are implemented like this.</p>
+
+<p>​2. <strong>Negotiation based on the AppliesTo header</strong>.</p>
+
+<p>This solution present a subtle difference with the one discussed before,
+the claims vary according the relying party that will make use of them.
+The STS ignores the claims requirements in the RST messages and returns
+a claim set based on the received AppliesTo header. An existing
+agreement must exist between the STS and the relying party, which will
+include in addition to the key for encrypting the tokens, a number of
+expected claims.  Again, easy to implement, difficult to scale up.</p>
+
+<p>​3. <strong>Manual negotiation based on the &ldquo;Claims&rdquo; header</strong>.</p>
+
+<p>In this scenario, the consumer sends the expected claims in the &ldquo;claims&rdquo;
+header and the STS makes use of them for generating the resulting token.
+However, the negotiation of those claims between the consumer and the
+relying party is manual, a previous agreement must exist, the service
+does not express those requirements through metadata. This means that
+the claims are hard-coded during development in the client
+configuration.  If the service requires additional claims, only the
+client configuration will have to be changed, the STS does not have to
+be touched at all.</p>
+
+<p>If you are implementing a custom STS with the latest Microsoft Geneva
+bits, there is a property &ldquo;Claims&rdquo; in the RequestSecurityToken for
+getting access to these values.</p>
+
+<p>protected override IClaimsIdentity
+GetOutputClaimsIdentity(IClaimsPrincipal principal, RequestSecurityToken
+request, Scope scope)</p>
+
+<p>{</p>
+
+<p>    IClaimsIdentity outputIdentity = new ClaimsIdentity();</p>
+
+<p> </p>
+
+<p>    foreach (Claim claim in request.Claims)</p>
+
+<p>    {</p>
+
+<p>        //Do something&hellip;</p>
+
+<p> </p>
+
+<p>        outputIdentity.Claims.Add(&hellip;);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    return outputIdentity;</p>
+
+<p>}</p>
+
+<p>The client can specify those claims through configuration as well,</p>
+
+<p>&lt;wsFederationHttpBinding></p>
+
+<p>  &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>    &lt;security mode=&ldquo;Message&rdquo;></p>
+
+<p>      &lt;message
+issuedTokenType=&ldquo;<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>&rdquo;
+negotiateServiceCredential=&ldquo;false&rdquo;></p>
+
+<p>        &lt;claimTypeRequirements></p>
+
+<p>          &lt;add claimType
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress">http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress</a>&rdquo;/></p>
+
+<p>          &lt;add claimType
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName">http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName</a>&rdquo;/></p>
+
+<p>          &lt;add claimType
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname">http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname</a>&rdquo;
+isOptional =&ldquo;true&rdquo;/></p>
+
+<p>        &lt;/claimTypeRequirements></p>
+
+<p>        &lt;issuer>&lt;/issuer></p>
+
+<p>      &lt;/message></p>
+
+<p>    &lt;/security></p>
+
+<p>  &lt;/binding></p>
+
+<p>&lt;/wsFederationHttpBinding></p>
+
+<p>Once they are added to the binding configuration, WCF will automatically
+include them as part of the RST message to the STS.</p>
+
+<p>​4. <strong>Automatic negotiation based on the &ldquo;Claims&rdquo; header</strong>.</p>
+
+<p>This is by far the best solution we can find. The three parties
+automatically negotiates the claims at runtime,</p>
+
+<ol type="a">
+<li>The service exposes the claim requirements through metadata
+(WS-Policy)</li>
+</ol>
+
+
+<p>​II. The client acquires the service&rsquo;s policy and requirements using
+some mechanism that could be WS-MetatadaExchange.  Later,  the client
+includes some claim requirements into the RST message that will be send
+to the STS.</p>
+
+<p>​III. The STS extracts those requirements from the RST message, and
+then, it makes use of them for generating the resulting token.</p>
+
+<p>The Cardspace identity selector on the consumer side works like this. It
+first detects what claims are needed by the Relying Party, and then,
+displays all the possible cards (From different Identity providers) that
+satisfy those requirements to the user.</p>
+
+<p>Exposing the claim requirements on the relying party through WCF is
+equivalent to do it on the client side (same binding configuration),</p>
+
+<p>&lt;wsFederationHttpBinding></p>
+
+<p>  &lt;binding name=&ldquo;ServiceBinding&rdquo;></p>
+
+<p>    &lt;security mode=&ldquo;Message&rdquo;></p>
+
+<p>      &lt;message
+issuedTokenType=&ldquo;<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>&rdquo;></p>
+
+<p>        &lt;claimTypeRequirements></p>
+
+<p>          &lt;add claimType
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress">http://schemas.microsoft.com/ws/2005/05/identity/claims/EmailAddress</a>&rdquo;/></p>
+
+<p>          &lt;add claimType
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName">http://schemas.microsoft.com/ws/2005/05/identity/claims/GivenName</a>&rdquo;/></p>
+
+<p>          &lt;add claimType
+=&ldquo;<a href="http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname">http://schemas.microsoft.com/ws/2005/05/identity/claims/Surname</a>&rdquo;
+isOptional =&ldquo;true&rdquo;/></p>
+
+<p>        &lt;/claimTypeRequirements></p>
+
+<p>        &lt;issuer>&lt;/issuer></p>
+
+<p>      &lt;/message></p>
+
+<p>    &lt;/security></p>
+
+<p>  &lt;/binding></p>
+
+<p>&lt;/wsFederationHttpBinding></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -2087,313 +2332,6 @@ application and server restarts :). Download the complete code from this
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2008/11/19/open-source-alternatives-in-net-for-building-restful-services/">Open Source Alternatives in .NET for Building RESTful Services</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2008-11-19T00:00:00-03:00" pubdate data-updated="true">Nov 19<span>th</span>, 2008</time>
-        
-         | <a href="/blog/2008/11/19/open-source-alternatives-in-net-for-building-restful-services/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Usually all my posts about REST are about WCF or mention this technology
-in some parts. Today, I decided to take a different approach and discuss
-some of the projects available today for building REST services, 
-<a href="http://www.codeplex.com/resourceful">Resourceful</a> and <a href="http://wiki.developer.mindtouch.com/Dream">Dream
-framework</a> (Both available
-for mono as well).\
-It is worth mentioning however that the WCF team has made an excellent
-work introducing the new Web Model in .NET 3.5, it has definitively
-helped a lot to adopt this kind of service in the .NET platform. In my
-opinion, there are still some aspects in WCF that could be improved,</p>
-
-<ol>
-<li>WCF services are hard to unit test. It is possible but requires some
-extra work. I already mentioned some techniques  based on
-integration tests and mocks in this post <a href="http://weblogs.asp.net/cibrax/archive/2008/05/16/unit-tests-for-wcf.aspx">&ldquo;Unit tests for
-WCF&rdquo;</a></li>
-<li>Poor support for defining multiple resource representations/formats
-within a single operation definition.</li>
-<li>Any aspect you would like to add here ?</li>
-</ol>
-
-
-<p>Ok, I will try now to summarize some of available features or
-implementation details in these two projects.</p>
-
-<p><strong>Resourceful</strong></p>
-
-<ul>
-<li>Service definitions are totally imperative. Whereas a service
-definition (and operations) in WCF is made declaratively through
-attributes (annotating classes with WCF attributes), the service
-definition in Resourceful is totally imperative, it has to be made
-through several lines of code.</li>
-</ul>
-
-
-<blockquote><p>LocalApplicationDescription app = new LocalApplicationDescription();</p>
-
-<p>// get-user</p>
-
-<p>LocalApplicationMethod getUser = app.NewMethod(&ldquo;getUser&rdquo;,
-HttpMethod.Get, _usersController.GetUser);</p>
-
-<p>getUser.NewResponseRepresentation(MediaType.ApplicationXml);</p>
-
-<p>getUser.NewResponseRepresentation(MediaType.ApplicationExWwwFormUrlencoded);</p>
-
-<p> </p>
-
-<p>ApplicationResource userResource = app.NewResource(&ldquo;users/{username}&rdquo;,
-new TemplateParameter(&ldquo;username&rdquo;, &ldquo;xsd:string&rdquo;));</p>
-
-<p>app.Bind(userResource, getUser);</p>
-
-<p>The developer has to perform two things, first define the operation
-itself specifying a friendly name along with the supported Http
-methods and resource representations and afterwards, create a resource
-mapping (&ldquo;users/{username}&rdquo; in this case). {username} is a URI
-template hole, equivalent to the Uri Templates in WCF.</p>
-
-<p>The method signature for the NewMethod is the following,</p>
-
-<p>NewMethod(string id, string name,Action&lt;IRepresentationContext>
-handler)</p>
-
-<p>As you can see, the last argument is a delegate that points to the
-operation implementation. IRepresentationContext is equivalent to the
-WebOperationContext class in WCF, it contains all the runtime context
-settings that a service can use. This actually better than WCF because
-IRepresentationContext can be mocked for unit tests.</p>
-
-<p>In the example above, _usersController is a simple class with the
-service implementation (This separation of concerns definitively helps
-a lot for unit testing). Some code for the GetUser operation
-implementation looks as follow,</p>
-
-<p>public void GetUser(IRepresentationContext context)</p>
-
-<p>{</p>
-
-<p>    string username = context.TemplateParameters[&ldquo;username&rdquo;];</p>
-
-<p> </p>
-
-<p>    UserAccount user = this.Engine.FindUser(username);</p>
-
-<p> </p>
-
-<p>    if (user == null)</p>
-
-<p>    {</p>
-
-<p>        this.RenderStatus(context, HttpStatus.NotFound);</p>
-
-<p>        return;</p>
-
-<p>    }</p>
-
-<p> </p></blockquote>
-
-<ul>
-<li>Support for WADL. The framework uses the service definition (the
-LocalApplicationDescription class in the example above) to publish
-all the available operations in the service.</li>
-</ul>
-
-
-<blockquote><p> <img src="/images/legacy/wadl.jpg" alt="" /></p></blockquote>
-
-<ul>
-<li>Support for multiple resource representations in a single operation.
-This is possible because the framework does not support the concept
-of channels (Or aspects) that can be plugged into the service to
-perform additional work, all the translation must be done in the
-operation implementation itself. The service operation can only get
-the resource representation as an stream from the
-IRepresentationContext (Same thing can be done in WCF if the input
-parameter for the operation method is an stream or a message),</li>
-</ul>
-
-
-<blockquote><p>public void CreateUser(IRepresentationContext context)</p>
-
-<p>{</p>
-
-<p>    if (context.Request.MediaType != MediaType.ApplicationXml)</p>
-
-<p>    {</p>
-
-<p>        this.RenderStatus(context, HttpStatus.UnsupportedMediaType);</p>
-
-<p>        return;</p>
-
-<p>    }</p></blockquote>
-
-<p>     UserAccount user = UserAccount.FromXml(new
-StreamReader(context.Request.GetEntityStream()));</p>
-
-<blockquote><p>In the example above, CreateUser only supports POX (Plain old xml)
-representation for the users, so it also makes the translation from
-XML to an user entity.</p></blockquote>
-
-<ul>
-<li>There is not support for channels or aspects to perform additional
-work before a message arrives/leaves a service. There is, however,
-an special class for hosting service instances, it can be used from
-a console application or IIS as an http handler.</li>
-</ul>
-
-
-<blockquote><p>Uri rootUri = new Uri(string.Format(&ldquo;<a href="http://localhost:3000/v1/">http://localhost:3000/v1/</a>&rdquo;,
-address));</p>
-
-<p> </p>
-
-<p>BookmarkService service = new BookmarkService();</p>
-
-<p> </p>
-
-<p>HttpServer host = new HttpServer(rootUri);</p>
-
-<p> </p>
-
-<p>host.ReceiveWebRequest += delegate(HttpListenerContext context)</p>
-
-<p>{</p>
-
-<p>    service.Process(new HttpListenerContextAdapter(context, rootUri));</p>
-
-<p>};</p>
-
-<p> </p>
-
-<p>host.Start();</p></blockquote>
-
-<ul>
-<li>Rich and fluent client API for consuming existing REST services.
-This is probably one of the nicest things about this framework, a
-lot of examples are provided for consuming well-know REST services
-on the web such as Amazon S3,  ADO.NET services, Simple DB or
-Delicious to name a few. This client API can be used from
-Silverlight applications as well.</li>
-</ul>
-
-
-<p><strong>Dream Framework</strong> </p>
-
-<ul>
-<li>Service definitions are declarative as in WCF. Two attributes are
-used, one for the service definition &ldquo;DreamService&rdquo; and another for
-each operation in that service, &ldquo;DreamFeature&rdquo;.   </li>
-</ul>
-
-
-<blockquote><p>[DreamService(&ldquo;Dream Tutorial Address-Book&rdquo;, &ldquo;Copyright &copy; 2006, 2007
-MindTouch, Inc.&rdquo;,</p>
-
-<p>      Info =
-&ldquo;<a href="http://doc.opengarden.org/Dream_SDK/Tutorials/Address_Book">http://doc.opengarden.org/Dream_SDK/Tutorials/Address_Book</a>&rdquo;,</p>
-
-<p>      SID = new string[] {
-&ldquo;<a href="http://services.mindtouch.com/dream/tutorial/2007/03/addressbook">http://services.mindtouch.com/dream/tutorial/2007/03/addressbook</a>&rdquo; }</p>
-
-<p>    )]</p>
-
-<p>    public class AddressBookService : DreamService {</p>
-
-<p>        [DreamFeature(&ldquo;GET:firstname/{name}&rdquo;, &ldquo;Get list of all
-addresses matching first name&rdquo;)]</p>
-
-<p>        public Yield GetFirstName(DreamContext context, DreamMessage
-request, Result&lt;DreamMessage> response) {</p>
-
-<p> </p>
-
-<p>I will not enter much in detail here, but the &ldquo;DreamFeature&rdquo; supports
-almost the same things as WCF and Resourceful, an Http verb and the
-URI template for the resource. For more information about how to
-create an Dream service from scratch, take a look at <a href="http://wiki.developer.mindtouch.com/Dream/Tutorials/Creating_a_Magic_8-Ball_service">this
-page</a>.</p></blockquote>
-
-<ul>
-<li>Every operation implementation should receive three arguments and
-return an enumerator. The arguments are basically the runtime
-context (Equivalent to WebOperationContext in WCF), the request
-message and a handler to send responses to the client.</li>
-</ul>
-
-
-<blockquote><blockquote><p>using Yield = System.Collections.Generic.IEnumerator&lt;IYield>;</p>
-
-<p>public Yield GetFirstName(DreamContext context, DreamMessage
-request, Result&lt;DreamMessage> response) {</p></blockquote>
-
-<p>They implement a weird mechanism based on custom enumerators to
-execute callbacks on the service host. The service can basically
-returns IYield objects representing callbacks with the C# keyword
-&ldquo;yield&rdquo;. The response is automatically sent to the client application
-when the service invokes &ldquo;yield break&rdquo;.</p>
-
-<p>[DreamFeature(&ldquo;GET:addresses&rdquo;, &ldquo;Get all addresses&rdquo;)]</p>
-
-<p>public Yield GetAddresses(DreamContext context, DreamMessage request,
-Result&lt;DreamMessage> response) {</p>
-
-<p> </p>
-
-<p>    // send back the entire address book</p>
-
-<p>    lock(_addresses) {</p>
-
-<p>        response.Return(DreamMessage.Ok(_addresses));</p>
-
-<p>    }</p>
-
-<p>    yield break;</p>
-
-<p>}</p></blockquote>
-
-<ul>
-<li>Supports for long running services with durable state, it&rsquo;s not
-clear to me however how they restore that state between calls. The
-fields must be annotated with the attribute &ldquo;DreamServiceState&rdquo; in
-order to use this feature.</li>
-</ul>
-
-
-<blockquote><p>[DreamServiceState]private XDoc _addresses;</p>
-
-<p> </p></blockquote>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/17/">&larr; Older</a>
@@ -2411,6 +2349,10 @@ order to use this feature.</li>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
       </li>
     
@@ -2424,10 +2366,6 @@ order to use this feature.</li>
     
       <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
       </li>
     
   </ul>

@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="Configuring a WCF service to use federated authentication in an
-organization is not something trivial as it requires some good knowledge
-of the &hellip;">
+  <meta name="description" content="WIF is an excellent framework that allows you to develop an STS in just
+a few minutes if you know exactly what you are doing of course :). In my
+role &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +81,137 @@ of the &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/08/27/some-wif-interop-gotchas/">Some WIF Interop Gotchas</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-08-27T00:00:00-03:00" pubdate data-updated="true">Aug 27<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/08/27/some-wif-interop-gotchas/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>WIF is an excellent framework that allows you to develop an STS in just
+a few minutes if you know exactly what you are doing of course :). In my
+role as consultant and architect in Tellago, I went through several
+projects in which some level of customization was required at wire level
+to accomplish some interoperability between a STS built with WIF and
+existing federation solutions like ADFS 1.x and OpenSSO.</p>
+
+<p>The idea of this post is to show some of extensibility points that you
+will find in WIF to customize the WS-Trust messages, and issued tokens.</p>
+
+<p><strong>1. Making WIF to speak WS-Trust Feb 2005</strong></p>
+
+<p>WIF uses by default WS-Trust 1.3, which means that all the generated
+WS-Trust messages will use that spec unless you specify a different one.
+ADFS 1.x and OpenSSO both uses WS-Trust Feb 2005
+(<a href="http://schemas.xmlsoap.org/ws/2005/02/trust">http://schemas.xmlsoap.org/ws/2005/02/trust</a>)
+for the passive profile to support single sign on over the web.
+Therefore, if you want to generate WS-Trust messages that follow that
+spec version in your WIF passive STS, you need to modify a little bit
+the code you use for processing the RST messages.</p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+class FederatedPassiveSecurityTokenServiceOperations{    public static void ProcessRequest(HttpRequest request, IPrincipal principal,         SecurityTokenService sts, HttpResponse response,         WSFederationSerializer federationSerializer);    public static SignInResponseMessage ProcessSignInRequest(SignInRequestMessage requestMessage,         IPrincipal principal, SecurityTokenService sts,         WSFederationSerializer federationSerializer);}
+</del></p>
+
+<p>\</p>
+
+<p>The methods ProcessRequest and ProcessSignRequest in the
+FederatedPassiveSecurityTokenServiceOperations class both support an
+additional overload for passing the WS-Trust version
+(WSFederationSerializer instance).</p>
+
+<p>You can force another WS-Trust version by passing the right serializer
+instance. For example, the following code uses the WS-Trust Feb 2005
+specification.</p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+SignInResponseMessage responseMessage = FederatedPassiveSecurityTokenServiceOperations.ProcessSignInRequest(    requestMessage, User, sts,         new WSFederationSerializer(new WSTrustFeb2005RequestSerializer(),             new WSTrustFeb2005ResponseSerializer()));
+</del></p>
+
+<p>\</p>
+
+<p><strong>2. Changing the SAML token’s signature algorithms</strong></p>
+
+<p>WIF uses by default a combination of RSA and SHA 256 for generating the
+SAML signature. You can notice this in the generated SAML token,</p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+&lt;saml:Attribute AttributeName=&ldquo;name&rdquo; AttributeNamespace=&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/05/identity/claims">http://schemas.xmlsoap.org/ws/2005/05/identity/claims</a>&rdquo;>    &lt;saml:AttributeValue>MyName&lt;/saml:AttributeValue>  &lt;/saml:Attribute>&lt;/saml:AttributeStatement>&lt;ds:Signature xmlns:ds=&ldquo;<a href="http://www.w3.org/2000/09/xmldsig#">http://www.w3.org/2000/09/xmldsig#</a>&rdquo;>  &lt;ds:SignedInfo>    &lt;ds:CanonicalizationMethod Algorithm=&ldquo;<a href="http://www.w3.org/2001/10/xml-exc-c14n#">http://www.w3.org/2001/10/xml-exc-c14n#</a>&rdquo; />    &lt;ds:SignatureMethod Algorithm=&ldquo;<a href="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256">http://www.w3.org/2001/04/xmldsig-more#rsa-sha256</a>&rdquo; />    &lt;ds:Reference URI=&ldquo;#_cecf3c23-824e-4064-846c-b90c03d29700&rdquo;>      &lt;ds:Transforms>        &lt;ds:Transform Algorithm=&ldquo;<a href="http://www.w3.org/2000/09/xmldsig#enveloped-signature">http://www.w3.org/2000/09/xmldsig#enveloped-signature</a>&rdquo; />        &lt;ds:Transform Algorithm=&ldquo;<a href="http://www.w3.org/2001/10/xml-exc-c14n#">http://www.w3.org/2001/10/xml-exc-c14n#</a>&rdquo; />      &lt;/ds:Transforms>      &lt;ds:DigestMethod Algorithm=&ldquo;<a href="http://www.w3.org/2001/04/xmlenc#sha256">http://www.w3.org/2001/04/xmlenc#sha256</a>&rdquo; />      &lt;ds:DigestValue>1flG08Axm71C0isY2wLR0C9jqgfIebNoG2nlIO+jO+s=&lt;/ds:DigestValue>    &lt;/ds:Reference> &lt;/ds:SignedInfo>
+</del></p>
+
+<p>\
+ADFS 1.x and OpenSSO use a combination of RSA and SHA, so that’s also
+something else you need to customize. The “X509SigningCredentials”
+instance that you pass in the constructor of the Secure token service
+configuration also contains an overload to change the signature
+algorithm. The following code creates a new instance of
+“X509SigningCredentials” that uses SHA rather than SHA 256.</p>
+
+<p> </p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+new X509SigningCredentials(    CertificateUtil.GetCertificate(StoreName.TrustedPeople,         StoreLocation.LocalMachine,         &ldquo;CN=Test&rdquo;),     &ldquo;<a href="http://www.w3.org/2000/09/xmldsig#rsa-sha1">http://www.w3.org/2000/09/xmldsig#rsa-sha1</a>&rdquo;,     &ldquo;<a href="http://www.w3.org/2000/09/xmldsig#sha1">http://www.w3.org/2000/09/xmldsig#sha1</a>&rdquo;))
+</del></p>
+
+<p>\</p>
+
+<p><strong>3. Adding an authentication statement to the issued SAML token</strong></p>
+
+<p> </p>
+
+<p>This part is very tricky, as WIF does not add by default an
+authentication statement in the SAML token unless you use an specific
+claim type (NameIdentifier) with some custom properties.</p>
+
+<p> </p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+Claim nameIdentifier = new Claim(System.IdentityModel.Claims.ClaimTypes.NameIdentifier,     &ldquo;<a href="&#109;&#x61;&#x69;&#108;&#116;&#111;&#58;&#102;&#x6f;&#x6f;&#x40;&#116;&#x65;&#115;&#x74;&#46;&#x63;&#111;&#109;">&#102;&#x6f;&#111;&#x40;&#116;&#x65;&#x73;&#x74;&#x2e;&#99;&#x6f;&#x6d;</a>&rdquo;);nameIdentifier.Properties[&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/05/identity/claimproperties/format">http://schemas.xmlsoap.org/ws/2005/05/identity/claimproperties/format</a>&rdquo;]     = &ldquo;<a href="http://schemas.xmlsoap.org/claims/UPN">http://schemas.xmlsoap.org/claims/UPN</a>&rdquo;;outputIdentity.Claims.Add(nameIdentifier);outputIdentity.Claims.Add(new Claim(ClaimTypes.AuthenticationMethod, &ldquo;<a href="http://microsoft/geneva">http://microsoft/geneva</a>&rdquo;));outputIdentity.Claims.Add(new Claim(ClaimTypes.AuthenticationInstant, XmlConvert.ToString(DateTime.Now, XmlDateTimeSerializationMode.Utc)));
+</del></p>
+
+<p>\</p>
+
+<p>The code above will generate an authentication statement like this in
+the SAML token, which is something equivalent to what ADFS 1.x or
+OpenSSO would generate.</p>
+
+<p><del> {#codeSnippet style=&ldquo;border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: &lsquo;Courier New&rsquo;, courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px&rdquo;}
+&lt;saml:AttributeStatement>  &lt;saml:Subject>    &lt;saml:NameIdentifier Format=&ldquo;<a href="http://schemas.xmlsoap.org/claims/UPN">http://schemas.xmlsoap.org/claims/UPN</a>&rdquo;>        <a href="&#109;&#97;&#x69;&#x6c;&#x74;&#x6f;&#58;&#x66;&#x6f;&#111;&#64;&#x74;&#x65;&#115;&#x74;&#46;&#x63;&#x6f;&#x6d;">&#x66;&#x6f;&#x6f;&#64;&#116;&#101;&#x73;&#x74;&#x2e;&#x63;&#x6f;&#x6d;</a>    &lt;/saml:NameIdentifier>    &lt;saml:SubjectConfirmation>      &lt;saml:ConfirmationMethod>            urn:oasis:names:tc:SAML:1.0:cm:bearer        &lt;/saml:ConfirmationMethod>    &lt;/saml:SubjectConfirmation>  &lt;/saml:Subject>    &lt;/saml:AttributeStatement>
+</del></p>
+
+<p>\</p>
+
+<p> </p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1410,368 +1541,6 @@ site
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2010/05/31/implementing-a-generic-repository-for-wcf-data-services/">Implementing a Generic Repository for WCF Data Services</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2010-05-31T00:00:00-03:00" pubdate data-updated="true">May 31<span>st</span>, 2010</time>
-        
-         | <a href="/blog/2010/05/31/implementing-a-generic-repository-for-wcf-data-services/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>The repository implementation I am going to discuss here is not exactly
-what someone would call repository in terms of DDD, but it is an
-abstraction layer that becomes handy at the moment of unit testing the
-code around this repository. In other words, you can easily create a
-mock to replace the real repository implementation.</p>
-
-<p>The WCF Data Services update for .NET 3.5 introduced a nice feature to
-support two way data bindings, which is very helpful for developing WPF
-or Silverlight based application but also for implementing the
-repository I am going to talk about. As part of this feature, the WCF
-Data Services Client library introduced a new collection
-DataServiceCollection&lt;T> that implements INotifyPropertyChanged to
-notify the data context (DataServiceContext) about any change in the
-association links. This means that it is not longer necessary to
-manually set or remove the links in the data context when an item is
-added or removed from a collection.</p>
-
-<p>Before having this new collection, you basically used the following code
-to add a new item to a collection.</p>
-
-<p>Order order = new Order \
-{ \
-  Name = &ldquo;Foo&rdquo; \
-};</p>
-
-<p>OrderItem item = new OrderItem \
-{ \
-  Name = &ldquo;bar&rdquo;, \
-  UnitPrice = 10, \
-  Qty = 1 \
-};</p>
-
-<p>var context = new OrderContext(); \
-context.AddToOrders(order); \
-context.AddToOrderItems(item);</p>
-
-<p>context.SetLink(item, &ldquo;Order&rdquo;, order);</p>
-
-<p>context.SaveChanges();</p>
-
-<p>Now, thanks to this new collection, everything is much simpler and
-similar to what you have in other ORMs like Entity Framework or L2S.</p>
-
-<p>Order order = new Order \
-{ \
-  Name = &ldquo;Foo&rdquo; \
-};</p>
-
-<p>OrderItem item = new OrderItem \
-{ \
-  Name = &ldquo;bar&rdquo;, \
-  UnitPrice = 10, \
-  Qty = 1 \
-};</p>
-
-<p>order.Items.Add(item);</p>
-
-<p>var context = new OrderContext(); \
-context.AddToOrders(order);</p>
-
-<p>context.SaveChanges();</p>
-
-<p>In order to use this new feature, you first need to enable V2 in the
-data service, and then use some specific arguments in the datasvcutil
-tool (You can find more information about this new feature and how to
-use it in this
-<a href="http://blogs.msdn.com/b/astoriateam/archive/2009/09/01/introduction-to-data-binding-in-ctp2.aspx">post</a>).</p>
-
-<p>DataSvcUtil
-/uri:&ldquo;<a href="http://localhost:3655/MyDataService.svc/">http://localhost:3655/MyDataService.svc/</a>&rdquo;
-/out:Reference.cs /dataservicecollection /version:2.0</p>
-
-<p>Once you use those two arguments, the generated proxy classes will use
-DataServiceCollection&lt;T> rather than a simple ObjectCollection&lt;T>,
-which was the default collection in V1.</p>
-
-<p>There are some aspects that you need to know to use this feature
-correctly.</p>
-
-<p>​1. All the entities retrieved directly from the data context with a
-query track the changes and report those to the data context
-automatically.</p>
-
-<p>​2. A entity created with “new” does not track any change in the
-properties or associations. In order to enable change tracking in this
-entity, you need to do the following trick.</p>
-
-<p>public Order CreateOrder() \
-{ \
-  var collection = new DataServiceCollection&lt;Order>(this.context); \
-  var order = new Order();</p>
-
-<p>  collection.Add(order);</p>
-
-<p>  return order; \
-}</p>
-
-<p>You basically need to create a collection, and add the entity to that
-collection with the “Add” method to enable change tracking on that
-entity.</p>
-
-<p>​3. If you need to attach an existing entity (For example, if you
-created the entity with the “new” operator rather than retrieving it
-from the data context with a query) to a data context for tracking
-changes, you can use the “Load” method in the DataServiceCollection.</p>
-
-<p>var order = new Order \
-{ \
-  Id = 1 \
-};</p>
-
-<p>var collection = new DataServiceCollection&lt;Order>(this.context); \
-collection.Load(order);</p>
-
-<p>In this case, the order with Id = 1 must exist on the data source
-exposed by the Data service. Otherwise, you will get an error because
-the entity did not exist.</p>
-
-<p>These cool extensions methods discussed by Stuart Leeks in this
-<a href="http://blogs.msdn.com/b/stuartleeks/archive/2008/09/15/dataservicequery-t-expand.aspx">post</a>
-to replace all the magic strings in the “Expand” operation with
-Expression Trees represent another feature I am going to use to
-implement this generic repository.</p>
-
-<p>Thanks to these extension methods, you could replace the following query
-with magic strings by a piece of code that only uses expressions.</p>
-
-<p>Magic strings,</p>
-
-<p>var customers = dataContext.Customers \
-.Expand(&ldquo;Orders&rdquo;) \
-        .Expand(&ldquo;Orders/Items&rdquo;)</p>
-
-<p>Expressions,</p>
-
-<p>var customers = dataContext.Customers \
-.Expand(c => c.Orders.SubExpand(o => o.Items))</p>
-
-<p>That query basically returns all the customers with their orders and
-order items.</p>
-
-<p>Ok, now that we have the automatic change tracking support and the
-expression support for explicitly loading entity associations, we are
-ready to create the repository.</p>
-
-<p>The interface for this repository looks like this,</p>
-
-<p><del> {.code}
-public interface IRepository
-{
-  T Create<T>() where T : new();
-  void Update<T>(T entity);
-  void Delete<T>(T entity);
-  IQueryable<T> RetrieveAll<T>(params Expression&lt;Func&lt;T, object>>[] eagerProperties);
-  IQueryable<T> Retrieve<T>(Expression&lt;Func&lt;T, bool>> predicate,
-</del></p>
-
-<p><del> {.code}
-params Expression&lt;Func&lt;T, object>>[] eagerProperties);
-  void Attach<T>(T entity);
-  void SaveChanges();
-}
-</del></p>
-
-<p><a href="http://11011.net/software/vspaste"></a></p>
-
-<p>The Retrieve and RetrieveAll methods are used to execute queries against
-the data service context. While both methods receive an array of
-expressions to load associations explicitly, only the Retrieve method
-receives a predicate representing the “where” clause.</p>
-
-<p>The following code represents the final implementation of this
-repository.</p>
-
-<p>~~~~ {.code}
-public class DataServiceRepository: IRepository
-{
-  ResourceRepositoryContext context;</p>
-
-<p>  public DataServiceRepository()</p>
-
-<pre><code>  : this (new DataServiceContext())
-</code></pre>
-
-<p>  {
-  }</p>
-
-<p>  public DataServiceRepository(DataServiceContext context)
-  {</p>
-
-<pre><code>        this.context = context;
-</code></pre>
-
-<p>  }</p>
-
-<p>  private static string ResolveEntitySet(Type type)
-  {</p>
-
-<pre><code>var entitySetAttribute = (EntitySetAttribute)type
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {.code}
-.GetCustomAttributes(typeof(EntitySetAttribute), true).FirstOrDefault();</p>
-
-<p>   if (entitySetAttribute != null)</p>
-
-<pre><code>  return entitySetAttribute.EntitySet;
-</code></pre>
-
-<p>   return null;
-  }</p>
-
-<p>  public T Create<T>() where T : new()
-  {</p>
-
-<pre><code>var collection = new DataServiceCollection&lt;T&gt;(this.context);
-var entity = new T();
-
-collection.Add(entity);
-
-return entity;
-</code></pre>
-
-<p>  }</p>
-
-<p>  public void Update<T>(T entity)
-  {</p>
-
-<pre><code>this.context.UpdateObject(entity);
-</code></pre>
-
-<p>  }</p>
-
-<p>  public void Delete<T>(T entity)
-  {</p>
-
-<pre><code>this.context.DeleteObject(entity);
-</code></pre>
-
-<p>  }</p>
-
-<p>  public void Attach<T>(T entity)
-  {</p>
-
-<pre><code>var collection = new DataServiceCollection&lt;T&gt;(this.context);
-collection.Load(entity);
-</code></pre>
-
-<p>  }</p>
-
-<p>  public IQueryable<T> Retrieve<T>(Expression&lt;Func&lt;T, bool>> predicate,
-~~~~</p>
-
-<p>~~~~ {.code}
-  params Expression&lt;Func&lt;T, object>>[] eagerProperties)
-  {</p>
-
-<pre><code>var entitySet = ResolveEntitySet(typeof(T));
-var query = context.CreateQuery&lt;T&gt;(entitySet);
-
-foreach (var e in eagerProperties)
-{
-  query = query.Expand(e);
-}
-
-return query.Where(predicate);
-</code></pre>
-
-<p>  }</p>
-
-<p>  public IQueryable<T> RetrieveAll<T>(params Expression&lt;Func&lt;T, object>>[] eagerProperties)
-  {</p>
-
-<pre><code>var entitySet = ResolveEntitySet(typeof(T));
-var query = context.CreateQuery&lt;T&gt;(entitySet);
-
-foreach (var e in eagerProperties)
-{
-  query = query.Expand(e);
-}
-
-return query;
-</code></pre>
-
-<p>  }</p>
-
-<p>  public void SaveChanges()
-  {</p>
-
-<pre><code>this.context.SaveChanges(SaveChangesOptions.Batch);
-</code></pre>
-
-<p>  }</p>
-
-<p> }
-~~~~</p>
-
-<p><a href="http://11011.net/software/vspaste"></a></p>
-
-<p>For instance, you can use the following code to retrieve customers with
-First name equal to “John”, and all their orders in a single call.</p>
-
-<p>repository.Retrieve&lt;Customer>( \
-   c => c.FirstName == “John”, //Where \
-   c => c.Orders.SubExpand(o => o.Items));</p>
-
-<p>In case, you want to have some pre-defined queries that you are going to
-use across several places, you can put them in an specific class.</p>
-
-<p>public static class CustomerQueries \
-{ \
-  public static Expression&lt;Func&lt;Customer, bool>>
-LastNameEqualsTo(string lastName) \
-  { \
-    return c => c.LastName == lastName; \
-  } \
-}</p>
-
-<p>And then, use it with the repository.</p>
-
-<p>repository.Retrieve&lt;Customer>( \
-   CustomerQueries.LastNameEqualsTo(&ldquo;foo&rdquo;), \
-   c => c.Orders.SubExpand(o => o.Items));</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/11/">&larr; Older</a>
@@ -1789,6 +1558,10 @@ LastNameEqualsTo(string lastName) \
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/01/31/making-ajax-calls-with-hawk-authentication-to-asp-dot-net-web-api/">Making Ajax Calls With Hawk Authentication to ASP.NET Web API</a>
       </li>
     
@@ -1802,10 +1575,6 @@ LastNameEqualsTo(string lastName) \
     
       <li class="post">
         <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/21/injecting-dynamic-content-in-windows-azure-package/">Injecting Dynamic Content in Windows Azure Packages</a>
       </li>
     
   </ul>
