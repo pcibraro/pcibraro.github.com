@@ -4,7 +4,7 @@
   <title><![CDATA[Pablo Cibraro (Cibrax)]]></title>
   <link href="http://cibrax.me/atom.xml" rel="self"/>
   <link href="http://cibrax.me/"/>
-  <updated>2014-05-23T15:16:29-03:00</updated>
+  <updated>2014-05-23T15:27:33-03:00</updated>
   <id>http://cibrax.me/</id>
   <author>
     <name><![CDATA[Cibrax]]></name>
@@ -19,10 +19,10 @@
     <updated>2014-05-23T14:36:00-03:00</updated>
     <id>http://cibrax.me/blog/2014/05/23/appfabric-outputcaching</id>
     <content type="html"><![CDATA[<p>ASP.NET Web API does not provide any output caching capabilities out of the box other than the ones you would traditionally find in the ASP.NET caching module.
-Fortunately, Filip [wrote a very nice library] (<a href="http://www.strathweb.com/2012/05/output-caching-in-asp-net-web-api/">http://www.strathweb.com/2012/05/output-caching-in-asp-net-web-api/</a>) that you can use to decorate your Web API controller methods with an [OutputCaching] attribute, which is similar to the one you can find in ASP.NET MVC.
+Fortunately, Filip <a href="http://www.strathweb.com/2012/05/output-caching-in-asp-net-web-api/">wrote a very nice library</a> that you can use to decorate your Web API controller methods with an [OutputCaching] attribute, which is similar to the one you can find in ASP.NET MVC.
 This library provides a way to configure different persistence storages for the cached data, which uses memory by default. As part of this post, I will show how you can implement your own persistence provider for AppFabric in order to support distributed caching on web applications running on premises.</p>
 
-<p>The first thing is to install AppFabric Caching. Wade Wegner wrote a very useful post describing all the required steps [here] (<a href="http://www.wadewegner.com/2010/08/getting-started-with-windows-server-appfabric-cache/">http://www.wadewegner.com/2010/08/getting-started-with-windows-server-appfabric-cache/</a>).</p>
+<p>The first thing is to install AppFabric Caching. Wade Wegner wrote a very useful post describing all the required steps <a href="http://www.wadewegner.com/2010/08/getting-started-with-windows-server-appfabric-cache/">here</a>.</p>
 
 <p>Once AppFabric Cache is installed, you need to start the cluster and configure a new cache that will be used by our extension. Open up the Cache PowerShell console (Caching Administration Windows PowerShell in programs). Run the following command in the PowerShell console:</p>
 
