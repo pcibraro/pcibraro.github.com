@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="One of the things that caught my attention when WCF Data Service was
-released a couple of years ago was the ability of using URI segments for
-passing &hellip;">
+  <meta name="description" content="As part of the simplification in service configuration that we want to
+provide in SO-Aware, we have added two new commands in the PowerShell
+provider &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +81,114 @@ passing &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/11/10/generating-wcf-configuration-from-the-so-aware-repository/">Generating WCF Configuration From the SO-Aware Repository</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-11-10T00:00:00-03:00" pubdate data-updated="true">Nov 10<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/11/10/generating-wcf-configuration-from-the-so-aware-repository/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As part of the simplification in service configuration that we want to
+provide in SO-Aware, we have added two new commands in the PowerShell
+provider for generating the service configuration at design time in case
+you don’t want to rely on SO-Aware for resolving all that at runtime.</p>
+
+<p>We have added a command for generating the configuration specific for
+SO-Aware</p>
+
+<p><strong>Get-SWServiceConfiguration</strong> -serviceversion &ldquo;SampleService(1.0)&rdquo;
+-configpath &ldquo;d:\temp\MyConfig.config&rdquo; -servicetype
+&ldquo;Services.SampleService&rdquo;</p>
+
+<p>The arguments you pass to this command are the service version (A
+service that you already imported in the repository), the path to the
+configuration file, and the .NET type implementing the service. As
+result of executing this command, the following section will be added to
+the configuration file.</p>
+
+<p>&lt;configuration> \
+  &lt;configSections> \
+    &lt;section name=&ldquo;serviceRepository&rdquo;
+type=&ldquo;Tellago.ServiceModel.Governance.ServiceConfiguration.ServiceRepositoryConfigurationSection,
+Tellago.ServiceModel.Governance.ServiceConfiguration&rdquo; /> \
+  &lt;/configSections> \
+  &lt;serviceRepository
+url=&ldquo;<a href="http://localhost/soaware/servicerepository.svc">http://localhost/soaware/servicerepository.svc</a>&rdquo;>
+\
+    &lt;services> \
+      &lt;service name=&ldquo;ref:SampleService(1.0)&rdquo;
+type=&ldquo;Services.SampleService&rdquo; /> \
+    &lt;/services> \
+  &lt;/serviceRepository></p>
+
+<p>&lt;/configuration></p>
+
+<p>That’s the configuration required by SO-Aware to resolve the service
+configuration at runtime.</p>
+
+<p>In addition, if you don’t want to rely on SO-Aware at all, another
+command has been added to generate the WCF configuration section for a
+service. This command might also becomes handy if you want to deploy the
+configuration at design time in a cluster for example.</p>
+
+<p><strong>Get-SWWCFServiceConfiguration</strong> -serviceversion &ldquo;SampleService(1.0)&rdquo;
+-configpath &ldquo;d:\temp\MyConfig.config&rdquo; -servicetype
+&ldquo;Samples.SampleService&rdquo;</p>
+
+<p>&lt;configuration> \
+  &lt;system.serviceModel> \
+    &lt;services>     \
+      &lt;service name=&ldquo;Samples.SampleService&rdquo;> \
+        &lt;endpoint
+address=&ldquo;<a href="http://localhost:13749/SampleService.svc">http://localhost:13749/SampleService.svc</a>&rdquo;
+contract=&ldquo;ISampleService&rdquo; binding=&ldquo;basicHttpBinding&rdquo;
+bindingConfiguration=&ldquo;basicHttp&rdquo; /> \
+      &lt;/service> \
+    &lt;/services> \
+    &lt;behaviors> \
+      &lt;serviceBehaviors /> \
+      &lt;endpointBehaviors /> \
+    &lt;/behaviors> \
+    &lt;bindings> \
+      &lt;basicHttpBinding> \
+        &lt;binding name=&ldquo;basicHttp&rdquo; /> \
+      &lt;/basicHttpBinding> \
+    &lt;/bindings> \
+  &lt;/system.serviceModel> \
+&lt;/configuration></p>
+
+<p>Both commands receive the same arguments, but the generated
+configuration is quite different as you can see.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1982,98 +2090,6 @@ running in the same host.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2010/09/01/managing-the-so-aware-repository-with-powershell/">Managing the SO-Aware Repository With PowerShell</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2010-09-01T00:00:00-03:00" pubdate data-updated="true">Sep 1<span>st</span>, 2010</time>
-        
-         | <a href="/blog/2010/09/01/managing-the-so-aware-repository-with-powershell/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>As Jesus mentioned in this
-<a href="http://www.tellagostudios.com/tellago-studios-launching">post</a>,
-SO-Aware provides three interfaces for managing the service repository.
-An OData API in case you want to integrate third applications with the
-repository. OData is a pure http API that can be easily consumed in any
-platform using a simple http client library. The management portal,
-which is an ASP.NET MVC user interface layered on top of the OData API
-and probably the one most people will use. And finally, a PowerShell
-provider that also mounts on top of the OData API to allow
-administrators to automate management tasks over the repository with
-scripting. </p>
-
-<p>The SO-Aware PowerShell provider, in that sense offers around 40
-commands that enables simple management scenarios like registering
-bindings or services or more complex scenarios that involves testing
-services or sending alerts when a service is not properly working.  </p>
-
-<p>This provider can be registered as an snapin in an existing script using
-the following command,</p>
-
-<p><del> {#codeSnippet style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
-$snapin = get-pssnapin  | select-string &ldquo;SOAwareSnapIn&#8221;if ($snapin -eq $null){    Add-PSSnapin &#8220;SOAwareSnapIn&rdquo;}
-</del></p>
-
-<p>\</p>
-
-<p>Once you have registered the snapin, you can start using most of the
-commands for managing the repository.</p>
-
-<p>The first and more important command is “Set-SWEndpoint”, which allows
-you to connect to an existing SO-Aware instance. This command receives
-the OData service location as first argument, and it looks as follow,</p>
-
-<p><del> {#codeSnippet style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
-Set-SWEndpoint -uri <a href="http://localhost/SOAware/ServiceRepository.svc">http://localhost/SOAware/ServiceRepository.svc</a>
-</del></p>
-
-<p>\</p>
-
-<p> </p>
-
-<p>As next step, you can start managing or querying data from the
-repository using the rest of the commands. For instance, the following
-example registers a new binding in the repository only if it was not
-created already</p>
-
-<p><del> {#codeSnippet style=&ldquo;BORDER-BOTTOM-STYLE: none; TEXT-ALIGN: left; PADDING-BOTTOM: 0px; LINE-HEIGHT: 12pt; BORDER-RIGHT-STYLE: none; BACKGROUND-COLOR: #f4f4f4; MARGIN: 0em; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; FONT-FAMILY: &lsquo;Courier New&rsquo;, courier, monospace; DIRECTION: ltr; BORDER-TOP-STYLE: none; COLOR: black; FONT-SIZE: 8pt; BORDER-LEFT-STYLE: none; OVERFLOW: visible; PADDING-TOP: 0px&rdquo;}
-function RegisterBinding([string]$name,[string]$type,[string]$xml){    $binding = GetBinding($name);    if(!$binding)    {       Add-SWBinding -Name $name -BindingType $type -Configuration $xml    }}function GetBinding([string]$name){    $bindings = Get-SWBindings    foreach($binding in $bindings)    {        if($binding.Name -eq $name)        {            return $binding        }    }}RegisterBinding &ldquo;stsBinding&rdquo; &ldquo;ws2007HttpBinding&rdquo; &ldquo;<binding>        <security mode='Message'>            <message clientCredentialType='UserName' establishSecurityContext='false' negotiateServiceCredential='false'/>        </security> </binding>&rdquo;;
-</del></p>
-
-<p>\</p>
-
-<p>As you can see, this provider brings a powerful toy that administrators
-in any organization can use to manage services or governance aspects by
-leveraging their scripting knowledge.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/10/">&larr; Older</a>
@@ -2091,6 +2107,10 @@ leveraging their scripting knowledge.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
       </li>
     
@@ -2104,10 +2124,6 @@ leveraging their scripting knowledge.</p>
     
       <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
   </ul>

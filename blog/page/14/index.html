@@ -9,8 +9,10 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="I just got great news!  MVP in Connected Systems for another year. I want to thank Ed Hickey, my MVP lead Fernando Garcia
-Loera, and the rest of &hellip;">
+  <meta name="description" content="Some people have been asking around in the MSDN forums or
+stackoverflow
+about a possible way to pass form-urlencoded data to an existing WCF
+REST &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -80,6 +82,90 @@ Loera, and the rest of &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/04/01/support-for-form-urlencoded-data-in-wcf-rest-services/">Support for Form-UrlEncoded Data in WCF Rest Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-04-01T00:00:00-03:00" pubdate data-updated="true">Apr 1<span>st</span>, 2009</time>
+        
+         | <a href="/blog/2009/04/01/support-for-form-urlencoded-data-in-wcf-rest-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Some people have been asking around in the MSDN forums or
+<a href="http://stackoverflow.com/questions/604463/best-way-to-support-application-x-www-form-urlencoded-post-data-with-wcf">stackoverflow</a>
+about a possible way to pass form-urlencoded data to an existing WCF
+REST service. Although this is not a core feature in WCF from my point
+view, there is still some support for addressing this scenario in the
+REST Starter kit.</p>
+
+<p>This feature takes the form of a new message formatter,
+FormsPostDispatchMessageFormatter, which is automatically injected to
+any existing service hosted within the new WebServiceHost2 host (shipped
+as part of the kit)</p>
+
+<p>This formatter basically intercepts all messages, and handle those that
+contains “application/x-www-form-urlencoded” as content type in the
+request header. The rest of the messages are handled by the existing
+formatters as usual.</p>
+
+<p>The service operation must expose a NameValueCollection argument in the
+method signature in order to receive the data. This collection will
+contain the key/value pairs that were parsed from request body.</p>
+
+<p>For example,</p>
+
+<p>[WebInvoke(UriTemplate = &ldquo;SetData&rdquo;)]</p>
+
+<p>[OperationContract]</p>
+
+<p>void SetData(NameValueCollection formsData)</p>
+
+<p>{</p>
+
+<p>    this.value = Int32.Parse(formsData[&ldquo;counter&rdquo;]);</p>
+
+<p>}</p>
+
+<p>“Counter”  in this case represents a field in the form that was posted
+to the service.</p>
+
+<p>&lt;</p>
+
+<p>FORM action=&ldquo;service.svc/SetData&rdquo; method=&ldquo;post&rdquo;></p>
+
+<p>Input Counter value and hit enter:</p>
+
+<p>&lt;INPUT type=&ldquo;text&rdquo; name=&ldquo;Counter&rdquo;></p>
+
+<p>&lt;/FORM></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1484,304 +1570,6 @@ class is minimal, it just a quick search in the TLS.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2009/03/06/brokered-authentication-for-rest-active-clients-with-saml/">Brokered Authentication for REST Active Clients With SAML</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2009-03-06T00:00:00-03:00" pubdate data-updated="true">Mar 6<span>th</span>, 2009</time>
-        
-         | <a href="/blog/2009/03/06/brokered-authentication-for-rest-active-clients-with-saml/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>I have been thinking for a while about what could be a good way to
-support brokered authentication for active REST clients. Something I did
-not want to do was to force the use of WS-Trust Active profile, which is
-in essence SOAP based.</p>
-
-<p>Some of the qualities attributes that are easy to reach with REST
-services, such as simplicity, interoperability and scalability can
-definitely be affected with the introduction of a additional SOAP stack
-for negotiating an identity token. WS-Trust passive requestor profile,
-on the other hand, was designed for dumb clients like web browsers,
-clients that do not have capabilities to handle cryptographic materials
-or the SOAP stack itself.  This profile basically hides most of the
-WS-Trust details from client applications through a sequence of http
-redirections, which could be helpful in this scenario for negotiating a
-token and still keep simple REST clients. However, as some user
-interaction is required, this profile is not suitable for consuming REST
-services from desktop applications or other active client applications.</p>
-
-<p>If we take a deep look at the functionality provided by a Secure Token
-Service (STS), it is not more than a service that handle the lifecycle
-of a identity token, it knows how to issue a token, renew it or finally
-cancel it when it is not longer need it.  If we see all these scenarios
-from a point of view of REST, an identity token is just a resource,
-something that can be created, updated or even deleted. Of course, there
-is not any spec available yet for this scenario, all I will show here is
-just an possible implementation of a Restful STS.</p>
-
-<p>The mapping of supported Ws-Trust actions to http verbs for my Restful
-STS is defined below,</p>
-
-<ul>
-<li>Issue = POST, creates or issues a new token resource (A SAML token)</li>
-<li>Renew = PUT, renew an existing token</li>
-<li>Cancel = DELETE, cancel an existing token</li>
-<li>GET, gets an existing token (There is not such thing in Ws-Trust)</li>
-</ul>
-
-
-<p>I leave out the &ldquo;Validate&rdquo; action as part of this implementation.</p>
-
-<p>What I have created for this example is a REST facade layered on top of
-a STS implementation with the Geneva Framework. The definition of
-service contract for this Restful STS for supporting that mapping should
-look like this,</p>
-
-<p><del> {.c# name=&ldquo;code&rdquo;}
-[ServiceContract]public interface IRestSts{    [OperationContract]    [WebInvoke(UriTemplate=&ldquo;Tokens&rdquo;, Method=&ldquo;POST&rdquo;, RequestFormat=WebMessageFormat.Xml, ResponseFormat=WebMessageFormat.Xml)]    RequestSecurityTokenResponse IssueToken(RequestSecurityToken request);     [OperationContract]    [WebInvoke(Method = &ldquo;PUT&rdquo;, UriTemplate = &ldquo;Tokens/{tokenId}&rdquo;, RequestFormat = WebMessageFormat.Xml, ResponseFormat = WebMessageFormat.Xml)]    RequestSecurityTokenResponse RenewToken(string tokenId);     [OperationContract]    [WebInvoke(Method = &ldquo;DELETE&rdquo;, UriTemplate = &ldquo;Tokens/{tokenId}&rdquo;, RequestFormat = WebMessageFormat.Xml, ResponseFormat = WebMessageFormat.Xml)]    void CancelToken(string tokenId);     [OperationContract]    [WebGet(UriTemplate = &ldquo;Tokens/{tokenId}&rdquo;, RequestFormat = WebMessageFormat.Xml, ResponseFormat = WebMessageFormat.Xml)]    RequestSecurityTokenResponse GetToken(string tokenId);    }
-</del></p>
-
-<p>As I mentioned before, the client has to first acquire a token from the
-STS, that can be done with a regular Http POST containing a
-RequestSecurityToken message.</p>
-
-<p><a href="/images/legacy/FederatedidentityinRESTservices_A72D/Issue_REST.gif"><img src="/images/legacy/FederatedidentityinRESTservices_A72D/Issue_REST_thumb.gif" alt="Issue_REST" /></a></p>
-
-<p>The message embedded in the request body to the STS looks like this,</p>
-
-<p>~~~~ {.xml name=&ldquo;code&rdquo;}
-<RequestSecurityToken xmlns="http://schemas.xmlsoap.org/ws/2005/02/trust"></p>
-
-<pre><code>&lt;AppliesTo&gt;https://localhost/MyService&lt;/AppliesTo&gt;
-&lt;TokenType&gt;http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1&lt;/TokenType&gt;
-</code></pre>
-
-<p></RequestSecurityToken>
-~~~~</p>
-
-<p>And the corresponding response like this,</p>
-
-<p>~~~~ {.xml name=&ldquo;code&rdquo;}
-<RequestSecurityTokenResponse xmlns="http://schemas.xmlsoap.org/ws/2005/02/trust" xmlns:i="http://www.w3.org/2001/XMLSchema-instance"></p>
-
-<pre><code>&lt;Links&gt;
-    &lt;Link&gt;
-        &lt;href&gt;http://localhost:7362/STSWindows/Service.svc/_8a6fc87b-7e6a-45c9-a479-20ea42113e40&lt;/href&gt;
-        &lt;rel&gt;self&lt;/rel&gt;
-        &lt;type&gt;application/xml&lt;/type&gt;
-    &lt;/Link&gt;
-&lt;/Links&gt;
-&lt;RequestedSecurityToken&gt;....&lt;/RequestedSecurityToken&gt;
-&lt;TokenType&gt;http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1&lt;/TokenType&gt;
-</code></pre>
-
-<p></RequestSecurityTokenResponse>
-~~~~</p>
-
-<p>Both calls, the first one to get the token from the STS, and the second
-call to invoke the service in the Relying party should be protected with
-transport security to avoid any middle in the man attack.</p>
-
-<p>In this sample, the STS is using basic authentication to authenticate
-the user trying to get access to the token. If the authentication
-succeed, the STS implemented with Geneva will provide the necessary
-claims associated with that user.</p>
-
-<p>The code on the client side to ask for a new token is quite simple,</p>
-
-<p>static string GetToken(string address, string appliesTo, string
-username, string password)</p>
-
-<p>{</p>
-
-<p>    RequestSecurityToken request = new RequestSecurityToken</p>
-
-<p>    {</p>
-
-<p>        TokenType =
-&ldquo;<a href="http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1">http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1</a>&rdquo;,</p>
-
-<p>        AppliesTo = appliesTo</p>
-
-<p>    };</p>
-
-<p>    DataContractSerializer requestSerializer = new
-DataContractSerializer(typeof(RequestSecurityToken));</p>
-
-<p>    WebRequest webRequest = HttpWebRequest.Create(address);</p>
-
-<p>    webRequest.Method = &ldquo;POST&rdquo;;</p>
-
-<p>    webRequest.ContentType = &ldquo;application/xml&rdquo;;</p>
-
-<p>    webRequest.Credentials = new NetworkCredential(username, password);</p>
-
-<p>    using (var st = webRequest.GetRequestStream())</p>
-
-<p>    {</p>
-
-<p>        requestSerializer.WriteObject(st, request);</p>
-
-<p>        st.Flush();</p>
-
-<p>    }</p>
-
-<p>    WebResponse webResponse = webRequest.GetResponse();</p>
-
-<p>    DataContractSerializer responseSerializer = new
-DataContractSerializer(typeof(RequestSecurityTokenResponse));</p>
-
-<p>    using (var st = webResponse.GetResponseStream())</p>
-
-<p>    {</p>
-
-<p>        var response =
-(RequestSecurityTokenResponse)responseSerializer.ReadObject(st);</p>
-
-<p>        return response.RequestedSecurityToken;</p>
-
-<p>    }</p>
-
-<p>}</p>
-
-<p>It creates a new RequestSecurityToken message, provides the user
-credentials and post that information to the STS. The response from the
-STS is a RequestSecurityTokenResponse containing the issued token,
-that&rsquo;s what this method returns in response.RequestedSecurityToken.</p>
-
-<p>Once the client gets the issued token from the response, it can include
-it as part of the request message to the relying party&rsquo;s service. For
-this sample, I decided to include the token in the &ldquo;Authorization&rdquo;
-header, which is a common mechanism to attach authentication credentials
-in a request message to a REST service (Basic authentication, and other
-authentication mechanisms use the same approach).</p>
-
-<p>WebRequest webRequest = HttpWebRequest.Create(address);</p>
-
-<p>webRequest.Method = &ldquo;GET&rdquo;;</p>
-
-<p>webRequest.Headers[&ldquo;Authorization&rdquo;] = token;</p>
-
-<p>Now, the hard part, the Relying Party needs a way to parse the token and
-authenticate the user before calling the service implementation.
-Fortunately, the guys from the WCF REST Starter kit have provide an
-excellent solution for this kind of scenarios, message interceptors.
-What I did here was to implement a message interceptor for SAML tokens,
-which internally used the Geneva Framework for performing all the
-validations and parsing the token.  An easy way to inject message
-interceptors in a service implementation is through a custom service
-factory (Zero config deployment),</p>
-
-<p>class AppServiceHostFactory : ServiceHostFactory</p>
-
-<p>{</p>
-
-<p>    protected override ServiceHost CreateServiceHost(Type serviceType,
-Uri[] baseAddresses)</p>
-
-<p>    {</p>
-
-<p>        WebServiceHost2 result = new WebServiceHost2(serviceType, true,
-baseAddresses);</p>
-
-<p>        result.Interceptors.Add(new
-MessageInterceptors.SamlAuthenticationInterceptor(new
-TrustedIssuerNameRegistry()));</p>
-
-<p>        return result;</p>
-
-<p>    }</p>
-
-<p>}</p>
-
-<p>The &ldquo;TrustedIssuerNameRegistry&rdquo; is a just a simple implementation of a
-Geneva &ldquo;IssuerNameRegistry&rdquo; provider that validates the issuer of the
-SAML token.</p>
-
-<p>All this stuff is of course transparent to the service implementation,
-it only receives a bunch of claims representing the user identity. Those
-claims can be got accessed through the current user principal. In the
-code below, the service generates a feed with all the received claims.</p>
-
-<p>IClaimsIdentity identity =
-(IClaimsIdentity)Thread.CurrentPrincipal.Identity;</p>
-
-<p>var feed = new SyndicationFeed()</p>
-
-<p>{</p>
-
-<p>    Id = &ldquo;<a href="http://Claims">http://Claims</a>&rdquo;,</p>
-
-<p>    Title = new TextSyndicationContent(&ldquo;My claims&rdquo;),</p>
-
-<p>};</p>
-
-<p>feed.Items = identity.Claims.Select(c =></p>
-
-<p>    new SyndicationItem()</p>
-
-<p>    {</p>
-
-<p>        Id = Guid.NewGuid().ToString(),</p>
-
-<p>        Title = new TextSyndicationContent(c.ClaimType),</p>
-
-<p>        LastUpdatedTime = DateTime.UtcNow,</p>
-
-<p>        Authors =</p>
-
-<p>            {</p>
-
-<p>                new SyndicationPerson()</p>
-
-<p>                {</p>
-
-<p>                    Name = c.Issuer</p>
-
-<p>                }</p>
-
-<p>            },</p>
-
-<p>        Content = new TextSyndicationContent(c.Value)</p>
-
-<p>    }</p>
-
-<p>);</p>
-
-<p>The complete sample is available to download from
-<a href="/images/legacy/FederatedRest.zip">here</a>. Note, it uses
-the latest Geneva Framework bits (And also the X509 certificates
-included with the samples, just run the certificate setup file included
-with the framework).</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/15/">&larr; Older</a>
@@ -1799,6 +1587,10 @@ with the framework).</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
       </li>
     
@@ -1812,10 +1604,6 @@ with the framework).</p>
     
       <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
   </ul>

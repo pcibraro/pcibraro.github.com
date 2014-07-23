@@ -9,8 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="This post describes how to implement a behavior to route messages by
-means of the body element in the soap envelope. Routing messages in this way is &hellip;">
+  <meta name="description" content="Federation is key concept that allows to enable collaboration across
+multiple security or trust realms.\
+There are many resources on Internet about &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -80,6 +81,529 @@ means of the body element in the soap envelope. Routing messages in this way is 
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/02/02/437180/">Implementing a WS-Federation Scenario With WSE</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-02-02T00:00:00-03:00" pubdate data-updated="true">Feb 2<span>nd</span>, 2006</time>
+        
+         | <a href="/blog/2006/02/02/437180/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Federation is key concept that allows to enable collaboration across
+multiple security or trust realms.\
+There are many resources on Internet about this topic so I won&rsquo;t enter
+in details during this post.\
+The solution that I will give is based on the second extension of this
+pattern:</p>
+
+<p>\</p>
+
+<p><a href="http://msdn.microsoft.com/practices/default.aspx?pull=/library/en-us/dnpag2/html/wss_ch1_brokauthsts.asp">http://msdn.microsoft.com/practices/default.aspx?pull=/library/en-us/dnpag2/html/wss_ch1_brokauthsts.asp</a></p>
+
+<p>\</p>
+
+<p>By the way, this is one of the security patterns published by the
+Pattern and Practices team in Microsoft.\
+This a good starting point if you want to be familiar with different and
+useful patterns for web services.</p>
+
+<p>\</p>
+
+<p><strong>Sample scenario</strong>\
+\
+Imagine the following scenario:</p>
+
+<p>\</p>
+
+<p>Fabrikam has exposed some services to make on line operations, such as
+purchase goods, make orders and others.\
+These services can be used only by customers so the access to them is
+restricted.\
+Contoso is one of Fabrikam&rsquo;s customers and it has developed an internal
+desktop application to consume some of these services.\
+As you can see, this is a typical scenario for Federation where we have
+both companies in different security domains or realms but they trust
+each other.</p>
+
+<p>\</p>
+
+<p>The services exposed by Fabrikam authenticate the users by means of X509
+certificates, so one certificate is used for the client(Contoso) and
+another for the service(Fabrikam).\
+Contoso has deployed the desktop application in almost 100 machines and
+therefore installing both certificates in each one is not a practical
+solution in this case.</p>
+
+<p>\</p>
+
+<p>\
+<img src="/images/legacy/Federation/Problem.gif" alt="" /></p>
+
+<p>\</p>
+
+<p>The Brokered Authentication pattern by means of security token services
+meets really well the requirements for this solution.\</p>
+
+<p><img src="/images/legacy/Federation/Solution.gif" alt="" /></p>
+
+<p>\</p>
+
+<p>The arrows in this figure only show the work flow path and not the real
+path of the interchanged messages (Pair of request and response
+messages).</p>
+
+<p>\</p>
+
+<p>​1. Contoso deploys a STS with both certificates and the desktop
+application can ask for a SAML token to this service using a
+UsernameToken, a Kerberos token, or other kind of client credential.\
+2. The STS in the Fabrikam&rsquo;s domain only accepts SAML tokens signed by a
+well-know Authority (The Contoso&rsquo;s STS in this case) and creates an
+equivalent SAML token signed by him.\
+3. The Fabrikam&rsquo;s services only accept SAML tokens signed by Fabrikam&rsquo;s
+STS.</p>
+
+<p>\</p>
+
+<p>With this solution, Fabrikam can start to accept request from
+other customers and the services will not notice the difference.\
+In addition, if the communication between the STS and the services in
+Fabrikam is protected by means of a Kerberos token instead of a SAML
+token, the\
+X509 certificates must be only deployed in the servers where both STS
+run.</p>
+
+<p>\</p>
+
+<hr />
+
+<p><strong>Implementation</strong></p>
+
+<p>\
+In order to implement this sample scenario, I used the SAML
+implementation for WSE. You can download the code for this project in
+the <a href="http://practices.gotdotnet.com/projects/saml">GDN workspace</a>.\
+The image above illustrates the turn-key scenario used to secure the
+communication between the different participants in the architecture.</p>
+
+<p>\</p>
+
+<p><img src="/images/legacy/Federation/Turnkey.gif" alt="" />\</p>
+
+<p>​1. WSE Policy file in the client application</p>
+
+<p>&lt;policies xmlns=&ldquo;<a href="http://schemas.microsoft.com/wse/2005/06/policy">http://schemas.microsoft.com/wse/2005/06/policy</a>&rdquo;></p>
+
+<p>  &lt;extensions></p>
+
+<p>    &lt;extension name=&ldquo;saml&rdquo;
+type=&ldquo;Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion.SamlPolicyAssertion,
+Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion&rdquo;/></p>
+
+<p>  &lt;/extensions></p>
+
+<p>\</p>
+
+<p>  &lt;policy name=&ldquo;PurchaseGoods&rdquo;></p>
+
+<p>    &lt;saml issuer=&ldquo;<a href="http://localhost/FabrikamSTS/SamlTokenIssuer.ashx">http://localhost/FabrikamSTS/SamlTokenIssuer.ashx</a>&rdquo;
+issuerPolicy=&ldquo;FabrikamSTS&rdquo; establishSecurityContext=&ldquo;true&rdquo;
+renewExpiredSecurityContext=&ldquo;true&rdquo; requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>      &lt;protection></p>
+
+<p>        &lt;request signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;response signatureOptions=&ldquo;IncludeAddressing,
+IncludeTimestamp, IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;fault signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo; /></p>
+
+<p>      &lt;/protection></p>
+
+<p>    &lt;/saml></p>
+
+<p>  &lt;/policy></p>
+
+<p>  &lt;policy name=&ldquo;FabrikamSTS&rdquo;></p>
+
+<p>    &lt;saml issuer=&ldquo;<a href="http://localhost/ContosoSTS/SamlTokenIssuer.ashx">http://localhost/ContosoSTS/SamlTokenIssuer.ashx</a>&rdquo;
+issuerPolicy=&ldquo;ContosoSTS&rdquo; establishSecurityContext=&ldquo;false&rdquo;
+renewExpiredSecurityContext=&ldquo;false&rdquo; requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>      &lt;protection></p>
+
+<p>        &lt;request signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;response signatureOptions=&ldquo;IncludeAddressing,
+IncludeTimestamp, IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;fault signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo; /></p>
+
+<p>      &lt;/protection></p>
+
+<p>    &lt;/saml></p>
+
+<p>  &lt;/policy></p>
+
+<p>  &lt;policy name=&ldquo;ContosoSTS&rdquo;></p>
+
+<p>    &lt;usernameForCertificateSecurity establishSecurityContext=&ldquo;true&rdquo;
+renewExpiredSecurityContext=&ldquo;true&rdquo; requireSignatureConfirmation=&ldquo;false&rdquo;
+messageProtectionOrder=&ldquo;SignBeforeEncryptAndEncryptSignature&rdquo;
+requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>      &lt;serviceToken></p>
+
+<p>        &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
+findValue=&ldquo;CN=ContosoSTS&rdquo; findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
+
+<p>      &lt;/serviceToken></p>
+
+<p>      &lt;protection></p>
+
+<p>        &lt;request signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo;
+/></p>
+
+<p>        &lt;response signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo;
+/></p>
+
+<p>        &lt;fault signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo;
+/></p>
+
+<p>      &lt;/protection></p>
+
+<p>    &lt;/usernameForCertificateSecurity></p>
+
+<p>  &lt;/policy></p>
+
+<p>&lt;/policies></p>
+
+<p>\</p>
+
+<p>The policy definition above contains three policies:</p>
+
+<p>\</p>
+
+<p>​1. PurchaseGoods: This policy is used to secure the communication
+between the client and the Fabrikam&rsquo;s service (PurchaseGoods service).
+As you can see, this service requires a SAML token created by the
+Fabrikam&rsquo;s STS. The address for that STS is specified in the attribute
+&ldquo;issuer&rdquo;.</p>
+
+<p>​2. FabrikamSTS: This policy is used to secure the communication between
+the client and the STS in the Fabrikam realm. The Fabrikam&rsquo;s STS
+requires a SAML token from Contoso </p>
+
+<p>​3. ContosoSTS: This policy is used to secure the communication between
+the client and the STS in the Contoso realm. In this case, to make the
+things simpler, I decided to use a UsernameForCertificate turn-key
+scenario although any of the available turn-key scenarios can be used
+here.</p>
+
+<p>\</p>
+
+<p>​2. WSE Policy file in the Contoso&rsquo;s STS</p>
+
+<p>\</p>
+
+<p>&lt;policies xmlns=&ldquo;<a href="http://schemas.microsoft.com/wse/2005/06/policy">http://schemas.microsoft.com/wse/2005/06/policy</a>&rdquo;></p>
+
+<p>  &lt;policy name=&ldquo;ContosoSTS&rdquo;></p>
+
+<p>    &lt;usernameForCertificateSecurity establishSecurityContext=&ldquo;true&rdquo;
+renewExpiredSecurityContext=&ldquo;true&rdquo;
+requireSignatureConfirmation=&ldquo;false&#8221;  
+messageProtectionOrder=&#8221;SignBeforeEncryptAndEncryptSignature&rdquo;
+requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>      &lt;serviceToken></p>
+
+<p>        &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
+findValue=&ldquo;CN=ContosoSTS&rdquo; findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
+
+<p>      &lt;/serviceToken></p>
+
+<p>      &lt;protection></p>
+
+<p>        &lt;request signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo;
+/></p>
+
+<p>        &lt;response signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo;
+/></p>
+
+<p>        &lt;fault signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo;
+/></p>
+
+<p>      &lt;/protection></p>
+
+<p>    &lt;/usernameForCertificateSecurity></p>
+
+<p>  &lt;/policy></p>
+
+<p>&lt;/policies></p>
+
+<p>\</p>
+
+<p>​3. SAML configuration for the Contoso&rsquo;s STS</p>
+
+<p>\</p>
+
+<p>&lt;WseSaml></p>
+
+<p>  &lt;samlTokenIssuer allowCachingToken=&ldquo;true&rdquo; ttlInSeconds=&ldquo;300&rdquo;></p>
+
+<p>  &lt;!&mdash; the config for the saml token issuer, this is the only config we
+use. This token is used to sign the SAML token &mdash;></p>
+
+<p>    &lt;serviceTokens></p>
+
+<p>      &lt;!&mdash; SAML Authority certificate &mdash;></p>
+
+<p>      &lt;add
+uri=&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue/SAML">http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue/SAML</a>&rdquo;
+storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo; findValue=&ldquo;CN=ContosoSTS&rdquo;
+findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
+
+<p>      &lt;!&mdash; Fabrikam STS &mdash;></p>
+
+<p>      &lt;add uri=&ldquo;<a href="http://localhost/FabrikamSTS/SamlTokenIssuer.ashx">http://localhost/FabrikamSTS/SamlTokenIssuer.ashx</a>&rdquo;
+storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo; findValue=&ldquo;CN=FabrikamSTS&rdquo;
+findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
+
+<p>    &lt;/serviceTokens></p>
+
+<p>    &lt;policy name=&ldquo;ContosoSTS&rdquo;></p>
+
+<p>    &lt;/policy></p>
+
+<p>  &lt;/samlTokenIssuer></p>
+
+<p>&lt;/WseSaml></p>
+
+<p>\</p>
+
+<p>A quick description of the configuration above:</p>
+
+<p>\</p>
+
+<p>​a. allowCachingToken attribute: This attribute specifies whether the
+SAML token can be stored in a cache or not. Depending on this attribute,
+the STS will add or not a DoNotCacheCondition to the SAML token.</p>
+
+<p>​b. ttlInSeconds attribute: Lifetime in seconds for the SAML token</p>
+
+<p>​c. serviceTokens element: It specifies the location for the different
+X509 certificates required by the STS. The &ldquo;SAML authority certificate&rdquo;
+is used to sign the SAML token. (This signature is really important
+since the target service can trust or not in the SAML token depending on
+the certificate used to create it). The &ldquo;Fabrikam STS certificate&rdquo; is
+used to encrypt some sections in the SAML token, and thefore only the
+Fabrikam STS can decrypt those sections and use the token. In other
+words, it defines the X509 certificate for the target service.</p>
+
+<p>​d. policy element: The WSE policy used to secure the communication
+between the clients and the STS.</p>
+
+<p>\</p>
+
+<p>​4. WSE policy file in the Fabrikam&rsquo;s STS</p>
+
+<p>\</p>
+
+<p>&lt;policies></p>
+
+<p>  &lt;extensions></p>
+
+<p>    &lt;extension name=&ldquo;saml&rdquo;
+type=&ldquo;Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion.SamlPolicyAssertion,
+Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion&rdquo;/></p>
+
+<p>  &lt;/extensions></p>
+
+<p>  &lt;policy name=&ldquo;FabrikamSTS&rdquo;></p>
+
+<p>    &lt;saml issuer=&ldquo;<a href="http://localhost/ContosoSTS/SamlTokenIssuer.ashx">http://localhost/ContosoSTS/SamlTokenIssuer.ashx</a>&rdquo;
+issuerPolicy=&ldquo;issuerPolicy&rdquo; establishSecurityContext=&ldquo;false&rdquo;
+renewExpiredSecurityContext=&ldquo;false&rdquo; requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>      &lt;trustedTokenIssuers></p>
+
+<p>        &lt;add></p>
+
+<p>          &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
+findValue=&ldquo;CN=ContosoSTS&rdquo; findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
+
+<p>        &lt;/add></p>
+
+<p>      &lt;/trustedTokenIssuers></p>
+
+<p>      &lt;protection></p>
+
+<p>        &lt;request signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;response signatureOptions=&ldquo;IncludeAddressing,
+IncludeTimestamp, IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;fault signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo; /></p>
+
+<p>      &lt;/protection></p>
+
+<p>    &lt;/saml></p>
+
+<p>  &lt;/policy></p>
+
+<p>&lt;/policies></p>
+
+<p>\</p>
+
+<p>This STS only accepts SAML tokens created by the Contoso&rsquo;s STS
+(trustedTokenIssuers element in the policy definition). In other words,
+it only accepts SAML tokens signed by any of the issuers specified in
+the &ldquo;trustedTokenIssuers&rdquo; element.</p>
+
+<p>\</p>
+
+<p>​5. SAML configuration for the Fabrikam&rsquo;s STS</p>
+
+<p>\</p>
+
+<p>&lt;WseSaml></p>
+
+<p>  &lt;samlTokenIssuer allowCachingToken=&ldquo;true&rdquo; ttlInSeconds=&ldquo;300&rdquo; ></p>
+
+<p>  &lt;!&mdash; the config for the saml token issuer, this is the only config we
+use. This token is used to sign the SAML token &mdash;></p>
+
+<p>  &lt;serviceTokens></p>
+
+<p>    &lt;!&mdash; SAML Authority certificate. Certificate used to sign the token
+&mdash;></p>
+
+<p>    &lt;add
+uri=&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue/SAML">http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue/SAML</a>&rdquo;</p>
+
+<p>storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo; findValue=&ldquo;CN=FabrikamSTS&rdquo;
+findType=&ldquo;FindBySubjectDistinguishedName&rdquo;/></p>
+
+<p>    &lt;!&mdash; Fabrikam service. Certificate used to encrypt the token
+subject &mdash;></p>
+
+<p>    &lt;add uri=&ldquo;<a href="http://localhost/FabrikamServices/PurchaseGoods.asmx">http://localhost/FabrikamServices/PurchaseGoods.asmx</a>&rdquo;</p>
+
+<p>storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
+findValue=&ldquo;CN=FabrikamServices&rdquo;
+findType=&ldquo;FindBySubjectDistinguishedName&rdquo;/></p>
+
+<p>  &lt;/serviceTokens></p>
+
+<p>  &lt;policy name=&ldquo;FabrikamSTS&rdquo;>&lt;/policy></p>
+
+<p>  &lt;/samlTokenIssuer></p>
+
+<p>&lt;/WseSaml></p>
+
+<p>\</p>
+
+<p>As you can see, this configuration is similar to the configuration in
+the Contoso STS. The only difference is the configuration for the
+service tokens.</p>
+
+<p>\</p>
+
+<p>​6. WSE policy file in the Fabrikam&rsquo;s service</p>
+
+<p>\</p>
+
+<p>&lt;policies></p>
+
+<p>  &lt;extensions></p>
+
+<p>    &lt;extension name=&ldquo;saml&rdquo;
+type=&ldquo;Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion.SamlPolicyAssertion,
+Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion&rdquo;/></p>
+
+<p>  &lt;/extensions></p>
+
+<p>  &lt;policy name=&ldquo;FabrikamServices&rdquo;></p>
+
+<p>    &lt;saml issuer=&ldquo;<a href="http://localhost/FabrikamSTS/SamlTokenIssuer.ashx">http://localhost/FabrikamSTS/SamlTokenIssuer.ashx</a>&rdquo;
+issuerPolicy=&ldquo;issuerPolicy&rdquo; establishSecurityContext=&ldquo;true&rdquo;
+renewExpiredSecurityContext=&ldquo;true&rdquo; requireDerivedKeys=&ldquo;true&rdquo;></p>
+
+<p>      &lt;trustedTokenIssuers></p>
+
+<p>        &lt;add></p>
+
+<p>          &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
+findValue=&ldquo;CN=FabrikamSTS&rdquo; findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
+
+<p>        &lt;/add></p>
+
+<p>      &lt;/trustedTokenIssuers></p>
+
+<p>      &lt;protection></p>
+
+<p>        &lt;request signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;response signatureOptions=&ldquo;IncludeAddressing,
+IncludeTimestamp, IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
+
+<p>        &lt;fault signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
+IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo; /></p>
+
+<p>      &lt;/protection></p>
+
+<p>    &lt;/saml></p>
+
+<p>   &lt;/policy></p>
+
+<p>&lt;/policies></p>
+
+<p>\</p>
+
+<p>Again, it is similar to the policy in the Fabrikam&rsquo;s STS but the
+configuration for the &#8221;trustedTokenIssuers&#8221; element changes.</p>
+
+<p>\</p>
+
+<p>Send me an email if are interested in the source code of this sample. </p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1209,7 +1733,7 @@ The only way I found to bind an ADAM principal to Azman was through the
 user’s SID\</p>
 
 <p>//ADAM Provider was configured in the Web.Config file\
-MembershipUser user = Membership.GetUser(&ldquo;<a href="&#x6d;&#x61;&#105;&#x6c;&#x74;&#x6f;&#58;&#x6d;&#121;&#x75;&#x73;&#x65;&#x72;&#x40;&#x4d;&#121;&#x44;&#x6f;&#x6d;&#97;&#105;&#110;&#x2e;&#x63;&#111;&#x6d;">&#109;&#x79;&#x75;&#x73;&#101;&#114;&#x40;&#77;&#121;&#68;&#x6f;&#109;&#x61;&#x69;&#110;&#x2e;&#x63;&#111;&#x6d;</a>&rdquo;);\
+MembershipUser user = Membership.GetUser(&ldquo;<a href="&#x6d;&#x61;&#105;&#x6c;&#x74;&#111;&#x3a;&#109;&#121;&#117;&#x73;&#x65;&#x72;&#x40;&#77;&#x79;&#68;&#111;&#x6d;&#x61;&#x69;&#110;&#x2e;&#99;&#111;&#x6d;">&#109;&#121;&#117;&#x73;&#101;&#114;&#64;&#77;&#121;&#x44;&#x6f;&#x6d;&#x61;&#105;&#110;&#46;&#x63;&#111;&#x6d;</a>&rdquo;);\
 \
 AzAuthorizationStoreClass store = new AzAuthorizationStoreClass();\
 \
@@ -1488,369 +2012,6 @@ solution, so, don&rsquo;t miss this opportunity.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2005/07/19/419921/">WS-I BSP Sample Application for WSE 3</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2005-07-19T00:00:00-03:00" pubdate data-updated="true">Jul 19<span>th</span>, 2005</time>
-        
-         | <a href="/blog/2005/07/19/419921/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>The <strong>&ldquo;WS-I Basic Security Profile Sample Application&rdquo;</strong> preview for WSE
-3.0 is out, you can get it in the <a href="http://practices.gotdotnet.com/projects/wsibsp">GDN
-workspace</a>.\
-This sample illustrates how to build secure and interoperable web
-services based in the specification <a href="http://www.ws-i.org/Profiles/BasicProfile-1.1-2004-08-24.html">WS-I Basic Profile
-1.1</a>. \
-When we started to develop this application, we faced some challenges,
-all of them related to the new policy framework shipped in WSE 3.0. \
-Some parts of the policies used by the previous version of this
-application weren&rsquo;t easy to migrate, so we had to develop some custom
-assertions.\
-In this post, I will give a brief description about the new WSE &ldquo;Policy
-framework&rdquo;, and the custom assertion shipped in this preview.
-(CustomX509Assertion)</p>
-
-<h3>Policy framework</h3>
-
-<p><img src="/images/legacy/ArchitectureWSE.gif" alt="" />\
-\
-<strong>Policies</strong>\
-\
-A policy allows to apply different claims for incoming and outgoing
-messages on the client and the service (All messages to a particular
-endpoint).\
-It is used to describe the requirements for a service and as a factory
-for runtime objects &ndash; Pipeline and Assertions. \
-As you can see in the image, the policy is converted in a pipeline at
-runtime. This pipeline contains an ordered list of assertions, \
-each assertion performs different message transformations through the
-use of Filters. \
-\
-Policy definition sample: \</p>
-
-<p>&lt;policies>\
-  &lt;extensions>\
-    &lt;extension name=&ldquo;mutualX509Security&rdquo;
-type=&ldquo;Microsoft.Web.Services3.Design.MutualX509Assertion,
-Microsoft.Web.Services3, Version=3.0.0.0, Culture=neutral,
-PublicKeyToken=31bf3856ad364e35&rdquo; />\
-    &lt;extension name=&ldquo;x509&rdquo;
-type=&ldquo;Microsoft.Web.Services3.Design.X509TokenProvider,
-Microsoft.Web.Services3, Version=3.0.0.0, Culture=neutral,
-PublicKeyToken=31bf3856ad364e35&rdquo; />\
-  &lt;/extensions>\
-  &lt;policy name=&ldquo;MyPolicy&rdquo;>\
-    &lt;mutualX509Security establishSecurityContext=&ldquo;false&rdquo;
-renewExpiredSecurityContext=&ldquo;true&rdquo; signatureConfirmation=&ldquo;true&rdquo;
-protectionOrder=&ldquo;SignBeforeEncryptingAndEncryptSignature&rdquo;
-deriveKeys=&ldquo;true&rdquo; actor=&ldquo;&rdquo;>\
-      &lt;clientToken>\
-        &lt;x509 storeLocation=&ldquo;CurrentUser&rdquo; storeName=&ldquo;My&rdquo;
-findValue=&ldquo;CN=WSE2QuickStartClient&rdquo;
-findType=&ldquo;FindBySubjectDistinguishedName&rdquo; />\
-      &lt;/clientToken>\
-      &lt;serviceToken>\
-        &lt;x509 storeLocation=&ldquo;CurrentUser&rdquo; storeName=&ldquo;AddressBook&rdquo;
-findValue=&ldquo;CN=WSE2QuickStartServer&rdquo;
-findType=&ldquo;FindBySubjectDistinguishedName&rdquo; />\
-      &lt;/serviceToken>\
-      &lt;protection>\
-        &lt;request signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
-IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; />\
-        &lt;response signatureOptions=&ldquo;IncludeAddressing,
-IncludeTimestamp, IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; />\
-        &lt;fault signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
-IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo; />\
-      &lt;/protection>\
-    &lt;/mutualX509Security>\
-  &lt;/policy>\
-&lt;/policies>\
-\</p>
-
-<p>In this case, the policy specifies security requirements for the
-service. ( Some parts of the message should be encrypted and signed with
-X509 certificates) \
-\
-A policy can be assigned to a proxy or a service using a declarative or
-imperative way. The following examples show how to assign a policy \
-to a proxy and a service:\
-\
-<strong>Client proxy with PolicyAttribute:</strong> \
-\</p>
-
-<p>[PolicyAttribute(&ldquo;MyPolicy&rdquo;)]\
-public partial class MyService :
-Microsoft.Web.Services3.WebServicesClientProtocol \
-{\
-  public string HelloWorld() {\
-    object[] results = this.Invoke(&ldquo;HelloWorld&rdquo;, new object[0]);\
-    return ((string)(results[0]));\
-  }\
-}\</p>
-
-<p>\
-<strong>Imperative use of policy on the client</strong> \
-\</p>
-
-<p>MyService service = new MyService();\
-service.SetPolicy(&ldquo;MyPolicy&rdquo;);</p>
-
-<p>\
-<strong>Web Service with PolicyAttribute:</strong> \
-\</p>
-
-<p>[PolicyAttribute(&ldquo;MyPolicy&rdquo;)]\
-public class MyService : System.Web.Services.WebService \
-{\
-  [WebMethod]\
-  public string HelloWorld() {\
-    return &ldquo;Hello world&rdquo;;\
-  }\
-}\</p>
-
-<p>\
-<strong>Assertions</strong>\
-\
-An assertion uses filters to perform message processing in different
-stages. Each assertion is capable of creating up to four soap filters: \
-\</p>
-
-<p><strong>ClientOutputFilter:</strong> for outgoing messages on the client</p>
-
-<p><strong>ClientInputFilter:</strong> for incoming messages on the client</p>
-
-<p><strong>ServiceOutputFilter:</strong> for outgoing messages on the service</p>
-
-<p><strong>ServiceInputFilter:</strong> for incoming messages on the service \
-\
-An assertion may not create a filter in one of the four locations. In
-that case, this assertion does not affect message processing in this
-location.\
-For example, a security assertion could use the output stages to protect
-a soap document, and the input stages to validate that protection \
-\
-<strong>Assertion code sample :</strong> \
-\</p>
-
-<p>class MyAssertion : PolicyAssertion\
-{\
-  public override SoapFilter
-CreateClientInputFilter(FilterCreationContext context)\
-  {\
-    return null;\
-   }\
-\
-   public override SoapFilter
-CreateClientOutputFilter(FilterCreationContext context)\
-   {\
-     return null;\
-   }\
-\
-   public override SoapFilter
-CreateServiceInputFilter(FilterCreationContext context)\
-   {\
-     return null;\
-   }\
-\
-   public override SoapFilter
-CreateServiceOutputFilter(FilterCreationContext context)\
-   {\
-     return null;\
-   }\
-}\</p>
-
-<p>\
-This assertion does not return any filter, it is useless in a real
-scenario. \
-\
-WSE includes the following list of assertions:\
-\</p>
-
-<hr />
-
-<p>  AnonymousOverCertificateAssertion                 The client is not authenticated and the security protection is via a server&rsquo;s X.509 certificate
-  CertificateMutualAuthenticationProfileAssertion   X.509 certificates are used for authentication and message protection. It doesn&rsquo;t use the WS-Security 1.1 extensions
-  KerberosAssertion                                 Kerberos tickets are used for authentication and message protection
-  MutualCertificateAssertion                        X.509 certificates are used for authentication and message protection. It uses the WS-Security 1.1 extensions
-  UsernameOverCertificateAssertion                  The client is authenticated via a suplied &ldquo;UsernameToken&rdquo; ( user and password ) and the security protection is performed by a X.509 certificate
-  UsernameOverTransportAssertion                    The client is authenticated via a supplied &ldquo;UsernameToken&rdquo; and the security protection is performed at the transport level
-  AuthorizationAssertion                            It performs authorization checks using the identity token. The identity token is determined after the client authentication</p>
-
-<hr />
-
-<p>\
-<strong>Filters</strong>\
-\
-Soap filters use lower level mechanisms to perform different message
-processing tasks. For example, a security filter could use signatures
-and encryption tokens to protect a message.\
-All filters inherit from the base class &ldquo;SoapFilter&rdquo; and implement the
-abstract method &ldquo;ProcessMessage&rdquo;. \
-\</p>
-
-<p>public abstract class SoapFilter\
-{\
-  protected SoapFilter();\
-  public virtual T GetBehavior();\
-  public abstract SoapFilterResult ProcessMessage(SoapEnvelope
-envelope);\
-}</p>
-
-<p>\
-That method returns a &ldquo;SoapFilterResult&rdquo; class, which is used to control
-the pipeline execution. It can take the following values:\
-\</p>
-
-<p>Continue: To keep executing the next filters in the pipeline</p>
-
-<p>Terminate: To terminate the pipeline execution\
-\
-WSE also includes the classes &ldquo;SendSecurityFilter&rdquo; and
-&ldquo;ReceiveSecurityFitler&rdquo; to build security filters. These classes inherit
-from &ldquo;SoapFilter&rdquo;, but they implement the &ldquo;ProcessMessage&rdquo; method in
-order to parse the security headers included in the soap document. \
-\</p>
-
-<p>public abstract class SendSecurityFilter : SoapFilter\
-{\
-  protected abstract void SecureMessage(SoapEnvelope envelope, Security
-security);\
-} \
-\
-public abstract class SendSecurityFilter : SoapFilter\
-{\
-  protected abstract void ValidateMessageSecurity(SoapEnvelope envelope,
-Security security);\
-}</p>
-
-<h3>Custom Security Assertion</h3>
-
-<p>The &ldquo;MutualCertificateAssertion&rdquo; did not solve some security aspects
-required \
-by the application, so we had to develop a custom security assertion (
-&ldquo;X509CustomSecurityAssertion&rdquo; ) \
-This assertion allows us to fulfill the following requeriments: \
-\
-1. Sign and encrypt the messages with different X509 certificates ( One
-certificate to sign the message and \
-another to encrypt it ). The &ldquo;MutualCertificateAssertion&rdquo; assertion only
-signs and encrypts the messages with a key derived from\
-the same certificate.\
-2. Different certificates for requests and responses. The
-&ldquo;MutualCertificateAssertion&rdquo; does not allow to specify that\
-3. Custom headers encryption. The &ldquo;MutualCertificateAssertion&rdquo; only
-signs custom headers, but it does not encrypt them.\
-4. Different protection order for the request and response. The
-&ldquo;MutualCertificateAssertion&rdquo; specifies the same protection order\
-for the request and the response ( Protection order =
-SignBeforeEncryptingAndEncryptSignature, SignBeforeEncrypting,
-EncryptBeforeSigning).\
-\
-This policy is used by client application to consume the Retailer
-services:\</p>
-
-<p>&lt;policy name=&ldquo;RetailerServices&rdquo;>\
-  &lt;customX509Security actor=&ldquo;&rdquo;>\
-    <strong>&lt;request></strong>\
-      &lt;clientToken>\
-        &lt;!&mdash; WebClient Signing Certificate &mdash;>\
-        &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
-findValue=&ldquo;8d5f67d8991bc6517785b3266a333fb871cf2c6f&rdquo;
-findType=&ldquo;FindBySubjectKeyIdentifier&rdquo; />\
-      &lt;/clientToken>\
-      &lt;serviceToken>\
-        &lt;!&mdash; Retailer Encrypting Certificate &mdash;>\
-        &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
-findValue=&ldquo;944e5a12f31f6f8456ae6ad479581792af15eb6b&rdquo;
-findType=&ldquo;FindBySubjectKeyIdentifier&rdquo; />\
-      &lt;/serviceToken>\
-    <strong>&lt;/request></strong>\
-    <strong>&lt;response></strong>\
-      &lt;clientToken>\
-        &lt;!&mdash;Retailer Signing Certificate&mdash;> \
-        &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
-findValue=&ldquo;4cd379e9caff8759da99b17c85ffa15b66c60dcb&rdquo;
-findType=&ldquo;FindBySubjectKeyIdentifier&rdquo; />\
-      &lt;/clientToken>\
-      &lt;serviceToken>\
-        &lt;!&mdash; WebClient Encrypting Certificate &mdash;>\
-        &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
-findValue=&ldquo;399cb4ee8d3339c36618f667dfa03183948f145c&rdquo;
-findType=&ldquo;FindBySubjectKeyIdentifier&rdquo; />\
-      &lt;/serviceToken>\
-    <strong>&lt;/response></strong>\
-    &lt;!&mdash; getCatalog &mdash;>\
-    &lt;protection requestAction=&ldquo;getCatalog&rdquo;>\
-      &lt;request signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
-IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo;
-<strong>protectionOrder=&ldquo;SignBeforeEncrypting&rdquo;</strong>>\
-        <strong>&lt;customHeader name=&ldquo;UsernameToken&rdquo;
-ns=&ldquo;<a href="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd</a>&rdquo;
-signed=&ldquo;true&rdquo; encrypted=&ldquo;false&rdquo;>&lt;/customHeader></strong>\
-      &lt;/request>\
-      &lt;response signatureOptions=&ldquo;IncludeTimestamp, IncludeSoapBody&rdquo;
-encryptBody=&ldquo;true&rdquo;
-<strong>protectionOrder=&ldquo;SignBeforeEncryptingAndEncryptSignature&rdquo;</strong> />\
-    &lt;/protection>\
-    &lt;!&mdash; submitOrder &mdash;>\
-    &lt;protection requestAction=&ldquo;submitOrder&rdquo;>\
-      &lt;request signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
-IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo;
-<strong>protectionOrder=&ldquo;SignBeforeEncryptingAndEncryptSignature&rdquo;</strong>>\
-        <strong>&lt;customHeader name=&ldquo;Configuration&rdquo;
-ns=&ldquo;<a href="http://www.ws-i.org/SampleApplications/SupplyChainManagement/2002-08/Configuration.xsd">http://www.ws-i.org/SampleApplications/SupplyChainManagement/2002-08/Configuration.xsd</a>&rdquo;
-signed=&ldquo;true&rdquo; encrypted=&ldquo;false&rdquo;>&lt;/customHeader></strong>\
-        <strong>&lt;customHeader name=&ldquo;UsernameToken&rdquo;
-ns=&ldquo;<a href="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd</a>&rdquo;
-signed=&ldquo;true&rdquo; encrypted=&ldquo;true&rdquo;>&lt;/customHeader></strong>\
-      &lt;/request>\
-      &lt;response signatureOptions=&ldquo;IncludeTimestamp, IncludeSoapBody&rdquo;
-encryptBody=&ldquo;true&rdquo;
-<strong>protectionOrder=&ldquo;SignBeforeEncryptingAndEncryptSignature&rdquo;</strong> />\
-    &lt;/protection>\
-  &lt;/customX509Security>\
-&lt;/policy></p>
-
-<p>\
-Many changes were introduced to the policy. It supports different X509
-certificates for requests and responses (&ldquo;Request&rdquo; and &ldquo;Response&rdquo;
-elements ).\
-Also, it specifies different protection requirements for custom headers
-and different protection order for each message. \
-\
-If you are interested to build secure and interoperable web services,
-then you should look this application, it is a good starting point.\
-That is all for now, I will blog more about WSE and WSI soon.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/26/">&larr; Older</a>
@@ -1868,6 +2029,10 @@ That is all for now, I will blog more about WSE and WSI soon.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
       </li>
     
@@ -1881,10 +2046,6 @@ That is all for now, I will blog more about WSE and WSI soon.</p>
     
       <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
   </ul>

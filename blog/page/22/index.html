@@ -9,8 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="Thanks Soledad for tagging me. ​1. I was born in Buenos Aires, Argentina and I lived there until 8
-months ago. Now, I am working for the Inter- &hellip;">
+  <meta name="description" content="I have been reading in different places that using a CRUD (Create, Read,
+Update, Delete) interface for a service is considered a bad practice or
+anti &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -80,6 +81,78 @@ months ago. Now, I am working for the Inter- &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2007/01/25/crud-interface-for-a-service-is-a-bad-practice/">CRUD Interface for a Service - Is a Bad Practice ?</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-01-25T00:00:00-03:00" pubdate data-updated="true">Jan 25<span>th</span>, 2007</time>
+        
+         | <a href="/blog/2007/01/25/crud-interface-for-a-service-is-a-bad-practice/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I have been reading in different places that using a CRUD (Create, Read,
+Update, Delete) interface for a service is considered a bad practice or
+anti-pattern. Therefore, this kind of interface should be avoided at all
+cost.</p>
+
+<p>I am not agree with this at all, when I hear the word CRUD, I assume
+something like this:</p>
+
+<ul>
+<li>CreateCustomer (Create new customer)</li>
+<li>ModifyCustomer (Modify an existing customer)</li>
+<li>DeleteCustomer (Delete an existing customer)</li>
+<li>FindCustomer (Find an existing customer)</li>
+</ul>
+
+
+<p>This is typical case of a CRUD interface to manage data related to a
+customer entity.</p>
+
+<p>What happens if those services represent real business events in the
+system that I am trying to model, and the design of them also adheres to
+the four tenets of service orientation, is that considered a bad
+practice as well ?.</p>
+
+<p>I do not think so.</p>
+
+<p>The sample given in this article <a href="http://msdn2.microsoft.com/en-us/library/ms954638.aspx">&ldquo;Principles of Service Design: Service
+Patterns and
+Anti-Patterns&rdquo;</a>
+ shows an ugly sample of CRUD interface, and it is ok to consider it an
+anti-pattern. However, not all the CRUD interfaces are modeled in that
+way, in fact, I have never seen such a bad design as the one shown in
+that sample.</p>
+
+<p>What do think ?. I would like to hear any opinion about this topic.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1143,101 +1216,6 @@ release.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2006/09/08/SAML-_2D00_-STS-implementation-for-WCF/">SAML - STS Implementation for WCF</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2006-09-08T00:00:00-03:00" pubdate data-updated="true">Sep 8<span>th</span>, 2006</time>
-        
-         | <a href="/blog/2006/09/08/SAML-_2D00_-STS-implementation-for-WCF/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>I finally decided to publish a STS implementation for WCF.  (It is based
-on one of my previous posts, <a href="/cibrax/archive/2006/03/14/440222.aspx">&ldquo;Implementing a Secure token service with
-WCF&rdquo;</a>)</p>
-
-<p>I received a lot of mails from people asking me for a official version
-of that code, so here it
-<a href="/images/legacy/STSExample.zip">is</a>. I implemented this
-STS using latest WCF release (September CTP).</p>
-
-<p>All the classes previously provided by WCF to parse the RST and RSTR
-messages have gone (They are now private). I am not sure about the
-reason to take that decision, but it certainly complicates everything.</p>
-
-<p>Therefore, a person developing a STS (me) has only two options:</p>
-
-<ol>
-<li>Create different classes to parse those messages. In other words,
-duplicate all the code previously provided by WCF</li>
-<li>Copy that code from the <a href="http://pluralsight.com/blogs/mgudgin/archive/2006/06/19/28503.aspx">Martin Gudgin&rsquo;s
-implementation</a>
-(Same as 1, but it makes your life easier).  </li>
-</ol>
-
-
-<p>The code also includes the following features:</p>
-
-<ul>
-<li>A custom Security Token Manager to reuse the same SAML token
-instance in different WCF channels. You can find more information
-about this solution in this
-<a href="/cibrax/archive/2006/03/27/441227.aspx">post</a>. This token manager
-is quite simple, and it only shows how this task can be performed. </li>
-<li>Two configuration files showing different binding settings between
-the client, the service and the STS. The first one uses the standar
-wsFederationHttpBinding, and the last one uses customBindings.</li>
-</ul>
-
-
-<p>Download the code from this
-<a href="/images/legacy/STSExample.zip">location</a></p>
-
-<p>Update, feedback received from the WCF team regarding the RST/RSTR
-classes:</p>
-
-<p><em>&ldquo;We made those classes internal during our RC1 milestone because this
-will enable us to align the product better for future version of the
-WS-Trust protocol without exposing user to the necessary changes. When
-doing this we have actually changed our samples that show our Federation
-feature so that those samples now contain source code of RST/RSTR
-library that you can use to parse RST and RSTR messages in your
-application. For example the FederationHttp binding sample in the
-Windows SDK in WCF samples collection contains source code for parsing
-RST/RSTR messages. It can be found in
-TechnologySamples\Basic\Binding\WS\FederationHttp directory. I hope
-this answers your concern. Thanks, &mdash;Jan&#8221; </em>\
- </p>
-
-<p> </p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/23/">&larr; Older</a>
@@ -1255,6 +1233,10 @@ this answers your concern. Thanks, &mdash;Jan&#8221; </em>\
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
       </li>
     
@@ -1268,10 +1250,6 @@ this answers your concern. Thanks, &mdash;Jan&#8221; </em>\
     
       <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
   </ul>

@@ -9,9 +9,10 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="ADO.NET Data services represent today one of the most powerful
-alternatives to build RESTful services in the .NET platform. This
-framework basically &hellip;">
+  <meta name="description" content="Como Jesus menciono en su post “We are still
+hiring..”,
+en Tellago estamos buscando gente que quieran unirse a nuestro equipo de
+desarrollo. En estos &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +82,57 @@ framework basically &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/06/12/tellago-esta-contratando/">Tellago Esta Contratando!!</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-06-12T00:00:00-03:00" pubdate data-updated="true">Jun 12<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/06/12/tellago-esta-contratando/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Como Jesus menciono en su <a href="http://weblogs.asp.net/gsusx/archive/2009/06/12/we-are-still-hiring.aspx">post “We are still
+hiring..”</a>,
+en Tellago estamos buscando gente que quieran unirse a nuestro equipo de
+desarrollo. En estos momentos tenemos algunas posiciones para
+Arquitectos y Desarrolladores con buenos conocimientos de Biztalk e
+idioma ingles.</p>
+
+<p>Si queres ser parte de una empresa joven, jugar con las ultimas
+tecnologias o involucrarte en proyectos con diversos equipos de trabajo
+en Microsoft, enviame tu curriculum a pablo [dot] cibraro [at] tellago
+[dot] com</p>
+
+<p>Las posiciones pueden ser tanto en Buenos Aires como en los Estados
+Unidos.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1167,90 +1219,6 @@ property.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2009/04/01/support-for-form-urlencoded-data-in-wcf-rest-services/">Support for Form-UrlEncoded Data in WCF Rest Services</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2009-04-01T00:00:00-03:00" pubdate data-updated="true">Apr 1<span>st</span>, 2009</time>
-        
-         | <a href="/blog/2009/04/01/support-for-form-urlencoded-data-in-wcf-rest-services/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Some people have been asking around in the MSDN forums or
-<a href="http://stackoverflow.com/questions/604463/best-way-to-support-application-x-www-form-urlencoded-post-data-with-wcf">stackoverflow</a>
-about a possible way to pass form-urlencoded data to an existing WCF
-REST service. Although this is not a core feature in WCF from my point
-view, there is still some support for addressing this scenario in the
-REST Starter kit.</p>
-
-<p>This feature takes the form of a new message formatter,
-FormsPostDispatchMessageFormatter, which is automatically injected to
-any existing service hosted within the new WebServiceHost2 host (shipped
-as part of the kit)</p>
-
-<p>This formatter basically intercepts all messages, and handle those that
-contains “application/x-www-form-urlencoded” as content type in the
-request header. The rest of the messages are handled by the existing
-formatters as usual.</p>
-
-<p>The service operation must expose a NameValueCollection argument in the
-method signature in order to receive the data. This collection will
-contain the key/value pairs that were parsed from request body.</p>
-
-<p>For example,</p>
-
-<p>[WebInvoke(UriTemplate = &ldquo;SetData&rdquo;)]</p>
-
-<p>[OperationContract]</p>
-
-<p>void SetData(NameValueCollection formsData)</p>
-
-<p>{</p>
-
-<p>    this.value = Int32.Parse(formsData[&ldquo;counter&rdquo;]);</p>
-
-<p>}</p>
-
-<p>“Counter”  in this case represents a field in the form that was posted
-to the service.</p>
-
-<p>&lt;</p>
-
-<p>FORM action=&ldquo;service.svc/SetData&rdquo; method=&ldquo;post&rdquo;></p>
-
-<p>Input Counter value and hit enter:</p>
-
-<p>&lt;INPUT type=&ldquo;text&rdquo; name=&ldquo;Counter&rdquo;></p>
-
-<p>&lt;/FORM></p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/14/">&larr; Older</a>
@@ -1268,6 +1236,10 @@ to the service.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
       </li>
     
@@ -1281,10 +1253,6 @@ to the service.</p>
     
       <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
   </ul>

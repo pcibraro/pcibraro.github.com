@@ -9,10 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="As I mentioned in a previous post, I have been very busy lately working
-with Daniel,
-Mariano and other guys here in
-Clarius on an open-source &hellip;">
+  <meta name="description" content="Many times the services are just part of a service layer interface or
+facade that only delegate calls to other components in lower layers,
+such as &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -82,6 +81,334 @@ Clarius on an open-source &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2007/12/13/wcf-dependency-injection-behavior/">WCF Dependency Injection Behavior</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2007-12-13T00:00:00-03:00" pubdate data-updated="true">Dec 13<span>th</span>, 2007</time>
+        
+         | <a href="/blog/2007/12/13/wcf-dependency-injection-behavior/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Many times the services are just part of a service layer interface or
+facade that only delegate calls to other components in lower layers,
+such as entity translators, business logic components, data access
+components or service agents that work as proxy with other systems. To
+clarify more this point, this is how the Patterns &amp; Practices team
+envisioned  a general multi-layer architecture for .NET applications,
+<a href="http://blogs.msdn.com/donsmith/archive/2006/07/21/673481.aspx">http://blogs.msdn.com/donsmith/archive/2006/07/21/673481.aspx</a></p>
+
+<p>When this happens, the ideal scenario to test the service code is to
+replace the dependencies on lower layers by mocks or stubs objects and
+focus our unit tests in the service code only. Fortunately, the
+Dependency Injection pattern comes to help us here. Oran Dennison
+already discussed a similar approach in this excellent post,
+<a href="http://orand.blogspot.com/2006/10/wcf-service-dependency-injection.html">http://orand.blogspot.com/2006/10/wcf-service-dependency-injection.html</a>.</p>
+
+<p>During the course of this post I will take a different path using the
+&ldquo;Dependency Injection Container&rdquo; sample that comes with <a href="http://www.codeplex.com/ObjectBuilder">Object
+Builder</a> . This sample also
+includes good documentation about the supported features.</p>
+
+<p>So, suppose we have a service implementation with the following
+dependencies:</p>
+
+<p>[ServiceContract(Namespace =
+<a href="http://microsoft.servicemodel.samples/">http://Microsoft.ServiceModel.Samples</a>)]</p>
+
+<p>public interface ICustomer</p>
+
+<p>{</p>
+
+<p>   [OperationContract]</p>
+
+<p>   string GetFullName(string customerId);</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public class CustomerService : ICustomer</p>
+
+<p>{</p>
+
+<p>  ICustomerBusinessComponent businessComponent;</p>
+
+<p> </p>
+
+<p>  public CustomerService(ICustomerBusinessComponent businessComponent)</p>
+
+<p>  {</p>
+
+<p>    this.businessComponent = businessComponent;</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  public string GetFullName(string customerId)</p>
+
+<p>  {</p>
+
+<p>    return businessComponent.GetFullName(customerId);</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public interface ICustomerDataAccess</p>
+
+<p>{</p>
+
+<p>  string GetFullName(string customerId);</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public class CustomerDataAccess : ICustomerDataAccess</p>
+
+<p>{</p>
+
+<p>  public CustomerDataAccess()</p>
+
+<p>  {</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  public string GetFullName(string customerId)</p>
+
+<p>  {</p>
+
+<p>    return &ldquo;FOO&rdquo;;</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p>As you can see in the code above, our service has a direct dependency
+with a business component, and at the same time, our business component
+has a dependency with another component in the data access layer. What
+we want to do here is to inject both dependencies at runtime using the
+Dependency injection pattern.</p>
+
+<p>The equivalent code with the Dependency Container looks could be,</p>
+
+<p>DependencyContainer container = new DependencyContainer();</p>
+
+<p> </p>
+
+<p>container.RegisterTypeMapping&lt;ICustomerBusinessComponent,
+CustomerBusinessComponent>();</p>
+
+<p>container.RegisterTypeMapping&lt;ICustomerDataAccess,
+CustomerDataAccess>();</p>
+
+<p> </p>
+
+<p>CustomerService service = container.Get&lt;CustomerService>();</p>
+
+<p>Quite easy, the only requirement is the mapping, otherwise the container
+will not know how to create instances of the interfaces. Now, let&rsquo;s move
+forward to try configuring this in WCF using a behavior as extensibility
+point. WCF supports an extension called IInstanceProvider that controls
+the lifecycle of a WCF service instance. We will use one this provider
+to hook up our custom code and inject the dependencies at runtime.</p>
+
+<p>public class DIInstanceProvider : IInstanceProvider</p>
+
+<p>{</p>
+
+<p>  private Type serviceType;</p>
+
+<p>  List&lt;TypeMapping> typeMappings;</p>
+
+<p> </p>
+
+<p>  public DIInstanceProvider(Type serviceType, List&lt;TypeMapping>
+typeMappings)</p>
+
+<p>  {</p>
+
+<p>    this.serviceType = serviceType;</p>
+
+<p>    this.typeMappings = typeMappings;</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  public object GetInstance(InstanceContext instanceContext)</p>
+
+<p>  {</p>
+
+<p>    return GetInstance(instanceContext, null);</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  public object GetInstance(InstanceContext instanceContext, Message
+message)</p>
+
+<p>  {</p>
+
+<p>    DependencyContainer container = new DependencyContainer();</p>
+
+<p> </p>
+
+<p>    foreach (TypeMapping typeMapping in this.typeMappings)</p>
+
+<p>    {</p>
+
+<p>      container.RegisterTypeMapping(typeMapping.TypeRequested,
+typeMapping.TypeToBuild);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    return container.Get(this.serviceType);</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  public void ReleaseInstance(InstanceContext instanceContext, object
+instance)</p>
+
+<p>  {</p>
+
+<p> </p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>The typeMapping that you can see there in the code are extensions that
+we are going to set up through configuration. This class basically
+represents a mapping between a requested type (Which usually is an
+interface) and the type to build by the object builder (Which usually is
+the concrete implementation).</p>
+
+<p>public class TypeMapping</p>
+
+<p>{</p>
+
+<p>  private Type typeRequested;</p>
+
+<p>  private Type typeToBuild;</p>
+
+<p> </p>
+
+<p>  public TypeMapping(Type typeRequested, Type typeToBuild)</p>
+
+<p>  {</p>
+
+<p>    this.typeRequested = typeRequested;</p>
+
+<p>    this.typeToBuild = typeToBuild;</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  public Type TypeRequested</p>
+
+<p>  {</p>
+
+<p>    get { return typeRequested; }</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  public Type TypeToBuild</p>
+
+<p>  {</p>
+
+<p>    get { return typeToBuild; }</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p>Once we have the behavior implementation, the final step is to configure
+it in our application. This can be done as follows,</p>
+
+<p>&lt;behaviors></p>
+
+<p>      &lt;serviceBehaviors></p>
+
+<p>        &lt;behavior name=&ldquo;Behaviors1&rdquo;></p>
+
+<p>          &lt;dependencyInjection></p>
+
+<p>            &lt;typeMappings></p>
+
+<p>              &lt;add name=&ldquo;DataAccess&rdquo;
+typeRequested=&ldquo;SampleService.ICustomerDataAccess, SampleService&rdquo;
+typeToBuild=&ldquo;SampleService.CustomerDataAccess, SampleService&rdquo;/></p>
+
+<p>              &lt;add name=&ldquo;BusinessComponent&rdquo;
+typeRequested=&ldquo;SampleService.ICustomerBusinessComponent, SampleService&rdquo;
+typeToBuild=&ldquo;SampleService.CustomerBusinessComponent, SampleService&rdquo;/></p>
+
+<p>            &lt;/typeMappings></p>
+
+<p>          &lt;/dependencyInjection></p>
+
+<p>        &lt;/behavior></p>
+
+<p>      &lt;/serviceBehaviors>   </p>
+
+<p>&lt;/behaviors></p>
+
+<p>The configuration looks simple, I just mapped two interfaces to the real
+implementations (Which could be replaced during testing through mocks or
+stub objects). No additional code needed for the WCF service :&ndash;)</p>
+
+<p>As a final comment, the dependency container also supports method
+injection (This is to inject the dependencies that are arguments of a
+method) and setter injections (This is to inject dependencies through
+property setters).</p>
+
+<p>Download the complete sample from this
+<a href="/images/legacy/WCFDependencyInjection.zip">location</a>.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -950,222 +1277,6 @@ consumed with <a href="http://myhost/MyService">http://MyHost/MyService</a></p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2007/07/24/configsource-attribute-on-system-servicemodel-section/">ConfigSource Attribute on system.serviceModel Section</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2007-07-24T00:00:00-03:00" pubdate data-updated="true">Jul 24<span>th</span>, 2007</time>
-        
-         | <a href="/blog/2007/07/24/configsource-attribute-on-system-servicemodel-section/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>The configSource attribute was firstly introduced in .NET framework 2.0
-to support external configuration files.</p>
-
-<p>This attribute can be added to any configuration section to specify a an
-external file for that section. Using an external configuration source
-can be useful in many scenarios. For instance, you could place a section
-into an external configSource if you need an easy method to swap
-settings for the section depending on the environment (development,
-test, or production), or  you need granular control over permissions.</p>
-
-<p>Unfortunately, the system.serviceModel section group does not support
-this attribute. If you try to add it, you will receive the following
-exception:</p>
-
-<p><strong><em>The attribute &lsquo;configSource&rsquo; cannot be specified because its name
-starts with the reserved prefix &lsquo;config&rsquo; or &lsquo;lock&rsquo;</em></strong></p>
-
-<p>What I found out is that you can use this attribute on the different
-sections under system.serviceModel such as services, behaviors or
-bindings.</p>
-
-<p>For instance, the configuration file could look like this,</p>
-
-<p>&lt;configuration></p>
-
-<p> </p>
-
-<p>  &lt;system.serviceModel></p>
-
-<p>    &lt;services configSource=&ldquo;Services.config&rdquo; ></p>
-
-<p>    &lt;/services></p>
-
-<p> </p>
-
-<p>    &lt;bindings configSource=&ldquo;Bindings.config&rdquo;></p>
-
-<p>    &lt;/bindings></p>
-
-<p> </p>
-
-<p>    &lt;behaviors configSource=&ldquo;Behaviors.config&rdquo;></p>
-
-<p>    &lt;/behaviors></p>
-
-<p> </p>
-
-<p>  &lt;/system.serviceModel></p>
-
-<p> </p>
-
-<p>&lt;/configuration></p>
-
-<p> And then, each file contains the corresponding section.</p>
-
-<p><strong>Services.config</strong></p>
-
-<p>&lt;services></p>
-
-<p>  &lt;service name=&ldquo;Microsoft.ServiceModel.Samples.CalculatorService&rdquo;</p>
-
-<p>          behaviorConfiguration=&ldquo;CalculatorServiceBehavior&rdquo;></p>
-
-<p>    &lt;host></p>
-
-<p>      &lt;baseAddresses></p>
-
-<p>        &lt;add
-baseAddress=&ldquo;<a href="http://localhost:8000/servicemodelsamples/service">http://localhost:8000/servicemodelsamples/service</a>&rdquo;/></p>
-
-<p>      &lt;/baseAddresses></p>
-
-<p>    &lt;/host></p>
-
-<p>    &lt;!&mdash; this endpoint is exposed at:
-net.tcp://localhost:9000/servicemodelsamples/service  &mdash;></p>
-
-<p>    &lt;endpoint
-address=&ldquo;net.tcp://localhost:9000/servicemodelsamples/service&rdquo;</p>
-
-<p>              binding=&ldquo;netTcpBinding&rdquo;</p>
-
-<p>              bindingConfiguration=&ldquo;Binding1&rdquo;</p>
-
-<p>              contract=&ldquo;Microsoft.ServiceModel.Samples.ICalculator&rdquo; /></p>
-
-<p>    &lt;!&mdash; the mex endpoint is exposed at
-<a href="http://localhost:8000/ServiceModelSamples/service/mex">http://localhost:8000/ServiceModelSamples/service/mex</a> &mdash;></p>
-
-<p>    &lt;endpoint address=&ldquo;mex&rdquo;</p>
-
-<p>              binding=&ldquo;mexHttpBinding&rdquo;</p>
-
-<p>              contract=&ldquo;IMetadataExchange&rdquo; /></p>
-
-<p>  &lt;/service></p>
-
-<p>&lt;/services></p>
-
-<p><strong>Bindings.config</strong></p>
-
-<p>&lt;bindings></p>
-
-<p>  &lt;netTcpBinding></p>
-
-<p>    &lt;binding name=&ldquo;Binding1&rdquo;</p>
-
-<p>            closeTimeout=&ldquo;00:01:00&rdquo;</p>
-
-<p>            openTimeout=&ldquo;00:01:00&rdquo;</p>
-
-<p>            receiveTimeout=&ldquo;00:10:00&rdquo;</p>
-
-<p>            sendTimeout=&ldquo;00:01:00&rdquo;</p>
-
-<p>            transactionFlow=&ldquo;false&rdquo;</p>
-
-<p>            transferMode=&ldquo;Buffered&rdquo;</p>
-
-<p>            transactionProtocol=&ldquo;OleTransactions&rdquo;</p>
-
-<p>            hostNameComparisonMode=&ldquo;StrongWildcard&rdquo;</p>
-
-<p>            listenBacklog=&ldquo;10&rdquo;</p>
-
-<p>            maxBufferPoolSize=&ldquo;524288&rdquo;</p>
-
-<p>            maxBufferSize=&ldquo;65536&rdquo;</p>
-
-<p>            maxConnections=&ldquo;10&rdquo;</p>
-
-<p>            maxReceivedMessageSize=&ldquo;65536&rdquo;></p>
-
-<p>      &lt;readerQuotas maxDepth=&ldquo;32&rdquo;</p>
-
-<p>                    maxStringContentLength=&ldquo;8192&rdquo;</p>
-
-<p>                    maxArrayLength=&ldquo;16384&rdquo;</p>
-
-<p>                    maxBytesPerRead=&ldquo;4096&rdquo;</p>
-
-<p>                    maxNameTableCharCount=&ldquo;16384&rdquo; /></p>
-
-<p>      &lt;reliableSession ordered=&ldquo;true&rdquo;</p>
-
-<p>                      inactivityTimeout=&ldquo;00:10:00&rdquo;</p>
-
-<p>                      enabled=&ldquo;false&rdquo; /></p>
-
-<p>      &lt;security mode=&ldquo;Transport&rdquo;></p>
-
-<p>        &lt;transport clientCredentialType=&ldquo;Windows&rdquo;
-protectionLevel=&ldquo;EncryptAndSign&rdquo; /></p>
-
-<p>      &lt;/security></p>
-
-<p>    &lt;/binding></p>
-
-<p>  &lt;/netTcpBinding></p>
-
-<p>&lt;/bindings></p>
-
-<p><strong>Behaviors.config</strong></p>
-
-<p>&lt;behaviors></p>
-
-<p>  &lt;serviceBehaviors></p>
-
-<p>    &lt;behavior name=&ldquo;CalculatorServiceBehavior&rdquo;></p>
-
-<p>      &lt;serviceMetadata httpGetEnabled=&ldquo;true&rdquo; /></p>
-
-<p>      &lt;serviceDebug includeExceptionDetailInFaults=&ldquo;False&rdquo; /></p>
-
-<p>    &lt;/behavior></p>
-
-<p>  &lt;/serviceBehaviors></p>
-
-<p>&lt;/behaviors></p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/21/">&larr; Older</a>
@@ -1183,6 +1294,10 @@ protectionLevel=&ldquo;EncryptAndSign&rdquo; /></p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
       </li>
     
@@ -1196,10 +1311,6 @@ protectionLevel=&ldquo;EncryptAndSign&rdquo; /></p>
     
       <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
   </ul>

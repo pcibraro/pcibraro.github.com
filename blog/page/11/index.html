@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="The repository implementation I am going to discuss here is not exactly
-what someone would call repository in terms of DDD, but it is an
-abstraction &hellip;">
+  <meta name="description" content="The book in which I been working on since last year finally went to the
+light this week. It has been the result of hard work between me and
+three &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +81,57 @@ abstraction &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/06/12/professional-wcf-4-0-windows-communication-foundation-with-net-4-0/">Professional WCF 4.0: Windows Communication Foundation With .NET 4.0</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-06-12T00:00:00-03:00" pubdate data-updated="true">Jun 12<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/06/12/professional-wcf-4-0-windows-communication-foundation-with-net-4-0/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>The book in which I been working on since last year finally went to the
+light this week. It has been the result of hard work between me and
+three other Connected Systems MVP, my friend <a href="http://weblogs.asp.net/fabio/">Fabio
+Cozzolino</a>, <a href="http://geekswithblogs.net/claeyskurt/Default.aspx">Kurt
+Claeys</a> and Johann
+Grabner. If you are interested in learning the new features in WCF 4.0,
+but also WCF in general and how to apply it in real world scenarios,
+this book is for you. I dedicated three chapters of this book to one of
+my favorites topics, Security, from the basics to more complicated
+scenarios with Claim-Based security and Federated authentication using
+WCF services with Windows Identity Foundation. You can find more
+information about the book and the table of contents in the Wrox web
+site
+<a href="http://www.wrox.com/WileyCDA/WroxTitle/Professional-WCF-4-Windows-Communication-Foundation-with-NET-4.productCd-0470563141,descCd-tableOfContents.html">here</a>.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1927,251 +1978,6 @@ calling an operation in another “EchoService” service.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2010/01/04/actas-in-ws-trust-1-4/">ActAs in WS-Trust 1.4</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2010-01-04T00:00:00-03:00" pubdate data-updated="true">Jan 4<span>th</span>, 2010</time>
-        
-         | <a href="/blog/2010/01/04/actas-in-ws-trust-1-4/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>WS-Trust 1.4 introduced a new feature called as “ActAs” for addressing
-common scenarios where an application needs to call a service on behalf
-of the logged user or a service needs to call another service on behalf
-of the original caller. These are typical examples of what is usually
-resolved with the “<a href="http://www.soapatterns.org/trusted_subsystem.php">Trusted Subsystem”
-pattern</a>.</p>
-
-<p>“ActAs” is not more than a new element in the RST message for including
-additional information about the original caller when a token is
-negotiated with the STS for consuming the final service in the Relying
-Party (that means that a trust relationship already exists between the
-STS and the final service). That element usually takes the form of a
-token with identity claims, which are secured (encrypted/signed) and
-included together with the credentials of the client application that is
-negotiating the token with the STS.</p>
-
-<p>As this element is part of the WS-Trust specification, it only makes
-sense in scenarios where the client authentication is delegated to an
-STS. I already discussed this scenario several times in the past. The
-following message shows how this element is included in a RST message,</p>
-
-<p>&lt;trust:RequestSecurityToken
-xmlns:trust=&ldquo;<a href="http://docs.oasis-open.org/ws-sx/ws-trust/200512">http://docs.oasis-open.org/ws-sx/ws-trust/200512</a>&rdquo;>
-\
-  &lt;tr:ActAs
-xmlns:tr=&ldquo;<a href="http://docs.oasis-open.org/ws-sx/ws-trust/200802">http://docs.oasis-open.org/ws-sx/ws-trust/200802</a>&rdquo;>
-\
-    &lt;saml:Assertion MajorVersion=&ldquo;1&rdquo; MinorVersion=&ldquo;1&rdquo;
-AssertionID=&ldquo;_cf5f224e-4bae-4f2d-9800-248023ac0e4d&rdquo; Issuer=&ldquo;PassiveSTS&rdquo;
-IssueInstant=&ldquo;2010-01-04T15:20:14.506Z&rdquo;
-xmlns:saml=&ldquo;urn:oasis:names:tc:SAML:1.0:assertion&rdquo;> \
-      &lt;saml:Conditions NotBefore=&ldquo;2010-01-04T15:20:14.470Z&rdquo;
-NotOnOrAfter=&ldquo;2010-01-04T16:20:14.470Z&rdquo;>&lt;/saml:Conditions> \
-        &lt;saml:AttributeStatement> \
-          &lt;saml:Subject> \
-            &lt;saml:NameIdentifier
-Format=&ldquo;<a href="http://schemas.xmlsoap.org/claims/UPN%22%3Euid:0@stonehenge.com%3C/saml:NameIdentifier">uid:0@stonehenge.comhttp://schemas.xmlsoap.org/claims/UPN&#8221;>uid:0@stonehenge.com&lt;/saml:NameIdentifier</a>>
-\
-            &lt;saml:SubjectConfirmation> \
-             
-&lt;saml:ConfirmationMethod>urn:oasis:names:tc:SAML:1.0:cm:bearer&lt;/saml:ConfirmationMethod>
-\
-            &lt;/saml:SubjectConfirmation> \
-          &lt;/saml:Subject> \
-          &lt;saml:Attribute AttributeName=&#8221;role&rdquo;
-AttributeNamespace=&ldquo;<a href="http://microsoft">http://microsoft</a>&rdquo;> \
-            &lt;saml:AttributeValue>staff&lt;/saml:AttributeValue>\ \
-          &lt;/saml:Attribute> \
-        &lt;/saml:AttributeStatement> \
-        &lt;saml:AuthenticationStatement
-AuthenticationMethod=&ldquo;<a href="http://microsoft/geneva">http://microsoft/geneva</a>&rdquo;
-AuthenticationInstant=&ldquo;2010-01-04T15:20:14.481Z&rdquo;> \
-          &lt;saml:Subject> \
-            &lt;saml:NameIdentifier
-Format=&ldquo;<a href="http://schemas.xmlsoap.org/claims/UPN%22%3Euid:0@stonehenge.com%3C/saml:NameIdentifier">uid:0@stonehenge.comhttp://schemas.xmlsoap.org/claims/UPN&#8221;>uid:0@stonehenge.com&lt;/saml:NameIdentifier</a>>
-\
-            &lt;saml:SubjectConfirmation> \
-             
-&lt;saml:ConfirmationMethod>urn:oasis:names:tc:SAML:1.0:cm:bearer&lt;/saml:ConfirmationMethod>
-\
-            &lt;/saml:SubjectConfirmation> \
-          &lt;/saml:Subject> \
-        &lt;/saml:AuthenticationStatement> \
-        &lt;ds:Signature
-xmlns:ds=&rdquo;<a href="http://www.w3.org/2000/09/xmldsig">http://www.w3.org/2000/09/xmldsig</a>#&ldquo;>
-\
-        &lt;/ds:Signature> \
-      &lt;/saml:Assertion> \
-    &lt;/tr:ActAs> \
- 
-&lt;trust:ComputedKeyAlgorithm><a href="http://docs.oasis-open.org/ws-sx/ws-trust/200512/CK/PSHA1&lt;/trust:ComputedKeyAlgorithm>&#8220;>http://docs.oasis-open.org/ws-sx/ws-trust/200512/CK/PSHA1&lt;/trust:ComputedKeyAlgorithm></a>
-\
-&lt;/trust:RequestSecurityToken></p>
-
-<p>If you still want to support an scenario like this when an STS is not
-involved for client authentication, the closer thing you can find is the
-client authentication through supporting tokens method. I described this
-scenario in this
-<a href="http://weblogs.asp.net/cibrax/archive/2008/01/22/authenticating-users-with-supporting-tokens-in-wcf.aspx">post</a>,
-and Dominick did a better job giving a <a href="http://www.leastprivilege.com/UserNameSupportingTokenInWCF.aspx">concrete
-implementation</a>
-in WCF that uses an Username Token as supporting token, a also a <a href="http://www.leastprivilege.com/UsingSAMLAsAClientCredentialTypeInWCFWithGeneva.aspx">SAML
-token</a>,
-which represents something very useful.</p>
-
-<p><a href="http://weblogs.asp.net/blogs/cibrax/WSTrust1_6E19D943.jpg"><img src="http://weblogs.asp.net/blogs/cibrax/WSTrust1_thumb_579714EF.jpg" title="WSTrust1" alt="WSTrust1" /></a></p>
-
-<p><a href="http://weblogs.asp.net/blogs/cibrax/WSTrust2_766D88CD.jpg"><img src="http://weblogs.asp.net/blogs/cibrax/WSTrust2_thumb_14D7C9B7.jpg" title="WSTrust2" alt="WSTrust2" /></a></p>
-
-<p>The images illustrate two scenarios where this new feature makes a lot
-of sense. Let’s discuss both of them more in detail.</p>
-
-<p>Scenario 1: A Service A calling a Service B</p>
-
-<p>In this scenario, we have a Service A that needs to make a call to an
-operation in the Service B. Both services are expecting an token issued
-by an STS that they trust (The example assumes that they both trust the
-same STS). This is how “ActAs” works in this scenario.</p>
-
-<p>​1. The client negotiates a SAML token with the STS for consuming the
-service A</p>
-
-<p>​2. The client invokes an operation in the Service A using the SAML
-token it got from the STS as client credentials.</p>
-
-<p>​3. Now, the Service A needs to invoke an operation in the Service B so
-it has to negotiate a new SAML token from the STS first. In order to do
-that, it includes the SAML token sent by the client as part of the ActAs
-element, and secures the message using any of the traditional
-WS-Security profiles. For example, Mutual Certificate, a client
-certificate for authenticating the client (Service A) and a service
-certificate for authenticating the service and protecting the messages.
-The STS issues a new token for consuming the service B using all the
-information received in the RST message.</p>
-
-<p>​4. The service A invokes an operation in the Service B using the SAML
-token it just got from the STS as client credentials.</p>
-
-<p>Scenario 2: A Web Application calling a Service</p>
-
-<p>In this scenario, the Web Application authenticates all its user through
-an STS that implements the WS-Trust passive profile. This means that the
-web application is a claim-aware application that receives the user
-identity as claims from a token sent by the STS (The user first
-authenticates in the STS, step 1). As the web application already has a
-token with the user claims, which is the token it received from the
-passive STS, it can include it as the ActAs element when it negotiates a
-SAML token from the Active STS (step 2). Once the application gets a
-SAML token from the Active STS, it can actually use it for consuming the
-service (step 3)</p>
-
-<p>Fortunately, WIF already includes support in the client API for
-negotiating a token with the ActAs element, and also support for parsing
-and getting access to that information in the STS implementation. 
-What’s more, the implementation of this new feature in WIF is totally
-interoperable with other Service stacks as well. This is something that
-have been proved in the Apache Stonehenge project by proving an example
-application that shows different interoperability scenarios with
-claim-based security with other service stacks like Sun Metro or WOS2.</p>
-
-<p> </p>
-
-<p> </p>
-
-<p>On the client side, WIF provides a couple of extensions methods in the
-WCF channel for including a token in the ActAs element.</p>
-
-<p>public static T CreateChannelActingAs&lt;T>(this ChannelFactory&lt;T>
-factory, SecurityToken actAs); \
-public static T CreateChannelActingAs&lt;T>(this ChannelFactory&lt;T>
-factory, EndpointAddress address, SecurityToken actAs); \
-public static T CreateChannelActingAs&lt;T>(this ChannelFactory&lt;T>
-factory, EndpointAddress address, Uri via, SecurityToken actAs);</p>
-
-<p>In case you are using a SAML token, you need to negotiate it out of band
-with the WSTrustChannel class or use the one that is available in the
-web application when passive authentication is used with an STS (and the
-setting saveBootstapTokens is enabled in the microsoft.IdentityModel
-section). The following code illustrates a sample that uses the SAML
-token available as part of the Bootstrap tokens in the IClaimsPrincipal
-instance attached to the current thread.</p>
-
-<p>SecurityToken callerToken = null;</p>
-
-<p>IClaimsPrincipal claimsPrincipal = Thread.CurrentPrincipal as
-IClaimsPrincipal; \
- if (claimsPrincipal != null) \
- { \
-   foreach (IClaimsIdentity claimsIdentity in
-claimsPrincipal.Identities) \
-   { \
-     if (claimsIdentity.BootstrapToken is SamlSecurityToken) \
-     { \
-       callerToken = claimsIdentity.BootstrapToken; \
-       break; \
-     } \
-  } \
- }</p>
-
-<p>var channel = channelFactory.CreateChannelActingAs(callerToken);</p>
-
-<p>The STS implementation can get the ActAs element information from the
-RequestSecurityToken.ActAs property,</p>
-
-<p>if (request.ActAs != null) \
-{ \
-  IClaimsIdentity actAsIdentity = new ClaimsIdentity(); \
-  CopyClaims(request.ActAs.GetSubject().First(), actAsIdentity);</p>
-
-<p>  // Find the last delegate in the actAs identity \
-  IClaimsIdentity lastActingVia = actAsIdentity; \
-  while (lastActingVia.Actor != null) \
-  { \
-    lastActingVia = lastActingVia.Actor; \
-  }</p>
-
-<p>  // Put the caller&rsquo;s identity as the last delegate to the ActAs
-identity \
-  lastActingVia.Actor = outputIdentity;</p>
-
-<p>  // Return the actAsIdentity instead of the caller&rsquo;s identity in this
-case \
-  outputIdentity = actAsIdentity; \
-}</p>
-
-<p>The apache stonehenge application or the <a href="http://code.msdn.microsoft.com/FabrikamShipping">Fabrikam shipping
-sample</a> in codeplex are
-using this feature, so you might be interested in taking a look there.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/12/">&larr; Older</a>
@@ -2189,6 +1995,10 @@ using this feature, so you might be interested in taking a look there.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
       </li>
     
@@ -2202,10 +2012,6 @@ using this feature, so you might be interested in taking a look there.</p>
     
       <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
   </ul>

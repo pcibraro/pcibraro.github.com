@@ -9,8 +9,8 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="Usually all my posts about REST are about WCF or mention this technology
-in some parts. Today, I decided to take a different approach and discuss &hellip;">
+  <meta name="description" content="A durable service in WCF is by a definition a service that can persist
+all its internal state across calls in some durable storage. For every &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -80,6 +80,308 @@ in some parts. Today, I decided to take a different approach and discuss &hellip
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/11/25/my-durable-wcf-restful-calculator/">My Durable WCF RESTful Calculator</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-11-25T00:00:00-03:00" pubdate data-updated="true">Nov 25<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/11/25/my-durable-wcf-restful-calculator/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>A durable service in WCF is by a definition a service that can persist
+all its internal state across calls in some durable storage. For every
+operation, the service state is retrieved from the storage, the
+operation is executed and finally the state is persisted again in the
+storage. Therefore, there is not need to keep the service instance idle
+in memory while waiting for client calls. It is equivalent to a long run
+session, which make this feature something ideal for long-running
+processes like workflows (In fact, workflow services are mount on top of
+this feature),</p>
+
+<p>In order to create a durable service, WCF provides a &ldquo;DurableService&rdquo;
+attribute (It&rsquo;s a service behavior) that can be applied to a regular
+service definition. The service itself has to be either serializable or
+have members decorated with DataContract or DataMember attributes to be
+serialized and stored in the persistent storage.</p>
+
+<p>The service activation, as in workflow services, is managed by the WCF
+context correlation mechanism. Once a service instance has been created,
+the client application has to propagate some context information(which
+includes the service instance id) in order to route all the new messages
+to the right service instance. Jesus has already discussed how this
+mechanism works more in detail in this
+<a href="http://weblogs.asp.net/gsusx/archive/2007/06/14/orcas-durable-services.aspx">post</a>
+(Although the post is bit old and some names have changed since then, it
+is worth reading).</p>
+
+<p>For purposes of this post, I decided to create a simple calculator
+example that exposes different operations through the classic http
+verbs,</p>
+
+<p>[ServiceContract(Namespace =
+&ldquo;<a href="http://Microsoft.WorkflowServices.Samples">http://Microsoft.WorkflowServices.Samples</a>&rdquo;)]</p>
+
+<p>public interface ICalculator</p>
+
+<p>{</p>
+
+<p>    [OperationContract()]</p>
+
+<p>    [WebInvoke(Method = &ldquo;POST&rdquo;)]</p>
+
+<p>    int PowerOn();</p>
+
+<p> </p>
+
+<p>    [OperationContract()]</p>
+
+<p>    [WebInvoke(Method = &ldquo;PUT&rdquo;, UriTemplate = &ldquo;add&rdquo;)]</p>
+
+<p>    int Add(int value);</p>
+
+<p> </p>
+
+<p>    [OperationContract()]</p>
+
+<p>    [WebInvoke(Method = &ldquo;PUT&rdquo;, UriTemplate = &ldquo;subtract&rdquo;)]</p>
+
+<p>    int Subtract(int value);</p>
+
+<p> </p>
+
+<p>    [OperationContract()]</p>
+
+<p>    [WebInvoke(Method = &ldquo;PUT&rdquo;, UriTemplate = &ldquo;multiply&rdquo;)]</p>
+
+<p>    int Multiply(int value);</p>
+
+<p> </p>
+
+<p>    [OperationContract()]</p>
+
+<p>    [WebInvoke(Method = &ldquo;PUT&rdquo;, UriTemplate = &ldquo;divide&rdquo;)]</p>
+
+<p>    int Divide(int value);</p>
+
+<p> </p>
+
+<p>    [OperationContract()]</p>
+
+<p>    [WebInvoke(Method = &ldquo;DELETE&rdquo;)]</p>
+
+<p>    void PowerOff();</p>
+
+<p>} </p>
+
+<p>The implementation of this service is also quite straightforward.</p>
+
+<p>[Serializable]</p>
+
+<p>[DurableService]</p>
+
+<p>public class DurableCalculator : ICalculator</p>
+
+<p>{</p>
+
+<p>    int _currentValue = 0;</p>
+
+<p> </p>
+
+<p>    [DurableOperation(CanCreateInstance=true)]</p>
+
+<p>    public int PowerOn()</p>
+
+<p>    {</p>
+
+<p>        return _currentValue;</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    [DurableOperation]</p>
+
+<p>    public int Add(int value)</p>
+
+<p>    {</p>
+
+<p>        return (_currentValue += value);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    [DurableOperation]</p>
+
+<p>    public int Subtract(int value)</p>
+
+<p>    {</p>
+
+<p>        return (_currentValue &ndash;= value);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    [DurableOperation]</p>
+
+<p>    public int Multiply(int value)</p>
+
+<p>    {</p>
+
+<p>        return (_currentValue *= value);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    [DurableOperation]</p>
+
+<p>    public int Divide(int value)</p>
+
+<p>    {</p>
+
+<p>        return (_currentValue /= value);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    [DurableOperation(CompletesInstance=true)]</p>
+
+<p>    public void PowerOff()</p>
+
+<p>    {</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>As you can see, I decorated the service implementation with the
+&ldquo;DurableService&rdquo; and &ldquo;DurableOperation&rdquo; attributes to make this simple
+service a durable one.</p>
+
+<p>WCF only comes with built-in support for transferring the context
+information between the client and service with Http Cookies or Soap
+Headers. While cookies would be the right mechanism for http REST
+services, unfortunately they do not work as expected. The path that WCF
+uses for creating the cookies is relative, so the context manager throws
+the following exception on the client side,</p>
+
+<p><strong><em>Unhandled Exception: System.Net.CookieException: An error occurred
+when parsing the Cookie header for Uri
+&lsquo;<a href="http://localhost:8080/DurableCalculator">http://localhost:8080/DurableCalculator</a>&rsquo;. &mdash;&ndash;>
+System.Net.CookieException: The &lsquo;Path&rsquo;=&lsquo;/DurableCalculator/PowerOn&rsquo; part
+of the cookie  is invalid.</em></strong></p>
+
+<p>As workaround, we can use for this scenario the custom context binding I
+created <a href="http://weblogs.asp.net/cibrax/archive/2008/10/30/rest-and-workflow-services-play-well-together-part-ii.aspx">some weeks
+ago</a>
+to exchange the context information as regular http headers.</p>
+
+<p>&lt;connectionStrings></p>
+
+<p>  &lt;add name=&ldquo;DurableService&rdquo; connectionString=&ldquo;Initial
+Catalog=SQLWorkflows;Data Source=.\SQLEXPRESS;Integrated
+Security=SSPI;&rdquo;/></p>
+
+<p>&lt;/connectionStrings></p>
+
+<p>&lt;system.serviceModel></p>
+
+<p>  &lt;services></p>
+
+<p>    &lt;service name=&ldquo;ServiceConsole.DurableCalculator&rdquo;
+behaviorConfiguration=&ldquo;MyServiceBehavior&rdquo;></p>
+
+<p>      &lt;endpoint address=&ldquo;&rdquo; behaviorConfiguration=&ldquo;MyServiceBehavior&rdquo;
+<strong>binding=&ldquo;webHttpContext&rdquo;</strong> contract=&ldquo;ServiceConsole.ICalculator&rdquo; /></p>
+
+<p>    &lt;/service></p>
+
+<p>&lt;/services></p>
+
+<p>&lt;behaviors></p>
+
+<p>  &lt;endpointBehaviors></p>
+
+<p>    &lt;behavior name=&ldquo;MyServiceBehavior&rdquo;></p>
+
+<p>      &lt;webHttp /></p>
+
+<p>    &lt;/behavior></p>
+
+<p>  &lt;/endpointBehaviors></p>
+
+<p>  &lt;serviceBehaviors></p>
+
+<p>    &lt;behavior name=&ldquo;MyServiceBehavior&rdquo;></p>
+
+<p>      &lt;persistenceProvider
+type=&ldquo;System.ServiceModel.Persistence.SqlPersistenceProviderFactory,
+System.WorkflowServices, Version=3.5.0.0, Culture=neutral,
+PublicKeyToken=31bf3856ad364e35&rdquo;
+connectionStringName=&ldquo;DurableService&rdquo;/></p>
+
+<p>    &lt;/behavior></p>
+
+<p>  &lt;/serviceBehaviors></p>
+
+<p>&lt;/behaviors></p>
+
+<p>&lt;extensions></p>
+
+<p>  &lt;bindingExtensions></p>
+
+<p>    &lt;add name=&ldquo;webHttpContext&rdquo;
+type=&ldquo;Microsoft.ServiceModel.Samples.WebHttpContextBindingCollectionElement,
+WebHttpContext, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null&rdquo;
+/></p>
+
+<p>  &lt;/bindingExtensions></p>
+
+<p>&lt;/extensions></p>
+
+<p>&lt;/system.serviceModel></p>
+
+<p>If you pay special attention to the configuration settings above, in
+addition to the binding configuration, I also included the
+&ldquo;persitenceProvider&rdquo; behavior for configuring the persistence provider
+that will serialize and store the service instance (In this case, the
+SQL server provider).</p>
+
+<p>Now, thanks to this support, my calculator service will survive to
+application and server restarts :). Download the complete code from this
+<a href="/images/legacy/DurableRestCalculator.zip">location</a>.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -463,16 +765,16 @@ with the ADO.NET data service</strong></p>
 
 <p>        _contacts = new Contact[]{</p>
 
-<p>          new Contact(){ Id=0, Name=&ldquo;Mike&rdquo;, Email=&ldquo;<a href="&#x6d;&#x61;&#105;&#108;&#116;&#x6f;&#58;&#x6d;&#105;&#x6b;&#x65;&#x40;&#99;&#x6f;&#x6e;&#x74;&#111;&#x73;&#x6f;&#46;&#99;&#111;&#109;">&#109;&#x69;&#107;&#x65;&#x40;&#x63;&#111;&#110;&#x74;&#x6f;&#115;&#111;&#46;&#x63;&#111;&#x6d;</a>&rdquo;,
+<p>          new Contact(){ Id=0, Name=&ldquo;Mike&rdquo;, Email=&ldquo;<a href="&#x6d;&#x61;&#105;&#x6c;&#116;&#111;&#58;&#x6d;&#105;&#x6b;&#101;&#64;&#x63;&#x6f;&#x6e;&#x74;&#x6f;&#x73;&#x6f;&#x2e;&#x63;&#x6f;&#x6d;">&#x6d;&#x69;&#107;&#x65;&#64;&#x63;&#111;&#110;&#x74;&#x6f;&#115;&#111;&#x2e;&#99;&#111;&#x6d;</a>&rdquo;,
 Owner = &ldquo;jane&rdquo; },</p>
 
-<p>          new Contact(){ Id=1, Name=&ldquo;Saaid&rdquo;, Email=&ldquo;<a href="&#109;&#97;&#x69;&#108;&#116;&#x6f;&#x3a;&#83;&#97;&#97;&#105;&#x64;&#64;&#x68;&#111;&#116;&#x6d;&#97;&#x69;&#108;&#46;&#99;&#x6f;&#x6d;">&#x53;&#97;&#x61;&#x69;&#x64;&#64;&#104;&#111;&#116;&#x6d;&#x61;&#x69;&#x6c;&#46;&#99;&#111;&#x6d;</a>&rdquo;,
+<p>          new Contact(){ Id=1, Name=&ldquo;Saaid&rdquo;, Email=&ldquo;<a href="&#109;&#97;&#x69;&#x6c;&#116;&#111;&#x3a;&#83;&#97;&#97;&#x69;&#100;&#x40;&#104;&#x6f;&#116;&#109;&#97;&#105;&#108;&#46;&#x63;&#111;&#109;">&#x53;&#x61;&#97;&#105;&#100;&#x40;&#104;&#x6f;&#116;&#109;&#x61;&#105;&#108;&#46;&#99;&#x6f;&#x6d;</a>&rdquo;,
 Owner = &ldquo;jane&rdquo;},</p>
 
-<p>          new Contact(){ Id=2, Name=&ldquo;John&rdquo;, Email=&ldquo;<a href="&#x6d;&#x61;&#x69;&#108;&#x74;&#111;&#58;&#x6a;&#x31;&#50;&#x33;&#64;&#x6c;&#x69;&#118;&#x65;&#46;&#99;&#x6f;&#x6d;">&#x6a;&#x31;&#50;&#x33;&#x40;&#108;&#105;&#x76;&#x65;&#46;&#x63;&#x6f;&#x6d;</a>&rdquo;, Owner
+<p>          new Contact(){ Id=2, Name=&ldquo;John&rdquo;, Email=&ldquo;<a href="&#109;&#97;&#105;&#108;&#x74;&#111;&#x3a;&#106;&#49;&#x32;&#x33;&#x40;&#108;&#x69;&#118;&#101;&#x2e;&#99;&#x6f;&#x6d;">&#x6a;&#49;&#50;&#x33;&#64;&#x6c;&#105;&#118;&#101;&#46;&#99;&#x6f;&#x6d;</a>&rdquo;, Owner
 = &ldquo;john&rdquo;},</p>
 
-<p>          new Contact(){ Id=3, Name=&ldquo;Pablo&rdquo;, Email=&ldquo;<a href="&#109;&#x61;&#x69;&#108;&#x74;&#x6f;&#58;&#x50;&#x61;&#98;&#108;&#111;&#64;&#109;&#x61;&#x69;&#x6c;&#x2e;&#99;&#x6f;&#109;">&#80;&#97;&#x62;&#108;&#111;&#x40;&#109;&#97;&#105;&#108;&#46;&#x63;&#x6f;&#x6d;</a>&rdquo;,
+<p>          new Contact(){ Id=3, Name=&ldquo;Pablo&rdquo;, Email=&ldquo;<a href="&#x6d;&#x61;&#105;&#108;&#x74;&#x6f;&#58;&#x50;&#97;&#x62;&#x6c;&#111;&#64;&#109;&#x61;&#x69;&#x6c;&#46;&#x63;&#x6f;&#109;">&#x50;&#x61;&#98;&#x6c;&#111;&#64;&#x6d;&#x61;&#x69;&#x6c;&#x2e;&#x63;&#111;&#109;</a>&rdquo;,
 Owner = &ldquo;john&rdquo;}};</p>
 
 <p>    }</p>
@@ -1947,176 +2249,6 @@ DataContractSerializer(typeof(T));</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2008/10/06/importance-of-conditional-gets-in-rest/">Conditional Gets in REST</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2008-10-06T00:00:00-03:00" pubdate data-updated="true">Oct 6<span>th</span>, 2008</time>
-        
-         | <a href="/blog/2008/10/06/importance-of-conditional-gets-in-rest/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>According to the Http specification, any Http GET request should be
-idempotent and safe. In this context, these principles have the
-following meaning:</p>
-
-<p>Idempotence: One or more calls with identical requests should return the
-same resource representation (As long as the resource has not changed on
-the server between calls).</p>
-
-<p>Safety:  The only action produced by a GET request is to retrieve a
-resource representation, no side-effects should be evident on the
-service side after executing the request. An example that violates this
-principle could be a GET request that also updates some info in the
-resource.</p>
-
-<p>As long as these principles are applied correctly by a service
-implementation, the client will have more available mechanisms to cache
-the resource representation on its side. This has a very positive
-meaning from a scalability view point, which represents a better use of
-the network bandwidth and an optimization in the utilization of server
-resources.</p>
-
-<p>Those caching mechanisms are based on what is commonly called Http
-conditional gets. An Http conditional get involves the use of two
-special headers generated by the service, ETag and Last-Modified.</p>
-
-<p>An Etag represents an opaque value that only the server knows how to
-recreate, it could represent anything, but it is usually a hash
-representing the resource version (it can be generated hashing the whole
-representation content or just some parts of it, like the timestamp). On
-the other hand, the Last-Modified headers represents a datetime that the
-service can use to determine whether the resource has changed since the
-last time it was served. The following example illustrates the
-request/response messages interchanged by the client/service for a
-service that returns information about customers</p>
-
-<p>First request, the client does not have anything on the cache.</p>
-
-<p>GET <a href="http://foo/customers/1">http://foo/customers/1</a></p>
-
-<p>Host foo\
-Accept */*\
-Accept-Language en-us,en;q=0.5\
-Accept-Encoding gzip,deflate\
-Accept-Charset ISO-8859-1,utf-8;q=0.7,*;q=0.7\
-Connection close\
-Referer <a href="http://foo/">http://foo/</a>\
-Pragma no-cache\
-Cache-Control no-cache</p>
-
-<p>Response:</p>
-
-<p>Connection close\
-Date Thu, 02 Oct 2008 14:46:57 GMT\
-Server Microsoft-IIS/6.0\
-X-Powered-By ASP.NET\
-X-AspNet-Version 2.0.50727\
-Content-Encoding gzip\
-Content-Length 1212\
-Expires Sat, 01 Nov 2008 14:46:57 GMT\
-<strong>Last-Modified Mon, 29 Sep 2008 15:40:27 GMT\
-Etag a9331828c517ac5d97f93b3cfdbcc9bc</strong>\
-Content-Type text/xml</p>
-
-<p>The next time the client sends a new request for the same customer, some
-extra information will be included in the request headers,</p>
-
-<p>GET <a href="http://foo/customers/1">http://foo/customers/1</a></p>
-
-<p>Host foo\
-Accept */*\
-Accept-Language en-us,en;q=0.5\
-Accept-Encoding gzip,deflate\
-Accept-Charset ISO-8859-1,utf-8;q=0.7,*;q=0.7\
-Connection close\
-Referer foo\
-<strong>If-Modified-Since Mon, 29 Sep 2008 15:40:27 GMT\
-If-None-Match a9331828c517ac5d97f93b3cfdbcc9bc\
-</strong></p>
-
-<p>With these two new headers, the service can now determine whether it has
-to serve the resource representation again or the client can use the
-cached version. If the resource has not changed according to the values
-in those headers (If-Modified-Since for Last-Modified and If-None-Match
-for Etag), the service can return an Http status code &ldquo;304 Not
-Modified&rdquo;, which instructs the client to use the cached version.</p>
-
-<p>This approach is widely used nowadays by syndication, RSS or Atom, that
-usually use the Last-Modified/If-Modified-Since to determine which items
-they have to send to the client.</p>
-
-<p>Since I am a WCF fan, I will also include here some code snippets to get
-the value in those headers and return a &ldquo;304&rdquo; http status code,</p>
-
-<p>Code to get those values:</p>
-
-<p>if
-(WebOperationContext.IncomingRequest.Headers[HttpRequestHeader.IfNoneMatch]
-!= null)</p>
-
-<p>{</p>
-
-<p>  // Do something with etag&hellip;</p>
-
-<p>}</p>
-
-<p>else if
-(WebOperationContext.IncomingRequest.Headers[HttpRequestHeader.IfModifiedSince]
-!= null)</p>
-
-<p>{</p>
-
-<p>  var date =
-DateTime.Parse(context.IncomingRequest.Headers[HttpRequestHeader.IfModifiedSince]);</p>
-
-<p>}</p>
-
-<p> </p>
-
-<p>Code to set those values:</p>
-
-<p> </p>
-
-<p>WebOperationContext.OutgoingResponse.LastModified = // sets the last
-modified;</p>
-
-<p>WebOperationContext.OutgoingResponse.ETag = // sets the Etag</p>
-
-<p>Code to return an Http 304 status code:</p>
-
-<p>WebOperationContext.OutgoingResponse.StatusCode =
-HttpStatusCode.NotModified;</p>
-
-<p>WebOperationContext.OutgoingResponse.SuppressEntityBody = true;</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/18/">&larr; Older</a>
@@ -2134,6 +2266,10 @@ HttpStatusCode.NotModified;</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
       </li>
     
@@ -2147,10 +2283,6 @@ HttpStatusCode.NotModified;</p>
     
       <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
   </ul>

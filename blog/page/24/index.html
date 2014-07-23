@@ -9,10 +9,10 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="I have developed a new WS-Compression implementation for WCF.  This code
-is based on the WSE 3.0
-implementation 
-made by my partner Rodolfo &hellip;">
+  <meta name="description" content="Last week I received some feedback from the web services guru Christian
+Weyer (By the way, a cool guy
+too) about my post &ldquo;Proxy
+Factory&rdquo &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -82,6 +82,259 @@ made by my partner Rodolfo &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/03/31/441591/">Service Interface Factory</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-03-31T00:00:00-03:00" pubdate data-updated="true">Mar 31<span>st</span>, 2006</time>
+        
+         | <a href="/blog/2006/03/31/441591/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Last week I received some feedback from the web services guru <a href="http://blogs.thinktecture.com/cweyer">Christian
+Weyer</a> (By the way, a cool guy
+too) about my post <a href="/cibrax/archive/2006/02/06/437501.aspx" title="'">&ldquo;Proxy
+Factory&rdquo;</a>, so I decided to
+develop a complete and usable sample to show that concept.</p>
+
+<p>In that post, I described a way to separate the service interface from
+the service implementation doing something similar to what WCF does when
+it creates a channel for a specific interface.</p>
+
+<p>During this post, I will give a brief description about the main parts
+of this sample.</p>
+
+<p>First of all, I defined a service interface or contract for my service.
+I did not use my imagination at all and I decided to call this interface
+&ldquo;IHelloWorld&rdquo;.</p>
+
+<p>public interface IHelloWorld</p>
+
+<p>{</p>
+
+<p>  string HelloWorld(string message);</p>
+
+<p>}</p>
+
+<p>The client application uses that interface and the service factory to
+create a proxy for the service implementation without care about any
+details of this last one.</p>
+
+<p>class Program</p>
+
+<p>{</p>
+
+<p>  static void Main(string[] args)</p>
+
+<p>  {</p>
+
+<p>     //Default implementation</p>
+
+<p>     ServiceFactory&lt;IHelloWorld> factory = new
+ServiceFactory&lt;IHelloWorld>();</p>
+
+<p>     IHelloWorld service = factory.Create();</p>
+
+<p>     Console.WriteLine(service.HelloWorld(&ldquo;John Doe&rdquo;));</p>
+
+<p> </p>
+
+<p>     //Remote implementation</p>
+
+<p>     factory = new
+ServiceFactory&lt;IHelloWorld>(&ldquo;RemoteImplementation&rdquo;);</p>
+
+<p>     service = factory.Create();</p>
+
+<p>     Console.WriteLine(service.HelloWorld(&ldquo;John Doe&rdquo;));</p>
+
+<p>   }</p>
+
+<p>}</p>
+
+<p>The proxy for the service implementation perform the following steps</p>
+
+<ol>
+<li>Looks for the correct service implementation using the provided
+interface</li>
+<li>Creates an instance of the service implementation</li>
+<li>Invokes the right method on the service implementation</li>
+</ol>
+
+
+<p>For this sample, the proxy is quite simple and invokes the real service
+in the current machine, but more complex tasks could be performed, such
+as message interception or remote invocation. (WCF performs both things,
+it uses message interception to create a soap message and remote
+invocation to execute the service implementation in other machine).</p>
+
+<p>public class ServiceProxy : System.Runtime.Remoting.Proxies.RealProxy</p>
+
+<p>{</p>
+
+<p>  private Type type;</p>
+
+<p>  private string configurationName;</p>
+
+<p> </p>
+
+<p>  public ServiceProxy(string configurationName, Type type) : base(type)</p>
+
+<p>  {</p>
+
+<p>    this.type = type;</p>
+
+<p>    this.configurationName = configurationName;</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  public override System.Runtime.Remoting.Messaging.IMessage
+Invoke(System.Runtime.Remoting.Messaging.IMessage imsg)</p>
+
+<p>  {</p>
+
+<p>    Type implementationType = null;</p>
+
+<p>    string type = this.type.FullName;</p>
+
+<p>    foreach (ServiceInterfaceDefinition definition in
+ServiceInterfaceConfiguration.Current.Interfaces)</p>
+
+<p>    {</p>
+
+<p>      if ((this.configurationName == null || this.configurationName ==
+definition.Name) &amp;&amp; type == definition.Type)</p>
+
+<p>      {</p>
+
+<p>        implementationType = definition.ImplementationType;</p>
+
+<p>        break;</p>
+
+<p>      }</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    if(implementationType == null)</p>
+
+<p>      throw new Exception(&ldquo;The implementation type can not be null&rdquo;);</p>
+
+<p> </p>
+
+<p>    object implementation =
+Activator.CreateInstance(implementationType);</p>
+
+<p>    ReturnMessage retmsg = null;</p>
+
+<p>    if (imsg is IMethodCallMessage)</p>
+
+<p>    {</p>
+
+<p>      IMethodCallMessage call = imsg as IMethodCallMessage;</p>
+
+<p>      object returnValue =
+implementationType.InvokeMember(call.MethodName,
+System.Reflection.BindingFlags.InvokeMethod,</p>
+
+<p>              null, implementation, call.Args);</p>
+
+<p>      retmsg = new ReturnMessage(returnValue, null, 0, null, call);</p>
+
+<p>    }</p>
+
+<p> </p>
+
+<p>    return retmsg;</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p>The configuration for the client application contains two service
+implementations in this case, &ldquo;LocalImplementation&rdquo; for a component in
+the same application and &ldquo;RemoteImplementation&rdquo; for a web service proxy.</p>
+
+<p>&lt;serviceInterfaces></p>
+
+<p>  &lt;interfaces></p>
+
+<p>    &lt;add name=&ldquo;LocalImplementation&rdquo;</p>
+
+<p>        implementationType=&ldquo;ServiceInterfaces.Client.LocalHelloWorld,
+ServiceInterfaces.Client&rdquo;</p>
+
+<p>        type=&ldquo;ServiceInterfaces.IHelloWorld&rdquo;></p>
+
+<p>    &lt;/add></p>
+
+<p>    &lt;add name=&ldquo;RemoteImplementation&rdquo;</p>
+
+<p>         implementationType=&ldquo;ServiceInterfaces.Client.RemoteHelloWorld,
+ServiceInterfaces.Client&rdquo;</p>
+
+<p>         type=&ldquo;ServiceInterfaces.IHelloWorld&rdquo;></p>
+
+<p>    &lt;/add></p>
+
+<p>  &lt;/interfaces></p>
+
+<p>&lt;/serviceInterfaces></p>
+
+<p>The code below shows the service implementation configured as
+&ldquo;LocalImplementation&rdquo;.</p>
+
+<p>class LocalHelloWorld : IHelloWorld</p>
+
+<p>{</p>
+
+<p>  #region IHelloWorld Members</p>
+
+<p>  public string HelloWorld(string message)</p>
+
+<p>  {</p>
+
+<p>    return String.Format(&ldquo;Local Hello World : {0}&rdquo;, message);</p>
+
+<p>  }</p>
+
+<p>  #endregion</p>
+
+<p>}</p>
+
+<p>Download the complete sample from
+<a href="/images/legacy/ServiceFactory.zip" title="here ">here</a></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1945,529 +2198,6 @@ equivalent to the class FactoryChannel in WCF.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2006/02/02/437180/">Implementing a WS-Federation Scenario With WSE</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2006-02-02T00:00:00-03:00" pubdate data-updated="true">Feb 2<span>nd</span>, 2006</time>
-        
-         | <a href="/blog/2006/02/02/437180/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Federation is key concept that allows to enable collaboration across
-multiple security or trust realms.\
-There are many resources on Internet about this topic so I won&rsquo;t enter
-in details during this post.\
-The solution that I will give is based on the second extension of this
-pattern:</p>
-
-<p>\</p>
-
-<p><a href="http://msdn.microsoft.com/practices/default.aspx?pull=/library/en-us/dnpag2/html/wss_ch1_brokauthsts.asp">http://msdn.microsoft.com/practices/default.aspx?pull=/library/en-us/dnpag2/html/wss_ch1_brokauthsts.asp</a></p>
-
-<p>\</p>
-
-<p>By the way, this is one of the security patterns published by the
-Pattern and Practices team in Microsoft.\
-This a good starting point if you want to be familiar with different and
-useful patterns for web services.</p>
-
-<p>\</p>
-
-<p><strong>Sample scenario</strong>\
-\
-Imagine the following scenario:</p>
-
-<p>\</p>
-
-<p>Fabrikam has exposed some services to make on line operations, such as
-purchase goods, make orders and others.\
-These services can be used only by customers so the access to them is
-restricted.\
-Contoso is one of Fabrikam&rsquo;s customers and it has developed an internal
-desktop application to consume some of these services.\
-As you can see, this is a typical scenario for Federation where we have
-both companies in different security domains or realms but they trust
-each other.</p>
-
-<p>\</p>
-
-<p>The services exposed by Fabrikam authenticate the users by means of X509
-certificates, so one certificate is used for the client(Contoso) and
-another for the service(Fabrikam).\
-Contoso has deployed the desktop application in almost 100 machines and
-therefore installing both certificates in each one is not a practical
-solution in this case.</p>
-
-<p>\</p>
-
-<p>\
-<img src="/images/legacy/Federation/Problem.gif" alt="" /></p>
-
-<p>\</p>
-
-<p>The Brokered Authentication pattern by means of security token services
-meets really well the requirements for this solution.\</p>
-
-<p><img src="/images/legacy/Federation/Solution.gif" alt="" /></p>
-
-<p>\</p>
-
-<p>The arrows in this figure only show the work flow path and not the real
-path of the interchanged messages (Pair of request and response
-messages).</p>
-
-<p>\</p>
-
-<p>​1. Contoso deploys a STS with both certificates and the desktop
-application can ask for a SAML token to this service using a
-UsernameToken, a Kerberos token, or other kind of client credential.\
-2. The STS in the Fabrikam&rsquo;s domain only accepts SAML tokens signed by a
-well-know Authority (The Contoso&rsquo;s STS in this case) and creates an
-equivalent SAML token signed by him.\
-3. The Fabrikam&rsquo;s services only accept SAML tokens signed by Fabrikam&rsquo;s
-STS.</p>
-
-<p>\</p>
-
-<p>With this solution, Fabrikam can start to accept request from
-other customers and the services will not notice the difference.\
-In addition, if the communication between the STS and the services in
-Fabrikam is protected by means of a Kerberos token instead of a SAML
-token, the\
-X509 certificates must be only deployed in the servers where both STS
-run.</p>
-
-<p>\</p>
-
-<hr />
-
-<p><strong>Implementation</strong></p>
-
-<p>\
-In order to implement this sample scenario, I used the SAML
-implementation for WSE. You can download the code for this project in
-the <a href="http://practices.gotdotnet.com/projects/saml">GDN workspace</a>.\
-The image above illustrates the turn-key scenario used to secure the
-communication between the different participants in the architecture.</p>
-
-<p>\</p>
-
-<p><img src="/images/legacy/Federation/Turnkey.gif" alt="" />\</p>
-
-<p>​1. WSE Policy file in the client application</p>
-
-<p>&lt;policies xmlns=&ldquo;<a href="http://schemas.microsoft.com/wse/2005/06/policy">http://schemas.microsoft.com/wse/2005/06/policy</a>&rdquo;></p>
-
-<p>  &lt;extensions></p>
-
-<p>    &lt;extension name=&ldquo;saml&rdquo;
-type=&ldquo;Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion.SamlPolicyAssertion,
-Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion&rdquo;/></p>
-
-<p>  &lt;/extensions></p>
-
-<p>\</p>
-
-<p>  &lt;policy name=&ldquo;PurchaseGoods&rdquo;></p>
-
-<p>    &lt;saml issuer=&ldquo;<a href="http://localhost/FabrikamSTS/SamlTokenIssuer.ashx">http://localhost/FabrikamSTS/SamlTokenIssuer.ashx</a>&rdquo;
-issuerPolicy=&ldquo;FabrikamSTS&rdquo; establishSecurityContext=&ldquo;true&rdquo;
-renewExpiredSecurityContext=&ldquo;true&rdquo; requireDerivedKeys=&ldquo;true&rdquo;></p>
-
-<p>      &lt;protection></p>
-
-<p>        &lt;request signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
-IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
-
-<p>        &lt;response signatureOptions=&ldquo;IncludeAddressing,
-IncludeTimestamp, IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
-
-<p>        &lt;fault signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
-IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo; /></p>
-
-<p>      &lt;/protection></p>
-
-<p>    &lt;/saml></p>
-
-<p>  &lt;/policy></p>
-
-<p>  &lt;policy name=&ldquo;FabrikamSTS&rdquo;></p>
-
-<p>    &lt;saml issuer=&ldquo;<a href="http://localhost/ContosoSTS/SamlTokenIssuer.ashx">http://localhost/ContosoSTS/SamlTokenIssuer.ashx</a>&rdquo;
-issuerPolicy=&ldquo;ContosoSTS&rdquo; establishSecurityContext=&ldquo;false&rdquo;
-renewExpiredSecurityContext=&ldquo;false&rdquo; requireDerivedKeys=&ldquo;true&rdquo;></p>
-
-<p>      &lt;protection></p>
-
-<p>        &lt;request signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
-IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
-
-<p>        &lt;response signatureOptions=&ldquo;IncludeAddressing,
-IncludeTimestamp, IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
-
-<p>        &lt;fault signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
-IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo; /></p>
-
-<p>      &lt;/protection></p>
-
-<p>    &lt;/saml></p>
-
-<p>  &lt;/policy></p>
-
-<p>  &lt;policy name=&ldquo;ContosoSTS&rdquo;></p>
-
-<p>    &lt;usernameForCertificateSecurity establishSecurityContext=&ldquo;true&rdquo;
-renewExpiredSecurityContext=&ldquo;true&rdquo; requireSignatureConfirmation=&ldquo;false&rdquo;
-messageProtectionOrder=&ldquo;SignBeforeEncryptAndEncryptSignature&rdquo;
-requireDerivedKeys=&ldquo;true&rdquo;></p>
-
-<p>      &lt;serviceToken></p>
-
-<p>        &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
-findValue=&ldquo;CN=ContosoSTS&rdquo; findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
-
-<p>      &lt;/serviceToken></p>
-
-<p>      &lt;protection></p>
-
-<p>        &lt;request signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo;
-/></p>
-
-<p>        &lt;response signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo;
-/></p>
-
-<p>        &lt;fault signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo;
-/></p>
-
-<p>      &lt;/protection></p>
-
-<p>    &lt;/usernameForCertificateSecurity></p>
-
-<p>  &lt;/policy></p>
-
-<p>&lt;/policies></p>
-
-<p>\</p>
-
-<p>The policy definition above contains three policies:</p>
-
-<p>\</p>
-
-<p>​1. PurchaseGoods: This policy is used to secure the communication
-between the client and the Fabrikam&rsquo;s service (PurchaseGoods service).
-As you can see, this service requires a SAML token created by the
-Fabrikam&rsquo;s STS. The address for that STS is specified in the attribute
-&ldquo;issuer&rdquo;.</p>
-
-<p>​2. FabrikamSTS: This policy is used to secure the communication between
-the client and the STS in the Fabrikam realm. The Fabrikam&rsquo;s STS
-requires a SAML token from Contoso </p>
-
-<p>​3. ContosoSTS: This policy is used to secure the communication between
-the client and the STS in the Contoso realm. In this case, to make the
-things simpler, I decided to use a UsernameForCertificate turn-key
-scenario although any of the available turn-key scenarios can be used
-here.</p>
-
-<p>\</p>
-
-<p>​2. WSE Policy file in the Contoso&rsquo;s STS</p>
-
-<p>\</p>
-
-<p>&lt;policies xmlns=&ldquo;<a href="http://schemas.microsoft.com/wse/2005/06/policy">http://schemas.microsoft.com/wse/2005/06/policy</a>&rdquo;></p>
-
-<p>  &lt;policy name=&ldquo;ContosoSTS&rdquo;></p>
-
-<p>    &lt;usernameForCertificateSecurity establishSecurityContext=&ldquo;true&rdquo;
-renewExpiredSecurityContext=&ldquo;true&rdquo;
-requireSignatureConfirmation=&ldquo;false&#8221;  
-messageProtectionOrder=&#8221;SignBeforeEncryptAndEncryptSignature&rdquo;
-requireDerivedKeys=&ldquo;true&rdquo;></p>
-
-<p>      &lt;serviceToken></p>
-
-<p>        &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
-findValue=&ldquo;CN=ContosoSTS&rdquo; findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
-
-<p>      &lt;/serviceToken></p>
-
-<p>      &lt;protection></p>
-
-<p>        &lt;request signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo;
-/></p>
-
-<p>        &lt;response signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo;
-/></p>
-
-<p>        &lt;fault signatureOptions=&ldquo;IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo;
-/></p>
-
-<p>      &lt;/protection></p>
-
-<p>    &lt;/usernameForCertificateSecurity></p>
-
-<p>  &lt;/policy></p>
-
-<p>&lt;/policies></p>
-
-<p>\</p>
-
-<p>​3. SAML configuration for the Contoso&rsquo;s STS</p>
-
-<p>\</p>
-
-<p>&lt;WseSaml></p>
-
-<p>  &lt;samlTokenIssuer allowCachingToken=&ldquo;true&rdquo; ttlInSeconds=&ldquo;300&rdquo;></p>
-
-<p>  &lt;!&mdash; the config for the saml token issuer, this is the only config we
-use. This token is used to sign the SAML token &mdash;></p>
-
-<p>    &lt;serviceTokens></p>
-
-<p>      &lt;!&mdash; SAML Authority certificate &mdash;></p>
-
-<p>      &lt;add
-uri=&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue/SAML">http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue/SAML</a>&rdquo;
-storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo; findValue=&ldquo;CN=ContosoSTS&rdquo;
-findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
-
-<p>      &lt;!&mdash; Fabrikam STS &mdash;></p>
-
-<p>      &lt;add uri=&ldquo;<a href="http://localhost/FabrikamSTS/SamlTokenIssuer.ashx">http://localhost/FabrikamSTS/SamlTokenIssuer.ashx</a>&rdquo;
-storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo; findValue=&ldquo;CN=FabrikamSTS&rdquo;
-findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
-
-<p>    &lt;/serviceTokens></p>
-
-<p>    &lt;policy name=&ldquo;ContosoSTS&rdquo;></p>
-
-<p>    &lt;/policy></p>
-
-<p>  &lt;/samlTokenIssuer></p>
-
-<p>&lt;/WseSaml></p>
-
-<p>\</p>
-
-<p>A quick description of the configuration above:</p>
-
-<p>\</p>
-
-<p>​a. allowCachingToken attribute: This attribute specifies whether the
-SAML token can be stored in a cache or not. Depending on this attribute,
-the STS will add or not a DoNotCacheCondition to the SAML token.</p>
-
-<p>​b. ttlInSeconds attribute: Lifetime in seconds for the SAML token</p>
-
-<p>​c. serviceTokens element: It specifies the location for the different
-X509 certificates required by the STS. The &ldquo;SAML authority certificate&rdquo;
-is used to sign the SAML token. (This signature is really important
-since the target service can trust or not in the SAML token depending on
-the certificate used to create it). The &ldquo;Fabrikam STS certificate&rdquo; is
-used to encrypt some sections in the SAML token, and thefore only the
-Fabrikam STS can decrypt those sections and use the token. In other
-words, it defines the X509 certificate for the target service.</p>
-
-<p>​d. policy element: The WSE policy used to secure the communication
-between the clients and the STS.</p>
-
-<p>\</p>
-
-<p>​4. WSE policy file in the Fabrikam&rsquo;s STS</p>
-
-<p>\</p>
-
-<p>&lt;policies></p>
-
-<p>  &lt;extensions></p>
-
-<p>    &lt;extension name=&ldquo;saml&rdquo;
-type=&ldquo;Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion.SamlPolicyAssertion,
-Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion&rdquo;/></p>
-
-<p>  &lt;/extensions></p>
-
-<p>  &lt;policy name=&ldquo;FabrikamSTS&rdquo;></p>
-
-<p>    &lt;saml issuer=&ldquo;<a href="http://localhost/ContosoSTS/SamlTokenIssuer.ashx">http://localhost/ContosoSTS/SamlTokenIssuer.ashx</a>&rdquo;
-issuerPolicy=&ldquo;issuerPolicy&rdquo; establishSecurityContext=&ldquo;false&rdquo;
-renewExpiredSecurityContext=&ldquo;false&rdquo; requireDerivedKeys=&ldquo;true&rdquo;></p>
-
-<p>      &lt;trustedTokenIssuers></p>
-
-<p>        &lt;add></p>
-
-<p>          &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
-findValue=&ldquo;CN=ContosoSTS&rdquo; findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
-
-<p>        &lt;/add></p>
-
-<p>      &lt;/trustedTokenIssuers></p>
-
-<p>      &lt;protection></p>
-
-<p>        &lt;request signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
-IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
-
-<p>        &lt;response signatureOptions=&ldquo;IncludeAddressing,
-IncludeTimestamp, IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
-
-<p>        &lt;fault signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
-IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo; /></p>
-
-<p>      &lt;/protection></p>
-
-<p>    &lt;/saml></p>
-
-<p>  &lt;/policy></p>
-
-<p>&lt;/policies></p>
-
-<p>\</p>
-
-<p>This STS only accepts SAML tokens created by the Contoso&rsquo;s STS
-(trustedTokenIssuers element in the policy definition). In other words,
-it only accepts SAML tokens signed by any of the issuers specified in
-the &ldquo;trustedTokenIssuers&rdquo; element.</p>
-
-<p>\</p>
-
-<p>​5. SAML configuration for the Fabrikam&rsquo;s STS</p>
-
-<p>\</p>
-
-<p>&lt;WseSaml></p>
-
-<p>  &lt;samlTokenIssuer allowCachingToken=&ldquo;true&rdquo; ttlInSeconds=&ldquo;300&rdquo; ></p>
-
-<p>  &lt;!&mdash; the config for the saml token issuer, this is the only config we
-use. This token is used to sign the SAML token &mdash;></p>
-
-<p>  &lt;serviceTokens></p>
-
-<p>    &lt;!&mdash; SAML Authority certificate. Certificate used to sign the token
-&mdash;></p>
-
-<p>    &lt;add
-uri=&ldquo;<a href="http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue/SAML">http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue/SAML</a>&rdquo;</p>
-
-<p>storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo; findValue=&ldquo;CN=FabrikamSTS&rdquo;
-findType=&ldquo;FindBySubjectDistinguishedName&rdquo;/></p>
-
-<p>    &lt;!&mdash; Fabrikam service. Certificate used to encrypt the token
-subject &mdash;></p>
-
-<p>    &lt;add uri=&ldquo;<a href="http://localhost/FabrikamServices/PurchaseGoods.asmx">http://localhost/FabrikamServices/PurchaseGoods.asmx</a>&rdquo;</p>
-
-<p>storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
-findValue=&ldquo;CN=FabrikamServices&rdquo;
-findType=&ldquo;FindBySubjectDistinguishedName&rdquo;/></p>
-
-<p>  &lt;/serviceTokens></p>
-
-<p>  &lt;policy name=&ldquo;FabrikamSTS&rdquo;>&lt;/policy></p>
-
-<p>  &lt;/samlTokenIssuer></p>
-
-<p>&lt;/WseSaml></p>
-
-<p>\</p>
-
-<p>As you can see, this configuration is similar to the configuration in
-the Contoso STS. The only difference is the configuration for the
-service tokens.</p>
-
-<p>\</p>
-
-<p>​6. WSE policy file in the Fabrikam&rsquo;s service</p>
-
-<p>\</p>
-
-<p>&lt;policies></p>
-
-<p>  &lt;extensions></p>
-
-<p>    &lt;extension name=&ldquo;saml&rdquo;
-type=&ldquo;Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion.SamlPolicyAssertion,
-Microsoft.Practices.WSSP.WSE3.QuickStart.SamlAssertion&rdquo;/></p>
-
-<p>  &lt;/extensions></p>
-
-<p>  &lt;policy name=&ldquo;FabrikamServices&rdquo;></p>
-
-<p>    &lt;saml issuer=&ldquo;<a href="http://localhost/FabrikamSTS/SamlTokenIssuer.ashx">http://localhost/FabrikamSTS/SamlTokenIssuer.ashx</a>&rdquo;
-issuerPolicy=&ldquo;issuerPolicy&rdquo; establishSecurityContext=&ldquo;true&rdquo;
-renewExpiredSecurityContext=&ldquo;true&rdquo; requireDerivedKeys=&ldquo;true&rdquo;></p>
-
-<p>      &lt;trustedTokenIssuers></p>
-
-<p>        &lt;add></p>
-
-<p>          &lt;x509 storeLocation=&ldquo;LocalMachine&rdquo; storeName=&ldquo;My&rdquo;
-findValue=&ldquo;CN=FabrikamSTS&rdquo; findType=&ldquo;FindBySubjectDistinguishedName&rdquo; /></p>
-
-<p>        &lt;/add></p>
-
-<p>      &lt;/trustedTokenIssuers></p>
-
-<p>      &lt;protection></p>
-
-<p>        &lt;request signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
-IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
-
-<p>        &lt;response signatureOptions=&ldquo;IncludeAddressing,
-IncludeTimestamp, IncludeSoapBody&rdquo; encryptBody=&ldquo;true&rdquo; /></p>
-
-<p>        &lt;fault signatureOptions=&ldquo;IncludeAddressing, IncludeTimestamp,
-IncludeSoapBody&rdquo; encryptBody=&ldquo;false&rdquo; /></p>
-
-<p>      &lt;/protection></p>
-
-<p>    &lt;/saml></p>
-
-<p>   &lt;/policy></p>
-
-<p>&lt;/policies></p>
-
-<p>\</p>
-
-<p>Again, it is similar to the policy in the Fabrikam&rsquo;s STS but the
-configuration for the &#8221;trustedTokenIssuers&#8221; element changes.</p>
-
-<p>\</p>
-
-<p>Send me an email if are interested in the source code of this sample. </p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/25/">&larr; Older</a>
@@ -2485,6 +2215,10 @@ configuration for the &#8221;trustedTokenIssuers&#8221; element changes.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
       </li>
     
@@ -2498,10 +2232,6 @@ configuration for the &#8221;trustedTokenIssuers&#8221; element changes.</p>
     
       <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
   </ul>

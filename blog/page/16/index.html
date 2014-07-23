@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="According to the WS-Trust specification, a service consumer has a way to
-negotiate or ask for specific claims to the STS. Those claims (or some
-of &hellip;">
+  <meta name="description" content="The other day and friend of mine asked me about portable STS
+implementations, if I knew about any available solution that he could
+use on his company &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +81,104 @@ of &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/02/02/some-thoughts-on-portable-sts-p-sts-and-geneva-cardspace/">Some Thoughts on Portable STS (P-STS) and Geneva Cardspace</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-02-02T00:00:00-03:00" pubdate data-updated="true">Feb 2<span>nd</span>, 2009</time>
+        
+         | <a href="/blog/2009/02/02/some-thoughts-on-portable-sts-p-sts-and-geneva-cardspace/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>The other day and friend of mine asked me about portable STS
+implementations, if I knew about any available solution that he could
+use on his company. That reminded me of a conversation I had like two
+years ago with another developer working on custom .NET CLR framework
+version for portable devices (like smartcards). As part of that project,
+his team was also working on a TCP/IP communication stack for the
+device, and a http handler for accepting raw WS-TRUST messages. One goal
+for that project was to have a P-STS that could be interoperable with
+WCF. The idea seemed very promising at time.</p>
+
+<p>So, what is a PSTS after all ?. In a few words, it is a service running
+on a portable device that exposes WS-TRUST endpoints and can issue
+security tokens of any kind (e.g, SAML tokens).</p>
+
+<p>Making a search today on
+<a href="http://www.google.com.ar/search?hl=en&amp;q=Portable+Security+Token+Service">google</a>
+will drop several P-STS products or solutions,  some of them also claim
+to be interoperable with WCF and Microsoft Cardspace V1.</p>
+
+<p>In terms of identity management, A P-STS really makes a great different
+over existing authentication mechanisms like username/password, X509
+certificates or any other kind of two-factor authentication device. Most
+of these authentication mechanisms are widely accepted and used today in
+applications within corporate environments or applications that requires
+off-line support. However, sometimes they lack of a truly identity
+support, which means that they do not represent the user identity at all
+in the context of those applications, they are just a way of identifying
+returning users, or they are hard to extend with additional user&rsquo;s
+identity claims.</p>
+
+<p>I can not deny that X509 certificates have demonstrated to be a very
+effective and secure way to authenticate users. In addition, X509
+certificates can be extended with some custom attributes, the space is
+limited, but at least there is a possibility. However, X509 certificates
+represent hard tokens, the claims stored on a certificate can not be
+changed once it has been issued. Therefore, they are a good solution as
+long as their information do not change frequently over a period of
+time.</p>
+
+<p>Issue tokens (e.g SAML tokens) on other hand are more dynamic and
+cheaper to create. They usually have a short expiration time, they can
+issued and used  on the fly, but what is more important, they can carry
+custom information or claims about the subject it has been issued for.</p>
+
+<p>Some good news is that the Geneva Cardspace team has also announced some
+support for roaming scenarios in Cardspace V2. There will be a way to
+store our identity cards on a device (or somewhere in the cloud), which
+will be great to combine with a P-STS, no need to export/import the
+cards anymore. This scenario was not possible in Cardspace V1, and <a href="http://blogs.msdn.com/vbertocci/archive/2008/01/27/on-the-idea-of-portable-sts-p-sts.aspx">here
+is the
+explanation</a>.
+According to what Rich Randall mentioned in the PDC talk &ldquo;BB44 Identity:
+Windows CardSpace &#8220;Geneva&rdquo; Under the Hood &ldquo;, the future Cardspace
+interface could look as follow,</p>
+
+<p> <img src="/images/legacy/Infocard.jpg" alt="" /></p>
+
+<p> </p>
+
+<p>As you can see, it will not be long until we have complete and portable
+identity solutions for roaming scenarios.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -2030,308 +2128,6 @@ this a must read for developers interested in this area.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2008/11/25/my-durable-wcf-restful-calculator/">My Durable WCF RESTful Calculator</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2008-11-25T00:00:00-03:00" pubdate data-updated="true">Nov 25<span>th</span>, 2008</time>
-        
-         | <a href="/blog/2008/11/25/my-durable-wcf-restful-calculator/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>A durable service in WCF is by a definition a service that can persist
-all its internal state across calls in some durable storage. For every
-operation, the service state is retrieved from the storage, the
-operation is executed and finally the state is persisted again in the
-storage. Therefore, there is not need to keep the service instance idle
-in memory while waiting for client calls. It is equivalent to a long run
-session, which make this feature something ideal for long-running
-processes like workflows (In fact, workflow services are mount on top of
-this feature),</p>
-
-<p>In order to create a durable service, WCF provides a &ldquo;DurableService&rdquo;
-attribute (It&rsquo;s a service behavior) that can be applied to a regular
-service definition. The service itself has to be either serializable or
-have members decorated with DataContract or DataMember attributes to be
-serialized and stored in the persistent storage.</p>
-
-<p>The service activation, as in workflow services, is managed by the WCF
-context correlation mechanism. Once a service instance has been created,
-the client application has to propagate some context information(which
-includes the service instance id) in order to route all the new messages
-to the right service instance. Jesus has already discussed how this
-mechanism works more in detail in this
-<a href="http://weblogs.asp.net/gsusx/archive/2007/06/14/orcas-durable-services.aspx">post</a>
-(Although the post is bit old and some names have changed since then, it
-is worth reading).</p>
-
-<p>For purposes of this post, I decided to create a simple calculator
-example that exposes different operations through the classic http
-verbs,</p>
-
-<p>[ServiceContract(Namespace =
-&ldquo;<a href="http://Microsoft.WorkflowServices.Samples">http://Microsoft.WorkflowServices.Samples</a>&rdquo;)]</p>
-
-<p>public interface ICalculator</p>
-
-<p>{</p>
-
-<p>    [OperationContract()]</p>
-
-<p>    [WebInvoke(Method = &ldquo;POST&rdquo;)]</p>
-
-<p>    int PowerOn();</p>
-
-<p> </p>
-
-<p>    [OperationContract()]</p>
-
-<p>    [WebInvoke(Method = &ldquo;PUT&rdquo;, UriTemplate = &ldquo;add&rdquo;)]</p>
-
-<p>    int Add(int value);</p>
-
-<p> </p>
-
-<p>    [OperationContract()]</p>
-
-<p>    [WebInvoke(Method = &ldquo;PUT&rdquo;, UriTemplate = &ldquo;subtract&rdquo;)]</p>
-
-<p>    int Subtract(int value);</p>
-
-<p> </p>
-
-<p>    [OperationContract()]</p>
-
-<p>    [WebInvoke(Method = &ldquo;PUT&rdquo;, UriTemplate = &ldquo;multiply&rdquo;)]</p>
-
-<p>    int Multiply(int value);</p>
-
-<p> </p>
-
-<p>    [OperationContract()]</p>
-
-<p>    [WebInvoke(Method = &ldquo;PUT&rdquo;, UriTemplate = &ldquo;divide&rdquo;)]</p>
-
-<p>    int Divide(int value);</p>
-
-<p> </p>
-
-<p>    [OperationContract()]</p>
-
-<p>    [WebInvoke(Method = &ldquo;DELETE&rdquo;)]</p>
-
-<p>    void PowerOff();</p>
-
-<p>} </p>
-
-<p>The implementation of this service is also quite straightforward.</p>
-
-<p>[Serializable]</p>
-
-<p>[DurableService]</p>
-
-<p>public class DurableCalculator : ICalculator</p>
-
-<p>{</p>
-
-<p>    int _currentValue = 0;</p>
-
-<p> </p>
-
-<p>    [DurableOperation(CanCreateInstance=true)]</p>
-
-<p>    public int PowerOn()</p>
-
-<p>    {</p>
-
-<p>        return _currentValue;</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    [DurableOperation]</p>
-
-<p>    public int Add(int value)</p>
-
-<p>    {</p>
-
-<p>        return (_currentValue += value);</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    [DurableOperation]</p>
-
-<p>    public int Subtract(int value)</p>
-
-<p>    {</p>
-
-<p>        return (_currentValue &ndash;= value);</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    [DurableOperation]</p>
-
-<p>    public int Multiply(int value)</p>
-
-<p>    {</p>
-
-<p>        return (_currentValue *= value);</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    [DurableOperation]</p>
-
-<p>    public int Divide(int value)</p>
-
-<p>    {</p>
-
-<p>        return (_currentValue /= value);</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    [DurableOperation(CompletesInstance=true)]</p>
-
-<p>    public void PowerOff()</p>
-
-<p>    {</p>
-
-<p>    }</p>
-
-<p>}</p>
-
-<p>As you can see, I decorated the service implementation with the
-&ldquo;DurableService&rdquo; and &ldquo;DurableOperation&rdquo; attributes to make this simple
-service a durable one.</p>
-
-<p>WCF only comes with built-in support for transferring the context
-information between the client and service with Http Cookies or Soap
-Headers. While cookies would be the right mechanism for http REST
-services, unfortunately they do not work as expected. The path that WCF
-uses for creating the cookies is relative, so the context manager throws
-the following exception on the client side,</p>
-
-<p><strong><em>Unhandled Exception: System.Net.CookieException: An error occurred
-when parsing the Cookie header for Uri
-&lsquo;<a href="http://localhost:8080/DurableCalculator">http://localhost:8080/DurableCalculator</a>&rsquo;. &mdash;&ndash;>
-System.Net.CookieException: The &lsquo;Path&rsquo;=&lsquo;/DurableCalculator/PowerOn&rsquo; part
-of the cookie  is invalid.</em></strong></p>
-
-<p>As workaround, we can use for this scenario the custom context binding I
-created <a href="http://weblogs.asp.net/cibrax/archive/2008/10/30/rest-and-workflow-services-play-well-together-part-ii.aspx">some weeks
-ago</a>
-to exchange the context information as regular http headers.</p>
-
-<p>&lt;connectionStrings></p>
-
-<p>  &lt;add name=&ldquo;DurableService&rdquo; connectionString=&ldquo;Initial
-Catalog=SQLWorkflows;Data Source=.\SQLEXPRESS;Integrated
-Security=SSPI;&rdquo;/></p>
-
-<p>&lt;/connectionStrings></p>
-
-<p>&lt;system.serviceModel></p>
-
-<p>  &lt;services></p>
-
-<p>    &lt;service name=&ldquo;ServiceConsole.DurableCalculator&rdquo;
-behaviorConfiguration=&ldquo;MyServiceBehavior&rdquo;></p>
-
-<p>      &lt;endpoint address=&ldquo;&rdquo; behaviorConfiguration=&ldquo;MyServiceBehavior&rdquo;
-<strong>binding=&ldquo;webHttpContext&rdquo;</strong> contract=&ldquo;ServiceConsole.ICalculator&rdquo; /></p>
-
-<p>    &lt;/service></p>
-
-<p>&lt;/services></p>
-
-<p>&lt;behaviors></p>
-
-<p>  &lt;endpointBehaviors></p>
-
-<p>    &lt;behavior name=&ldquo;MyServiceBehavior&rdquo;></p>
-
-<p>      &lt;webHttp /></p>
-
-<p>    &lt;/behavior></p>
-
-<p>  &lt;/endpointBehaviors></p>
-
-<p>  &lt;serviceBehaviors></p>
-
-<p>    &lt;behavior name=&ldquo;MyServiceBehavior&rdquo;></p>
-
-<p>      &lt;persistenceProvider
-type=&ldquo;System.ServiceModel.Persistence.SqlPersistenceProviderFactory,
-System.WorkflowServices, Version=3.5.0.0, Culture=neutral,
-PublicKeyToken=31bf3856ad364e35&rdquo;
-connectionStringName=&ldquo;DurableService&rdquo;/></p>
-
-<p>    &lt;/behavior></p>
-
-<p>  &lt;/serviceBehaviors></p>
-
-<p>&lt;/behaviors></p>
-
-<p>&lt;extensions></p>
-
-<p>  &lt;bindingExtensions></p>
-
-<p>    &lt;add name=&ldquo;webHttpContext&rdquo;
-type=&ldquo;Microsoft.ServiceModel.Samples.WebHttpContextBindingCollectionElement,
-WebHttpContext, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null&rdquo;
-/></p>
-
-<p>  &lt;/bindingExtensions></p>
-
-<p>&lt;/extensions></p>
-
-<p>&lt;/system.serviceModel></p>
-
-<p>If you pay special attention to the configuration settings above, in
-addition to the binding configuration, I also included the
-&ldquo;persitenceProvider&rdquo; behavior for configuring the persistence provider
-that will serialize and store the service instance (In this case, the
-SQL server provider).</p>
-
-<p>Now, thanks to this support, my calculator service will survive to
-application and server restarts :). Download the complete code from this
-<a href="/images/legacy/DurableRestCalculator.zip">location</a>.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/17/">&larr; Older</a>
@@ -2349,6 +2145,10 @@ application and server restarts :). Download the complete code from this
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
       </li>
     
@@ -2362,10 +2162,6 @@ application and server restarts :). Download the complete code from this
     
       <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
   </ul>

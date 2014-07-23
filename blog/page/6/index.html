@@ -9,9 +9,8 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="As you might read in my latest post, Hermes is one our new pet projects
-in Tellago for doing Pub/Sub over http. The idea is simple, but still
-very &hellip;">
+  <meta name="description" content="As some of you might know, with the release of Node version 0.5.2, there
+is now support for Windows. It’s a single executable “node.exe” that you &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +80,138 @@ very &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/08/05/running-the-express-web-development-framework-on-node-for-windows/">Running the “Express” Web Development Framework on Node for Windows</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-08-05T00:00:00-03:00" pubdate data-updated="true">Aug 5<span>th</span>, 2011</time>
+        
+         | <a href="/blog/2011/08/05/running-the-express-web-development-framework-on-node-for-windows/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As some of you might know, with the release of Node version 0.5.2, there
+is now support for Windows. It’s a single executable “node.exe” that you
+need to start using node on your machine, and you can get it from this
+<a href="http://blog.nodejs.org/2011/07/22/node-v0-5-2/">location</a>.</p>
+
+<p>Express is a Sinatra inspired web development framework for Node. You
+can find more information about this framework
+<a href="http://jade-lang.com/">here</a>.</p>
+
+<p>Once you download node in your system, you need to setup an optional
+environment variable “NODE_PATH”, which points to the root path or
+location that Node will use to resolve the external module references. A
+module in Node represents an unit of code reuse, pretty similar to a
+library or an assembly in .NET, but it’s not something binary, it is
+just JavaScript code. You can also optionally set the node executable
+path in the “PATH” environmental variable to run the exe from any
+location.</p>
+
+<p>In my case, I created the following structure on my disk for running
+Node.</p>
+
+<p>d:></p>
+
+<p>&mdash;&mdash;> NodeJs</p>
+
+<p>&mdash;&mdash;&mdash;> Node.exe</p>
+
+<p>&mdash;&mdash;&mdash;> Applications</p>
+
+<p>“NODE_PATH” and “PATH” both points to the folder “NodeJS” on my “d:”
+drive. All the applications or samples will be deployed in the
+“Applications” folder.</p>
+
+<p>In the Linux world, Node also comes with a very useful package manager
+“NPM” that automatically resolves external module dependencies for you. 
+As analogy with other platforms like Ruby or .NET, “NPM” would be
+equivalent to Ruby GEMS or NuGet.</p>
+
+<p>Unfortunately, “NPM” is still not ready for being used on Windows, there
+are some technical details that need to be addressed to migrate the
+current implementation to windows. Good news is that Jeroen Janssen has
+created a similar implementation in Python so you can run it in windows.
+The name of this implementation is “ryppi” and you can get it from this
+<a href="https://github.com/japj/ryppi">github repository</a>. It’s a single Phyton
+script “ryppi.py” that currently works with Python 2.X only. If you have
+Python 2.x already installed on your system, you can run the script as
+follow to resolve an external dependency “python ryppi install
+&lt;PACKAGE_NAME>”.</p>
+
+<p>In the case of “Express”, you can run  “python ryppi install Express”
+from the location where you set the “NODE_PATH” variable. After running
+the command, you should be able to see a new folder “node_modules” in
+that location, and an “express” folder inside of it. That’s the only
+package you need to run the “Express” core, but you also might want to
+download “jade” and “saas” for using the <a href="http://jade-lang.com/">Jade View
+Engine</a> and the <a href="http://sass-lang.com/">SAAS</a>
+engine respectively.</p>
+
+<p>In addition to the “Express” core library, there is an node application
+you can use to setup the initial folder structure for your web
+applications. The “Express” application is available under
+“node_modules/express/bin/express”, and you can run it with node
+itself. Bad news is that this application does not run on windows
+because it uses the “child_process” module, which is not currently
+supported on windows. I modified that application to get rid of the
+“child_process” module and use all the functionality available in
+windows. This updated version is available to download from
+<a href="/images/legacy/express">here</a>.</p>
+
+<p>If you replace the version in “node_modules/express/bin/express” by the
+one I updated, you should able to run it with node as follow “node.exe
+./node_modules/express/bin/express –help”. That will show the help
+instructions to setup a new web application. A new web application with
+all the defaults can be created by just passing a name to that “express”
+application, “node.exe ./node_modules/express/bin/express mywebapp”.
+One thing to have in mind is that the application will be created as a
+new folder in the current location, so you might want to run it from
+“NodeJs/Applications” if you are planning to have the web application in
+there.</p>
+
+<p>The command will generate a new folder “mywebapp” with all the
+boilerplate structure you need to run a web application from scratch. 
+The folder structure looks like this,</p>
+
+<ul>
+<li><p>public (contains all the JavaScript, images and stylesheets that make
+up your site)</p></li>
+<li><p>views (contains all the views)</p></li>
+<li><p>app.js (the root application)</p></li>
+</ul>
+
+
+<p>You can start the web application by running “node app”, and that’s it,
+you have your first “express” application running on windows
+<img src="http://weblogs.asp.net/blogs/cibrax/wlEmoticon-smile_32D32B80.png" alt="Smile" />.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1673,95 +1804,6 @@ good thing is that the web can be your friend in this matter too.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2011/05/14/don-t-use-services-unless-you-necessarily-need-them/">Don’t Use Services Unless You Necessarily Need Them</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-05-14T00:00:00-03:00" pubdate data-updated="true">May 14<span>th</span>, 2011</time>
-        
-         | <a href="/blog/2011/05/14/don-t-use-services-unless-you-necessarily-need-them/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>There are multiple factors or requirements that might lead you to
-refactor some functionality into services. Here are some examples,</p>
-
-<ul>
-<li>You have explicit requirements to distribute work across machines.
-This is a typical example of smart client applications (i.e.
-Silverlight apps), which runs a thin UI layer and have all the
-backend logic as part of services.</li>
-<li>You need to run code remotely in a specific machine, so a good
-choice is to expose that as a service.  </li>
-<li>You need to expose certain functionally of your system to other
-parties in a loosely coupled manner. Other parties in this context
-could mean anything such as other applications in the same
-organization, third party client applications, etc.</li>
-<li>You have some CPU intensive code that you might want to execute in
-another machine to do some load balancing.</li>
-</ul>
-
-
-<p>If you don’t have any of these requirements, you might want to think
-twice before coming up with the crazy idea of building services because
-you just think it is cool. The idea of building services must born from
-explicit requirements in the system you are creating, and that must be
-planned carefully. </p>
-
-<p>A common problem I usually see is that many developers or architects opt
-to build services to follow old principles of work distribution like you
-find in N-Tier applications, so they end up with tons of services that
-only makes sense in the context of the application they are building,
-but not as a unit of reuse.  In many cases, these services are usually
-UI driven, which means they are tied to the UI workflow and does not
-have a well defined interface.</p>
-
-<p>Here is where I recommend to stick to the Martin Fowler’s <a href="http://martinfowler.com/bliki/FirstLaw.html">first law of
-distribution</a>, “Don’t
-distribute your objects”. Using a different layer with services for your
-business logic to solve scalability issues don’t necessarily makes sense
-these days. That’s a problem you can usually solve by scaling
-horizontally with additional web servers to support more user requests
-at the same time. If you still need to reuse some logic from different
-places within your application, nothing prevents you from moving all
-that logic to common libraries that run within the same process.</p>
-
-<p>Services when used incorrectly only adds more complexity to the solution
-you are creating. You have an additional layer to maintain and
-configure, and configuring services is not something trivial. Unless you
-don’t use a central repository, you will probably run into a
-configuration hell with configuration files everywhere.  This generally
-leads to maintainability issues in the long run.</p>
-
-<p>In conclusion, avoid distributing work with services unless you really
-need it.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/7/">&larr; Older</a>
@@ -1779,6 +1821,10 @@ need it.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/05/23/appfabric-outputcaching/">AppFabric OutputCaching</a>
       </li>
     
@@ -1792,10 +1838,6 @@ need it.</p>
     
       <li class="post">
         <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/11/22/automatic-client-cert-detection-in-adfs-2-dot-0/">Automatic Client Cert Detection in ADFS 2.0</a>
       </li>
     
   </ul>

@@ -4,7 +4,7 @@
   <title><![CDATA[Pablo Cibraro (Cibrax)]]></title>
   <link href="http://cibrax.me/atom.xml" rel="self"/>
   <link href="http://cibrax.me/"/>
-  <updated>2014-05-23T15:27:33-03:00</updated>
+  <updated>2014-07-23T10:05:44-03:00</updated>
   <id>http://cibrax.me/</id>
   <author>
     <name><![CDATA[Cibrax]]></name>
@@ -12,6 +12,51 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[SelfHost Utilities]]></title>
+    <link href="http://cibrax.me/blog/2014/07/23/selfhost-utilities/"/>
+    <updated>2014-07-23T09:49:00-03:00</updated>
+    <id>http://cibrax.me/blog/2014/07/23/selfhost-utilities</id>
+    <content type="html"><![CDATA[<p>Self Hosting a Http server is a very common scenario these days with the push that Microsoft and the rest of the community are giving to Owin. One of the challenges you often find in this scenario is the ability to use HTTPS, and I can say by experience that it&rsquo;s not something trivial. You have to run several commands, and usually generate a self signed certificate for SSL.</p>
+
+<p>As part of the project where I was working on, we had to automate many of these steps in the installation process so we came up with a set of utilities classes that call the underline Win32 APIS for generate the certificate and also do the required registrations for the namespace and port. The process for doing this with these classes is pretty straigforward as it is shown below,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="kt">var</span> <span class="n">cert</span> <span class="p">=</span> <span class="n">X509Util</span><span class="p">.</span><span class="n">CreateSelfSignedCertificate</span><span class="p">(</span><span class="n">Environment</span><span class="p">.</span><span class="n">MachineName</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">//Register a namespace reservation for everyone in localhost in port 9010</span>
+</span><span class='line'><span class="n">HttpServerApi</span><span class="p">.</span><span class="n">ModifyNamespaceReservation</span><span class="p">(</span><span class="k">new</span> <span class="n">Uri</span><span class="p">(</span><span class="s">&quot;https://localhost:9010&quot;</span><span class="p">),</span>
+</span><span class='line'>  <span class="s">&quot;everyone&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">HttpServerApiConfigurationAction</span><span class="p">.</span><span class="n">AddOrUpdate</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">//Register the SSL certificate for any address (0.0.0.0) in the port 9010.</span>
+</span><span class='line'><span class="n">HttpServerApi</span><span class="p">.</span><span class="n">ModifySslCertificateToAddressBinding</span><span class="p">(</span><span class="s">&quot;0.0.0.0&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="m">9010</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">cert</span><span class="p">.</span><span class="n">GetCertHash</span><span class="p">(),</span>
+</span><span class='line'>  <span class="n">System</span><span class="p">.</span><span class="n">Security</span><span class="p">.</span><span class="n">Cryptography</span><span class="p">.</span><span class="n">X509Certificates</span><span class="p">.</span><span class="n">StoreName</span><span class="p">.</span><span class="n">My</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">HttpServerApiConfigurationAction</span><span class="p">.</span><span class="n">AddOrUpdate</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>All the code is now available for you in github <a href="https://github.com/pcibraro/SelfHostUtilities">SelfHostUtilities</a>.</p>
+]]></content>
+    
+      <category scheme="http://cibrax.me/categories/" term="webapi" />
+    
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[AppFabric OutputCaching]]></title>
@@ -3287,128 +3332,6 @@ API, which is available also in github under
 <a href="https://github.com/pcibraro/hawknet">https://github.com/pcibraro/hawknet</a></p>
 
 <p>Enjoy!.</p>
-]]></content>
-    
-      <category scheme="http://cibrax.me/categories/" term=".net" />
-    
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Multitenancy in SQL Azure]]></title>
-    <link href="http://cibrax.me/blog/2012/12/06/multitenancy-in-sql-azure/"/>
-    <updated>2012-12-06T00:00:00-03:00</updated>
-    <id>http://cibrax.me/blog/2012/12/06/multitenancy-in-sql-azure</id>
-    <content type="html"><![CDATA[<p>If you are building a SaaS application in Windows Azure that relies on
-SQL Azure, it’s probably that you will need to support multiple tenants
-at database level.</p>
-
-<p>This is short overview of the different approaches you can use for
-support that scenario,</p>
-
-<p><strong>A different database per tenant</strong></p>
-
-<p>A new database is created and assigned when a tenant is provisioned.</p>
-
-<p>Pros</p>
-
-<ul>
-<li>Complete isolation between tenants. All the data for a tenant lives
-in a database only he can access.</li>
-</ul>
-
-
-<p>Cons</p>
-
-<ul>
-<li>It’s not cost effective. SQL Azure databases are not cheap, and the
-minimum size for a database is 1GB.  You might be paying for storage
-that you don’t really use.</li>
-<li>A different connection pool is required per database.</li>
-<li>Updates must be replicated across all the databases</li>
-<li>You need multiple backup strategies across all the databases</li>
-</ul>
-
-
-<p><strong>Multiple schemas in a database shared by all the tenants</strong></p>
-
-<p>A single database is shared among all the tenants, but every tenant is
-assigned to a different schema and database user.</p>
-
-<p>Pros</p>
-
-<ul>
-<li>You only pay for a single database.</li>
-<li>Data is isolated at database level. If the credentials for one
-tenant is compromised, the rest of the data for the other tenants is
-not.</li>
-</ul>
-
-
-<p>Cons</p>
-
-<ul>
-<li>You need to replicate all the database objects in every schema, so
-the number of objects can increase indefinitely.</li>
-<li>Updates must be replicated across all the schemas.</li>
-<li>The connection pool for the database must maintain a different
-connection per tenant (or set of credentials)</li>
-<li>A different user is required per tenant, which is stored at server
-level. You have to backup that user independently.</li>
-</ul>
-
-
-<p><strong>Centralizing the database access with store procedures in a database
-shared by all the tenants</strong></p>
-
-<p>A single database is shared among all the tenants, but nobody can read
-the data directly from the tables. All the data operations are performed
-through store procedures that centralize the access to the tenant data.
-The store procedures contain some logic to map the database user to an
-specific tenant.</p>
-
-<p>Pros</p>
-
-<ul>
-<li>You only pay for a single database.</li>
-<li>You only have a set of objects to maintain and backup.</li>
-</ul>
-
-
-<p>Cons</p>
-
-<ul>
-<li>There is no real isolation. All the data for the different tenants
-is shared in the same tables.</li>
-<li>You can not use traditional ORM like EF code first for consuming the
-data.</li>
-<li>A different user is required per tenant, which is stored at server
-level. You have to backup that user independently.</li>
-</ul>
-
-
-<p><strong>SQL Federations</strong></p>
-
-<p>A single database is shared among all the tenants, but a different
-federation is used per tenant. A federation in few words, it’s a
-mechanism for horizontal scaling in SQL Azure, which basically uses the
-idea of logical partitions to distribute data based on certain criteria.</p>
-
-<p>Pros</p>
-
-<ul>
-<li>You only have a single database with multiple federations.</li>
-<li>You can use filtering in the connections to pick the right
-federation, so any ORM could be used to consume the data.</li>
-</ul>
-
-
-<p>Cons</p>
-
-<ul>
-<li>There is no real isolation at that database level. The isolation is
-enforced programmatically with federations.</li>
-</ul>
-
 ]]></content>
     
       <category scheme="http://cibrax.me/categories/" term=".net" />
