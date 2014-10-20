@@ -107,17 +107,17 @@
 
 <div class="entry-content"><p>Versioning the Web API URL is probably one of most common choice among developers. Well-known APIs such as Twitter, Github or Facebook use this approach, but it does not mean it&rsquo;s the best way to do things. It presents some of the issues discussed below.</p>
 
-<ol>
+<ul>
 <li>A new version number represents a new set of resources. If you have to create a new version to introduce a breaking change in one resource, that change expands to all the resources.</li>
-</ol>
+</ul>
 
 
 <p>For example. You have two resources /orders and /customers. You need to introduce a new version to accommodate an schema change in orders. That implies adding a new version number in the URL for v1/orders and v1/customers. Although customers is still the same resource, it&rsquo;s now referenced as a new resource v1/customers.</p>
 
-<ol>
+<ul>
 <li><p>It&rsquo;s hard to introduce backward compatibility changes. You might want to introduce improvements or changes that new clients can use without affecting existing ones. You can create a new version number for this, but it will represent some unnecessary overhead. Existing clients won&rsquo;t be affected by the change so creating a new version does not seem to be right. Also, you will not want to keep the same version number as you will want clients to know which specific version they are targeting.</p></li>
 <li><p>It does not go along with the idea of introducing incremental changes. A new version number usually represents a major release. If you want to make those changes public as they become available, you need a new version number. However, you won&rsquo;t want to create v1, v1.1, v1.2 for the overhead discussed in #2.</p></li>
-</ol>
+</ul>
 
 
 <h2>A better approach for versioning.</h2>
