@@ -4,7 +4,7 @@
   <title><![CDATA[Pablo Cibraro (Cibrax)]]></title>
   <link href="http://cibrax.me/atom.xml" rel="self"/>
   <link href="http://cibrax.me/"/>
-  <updated>2014-10-20T15:26:06-03:00</updated>
+  <updated>2014-10-20T15:30:16-03:00</updated>
   <id>http://cibrax.me/</id>
   <author>
     <name><![CDATA[Cibrax]]></name>
@@ -37,14 +37,21 @@
 
 <p>Use an http header to specify version. If no http header is specified in the request message, stick to the latest version.</p>
 
-<p>/orders
-accepts-version: 1.0
-content-type: application/json</p>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/orders
+</span><span class='line'>accepts-version: 1.0
+</span><span class='line'>content-type: application/json</span></code></pre></td></tr></table></div></figure>
+
 
 <p>The &ldquo;accepts-version&rdquo; header represents the version the client can understand. If some changes were introduced in the resource representation that won&rsquo;t affect the client, the service might be able to return it. Let&rsquo;s say that you now have a new version 1.3 for /orders, which only contains backward compatibility changes. The server can return a header to inform that.</p>
 
-<p>/orders
-version: 1.3</p>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/orders
+</span><span class='line'>version: 1.3</span></code></pre></td></tr></table></div></figure>
+
 
 <p>The client will know a new version exists, which is also compatible with 1.0 so it can optionally upgrade to it. This approach also works for fine for dynamic languages or schema-less types like json.</p>
 
