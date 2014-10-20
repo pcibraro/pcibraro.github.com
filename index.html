@@ -9,7 +9,7 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="Self Hosting a Http server is a very common scenario these days with the push that Microsoft and the rest of the community are giving to Owin. One of &hellip;">
+  <meta name="description" content="Versioning the Web API URL is probably one of most common choice among developers. Well-known APIs such as Twitter, Github or Facebook use this &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -70,8 +70,6 @@
 <ul class="main-navigation">
   <li><a href="/">Blog</a></li>
   <li><a href="/blog/archives">Archives</a></li>
-  <li><a href="/categories">Categories</a></li>
-  <li><a href="/about">About</a></li>
 </ul>
 
 </nav>
@@ -79,6 +77,74 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/10/20/do-not-version-urls/">Do Not Version Urls</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-10-20T15:21:00-03:00" pubdate data-updated="true">Oct 20<span>th</span>, 2014</time>
+        
+         | <a href="/blog/2014/10/20/do-not-version-urls/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Versioning the Web API URL is probably one of most common choice among developers. Well-known APIs such as Twitter, Github or Facebook use this approach, but it does not mean it&rsquo;s the best way to do things. It presents some of the issues discussed below.</p>
+
+<ol>
+<li>A new version number represents a new set of resources. If you have to create a new version to introduce a breaking change in one resource, that change expands to all the resources.</li>
+</ol>
+
+
+<p>For example. You have two resources /orders and /customers. You need to introduce a new version to accommodate an schema change in orders. That implies adding a new version number in the URL for v1/orders and v1/customers. Although customers is still the same resource, it&rsquo;s now referenced as a new resource v1/customers.</p>
+
+<ol>
+<li><p>It&rsquo;s hard to introduce backward compatibility changes. You might want to introduce improvements or changes that new clients can use without affecting existing ones. You can create a new version number for this, but it will represent some unnecessary overhead. Existing clients won&rsquo;t be affected by the change so creating a new version does not seem to be right. Also, you will not want to keep the same version number as you will want clients to know which specific version they are targeting.</p></li>
+<li><p>It does not go along with the idea of introducing incremental changes. A new version number usually represents a major release. If you want to make those changes public as they become available, you need a new version number. However, you won&rsquo;t want to create v1, v1.1, v1.2 for the overhead discussed in #2.</p></li>
+</ol>
+
+
+<h2>A better approach for versioning.</h2>
+
+<p>Use an http header to specify version. If no http header is specified in the request message, stick to the latest version.</p>
+
+<p>/orders
+accepts-version: 1.0
+content-type: application/json</p>
+
+<p>The &ldquo;accepts-version&rdquo; header represents the version the client can understand. If some changes were introduced in the resource representation that won&rsquo;t affect the client, the service might be able to return it. Let&rsquo;s say that you now have a new version 1.3 for /orders, which only contains backward compatibility changes. The server can return a header to inform that.</p>
+
+<p>/orders
+version: 1.3</p>
+
+<p>The client will know a new version exists, which is also compatible with 1.0 so it can optionally upgrade to it. This approach also works for fine for dynamic languages or schema-less types like json.</p>
+
+<p>For embedded URLs or browser support, the http header can be replaced by an optional query string parameter ?accepts-version or ?v to make it shorter.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1591,162 +1657,6 @@ Secondly, we have defined a document, which specifies one or more entities that 
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/">Using the Katana Authentication Handlers With NancyFx</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-07-29T00:00:00-03:00" pubdate data-updated="true">Jul 29<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/07/29/using-the-katana-authentication-handlers-with-nancyfx/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Once you write an OWIN Middleware service, it can be reused everywhere
-as long as OWIN is supported. In my <a href="http://weblogs.asp.net/cibrax/archive/2013/07/26/writing-an-authenticationhandler-for-katana.aspx">last
-post</a>,
-I discussed how you could write an Authentication Handler in Katana for
-Hawk (HMAC Authentication). Good news is NancyFx can be run as an OWIN
-handler, so you can use many of existing middleware services, including
-the ones that are ship with Katana.</p>
-
-<p>Running NancyFx as a OWIN handler is pretty straightforward, and
-discussed in detail as part of the NancyFx documentation
-<a href="https://github.com/NancyFx/Nancy/wiki/Hosting-nancy-with-owin">here</a>.
-After run the steps described there and you have the application
-working, only a few more steps are required to register the additional
-middleware services.</p>
-
-<p>The example bellow shows how the Startup class is modified to include
-Hawk authentication.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">Startup</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">Configuration</span><span class="p">(</span><span class="n">IAppBuilder</span> <span class="n">app</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="n">app</span><span class="p">.</span><span class="n">UseHawkAuthentication</span><span class="p">(</span><span class="k">new</span> <span class="n">HawkAuthenticationOptions</span>
-</span><span class='line'>        <span class="p">{</span>
-</span><span class='line'>            <span class="n">Credentials</span> <span class="p">=</span> <span class="p">(</span><span class="n">id</span><span class="p">)</span> <span class="p">=&gt;</span>
-</span><span class='line'>            <span class="p">{</span>
-</span><span class='line'>                <span class="k">return</span> <span class="k">new</span> <span class="n">HawkCredential</span>
-</span><span class='line'>                <span class="p">{</span>
-</span><span class='line'>                    <span class="n">Id</span> <span class="p">=</span> <span class="s">&quot;dh37fgj492je&quot;</span><span class="p">,</span>
-</span><span class='line'>                    <span class="n">Key</span> <span class="p">=</span> <span class="s">&quot;werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn&quot;</span><span class="p">,</span>
-</span><span class='line'>                    <span class="n">Algorithm</span> <span class="p">=</span> <span class="s">&quot;hmacsha256&quot;</span><span class="p">,</span>
-</span><span class='line'>                    <span class="n">User</span> <span class="p">=</span> <span class="s">&quot;steve&quot;</span>
-</span><span class='line'>                <span class="p">};</span>
-</span><span class='line'>            <span class="p">}</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">app</span><span class="p">.</span><span class="n">UseNancy</span><span class="p">();</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This code registers the Hawk Authentication Handler on top of the OWIN
-pipeline, so it will try to authenticate the calls before the request
-messages are passed over to NancyFx.</p>
-
-<p>The authentication handlers in Katana set the user principal in the OWIN
-environment using the key “server.User”. The following code shows how
-you can get that principal in a NancyFx module,</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="k">public</span> <span class="k">class</span> <span class="nc">HomeModule</span> <span class="p">:</span> <span class="n">NancyModule</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="k">public</span> <span class="nf">HomeModule</span><span class="p">()</span>
-</span><span class='line'>  <span class="p">{</span>
-</span><span class='line'>    <span class="n">Get</span><span class="p">[</span><span class="s">&quot;/&quot;</span><span class="p">]</span> <span class="p">=</span> <span class="n">x</span> <span class="p">=&gt;</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>      <span class="kt">var</span> <span class="n">env</span> <span class="p">=</span> <span class="p">(</span><span class="n">IDictionary</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">object</span><span class="p">&gt;)</span><span class="n">Context</span><span class="p">.</span><span class="n">Items</span><span class="p">[</span><span class="n">NancyOwinHost</span><span class="p">.</span><span class="n">RequestEnvironmentKey</span><span class="p">];</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="k">if</span> <span class="p">(!</span><span class="n">env</span><span class="p">.</span><span class="n">ContainsKey</span><span class="p">(</span><span class="s">&quot;server.User&quot;</span><span class="p">)</span> <span class="p">||</span> <span class="n">env</span><span class="p">[</span><span class="s">&quot;server.User&quot;</span><span class="p">]</span> <span class="p">==</span> <span class="k">null</span><span class="p">)</span>
-</span><span class='line'>      <span class="p">{</span>
-</span><span class='line'>          <span class="k">return</span> <span class="n">HttpStatusCode</span><span class="p">.</span><span class="n">Unauthorized</span><span class="p">;</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="kt">var</span> <span class="n">identity</span> <span class="p">=</span> <span class="p">(</span><span class="n">ClaimsPrincipal</span><span class="p">)</span><span class="n">env</span><span class="p">[</span><span class="s">&quot;server.User&quot;</span><span class="p">];</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="k">return</span> <span class="s">&quot;Hello &quot;</span> <span class="p">+</span> <span class="n">identity</span><span class="p">.</span><span class="n">Identity</span><span class="p">.</span><span class="n">Name</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">};</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='csharp'><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Thanks to OWIN, you don’t know any details of how these cross cutting
-concerns can be implemented in every possible web application framework.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -1762,6 +1672,10 @@ concerns can be implemented in every possible web application framework.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/10/20/do-not-version-urls/">Do Not Version Urls</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
       </li>
     
@@ -1775,10 +1689,6 @@ concerns can be implemented in every possible web application framework.</p>
     
       <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
   </ul>

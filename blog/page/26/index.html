@@ -9,10 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="The &ldquo;WS-I Basic Security Profile Sample Application&rdquo; preview for WSE
-3.0 is out, you can get it in the GDN
-workspace.\
-This sample &hellip;">
+  <meta name="description" content="Nowadays, single sign-on is a common problem in many applications.
+Getting some credentials from a well-known authentication authority, \
+and use &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -73,8 +72,6 @@ This sample &hellip;">
 <ul class="main-navigation">
   <li><a href="/">Blog</a></li>
   <li><a href="/blog/archives">Archives</a></li>
-  <li><a href="/categories">Categories</a></li>
-  <li><a href="/about">About</a></li>
 </ul>
 
 </nav>
@@ -82,6 +79,78 @@ This sample &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2005/08/01/421233/">SAML Preview for WSE 3.0</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2005-08-01T00:00:00-03:00" pubdate data-updated="true">Aug 1<span>st</span>, 2005</time>
+        
+         | <a href="/blog/2005/08/01/421233/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Nowadays, single sign-on is a common problem in many applications.
+Getting some credentials from a well-known authentication authority, \
+and use them later in different places is a good idea, but sometimes is
+difficult to implement. \
+Different vendors have implemented solutions to solve this problem, but
+they lack a main attribute, &ldquo;Interoperability&rdquo;. \
+SAML comes to solve this problem, providing a secure and interoperable
+protocol based on xml. \
+SAML is an acronym for &ldquo;Security Assertions Markup Language&rdquo;, a
+vendor-neutral framework for exchanging security-related information
+called &ldquo;assertions&rdquo;.\
+Its first specification set (1.0) was developed by the &ldquo;OASIS&rdquo;
+consortium. \
+The SAML specification doesn&rsquo;t define any mechanism for authentication
+or authorization, instead, it establishes how identity and access
+information is exchanged.\</p>
+
+<h3>Sample Scenario</h3>
+
+<p><img src="/images/legacy/SAML1.gif" alt="" /></p>
+
+<p>This image illustrates a client using a SAML token to consume a web
+service.\
+The client and the service don&rsquo;t know each other, but both trust in the
+same authority. \
+So the client can authenticate once against that authority and use the
+SAML assertion to consume the service.\</p>
+
+<h3>SAML implementation for WSE 3.0</h3>
+
+<p>An initial preview for this implementation is available in this <a href="http://practices.gotdotnet.com/projects/saml">GDN
+workspace</a>, and it is
+based on the new policy framework shipped in WSE 3.0.\
+We are open to hear your feedback on on what you think about this
+solution, so, don&rsquo;t miss this opportunity.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1160,6 +1229,10 @@ can use it to install your database in any machine.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/10/20/do-not-version-urls/">Do Not Version Urls</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
       </li>
     
@@ -1173,10 +1246,6 @@ can use it to install your database in any machine.</p>
     
       <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
   </ul>

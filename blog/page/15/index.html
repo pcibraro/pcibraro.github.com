@@ -9,9 +9,8 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="I have been thinking for a while about what could be a good way to
-support brokered authentication for active REST clients. Something I did
-not want &hellip;">
+  <meta name="description" content="WCFMock, a mocking framework for WCF services. Not a very original name,
+but it was the first one that came out to my mind :). If you have been &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -72,8 +71,6 @@ not want &hellip;">
 <ul class="main-navigation">
   <li><a href="/">Blog</a></li>
   <li><a href="/blog/archives">Archives</a></li>
-  <li><a href="/categories">Categories</a></li>
-  <li><a href="/about">About</a></li>
 </ul>
 
 </nav>
@@ -81,6 +78,328 @@ not want &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/03/08/wcfmock-a-mocking-framework-for-wcf-services/">WCFMock, a Mocking Framework for WCF Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-03-08T00:00:00-03:00" pubdate data-updated="true">Mar 8<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/03/08/wcfmock-a-mocking-framework-for-wcf-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>WCFMock, a mocking framework for WCF services. Not a very original name,
+but it was the first one that came out to my mind :). If you have been
+following my blog for a while, you might notice that I discussed
+different approaches in the past to unit test WCF services,
+<a href="http://weblogs.asp.net/cibrax/archive/2008/05/16/unit-tests-for-wcf.aspx">here</a>
+and
+<a href="http://weblogs.asp.net/cibrax/archive/2008/12/11/testing-wcf-rest-services.aspx">here</a>.
+One of the major pains that you will find today for unit testing WCF
+services is the static operation context (OperationContext and
+WebOperationContext). If you service implementation relies on that
+context for doing something, you will have a hard time trying to test
+that functionality.</p>
+
+<p>For instance, it is very common in WCF REST services to use the context
+to set or get http status codes. With the current WCF bits, how can you
+do to unit test those services ?. The answer is WCFMock, a set of useful
+classes that will help you to remove all the explicit dependencies with
+the operation context, and still provide a good way to mock them from
+unit tests.</p>
+
+<p>Let&rsquo;s see how WCFMock works in practice with a very simple example,</p>
+
+<p>​1. You have a WCF REST service that returns a RSS feed with a catalog
+of products</p>
+
+<p>[ServiceContract]</p>
+
+<p>public interface IProductCatalog</p>
+
+<p>{</p>
+
+<p>    [WebGet(UriTemplate = &ldquo;?category={category}&rdquo;)]</p>
+
+<p>    [OperationContract]</p>
+
+<p>    Atom10FeedFormatter GetProducts(string category);</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>public Atom10FeedFormatter GetProducts(string category)</p>
+
+<p>{</p>
+
+<p>    var items = new List&lt;SyndicationItem>();</p>
+
+<p>    foreach(var product in repository.GetProducts(category))</p>
+
+<p>    {</p>
+
+<p>        items.Add(new SyndicationItem()</p>
+
+<p>        {</p>
+
+<p>            Id = String.Format(CultureInfo.InvariantCulture,
+&ldquo;<a href="http://products/">http://products/</a>{0}&rdquo;, product.Id),</p>
+
+<p>            Title = new TextSyndicationContent(product.Name),</p>
+
+<p>            LastUpdatedTime = new DateTime(2008, 7, 1, 0, 0, 0,
+DateTimeKind.Utc),</p>
+
+<p>            Authors =</p>
+
+<p>            {</p>
+
+<p>                new SyndicationPerson()</p>
+
+<p>                {</p>
+
+<p>                    Name = &ldquo;cibrax&rdquo;</p>
+
+<p>                }</p>
+
+<p>            },</p>
+
+<p>            Content = new TextSyndicationContent(string.Format(&ldquo;Category
+Id {0} &ndash; Price {1}&rdquo;,</p>
+
+<p>                product.Category, product.UnitPrice))</p>
+
+<p>        });</p>
+
+<p>    }</p>
+
+<p>    var feed = new SyndicationFeed()</p>
+
+<p>    {</p>
+
+<p>        Id = &ldquo;<a href="http://Products">http://Products</a>&rdquo;,</p>
+
+<p>        Title = new TextSyndicationContent(&ldquo;Product catalog&rdquo;),</p>
+
+<p>        Items = items</p>
+
+<p>    };</p>
+
+<p>    WebOperationContext.Current.OutgoingResponse.ContentType =
+&ldquo;application/atom+xml&rdquo;;</p>
+
+<p>    return feed.GetAtom10Formatter();</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p> </p>
+
+<p>This service implementation only relies on the WebOperationContext to
+set up the response content type, that is being done in the following
+line,</p>
+
+<p> </p>
+
+<p>WebOperationContext.Current.OutgoingResponse.ContentType =
+&ldquo;application/atom+xml&rdquo;;</p>
+
+<p> </p>
+
+<p>​2. You have now to find a way to get rid of that dependency so we can
+unit test that method. Here is where WCFMock comes to the rescue. The
+first thing you have to do is to define a new alias on top of your
+class,</p>
+
+<p>using WebOperationContext =
+System.ServiceModel.Web.MockedWebOperationContext;</p>
+
+<p>Optionally, you can wrap that sentence with a conditional compilation
+directive</p>
+
+<p>#if DEBUG</p>
+
+<p>using WebOperationContext =
+System.ServiceModel.Web.MockedWebOperationContext;</p>
+
+<p>#endif</p>
+
+<p>This is useful for instance, if you want to use the mocked version in
+development, and always the WCF version in production. That&rsquo;s all, you
+do not need to touch your existing service implementation at all, once
+you defined that alias, the service is ready to be tested.</p>
+
+<p>​3. For testing the service, I will use Moq, a pretty good mock
+framework created by my friend <a href="http://weblogs.asp.net/cazzu">Cazzu</a>.</p>
+
+<p>[TestClass]</p>
+
+<p>public class UnitTests</p>
+
+<p>{</p>
+
+<p>    [TestMethod]</p>
+
+<p>    public void ShouldGetProductsFeed()</p>
+
+<p>    {</p>
+
+<p>        ProductCatalog catalog = new ProductCatalog(</p>
+
+<p>            new InMemoryProductRepository(</p>
+
+<p>                new List&lt;Product>{</p>
+
+<p>                new Product { Id = &ldquo;1&rdquo;, Category = &ldquo;foo&rdquo;, Name = &ldquo;Foo1&rdquo;,
+UnitPrice = 1 },</p>
+
+<p>                new Product { Id = &ldquo;2&rdquo;, Category = &ldquo;bar&rdquo;, Name = &ldquo;bar2&rdquo;,
+UnitPrice = 2 }</p>
+
+<p>            }));</p>
+
+<p>        Mock&lt;IWebOperationContext> mockContext = new
+Mock&lt;IWebOperationContext> { DefaultValue = DefaultValue.Mock };</p>
+
+<p>        IEnumerable&lt;SyndicationItem> items;</p>
+
+<p>        <strong>using (new MockedWebOperationContext(mockContext.Object))</strong></p>
+
+<p><strong>        {</strong></p>
+
+<p><strong>            var formatter = catalog.GetProducts(&ldquo;foo&rdquo;);</strong></p>
+
+<p><strong>            items = formatter.Feed.Items;</strong></p>
+
+<p><strong>        }</strong></p>
+
+<p>        mockContext.VerifySet(c => c.OutgoingResponse.ContentType,
+&ldquo;application/atom+xml&rdquo;);</p>
+
+<p>        Assert.AreEqual(1, items.Count());</p>
+
+<p>        Assert.IsTrue(items.Any(i => i.Id == &ldquo;<a href="http://products/1">http://products/1</a>&rdquo; &amp;&amp;
+i.Title.Text == &ldquo;Foo1&rdquo;));</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>Two pieces of code deserves some special attention, the code for
+creating the mocked WebOperationContext and the code required for
+verifying the expectations.</p>
+
+<p>using (new MockedWebOperationContext(mockContext.Object))</p>
+
+<p>{</p>
+
+<p>    var formatter = catalog.GetProducts(&ldquo;foo&rdquo;);</p>
+
+<p>    items = formatter.Feed.Items;</p>
+
+<p>}</p>
+
+<p>That will insert the mockContext object in the Thread Local Storage so
+it can be accessed later in the service implementation.  </p>
+
+<p>The test also verifies that the ContentType header was set with the
+correct value in the operation,</p>
+
+<p>mockContext.VerifySet(c => c.OutgoingResponse.ContentType,
+&ldquo;application/atom+xml&rdquo;);</p>
+
+<p>As you can see, all the magic is done by the MockedWebOperationContext
+(There is also a MockedOperationContext to replace the
+OperationContext). The implementation of this class is quite simple,</p>
+
+<p>public class MockedWebOperationContext : IDisposable</p>
+
+<p>{</p>
+
+<p>    [ThreadStatic]</p>
+
+<p>    private static IWebOperationContext currentContext;</p>
+
+<p>    public MockedWebOperationContext(IWebOperationContext context)</p>
+
+<p>    {</p>
+
+<p>        currentContext = context;</p>
+
+<p>    }</p>
+
+<p>    public static IWebOperationContext Current</p>
+
+<p>    {</p>
+
+<p>        get</p>
+
+<p>        {</p>
+
+<p>            if (currentContext == null)</p>
+
+<p>            {</p>
+
+<p>                return new
+WebOperationContextWrapper(WebOperationContext.Current);</p>
+
+<p>            }</p>
+
+<p>            return currentContext;</p>
+
+<p>        }</p>
+
+<p>    }</p>
+
+<p>    public void Dispose()</p>
+
+<p>    {</p>
+
+<p>        currentContext = null;</p>
+
+<p>    }</p>
+
+<p>}</p>
+
+<p>The Current property of this class first tries to get an
+IWebOperationContext from the thread local storage (That could be set by
+the unit tests), and if none is available, it returns a wrapper to the
+original WCF context. As you can see, the overhead introduced by the
+class is minimal, it just a quick search in the TLS.</p>
+
+<p>The project is now available to download from Codeplex at this location,
+<a href="http://wcfmock.codeplex.com/">http://wcfmock.codeplex.com/</a></p>
+
+<p>Enjoy.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1106,53 +1425,6 @@ supported by WCF.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2009/02/04/buenos-aires-msdn-and-technet-briefing-2009/">Buenos Aires MSDN and Technet Briefing 2009</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2009-02-04T00:00:00-03:00" pubdate data-updated="true">Feb 4<span>th</span>, 2009</time>
-        
-         | <a href="/blog/2009/02/04/buenos-aires-msdn-and-technet-briefing-2009/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>I just got an email from <a href="http://blogs.msdn.com/masaez">Miguel Angel
-Saenz</a> confirming the date of the next
-biggest Microsoft event in Buenos Aires Argentina, &ldquo;MSDN briefing&rdquo;,
-which will take place on March 25th.</p>
-
-<p>They are now accepting proposals or suggestions for possible sessions in
-the event, or to give an specific name to event itself :).</p>
-
-<p>If you are interested in participating, check out <a href="http://www.puertadeenlace.net/">this
-website</a>.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/16/">&larr; Older</a>
@@ -1170,6 +1442,10 @@ website</a>.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/10/20/do-not-version-urls/">Do Not Version Urls</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
       </li>
     
@@ -1183,10 +1459,6 @@ website</a>.</p>
     
       <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
   </ul>

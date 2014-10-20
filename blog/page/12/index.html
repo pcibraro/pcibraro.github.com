@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="WS-Trust 1.4 introduced a new feature called as “ActAs” for addressing
-common scenarios where an application needs to call a service on behalf
-of the &hellip;">
+  <meta name="description" content="Windows AppFabric (Previously known as Dublin) introduces a new built-in
+mechanism for monitoring the execution of the WCF services, all the
+events &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -72,8 +72,6 @@ of the &hellip;">
 <ul class="main-navigation">
   <li><a href="/">Blog</a></li>
   <li><a href="/blog/archives">Archives</a></li>
-  <li><a href="/categories">Categories</a></li>
-  <li><a href="/about">About</a></li>
 </ul>
 
 </nav>
@@ -81,6 +79,146 @@ of the &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/02/01/monitoring-your-wcf-services-with-appfabric/">Monitoring Your WCF Services With AppFabric</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-02-01T00:00:00-03:00" pubdate data-updated="true">Feb 1<span>st</span>, 2010</time>
+        
+         | <a href="/blog/2010/02/01/monitoring-your-wcf-services-with-appfabric/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Windows AppFabric (Previously known as Dublin) introduces a new built-in
+mechanism for monitoring the execution of the WCF services, all the
+events generated during the execution or the interaction with other
+services. While the message trace capabilities in WCF already provided
+some detail about the execution and the exchanged messages, it was a
+feature more suitable for troubleshooting and error diagnosis.   The
+performance counters did not help in this area either, as they provided
+live service usage statistics, which sometimes resulted very useful to
+determine possible bottlenecks.</p>
+
+<p>When this monitoring mechanism is enabled for IIS Hosted services, the
+AppFabric extension will capture different events during the execution
+of the services. The level of detail or number of events that you want
+to capture is something that can be adjusted through configuration.</p>
+
+<p>In order to configure monitoring for an existing WCF service, you need
+to add the following section to the web.config file,</p>
+
+<p>&lt;microsoft.applicationServer> \
+    &lt;monitoring> \
+      \
+      &lt;default enabled=&ldquo;true&rdquo;
+connectionStringName=&ldquo;DefaultApplicationServerExtensions&rdquo;
+monitoringLevel=&ldquo;Troubleshooting&rdquo; /> \
+    &lt;/monitoring> \
+&lt;/microsoft.applicationServer></p>
+
+<p>The connectionStringName attribute should contain a reference to an
+existing connection string in the ConnectionString section, and that’s
+the database used by AppFabric to store the monitoring events.</p>
+
+<p>The monitoringLevel attribute specifies the number of events you want to
+capture in a service execution. The possible values for this setting
+are,</p>
+
+<ul>
+<li>Off (monitoringLevel=&ldquo;Off”): No data is collected. It would be
+equivalent to have monitoring disabled.</li>
+<li>Errors only (monitoringLevel=&ldquo;ErrorsOnly”):  Only errors and
+warnings events are collected. This is very useful when you don’t
+want to incur into performance issues for collecting application
+events but you still want to know about any error may happen during
+the execution.</li>
+<li>Health Monitoring (monitoringLevel=HealthMonitoring): This is the
+default level and collects enough application events to show
+different metrics in the AppFabric dashboard.</li>
+<li>End To End Monitoring (monitoringLevel=&ldquo;EndToEndMonitoring”). It
+collects all the events from the Health Monitoring level, plus
+additional events to reconstruct the message flow. For example,
+Service A called Service B. You will get also events representing
+info about the Service B call if monitoring is enabled on Service A.</li>
+<li>Troubleshooting (monitoringLevel=&ldquo;Troubleshooting&rdquo;). This is the
+most verbose of all, so it is appropriate for troubleshooting an
+unhealthy application.</li>
+</ul>
+
+
+<p>All this monitoring infrastructure is layered on top of “Event Tracing
+for Windows (ETW)”, which provides a very efficient and optimized
+mechanism for capturing application events without affecting the
+application performance at all. In addition, this infrastructure is
+complemented with a windows service for collecting the events (A ETW
+listener basically), and providers for dumping all the information to
+different storages. This last part is totally extensible, and you can
+configure your own implementation by implementing the interface
+Microsoft.ApplicationServer.Monitoring.EventCollector.IBulkCopy in the
+Monitoring.ApplicationServer.Monitoring assembly. This interface looks
+quite simple to implement, and AppFabric ships with a default
+implementation for SQL Server.</p>
+
+<p>public interface IBulkCopy \
+{ \
+        int BatchSize { get; set; } \
+        DbConnection Connection { get; set; } \
+        string DestinationTableName { get; set; }</p>
+
+<p>        void WriteToServer(DataTable dataTable); \
+}</p>
+
+<p>The windows service for collecting the ETW events can be found under the
+folder,
+C:\Windows\System32\ApplicationServerExtensions\Microsoft.ApplicationServer.ServiceHost.exe,
+and it must be started in order to capture and dump the events in the
+configured IBulkCopy provider.</p>
+
+<p>In addition, if you want to correlate all the service calls within a
+single execution (For example, Service A calling Service B, and B
+calling C) under a unique global identifier, so you can group all the
+events under that identifier, there is a new &lt;endToEndTracing> element
+under the &lt;system.ServiceModel/diagnostics> section that you can use.</p>
+
+<p>&lt;system.ServiceModel> \
+  &lt;diagnostics etwProviderId=&ldquo;7d98f890-ff8d-4311-be4f-e679103ba7cf&rdquo;> \
+    &lt;endToEndTracing propagateActivity=&ldquo;true&rdquo; messageFlowTracing=&ldquo;true&rdquo;
+/> \
+  &lt;/diagnostics> \
+&lt;/system.ServiceModel></p>
+
+<p>For example, the following image shows two events that are correlated
+under the same E2EActivityId, which represents a service “HelloWorld”
+calling an operation in another “EchoService” service.</p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/EndToEndTracing_51E2E059.jpg"><img src="http://weblogs.asp.net/blogs/cibrax/EndToEndTracing_thumb_2D8DD60A.jpg" title="EndToEndTracing" alt="EndToEndTracing" /></a></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -960,127 +1098,6 @@ of WCF :).</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2009/06/25/a-bad-idea-ef-entities-over-wcf/">A Bad Idea, EF Entities Over WCF</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2009-06-25T00:00:00-03:00" pubdate data-updated="true">Jun 25<span>th</span>, 2009</time>
-        
-         | <a href="/blog/2009/06/25/a-bad-idea-ef-entities-over-wcf/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Do you want to see something very ugly ?. Try to send a complete EF
-entity directly as a data contract over the wire with WCF,</p>
-
-<p>&lt;Order
-xmlns:i=&ldquo;<a href="http://www.w3.org/2001/XMLSchema-instance">http://www.w3.org/2001/XMLSchema-instance</a>&rdquo;
-z:Id=&ldquo;i1&rdquo;
-xmlns:z=&ldquo;<a href="http://schemas.microsoft.com/2003/10/Serialization/">http://schemas.microsoft.com/2003/10/Serialization/</a>&rdquo;
-xmlns=&ldquo;<a href="http://schemas.datacontract.org/2004/07/ClassLibrary2">http://schemas.datacontract.org/2004/07/ClassLibrary2</a>&rdquo;>
-\
-  &lt;EntityKey
-xmlns:d2p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data">http://schemas.datacontract.org/2004/07/System.Data</a>&rdquo;
-i:nil=&ldquo;true&rdquo;
-xmlns=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses">http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses</a>&rdquo;
-/> \
-  &lt;Description>My new order&lt;/Description> \
-  &lt;OrderId>1&lt;/OrderId> \
-  &lt;OrderItem> \
-    &lt;OrderItem z:Id=&ldquo;i2&rdquo;> \
-      &lt;EntityKey
-xmlns:d4p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data">http://schemas.datacontract.org/2004/07/System.Data</a>&rdquo;
-i:nil=&ldquo;true&rdquo;
-xmlns=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses">http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses</a>&rdquo;
-/> \
-      &lt;Currency>USD&lt;/Currency> \
-      &lt;Description>item 1&lt;/Description> \
-      &lt;ItemId>1&lt;/ItemId> \
-      &lt;Order z:Ref=&ldquo;i1&rdquo; /> \
-      &lt;OrderReference
-xmlns:d4p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses">http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses</a>&rdquo;>
-\
-        &lt;d4p1:EntityKey
-xmlns:d5p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data">http://schemas.datacontract.org/2004/07/System.Data</a>&rdquo;
-i:nil=&ldquo;true&rdquo; /> \
-      &lt;/OrderReference> \
-      &lt;UnitPrice>10&lt;/UnitPrice> \
-    &lt;/OrderItem> \
-    &lt;OrderItem z:Id=&ldquo;i3&rdquo;> \
-      &lt;EntityKey
-xmlns:d4p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data">http://schemas.datacontract.org/2004/07/System.Data</a>&rdquo;
-i:nil=&ldquo;true&rdquo;
-xmlns=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses">http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses</a>&rdquo;
-/> \
-      &lt;Currency>USD&lt;/Currency> \
-      &lt;Description>item 2&lt;/Description> \
-      &lt;ItemId>2&lt;/ItemId> \
-      &lt;Order z:Ref=&ldquo;i1&rdquo; /> \
-      &lt;OrderReference
-xmlns:d4p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses">http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses</a>&rdquo;>
-\
-        &lt;d4p1:EntityKey
-xmlns:d5p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data">http://schemas.datacontract.org/2004/07/System.Data</a>&rdquo;
-i:nil=&ldquo;true&rdquo; /> \
-      &lt;/OrderReference> \
-      &lt;UnitPrice>145&lt;/UnitPrice> \
-    &lt;/OrderItem> \
-  &lt;/OrderItem> \
-&lt;/Order></p>
-
-<p>That is the result of serializing a complete object graph. I do not know
-what the folks in Microsoft were thinking when they decided to enable a
-feature like this. They made a good work teaching us about how evil
-Datasets were for interoperability with other platforms, and now they
-came up with a solution like this, no way.</p>
-
-<p>I always like the idea of making boundaries explicit, that is the
-approach the WCF team took with the first version of the framework
-(Every data contract should be decorated with DataContract and
-DataMember attributes).  If you break that rule, you will end up with
-things like this.</p>
-
-<p>I know this a solution for people that want to develop things quickly
-with no need to create DTOs, and do all the mapping stuff, but there are
-good tools and frameworks like
-<a href="http://www.codeplex.com/AutoMapper">AutoMapper</a> to help with that. Or
-you can use ADO.NET Data Services today, which is also prepared to
-handle this kind of scenarios, all the transformations between layers
-are made by the framework itself, and still you get a very nice RESTful
-api. We still need some more features in ADO.NET DS to have a more
-complete framework, there is not good support today for injecting
-business logic, <a href="http://weblogs.asp.net/cibrax/archive/2009/06/08/injecting-custom-logic-in-ado-net-data-services.aspx">it can be
-done</a>
-but it is complicated, it looks like the <a href="http://johnpapa.net/silverlight/ado-net-data-services-v1-5-is-on-its-way/">next
-version</a>
-will address that aspect better.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/13/">&larr; Older</a>
@@ -1098,6 +1115,10 @@ will address that aspect better.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/10/20/do-not-version-urls/">Do Not Version Urls</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
       </li>
     
@@ -1111,10 +1132,6 @@ will address that aspect better.</p>
     
       <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
   </ul>

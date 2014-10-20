@@ -9,8 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="A durable service in WCF is by a definition a service that can persist
-all its internal state across calls in some durable storage. For every &hellip;">
+  <meta name="description" content="It&rsquo;s pretty interesting to see how useful workflow services can be
+sometimes, specially for business applications that require
+orchestrating &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -71,8 +72,6 @@ all its internal state across calls in some durable storage. For every &hellip;"
 <ul class="main-navigation">
   <li><a href="/">Blog</a></li>
   <li><a href="/blog/archives">Archives</a></li>
-  <li><a href="/categories">Categories</a></li>
-  <li><a href="/about">About</a></li>
 </ul>
 
 </nav>
@@ -80,6 +79,74 @@ all its internal state across calls in some durable storage. For every &hellip;"
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/12/03/wcf-workflow-services-in-business-applications/">WCF Workflow Services in Business Applications</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-12-03T00:00:00-03:00" pubdate data-updated="true">Dec 3<span>rd</span>, 2008</time>
+        
+         | <a href="/blog/2008/12/03/wcf-workflow-services-in-business-applications/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>It&rsquo;s pretty interesting to see how useful workflow services can be
+sometimes, specially for business applications that require
+orchestrating several back-end services calls.</p>
+
+<p>As one of the programmers involved in the development of the WS-I Sample
+application for .NET, an application that demonstrates  how to build
+interoperable web services in .NET using the WS-I Basic Profile 1.0
+(Each vendor in the WS-I working group basically implemented the same
+application using its development platform, more information can be
+found
+<a href="http://www.ws-i.org/deliverables/workinggroup.aspx?wg=sampleapps">here</a>),
+it was a surprise to me to find another implementation as part of the
+WCF SDK, made this time all declaratively through WCF workflow services
+and just a few activities. To give you an idea, the original version of
+the same application took us some days and hundred lines of code just to
+have something complete and working.</p>
+
+<p>The SDK version is available under the folder, [SDK
+Folder]\WCF_WF_CardSpace_Samples\WCF\Scenario\WorkflowServices\Conversations</p>
+
+<p>Workflow services, initially introduced in WCF 3.5 with the Receive and
+Send activities, will now take a very important role as part of the Oslo
+vision. We will have the opportunity to write pure declarative
+long-running services with XAML, including all the WCF contracts for
+receiving/sending messages. This will make possible to store the
+complete workflow representation in the Oslo repository, and take later
+full control of this workflow&rsquo;s instances from Dublin, the new hosting
+environment for long-running services. David Chappell has written an
+excellent article about WF 4.0, Dublin the oslo vision, you can find it
+<a href="http://www.davidchappell.com/blog/2008/11/first-look-at-wf-40-dublin-and-oslo.html">here</a>,
+this a must read for developers interested in this area.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -765,16 +832,16 @@ with the ADO.NET data service</strong></p>
 
 <p>        _contacts = new Contact[]{</p>
 
-<p>          new Contact(){ Id=0, Name=&ldquo;Mike&rdquo;, Email=&ldquo;<a href="&#x6d;&#x61;&#105;&#x6c;&#116;&#111;&#58;&#x6d;&#105;&#x6b;&#101;&#64;&#x63;&#x6f;&#x6e;&#x74;&#x6f;&#x73;&#x6f;&#x2e;&#x63;&#x6f;&#x6d;">&#x6d;&#x69;&#107;&#x65;&#64;&#x63;&#111;&#110;&#x74;&#x6f;&#115;&#111;&#x2e;&#99;&#111;&#x6d;</a>&rdquo;,
+<p>          new Contact(){ Id=0, Name=&ldquo;Mike&rdquo;, Email=&ldquo;<a href="&#109;&#97;&#x69;&#x6c;&#116;&#111;&#x3a;&#x6d;&#x69;&#107;&#x65;&#64;&#99;&#111;&#x6e;&#x74;&#111;&#x73;&#111;&#x2e;&#99;&#111;&#x6d;">&#x6d;&#x69;&#107;&#101;&#x40;&#x63;&#x6f;&#110;&#x74;&#111;&#x73;&#x6f;&#46;&#x63;&#111;&#x6d;</a>&rdquo;,
 Owner = &ldquo;jane&rdquo; },</p>
 
-<p>          new Contact(){ Id=1, Name=&ldquo;Saaid&rdquo;, Email=&ldquo;<a href="&#109;&#97;&#x69;&#x6c;&#116;&#111;&#x3a;&#83;&#97;&#97;&#x69;&#100;&#x40;&#104;&#x6f;&#116;&#109;&#97;&#105;&#108;&#46;&#x63;&#111;&#109;">&#x53;&#x61;&#97;&#105;&#100;&#x40;&#104;&#x6f;&#116;&#109;&#x61;&#105;&#108;&#46;&#99;&#x6f;&#x6d;</a>&rdquo;,
+<p>          new Contact(){ Id=1, Name=&ldquo;Saaid&rdquo;, Email=&ldquo;<a href="&#x6d;&#x61;&#105;&#x6c;&#x74;&#x6f;&#x3a;&#83;&#97;&#x61;&#105;&#100;&#64;&#x68;&#x6f;&#116;&#x6d;&#97;&#x69;&#x6c;&#46;&#99;&#x6f;&#109;">&#x53;&#x61;&#97;&#x69;&#100;&#x40;&#x68;&#111;&#116;&#109;&#97;&#105;&#108;&#x2e;&#x63;&#x6f;&#x6d;</a>&rdquo;,
 Owner = &ldquo;jane&rdquo;},</p>
 
-<p>          new Contact(){ Id=2, Name=&ldquo;John&rdquo;, Email=&ldquo;<a href="&#109;&#97;&#105;&#108;&#x74;&#111;&#x3a;&#106;&#49;&#x32;&#x33;&#x40;&#108;&#x69;&#118;&#101;&#x2e;&#99;&#x6f;&#x6d;">&#x6a;&#49;&#50;&#x33;&#64;&#x6c;&#105;&#118;&#101;&#46;&#99;&#x6f;&#x6d;</a>&rdquo;, Owner
+<p>          new Contact(){ Id=2, Name=&ldquo;John&rdquo;, Email=&ldquo;<a href="&#x6d;&#97;&#x69;&#x6c;&#x74;&#x6f;&#58;&#106;&#x31;&#50;&#51;&#64;&#x6c;&#x69;&#x76;&#x65;&#46;&#x63;&#111;&#x6d;">&#x6a;&#49;&#50;&#x33;&#64;&#108;&#105;&#x76;&#101;&#x2e;&#99;&#x6f;&#x6d;</a>&rdquo;, Owner
 = &ldquo;john&rdquo;},</p>
 
-<p>          new Contact(){ Id=3, Name=&ldquo;Pablo&rdquo;, Email=&ldquo;<a href="&#x6d;&#x61;&#105;&#108;&#x74;&#x6f;&#58;&#x50;&#97;&#x62;&#x6c;&#111;&#64;&#109;&#x61;&#x69;&#x6c;&#46;&#x63;&#x6f;&#109;">&#x50;&#x61;&#98;&#x6c;&#111;&#64;&#x6d;&#x61;&#x69;&#x6c;&#x2e;&#x63;&#111;&#109;</a>&rdquo;,
+<p>          new Contact(){ Id=3, Name=&ldquo;Pablo&rdquo;, Email=&ldquo;<a href="&#x6d;&#x61;&#x69;&#108;&#x74;&#x6f;&#x3a;&#x50;&#x61;&#x62;&#108;&#111;&#x40;&#x6d;&#x61;&#105;&#x6c;&#x2e;&#x63;&#111;&#109;">&#x50;&#97;&#98;&#108;&#x6f;&#64;&#109;&#97;&#105;&#108;&#46;&#x63;&#111;&#109;</a>&rdquo;,
 Owner = &ldquo;john&rdquo;}};</p>
 
 <p>    }</p>
@@ -1831,424 +1898,6 @@ location</a>.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2008/10/24/rest-and-workflow-services-play-well-together/">REST and Workflow Services Play Well Together</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2008-10-24T00:00:00-03:00" pubdate data-updated="true">Oct 24<span>th</span>, 2008</time>
-        
-         | <a href="/blog/2008/10/24/rest-and-workflow-services-play-well-together/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>REST is not just about CRUD interfaces for your services, a complete
-long-running workflow can be modeled through the basic verbs as well. As
-my friend <a href="http://weblogs.asp.net/gsusx/archive/2008/10/03/new-rest-quot-must-read-quot-papers.aspx">Jesus
-mentioned</a>,
-the article &ldquo;<a href="http://www.infoq.com/articles/webber-rest-workflow">How to get a cup of
-coffee</a>&rdquo; represents
-an excellent source about this topic.</p>
-
-<p>The example I will show here is based on that article, during the course
-of this post I will try to illustrate all the steps required to
-implement a workflow as the one mentioned there using WF services.
-Unfortunately, no examples exist (or at least I could not find any)
-about how to configure the WCF web model to use the new WF services, so
-I decided to create a new one from scratch.</p>
-
-<p>This example only illustrates the workflow from the customer point of
-view, he can place an order, pay it and wait for his drink. He can also
-modify the order in the middle before it is paid.</p>
-
-<p> <img src="/images/legacy/OrderWorkflow.jpg" alt="" /></p>
-
-<p>The interface for our REST service will looks like this:</p>
-
-<p>[ServiceContract]</p>
-
-<p>public interface IOrderService</p>
-
-<p>{</p>
-
-<p>  [OperationContract]</p>
-
-<p>  [WebInvoke(Method=&ldquo;POST&rdquo;, UriTemplate=&ldquo;order&rdquo;)]</p>
-
-<p>  Order PlaceOrder(Order order);</p>
-
-<p> </p>
-
-<p>  [OperationContract]</p>
-
-<p>  [WebInvoke(Method = &ldquo;PUT&rdquo;, UriTemplate = &ldquo;order/{id}&rdquo;)]</p>
-
-<p>  Order UpdateOrder(string id, Order order);</p>
-
-<p> </p>
-
-<p>  [OperationContract]</p>
-
-<p>  [WebInvoke(Method=&ldquo;PUT&rdquo;, UriTemplate=&ldquo;payment/order/{id}&rdquo;)]</p>
-
-<p>  void PayOrder(string id, Payment payment);</p>
-
-<p>}</p>
-
-<p>Only three operations available, each one maps exactly with one
-ReceiveActivity in the workflow. For instance, the receive activity
-OnOrderPlaced waits for a client call to the PlaceOrder operation and
-then moves the workflow to the next state, which is &ldquo;OrderPlaced&rdquo; in
-this case. While the workflow is in the state &ldquo;OrderPlaced&rdquo;, only the
-operations UpdateOrder and PayOrder can be executed by the client (If he
-try to execute PlaceOrder again, it will receive a 404 http error, &ldquo;Not
-found&rdquo;).</p>
-
-<p><img src="/images/legacy/OnOrderPlaced.jpg" alt="" /></p>
-
-<p>The OnOrderPlacedCode is an simple code activity that contains the
-actual operation implementation. I used a code activity for a sake of
-simplicity, a custom activity for creating the order could also be used
-there.</p>
-
-<p>The code for this activity is quite simple, most of it is hard-coded,</p>
-
-<p>private void OnOrderPlacedCode_ExecuteCode(object sender, EventArgs e)</p>
-
-<p>{</p>
-
-<p>  currentOrder = new Order();</p>
-
-<p>  currentOrder.OrderId = Guid.NewGuid().ToString();</p>
-
-<p>  currentOrder.Cost = (receivedOrder.Drink == &ldquo;latte&rdquo;) ? 6 : 10;</p>
-
-<p>  currentOrder.Drink = receivedOrder.Drink;</p>
-
-<p>  currentOrder.Next = new Next[] {</p>
-
-<p>      new Next</p>
-
-<p>      {</p>
-
-<p>         Rel = &ldquo;<a href="http://starbucks.example.org/payment">http://starbucks.example.org/payment</a>&rdquo;,</p>
-
-<p>         Uri = &ldquo;<a href="http://localhost:8000/payment/order/">http://localhost:8000/payment/order/</a>&rdquo; +
-currentOrder.OrderId.ToString(),</p>
-
-<p>      },</p>
-
-<p>      new Next</p>
-
-<p>      {</p>
-
-<p>         Rel = &ldquo;<a href="http://starbucks.example/order/update">http://starbucks.example/order/update</a>&rdquo;,</p>
-
-<p>         Uri = &ldquo;<a href="http://localhost:8000/order/">http://localhost:8000/order/</a>&rdquo; +
-currentOrder.OrderId.ToString()</p>
-
-<p>      }};</p>
-
-<p> </p>
-
-<p>  //Persist the order in some place&hellip;..</p>
-
-<p> </p>
-
-<p>  WebOperationContext.Current.OutgoingResponse.StatusCode =
-System.Net.HttpStatusCode.Created;</p>
-
-<p>}</p>
-
-<p>currentOrder contains the instance of the order that will be returned by
-the service operation whereas receivedOrder is the order sent by the
-client application. This was map to the operation signature in the
-receive activity,</p>
-
-<p> <img src="/images/legacy/ReceiveOrderSettings.jpg" alt="" /></p>
-
-<p>Once the workflow is ready to be used, all we need is to configure the
-service host so the client application can start consuming the
-operations. At this point, we will face three issues:</p>
-
-<p>​1. If you want to host a WF service, a WorkflowServiceHost class has to
-be used in the host program. Therefore, we will not have all the
-automatic infrastructure configuration provided by WebServiceHost, all
-the configuration must be done manually. It would be great to have here
-a combination of both service hosts.</p>
-
-<p>​2. There is not a context binding for WebHttpBinding, only
-BasicHttpContextBinding, NetTcpContextBinding and WsHttpContextBinding
-are supported. We will have to use a custom binding.</p>
-
-<p>​3. A cookie must be used to transfer the context information between
-the client and the service, it would much better to have support for
-http headers here. According to this <a href="http://weblogs.asp.net/gsusx/archive/2008/06/27/combining-durable-messaging-and-workflow-services-building-a-custom-context-channel.aspx">post written by
-Jesus</a>,
-this should not be complex to do.</p>
-
-<p>&lt;system.serviceModel></p>
-
-<p>  &lt;serviceHostingEnvironment aspNetCompatibilityEnabled=&ldquo;true&rdquo; /></p>
-
-<p>  &lt;services></p>
-
-<p>    &lt;service name=&ldquo;RestWorkflows.OrderWorkflow&rdquo;></p>
-
-<p>     &lt;endpoint address=&ldquo;&rdquo; behaviorConfiguration=&ldquo;MyServiceBehavior&rdquo;
-binding=&ldquo;customBinding&rdquo; bindingConfiguration=&ldquo;myServiceBinding&rdquo;
-contract=&ldquo;RestWorkflows.IOrderService&rdquo; /></p>
-
-<p>  &lt;/service></p>
-
-<p>&lt;/services></p>
-
-<p>&lt;bindings></p>
-
-<p>&lt;customBinding></p>
-
-<p>  &lt;binding name=&ldquo;myServiceBinding&rdquo;></p>
-
-<p>  &lt;webMessageEncoding>&lt;/webMessageEncoding></p>
-
-<p>  &lt;context contextExchangeMechanism=&ldquo;HttpCookie&rdquo;
-protectionLevel=&ldquo;None&rdquo;/></p>
-
-<p>  &lt;httpTransport manualAddressing=&ldquo;true&rdquo;/></p>
-
-<p>  &lt;/binding></p>
-
-<p>&lt;/customBinding></p>
-
-<p>&lt;/bindings></p>
-
-<p>&lt;behaviors></p>
-
-<p>&lt;endpointBehaviors></p>
-
-<p>  &lt;behavior name=&ldquo;MyServiceBehavior&rdquo;></p>
-
-<p>    &lt;webHttp /></p>
-
-<p>  &lt;/behavior></p>
-
-<p>&lt;/endpointBehaviors></p>
-
-<p>&lt;/behaviors></p>
-
-<p>&lt;/system.serviceModel></p>
-
-<p>The code for the client application looks also quite simple, you only
-have to remember to include the cookie with the context between calls,
-otherwise WF will try to create a new instance of the workflow resulting
-in a bad request error.</p>
-
-<p>//Lets create a new order</p>
-
-<p>Order order = new Order { Drink = &ldquo;latte&rdquo; };</p>
-
-<p> </p>
-
-<p>HttpWebRequest createOrderRequest = CreateRequest(new
-Uri(&ldquo;<a href="http://localhost:8000/order">http://localhost:8000/order</a>&rdquo;), &ldquo;POST&rdquo;, null, order);</p>
-
-<p>string context =
-GetContext((HttpWebResponse)createOrderRequest.GetResponse());</p>
-
-<p>order = Execute&lt;Order>(createOrderRequest.GetResponse());</p>
-
-<p> </p>
-
-<p>Console.WriteLine(&ldquo;Order Cost {0}&rdquo;, order.Cost);</p>
-
-<p>foreach (Next next in order.Next)</p>
-
-<p>{</p>
-
-<p>  Console.WriteLine(&ldquo;Possible next step {0}&rdquo;, next.Uri);</p>
-
-<p>}</p>
-
-<p> </p>
-
-<p>//Lets update the existing order&hellip;.</p>
-
-<p>order.Drink = &ldquo;cappuchino&rdquo;;</p>
-
-<p> </p>
-
-<p>Uri updateOrderUri = new Uri(order.Next.Where(n => n.Rel ==
-&ldquo;<a href="http://starbucks.example/order/update">http://starbucks.example/order/update</a>&rdquo;).Single().Uri);</p>
-
-<p>HttpWebRequest updateOrderRequest = CreateRequest(updateOrderUri, &ldquo;PUT&rdquo;,
-context, order);</p>
-
-<p>Order updatedOrder = Execute&lt;Order>(updateOrderRequest.GetResponse());</p>
-
-<p> </p>
-
-<p>Console.WriteLine(&ldquo;Order Cost {0}&rdquo;, updatedOrder.Cost);</p>
-
-<p>foreach (Next next in updatedOrder.Next)</p>
-
-<p>{</p>
-
-<p>  Console.WriteLine(&ldquo;Possible next step {0}&rdquo;, next.Uri);</p>
-
-<p>}</p>
-
-<p> </p>
-
-<p>//Lets have our drink&hellip;</p>
-
-<p>Payment payment = new Payment { Name = &ldquo;John Doe&rdquo;, CardNumber =
-&ldquo;1234567&rdquo;, Expires = &ldquo;06/08&rdquo;, Amount =
-updatedOrder.Cost.GetValueOrDefault() };</p>
-
-<p> </p>
-
-<p>Uri payOrderUri = new Uri(order.Next.Where(n => n.Rel ==
-&ldquo;<a href="http://starbucks.example.org/payment">http://starbucks.example.org/payment</a>&rdquo;).Single().Uri);</p>
-
-<p>HttpWebRequest payOrderRequest = CreateRequest(payOrderUri, &ldquo;PUT&rdquo;,
-context, payment);</p>
-
-<p> </p>
-
-<p>int statusCode = Execute(payOrderRequest.GetResponse());</p>
-
-<p> </p>
-
-<p>if (statusCode == 201)</p>
-
-<p>  Console.WriteLine(&ldquo;Here is your drink!!!&rdquo;);</p>
-
-<p>else</p>
-
-<p>  Console.WriteLine(&ldquo;Sorry, there was some error while trying to process
-the payment&rdquo;);</p>
-
-<p>As you can see in the code above, I used some helper methods to execute
-the operations and retrieve the response/context information. These
-methods only represent a few lines of code,</p>
-
-<p>static HttpWebRequest CreateRequest(Uri address, string method, string
-context, object contract)</p>
-
-<p>{</p>
-
-<p>  HttpWebRequest webRequest =
-(HttpWebRequest)WebRequest.Create(address);</p>
-
-<p>  webRequest.ContentType = &ldquo;application/xml&rdquo;;</p>
-
-<p>  webRequest.Timeout = 30000;</p>
-
-<p>  webRequest.Method = method;</p>
-
-<p>  webRequest.CookieContainer = new CookieContainer();</p>
-
-<p> </p>
-
-<p>  if (context != null)</p>
-
-<p>  {</p>
-
-<p>    Cookie cookie = new Cookie(&ldquo;WscContext&rdquo;, context,
-address.PathAndQuery, address.Authority);</p>
-
-<p>    webRequest.CookieContainer.Add(cookie);</p>
-
-<p>  }</p>
-
-<p> </p>
-
-<p>  DataContractSerializer serializer = new
-DataContractSerializer(contract.GetType());</p>
-
-<p>  using (Stream stream = webRequest.GetRequestStream())</p>
-
-<p>  {</p>
-
-<p>    serializer.WriteObject(stream, contract);</p>
-
-<p>    stream.Flush();</p>
-
-<p>  }</p>
-
-<p> </p>
-
-<p>  return webRequest;</p>
-
-<p>}</p>
-
-<p> </p>
-
-<p>static string GetContext(HttpWebResponse response)</p>
-
-<p>{</p>
-
-<p>  if (response.Cookies[&ldquo;WscContext&rdquo;] != null)</p>
-
-<p>  {</p>
-
-<p>    return response.Cookies[&ldquo;WscContext&rdquo;].Value;</p>
-
-<p>  }</p>
-
-<p> </p>
-
-<p>  return null;</p>
-
-<p>}</p>
-
-<p> </p>
-
-<p>static T Execute&lt;T>(WebResponse response)</p>
-
-<p>{</p>
-
-<p>  DataContractSerializer serializer = new
-DataContractSerializer(typeof(T));</p>
-
-<p>  using (Stream stream = response.GetResponseStream())</p>
-
-<p>  {</p>
-
-<p>    return (T)serializer.ReadObject(stream);   </p>
-
-<p>  }</p>
-
-<p>}</p>
-
-<p>The complete solution is available to download from
-<a href="/images/legacy/RestWorkflows.zip">here</a>.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/18/">&larr; Older</a>
@@ -2266,6 +1915,10 @@ DataContractSerializer(typeof(T));</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/10/20/do-not-version-urls/">Do Not Version Urls</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
       </li>
     
@@ -2279,10 +1932,6 @@ DataContractSerializer(typeof(T));</p>
     
       <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
   </ul>

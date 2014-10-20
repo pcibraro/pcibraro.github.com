@@ -9,8 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="There are multiple factors or requirements that might lead you to
-refactor some functionality into services. Here are some examples, You have &hellip;">
+  <meta name="description" content="SOAP services are in nature transport agnostics so they can not rely on
+specific transport features. Http is a great example where SOAP services
+make &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -71,8 +72,6 @@ refactor some functionality into services. Here are some examples, You have &hel
 <ul class="main-navigation">
   <li><a href="/">Blog</a></li>
   <li><a href="/blog/archives">Archives</a></li>
-  <li><a href="/categories">Categories</a></li>
-  <li><a href="/about">About</a></li>
 </ul>
 
 </nav>
@@ -80,6 +79,87 @@ refactor some functionality into services. Here are some examples, You have &hel
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/05/18/caching-strategies-for-soap-and-rest-services/">Caching Strategies for SOAP and REST Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-05-18T00:00:00-03:00" pubdate data-updated="true">May 18<span>th</span>, 2011</time>
+        
+         | <a href="/blog/2011/05/18/caching-strategies-for-soap-and-rest-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>SOAP services are in nature transport agnostics so they can not rely on
+specific transport features. Http is a great example where SOAP services
+make a poor use of Http as application protocol. This means that many of
+the http constraints are simply ignored, http headers are not used at
+all, messages are not self descriptive (You can not easily infer what a
+message does by looking at the content), the uniform interface is not
+used either as everything goes as a POST to the server and the list
+keeps growing. This makes impossible to leverage the existing web
+architecture and use intermediaries for caching results.  </p>
+
+<p>As consequence of this, the only viable alternative is to provide
+caching as part of the service implementation. Caching at this level
+might be a good option for improving the service performance when some
+bottlenecks are detected and caused by IO operations with long delays
+(Calls to databases, legacy services, etc.) or CPU intensive code. In
+both scenarios, you might want to keep the results in memory as much as
+you can to reuse them in the service implementation. Here is where a
+distributed cache solution like AppFabric caching, NCache or MemCached
+makes a lot of sense. Local caches in memory such as Enterprise library
+might be another option but only if you are not running services in a
+farm scenario.</p>
+
+<p>Client applications might opt to cache responses from the services too,
+but there is not any explicit mechanism for negotiating the lifetime of
+the cached copies between clients and services, making necessary to use
+out of band information.</p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/Cache_663FEA5F.jpg"><img src="http://weblogs.asp.net/blogs/cibrax/Cache_thumb_6BAE5B03.jpg" title="Cache" alt="Cache" /></a> </p>
+
+<p>On the other hand, REST services can reuse all the available caching
+infrastructure in the web by leveraging Http as application protocol.
+Http already specifies headers for caching control and a process to
+revalidate cached copies that any intermediary can use (No need to use
+out of band information). Intermediaries in this contexts are usually
+represented by local caches like the one might find in a browser,
+proxies or reverse proxies. In described the implementation details
+<a href="http://weblogs.asp.net/cibrax/archive/2011/04/25/implementing-caching-in-your-wcf-web-apis.aspx">here</a>.</p>
+
+<p><a href="http://weblogs.asp.net/blogs/cibrax/Cache2_02F95F75.jpg"><img src="http://weblogs.asp.net/blogs/cibrax/Cache2_thumb_0867D019.jpg" title="Cache2" alt="Cache2" /></a></p>
+
+<p>REST services can still use a caching layer on the service
+implementation as it was discussed with SOAP services or use some output
+caching mechanism in the web server (ASP.NET Cache for example), but a
+good thing is that the web can be your friend in this matter too.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -2564,88 +2644,6 @@ eq &lsquo;4e12a0d0-f722-4082-b09d-47219f3c43bf&rsquo;</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2011/03/22/my-frustrations-with-mvvm-in-silverlight/">My Frustrations With MVVM in Silverlight</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-03-22T00:00:00-03:00" pubdate data-updated="true">Mar 22<span>nd</span>, 2011</time>
-        
-         | <a href="/blog/2011/03/22/my-frustrations-with-mvvm-in-silverlight/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>There is no doubt that the MVVM pattern offers a clean separation of
-concern for building testable user interfaces with WPF and Silverlight. 
-This pattern relies on the data binding support in those two
-technologies for mapping an existing model class (the view model) to the
-different parts of the UI or view.</p>
-
-<p>Someone would say, If you want to develop more testable and maintainable
-applications that can evolve in the long run, MVVM is definitely the way
-to go in Silverlight, but wait, is that a good decision to make when
-something that should take a couple of hours instead takes a day with
-MVVM ?.  </p>
-
-<p>In my case, I always want to do the things right, so MVVM was the
-approach I decided to use in some outgoing developments with
-Silverlight. In used MVVM in the past with WPF with no problems, so I
-thought it will be the same thing on Silverlight.</p>
-
-<p>After having worked around six months with the technology, I have to
-admit that I got frustrated with many of the limitations of I found for
-implementing MVVM with many of the existing controls. In the way I see
-it, many of them were definitely developed to support simple RAD
-scenarios with code behind, but not for scenarios with data templates
-and bindings.   </p>
-
-<p>I wrote a couple of posts in the past with some workarounds to support
-data binding in some of the existing controls
-(<a href="http://weblogs.asp.net/cibrax/archive/2011/01/27/workarounds-for-supporting-mvvm-in-the-silverlight-treeview-control.aspx">TreeView</a>
-and
-<a href="http://weblogs.asp.net/cibrax/archive/2011/01/31/workarounds-for-supporting-mvvm-in-the-silverlight-contextmenu-service.aspx">ContextMenu</a>),
-which definitely were not something trivial to find and required
-investing many hours of research and testing to understand how the
-things worked under the hood. To give an example of how simple things
-can become really hard to accomplish with MVVM, I recently came across
-this <a href="http://forums.silverlight.net/forums/p/18256/408031.aspx">thread</a>
-about implementing MVVM in the Tab Control while trying to do the same
-on my side. Using a converter for binding a model to the control was not
-the answer I expected to hear, and sounded like a dirty hack to me. The
-same thing can be achieved in WPF with data templates, which is a more
-natural way to do things with this model.</p>
-
-<p>The only thing I can say is that MVVM works well for simple scenarios
-and common controls like a dropdown list, but you will probably find a
-hard time trying to use this pattern in Silverlight unless you know
-exactly what the limitations are and the different workarounds you can
-use.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/8/">&larr; Older</a>
@@ -2663,6 +2661,10 @@ use.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/10/20/do-not-version-urls/">Do Not Version Urls</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
       </li>
     
@@ -2676,10 +2678,6 @@ use.</p>
     
       <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
   </ul>

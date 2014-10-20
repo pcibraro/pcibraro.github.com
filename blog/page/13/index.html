@@ -9,10 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="Como Jesus menciono en su post “We are still
-hiring..”,
-en Tellago estamos buscando gente que quieran unirse a nuestro equipo de
-desarrollo. En estos &hellip;">
+  <meta name="description" content="Do you want to see something very ugly ?. Try to send a complete EF
+entity directly as a data contract over the wire with WCF, &lt;Order
+xmlns:i=& &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -73,8 +72,6 @@ desarrollo. En estos &hellip;">
 <ul class="main-navigation">
   <li><a href="/">Blog</a></li>
   <li><a href="/blog/archives">Archives</a></li>
-  <li><a href="/categories">Categories</a></li>
-  <li><a href="/about">About</a></li>
 </ul>
 
 </nav>
@@ -82,6 +79,127 @@ desarrollo. En estos &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/06/25/a-bad-idea-ef-entities-over-wcf/">A Bad Idea, EF Entities Over WCF</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-06-25T00:00:00-03:00" pubdate data-updated="true">Jun 25<span>th</span>, 2009</time>
+        
+         | <a href="/blog/2009/06/25/a-bad-idea-ef-entities-over-wcf/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Do you want to see something very ugly ?. Try to send a complete EF
+entity directly as a data contract over the wire with WCF,</p>
+
+<p>&lt;Order
+xmlns:i=&ldquo;<a href="http://www.w3.org/2001/XMLSchema-instance">http://www.w3.org/2001/XMLSchema-instance</a>&rdquo;
+z:Id=&ldquo;i1&rdquo;
+xmlns:z=&ldquo;<a href="http://schemas.microsoft.com/2003/10/Serialization/">http://schemas.microsoft.com/2003/10/Serialization/</a>&rdquo;
+xmlns=&ldquo;<a href="http://schemas.datacontract.org/2004/07/ClassLibrary2">http://schemas.datacontract.org/2004/07/ClassLibrary2</a>&rdquo;>
+\
+  &lt;EntityKey
+xmlns:d2p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data">http://schemas.datacontract.org/2004/07/System.Data</a>&rdquo;
+i:nil=&ldquo;true&rdquo;
+xmlns=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses">http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses</a>&rdquo;
+/> \
+  &lt;Description>My new order&lt;/Description> \
+  &lt;OrderId>1&lt;/OrderId> \
+  &lt;OrderItem> \
+    &lt;OrderItem z:Id=&ldquo;i2&rdquo;> \
+      &lt;EntityKey
+xmlns:d4p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data">http://schemas.datacontract.org/2004/07/System.Data</a>&rdquo;
+i:nil=&ldquo;true&rdquo;
+xmlns=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses">http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses</a>&rdquo;
+/> \
+      &lt;Currency>USD&lt;/Currency> \
+      &lt;Description>item 1&lt;/Description> \
+      &lt;ItemId>1&lt;/ItemId> \
+      &lt;Order z:Ref=&ldquo;i1&rdquo; /> \
+      &lt;OrderReference
+xmlns:d4p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses">http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses</a>&rdquo;>
+\
+        &lt;d4p1:EntityKey
+xmlns:d5p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data">http://schemas.datacontract.org/2004/07/System.Data</a>&rdquo;
+i:nil=&ldquo;true&rdquo; /> \
+      &lt;/OrderReference> \
+      &lt;UnitPrice>10&lt;/UnitPrice> \
+    &lt;/OrderItem> \
+    &lt;OrderItem z:Id=&ldquo;i3&rdquo;> \
+      &lt;EntityKey
+xmlns:d4p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data">http://schemas.datacontract.org/2004/07/System.Data</a>&rdquo;
+i:nil=&ldquo;true&rdquo;
+xmlns=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses">http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses</a>&rdquo;
+/> \
+      &lt;Currency>USD&lt;/Currency> \
+      &lt;Description>item 2&lt;/Description> \
+      &lt;ItemId>2&lt;/ItemId> \
+      &lt;Order z:Ref=&ldquo;i1&rdquo; /> \
+      &lt;OrderReference
+xmlns:d4p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses">http://schemas.datacontract.org/2004/07/System.Data.Objects.DataClasses</a>&rdquo;>
+\
+        &lt;d4p1:EntityKey
+xmlns:d5p1=&ldquo;<a href="http://schemas.datacontract.org/2004/07/System.Data">http://schemas.datacontract.org/2004/07/System.Data</a>&rdquo;
+i:nil=&ldquo;true&rdquo; /> \
+      &lt;/OrderReference> \
+      &lt;UnitPrice>145&lt;/UnitPrice> \
+    &lt;/OrderItem> \
+  &lt;/OrderItem> \
+&lt;/Order></p>
+
+<p>That is the result of serializing a complete object graph. I do not know
+what the folks in Microsoft were thinking when they decided to enable a
+feature like this. They made a good work teaching us about how evil
+Datasets were for interoperability with other platforms, and now they
+came up with a solution like this, no way.</p>
+
+<p>I always like the idea of making boundaries explicit, that is the
+approach the WCF team took with the first version of the framework
+(Every data contract should be decorated with DataContract and
+DataMember attributes).  If you break that rule, you will end up with
+things like this.</p>
+
+<p>I know this a solution for people that want to develop things quickly
+with no need to create DTOs, and do all the mapping stuff, but there are
+good tools and frameworks like
+<a href="http://www.codeplex.com/AutoMapper">AutoMapper</a> to help with that. Or
+you can use ADO.NET Data Services today, which is also prepared to
+handle this kind of scenarios, all the transformations between layers
+are made by the framework itself, and still you get a very nice RESTful
+api. We still need some more features in ADO.NET DS to have a more
+complete framework, there is not good support today for injecting
+business logic, <a href="http://weblogs.asp.net/cibrax/archive/2009/06/08/injecting-custom-logic-in-ado-net-data-services.aspx">it can be
+done</a>
+but it is complicated, it looks like the <a href="http://johnpapa.net/silverlight/ado-net-data-services-v1-5-is-on-its-way/">next
+version</a>
+will address that aspect better.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1130,95 +1248,6 @@ consuming the service.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2009/04/08/sharing-the-security-context-between-asp-net-and-wcf-rest-services/">Sharing the Security Context Between ASP.NET and WCF REST Services</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2009-04-08T00:00:00-03:00" pubdate data-updated="true">Apr 8<span>th</span>, 2009</time>
-        
-         | <a href="/blog/2009/04/08/sharing-the-security-context-between-asp-net-and-wcf-rest-services/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>It is very common for WCF services that work as Ajax callbacks and
-ASP.NET pages that live in the same web application to share a common
-security context for the authenticated user. However, in order to make
-this happens, the <a href="http://blogs.msdn.com/wenlong/archive/2006/01/23/516041.aspx">ASP.NET compatibility
-mode</a> must
-be enabled for the WCF service. When that setting is enabled, WCF
-basically includes the service call within the ASP.NET pipeline, all the
-ASP.NET modules configured for the application are executed, and as
-result, the HttpContext get initialized for that service as it was a
-normal page. </p>
-
-<p>Optionally, an IAuthorizationPolicy can be used to inject the
-HttpContext.User into the WCF security context, and completely decouple
-in that way, the service implementation from the Http security context.</p>
-
-<p>For example, we can have a web application configured with Forms
-Authentication or the new FederationModule in geneva framework for
-authenticating users with passive federation, and share that security
-context with the services or ajax callbacks that the web pages consume.</p>
-
-<p>For this scenario, the WCF REST Starter kit already includes an
-IAuthorizationPolicy implementation for initialization the WCF security
-context with the authenticated user in the web application. That
-authorization policy is automatically injected in the service execution
-pipeline by the WebServiceHost2 host shipped also within the kit. If you
-are using that WCF host, you do not have to do anything extra other than
-enabling the ASP.NET compatibility mode for the services.</p>
-
-<p>Configuring the ASP.NET compatibility mode requires two steps.</p>
-
-<p>​1. Add a configuration settings in the configuration file,</p>
-
-<p>&lt;system.serviceModel></p>
-
-<p>&lt;serviceHostingEnvironment aspNetCompatibilityEnabled=&ldquo;true&rdquo; /></p>
-
-<p>&lt;/system.serviceModel></p>
-
-<p> 2. Add support for this mode in the service implementation. This is
-done through an special attribute “AspNetCompatibilityRequirements”
-added to the class definition</p>
-
-<p>[AspNetCompatibilityRequirements(RequirementsMode =
-AspNetCompatibilityRequirementsMode.Required)] </p>
-
-<p>[ServiceContract]</p>
-
-<p>public class ClaimsService</p>
-
-<p>Once you have done that, the user principal will become available to the
-service through the WCF security context or the Thread.CurrentPrincipal
-property.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/14/">&larr; Older</a>
@@ -1236,6 +1265,10 @@ property.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/10/20/do-not-version-urls/">Do Not Version Urls</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
       </li>
     
@@ -1249,10 +1282,6 @@ property.</p>
     
       <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
   </ul>

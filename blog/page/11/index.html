@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="The book in which I been working on since last year finally went to the
-light this week. It has been the result of hard work between me and
-three &hellip;">
+  <meta name="description" content="WCF Data Services provides an specific operator “\$value” for retrieving
+the underline value of any of the properties in exposed resources. Let’s
+say &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -72,8 +72,6 @@ three &hellip;">
 <ul class="main-navigation">
   <li><a href="/">Blog</a></li>
   <li><a href="/blog/archives">Archives</a></li>
-  <li><a href="/categories">Categories</a></li>
-  <li><a href="/about">About</a></li>
 </ul>
 
 </nav>
@@ -81,6 +79,83 @@ three &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/06/25/specifying-mime-types-for-content-in-wcf-data-services/">Specifying Mime Types for Content in WCF Data Services</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-06-25T00:00:00-03:00" pubdate data-updated="true">Jun 25<span>th</span>, 2010</time>
+        
+         | <a href="/blog/2010/06/25/specifying-mime-types-for-content-in-wcf-data-services/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>WCF Data Services provides an specific operator “\$value” for retrieving
+the underline value of any of the properties in exposed resources. Let’s
+say you have a resource “Configuration” that exposes a field “Xml” whose
+content should be treated as a mime type “text/xml”. When you execute a
+query like this to retrieve the value of that field,
+“myService.svc/Configurations(1)/Xml/\$value”, what you get is the
+content of that field but expressed as plain text (text/plain). This
+happens because the default behavior for WCF Data Services is to return
+most of the primitive types as “text/plain” and some others like byte
+arrays as “application/octet-stream”. So, how do you change that default
+behavior to retrieve property content with other mime types ?. Here is
+where the MimeTypeAttribute can be used to change that behavior.</p>
+
+<p>The MimeTypeAttribute can actually only be used with the
+ReflectionProvider, which is the default provider for exposing objects
+that are not EF entities. If you want to change the mime type for the EF
+Provider, you need to modify the underline CSDL model (This is the part
+that is not well documented, and I only found some incomplete references
+in some forums).</p>
+
+<p>For the reflection provider, the attribute must be specified at class
+level,</p>
+
+<p>[MimeType(&ldquo;Xml&rdquo;, &ldquo;text/xml&rdquo;)] \
+public class Configuration \
+{ \
+  public string Xml { get; set; } \
+}</p>
+
+<p>For the EF provider, a few additional changes are required in the CSDL
+model. Edit the CSDL by opening the EDM model in Xml view, and adding a
+reference to this namespace
+&ldquo;xmlns:m1=&rdquo;<a href="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">http://schemas.microsoft.com/ado/2007/08/dataservices/metadata</a>&ldquo;&rdquo;
+in the &lt;edmx:ConceptualModels> node  of the CSDL section in the EDMX
+file. Right after that, locate the entity that you want to modify and
+add the MimeType definition in the property.</p>
+
+<p>&lt;EntityType Name=&ldquo;Configuration&rdquo;> \
+          &lt;Property Name=&ldquo;Xml&rdquo; m1:MimeType=&ldquo;text/xml&rdquo; Type=&ldquo;String&rdquo;
+MaxLength=&ldquo;Max&rdquo; Unicode=&ldquo;true&rdquo; FixedLength=&ldquo;false&rdquo; /></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1838,146 +1913,6 @@ RsaSignatureCookieTransform(cookieProtectionCertificate) \
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2010/02/01/monitoring-your-wcf-services-with-appfabric/">Monitoring Your WCF Services With AppFabric</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2010-02-01T00:00:00-03:00" pubdate data-updated="true">Feb 1<span>st</span>, 2010</time>
-        
-         | <a href="/blog/2010/02/01/monitoring-your-wcf-services-with-appfabric/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Windows AppFabric (Previously known as Dublin) introduces a new built-in
-mechanism for monitoring the execution of the WCF services, all the
-events generated during the execution or the interaction with other
-services. While the message trace capabilities in WCF already provided
-some detail about the execution and the exchanged messages, it was a
-feature more suitable for troubleshooting and error diagnosis.   The
-performance counters did not help in this area either, as they provided
-live service usage statistics, which sometimes resulted very useful to
-determine possible bottlenecks.</p>
-
-<p>When this monitoring mechanism is enabled for IIS Hosted services, the
-AppFabric extension will capture different events during the execution
-of the services. The level of detail or number of events that you want
-to capture is something that can be adjusted through configuration.</p>
-
-<p>In order to configure monitoring for an existing WCF service, you need
-to add the following section to the web.config file,</p>
-
-<p>&lt;microsoft.applicationServer> \
-    &lt;monitoring> \
-      \
-      &lt;default enabled=&ldquo;true&rdquo;
-connectionStringName=&ldquo;DefaultApplicationServerExtensions&rdquo;
-monitoringLevel=&ldquo;Troubleshooting&rdquo; /> \
-    &lt;/monitoring> \
-&lt;/microsoft.applicationServer></p>
-
-<p>The connectionStringName attribute should contain a reference to an
-existing connection string in the ConnectionString section, and that’s
-the database used by AppFabric to store the monitoring events.</p>
-
-<p>The monitoringLevel attribute specifies the number of events you want to
-capture in a service execution. The possible values for this setting
-are,</p>
-
-<ul>
-<li>Off (monitoringLevel=&ldquo;Off”): No data is collected. It would be
-equivalent to have monitoring disabled.</li>
-<li>Errors only (monitoringLevel=&ldquo;ErrorsOnly”):  Only errors and
-warnings events are collected. This is very useful when you don’t
-want to incur into performance issues for collecting application
-events but you still want to know about any error may happen during
-the execution.</li>
-<li>Health Monitoring (monitoringLevel=HealthMonitoring): This is the
-default level and collects enough application events to show
-different metrics in the AppFabric dashboard.</li>
-<li>End To End Monitoring (monitoringLevel=&ldquo;EndToEndMonitoring”). It
-collects all the events from the Health Monitoring level, plus
-additional events to reconstruct the message flow. For example,
-Service A called Service B. You will get also events representing
-info about the Service B call if monitoring is enabled on Service A.</li>
-<li>Troubleshooting (monitoringLevel=&ldquo;Troubleshooting&rdquo;). This is the
-most verbose of all, so it is appropriate for troubleshooting an
-unhealthy application.</li>
-</ul>
-
-
-<p>All this monitoring infrastructure is layered on top of “Event Tracing
-for Windows (ETW)”, which provides a very efficient and optimized
-mechanism for capturing application events without affecting the
-application performance at all. In addition, this infrastructure is
-complemented with a windows service for collecting the events (A ETW
-listener basically), and providers for dumping all the information to
-different storages. This last part is totally extensible, and you can
-configure your own implementation by implementing the interface
-Microsoft.ApplicationServer.Monitoring.EventCollector.IBulkCopy in the
-Monitoring.ApplicationServer.Monitoring assembly. This interface looks
-quite simple to implement, and AppFabric ships with a default
-implementation for SQL Server.</p>
-
-<p>public interface IBulkCopy \
-{ \
-        int BatchSize { get; set; } \
-        DbConnection Connection { get; set; } \
-        string DestinationTableName { get; set; }</p>
-
-<p>        void WriteToServer(DataTable dataTable); \
-}</p>
-
-<p>The windows service for collecting the ETW events can be found under the
-folder,
-C:\Windows\System32\ApplicationServerExtensions\Microsoft.ApplicationServer.ServiceHost.exe,
-and it must be started in order to capture and dump the events in the
-configured IBulkCopy provider.</p>
-
-<p>In addition, if you want to correlate all the service calls within a
-single execution (For example, Service A calling Service B, and B
-calling C) under a unique global identifier, so you can group all the
-events under that identifier, there is a new &lt;endToEndTracing> element
-under the &lt;system.ServiceModel/diagnostics> section that you can use.</p>
-
-<p>&lt;system.ServiceModel> \
-  &lt;diagnostics etwProviderId=&ldquo;7d98f890-ff8d-4311-be4f-e679103ba7cf&rdquo;> \
-    &lt;endToEndTracing propagateActivity=&ldquo;true&rdquo; messageFlowTracing=&ldquo;true&rdquo;
-/> \
-  &lt;/diagnostics> \
-&lt;/system.ServiceModel></p>
-
-<p>For example, the following image shows two events that are correlated
-under the same E2EActivityId, which represents a service “HelloWorld”
-calling an operation in another “EchoService” service.</p>
-
-<p><a href="http://weblogs.asp.net/blogs/cibrax/EndToEndTracing_51E2E059.jpg"><img src="http://weblogs.asp.net/blogs/cibrax/EndToEndTracing_thumb_2D8DD60A.jpg" title="EndToEndTracing" alt="EndToEndTracing" /></a></p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/12/">&larr; Older</a>
@@ -1995,6 +1930,10 @@ calling an operation in another “EchoService” service.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/10/20/do-not-version-urls/">Do Not Version Urls</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
       </li>
     
@@ -2008,10 +1947,6 @@ calling an operation in another “EchoService” service.</p>
     
       <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
   </ul>

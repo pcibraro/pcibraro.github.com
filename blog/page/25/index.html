@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="Federation is key concept that allows to enable collaboration across
-multiple security or trust realms.\
-There are many resources on Internet about &hellip;">
+  <meta name="description" content="Last week, Sergio, a friend of mine asked me the following question
+about WCF &ldquo;Hey Pablo, do you know how WCF does to create a channel with
+a &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -72,8 +72,6 @@ There are many resources on Internet about &hellip;">
 <ul class="main-navigation">
   <li><a href="/">Blog</a></li>
   <li><a href="/blog/archives">Archives</a></li>
-  <li><a href="/categories">Categories</a></li>
-  <li><a href="/about">About</a></li>
 </ul>
 
 </nav>
@@ -81,6 +79,207 @@ There are many resources on Internet about &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2006/02/06/437501/">Proxy Factory</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2006-02-06T00:00:00-03:00" pubdate data-updated="true">Feb 6<span>th</span>, 2006</time>
+        
+         | <a href="/blog/2006/02/06/437501/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Last week, Sergio, a friend of mine asked me the following question
+about WCF &ldquo;Hey Pablo, do you know how WCF does to create a channel with
+a specific interface on the fly ?&rdquo;.</p>
+
+<p>He was talking about this piece of code:</p>
+
+<p>\</p>
+
+<p>ChannelFactory&lt;IMyService> factory = new
+ChannelFactory&lt;IMyService>();</p>
+
+<p>IMyService myService = factory.CreateChannel();</p>
+
+<p>\</p>
+
+<p>My answer at that moment was &ldquo;Nice question but I don&rsquo;t have idea, let
+me take a look&rdquo;.</p>
+
+<p>That trigger my curiosity so I decided to find out the way to do
+something similar. After all, that could be useful in some scenarios
+where a Service interface is required (A way to separate the service
+interface from the service implementation).</p>
+
+<p>After some investigation, I could reproduce something similar although I
+am not sure if this code is the same code as WCF.</p>
+
+<p>\</p>
+
+<p>As first step, I used some code provided by Cristofer Gonzales to build
+a template for a proxy. The code for that class looks as follows:</p>
+
+<p>\</p>
+
+<p>public class MyProxy&lt;T> : System.Runtime.Remoting.Proxies.RealProxy
+where T : class</p>
+
+<p>{</p>
+
+<p>  public MyProxy() : base(typeof(T))</p>
+
+<p>  {</p>
+
+<p>  }</p>
+
+<p>  public new T GetTransparentProxy()</p>
+
+<p>  {</p>
+
+<p>    return (T)base.GetTransparentProxy();</p>
+
+<p>  }</p>
+
+<p>  public override System.Runtime.Remoting.Messaging.IMessage
+Invoke(System.Runtime.Remoting.Messaging.IMessage imsg)</p>
+
+<p>  {  </p>
+
+<p>    Console.WriteLine(&ldquo;Invoking the transparent Proxy &hellip;&rdquo;);</p>
+
+<p>    ReturnMessage retmsg = null;</p>
+
+<p>   </p>
+
+<p>    int result = 0;</p>
+
+<p>    if (imsg is IMethodCallMessage)</p>
+
+<p>    {</p>
+
+<p>      IMethodCallMessage call = imsg as IMethodCallMessage;</p>
+
+<p>      Console.WriteLine(&ldquo;Calling to the method:&rdquo;);</p>
+
+<p>      Console.WriteLine(&ldquo;\Name: {0}&rdquo;, call.MethodName);</p>
+
+<p>    }</p>
+
+<p>    else if (imsg is IMethodReturnMessage)</p>
+
+<p>    {</p>
+
+<p>      Console.WriteLine(&ldquo;Returning &hellip;&rdquo;);</p>
+
+<p>      retmsg = new ReturnMessage(null, null, 0, null,
+(IMethodCallMessage)imsg);</p>
+
+<p>    </p>
+
+<p>      return retmsg;</p>
+
+<p>    }</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p>\</p>
+
+<p>This proxy class will contain the same methods as the class specified as
+T and will intercept all the calls to those methods (Using a Transparent
+proxy).</p>
+
+<p>\</p>
+
+<p>Secondly, I defined a factory for the proxies. This class pretend to be
+equivalent to the class FactoryChannel in WCF.</p>
+
+<p>\</p>
+
+<p>class Factory&lt;T></p>
+
+<p>{</p>
+
+<p>  public Factory()</p>
+
+<p>  {</p>
+
+<p>  }</p>
+
+<p>  public T Create()</p>
+
+<p>  {</p>
+
+<p>    MyProxy&lt;IMyService> proxy = new MyProxy&lt;IMyService>();</p>
+
+<p>    return (T)proxy.GetTransparentProxy();</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p>\</p>
+
+<p>Finally, I created some classes to test the factory and proxy classes.</p>
+
+<p>public interface IMyService</p>
+
+<p>{</p>
+
+<p>  void HelloWorld(string message);</p>
+
+<p>}</p>
+
+<p>class Program</p>
+
+<p>{</p>
+
+<p>  static void Main(string[] args)</p>
+
+<p>  {</p>
+
+<p>    Factory&lt;IMyService> factory = new Factory&lt;IMyService>();</p>
+
+<p>    IMyService service = factory.Create();</p>
+
+<p>    service.HelloWorld(&ldquo;Cibrax&rdquo;);</p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p>\</p>
+
+<p>This is really cool, isn&rsquo;t it ?.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1733,7 +1932,7 @@ The only way I found to bind an ADAM principal to Azman was through the
 user’s SID\</p>
 
 <p>//ADAM Provider was configured in the Web.Config file\
-MembershipUser user = Membership.GetUser(&ldquo;<a href="&#x6d;&#x61;&#105;&#x6c;&#x74;&#111;&#x3a;&#109;&#121;&#117;&#x73;&#x65;&#x72;&#x40;&#77;&#x79;&#68;&#111;&#x6d;&#x61;&#x69;&#110;&#x2e;&#99;&#111;&#x6d;">&#109;&#121;&#117;&#x73;&#101;&#114;&#64;&#77;&#121;&#x44;&#x6f;&#x6d;&#x61;&#105;&#110;&#46;&#x63;&#111;&#x6d;</a>&rdquo;);\
+MembershipUser user = Membership.GetUser(&ldquo;<a href="&#109;&#x61;&#x69;&#x6c;&#116;&#111;&#58;&#x6d;&#x79;&#x75;&#x73;&#101;&#x72;&#x40;&#77;&#121;&#x44;&#111;&#x6d;&#x61;&#105;&#x6e;&#x2e;&#99;&#111;&#x6d;">&#109;&#121;&#x75;&#x73;&#x65;&#x72;&#x40;&#x4d;&#x79;&#x44;&#111;&#x6d;&#97;&#x69;&#110;&#x2e;&#x63;&#111;&#x6d;</a>&rdquo;);\
 \
 AzAuthorizationStoreClass store = new AzAuthorizationStoreClass();\
 \
@@ -1940,78 +2139,6 @@ PublicKeyToken=31BF3856AD364E35&rdquo; \
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2005/08/01/421233/">SAML Preview for WSE 3.0</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2005-08-01T00:00:00-03:00" pubdate data-updated="true">Aug 1<span>st</span>, 2005</time>
-        
-         | <a href="/blog/2005/08/01/421233/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Nowadays, single sign-on is a common problem in many applications.
-Getting some credentials from a well-known authentication authority, \
-and use them later in different places is a good idea, but sometimes is
-difficult to implement. \
-Different vendors have implemented solutions to solve this problem, but
-they lack a main attribute, &ldquo;Interoperability&rdquo;. \
-SAML comes to solve this problem, providing a secure and interoperable
-protocol based on xml. \
-SAML is an acronym for &ldquo;Security Assertions Markup Language&rdquo;, a
-vendor-neutral framework for exchanging security-related information
-called &ldquo;assertions&rdquo;.\
-Its first specification set (1.0) was developed by the &ldquo;OASIS&rdquo;
-consortium. \
-The SAML specification doesn&rsquo;t define any mechanism for authentication
-or authorization, instead, it establishes how identity and access
-information is exchanged.\</p>
-
-<h3>Sample Scenario</h3>
-
-<p><img src="/images/legacy/SAML1.gif" alt="" /></p>
-
-<p>This image illustrates a client using a SAML token to consume a web
-service.\
-The client and the service don&rsquo;t know each other, but both trust in the
-same authority. \
-So the client can authenticate once against that authority and use the
-SAML assertion to consume the service.\</p>
-
-<h3>SAML implementation for WSE 3.0</h3>
-
-<p>An initial preview for this implementation is available in this <a href="http://practices.gotdotnet.com/projects/saml">GDN
-workspace</a>, and it is
-based on the new policy framework shipped in WSE 3.0.\
-We are open to hear your feedback on on what you think about this
-solution, so, don&rsquo;t miss this opportunity.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/26/">&larr; Older</a>
@@ -2029,6 +2156,10 @@ solution, so, don&rsquo;t miss this opportunity.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/10/20/do-not-version-urls/">Do Not Version Urls</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
       </li>
     
@@ -2042,10 +2173,6 @@ solution, so, don&rsquo;t miss this opportunity.</p>
     
       <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
   </ul>

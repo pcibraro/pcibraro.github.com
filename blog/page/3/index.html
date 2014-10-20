@@ -9,9 +9,8 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="If you are building a SaaS application in Windows Azure that relies on
-SQL Azure, it’s probably that you will need to support multiple tenants
-at &hellip;">
+  <meta name="description" content="For simple scenarios of Web API consumption where identity delegation is
+not required, traditional http authentication schemas such as basic, &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -72,8 +71,6 @@ at &hellip;">
 <ul class="main-navigation">
   <li><a href="/">Blog</a></li>
   <li><a href="/blog/archives">Archives</a></li>
-  <li><a href="/categories">Categories</a></li>
-  <li><a href="/about">About</a></li>
 </ul>
 
 </nav>
@@ -81,6 +78,99 @@ at &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/12/06/using-mac-authentication-for-simple-web-api-s-consumption/">Using MAC Authentication for Simple Web API’s Consumption</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-12-06T00:00:00-03:00" pubdate data-updated="true">Dec 6<span>th</span>, 2012</time>
+        
+         | <a href="/blog/2012/12/06/using-mac-authentication-for-simple-web-api-s-consumption/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>For simple scenarios of Web API consumption where identity delegation is
+not required, traditional http authentication schemas such as basic,
+certificates or digest are the most used nowadays. All these schemas
+rely on sending the caller credentials or some representation of it in
+every request message as part of the Authorization header, so they are
+prone to suffer phishing attacks if they are not correctly secured at
+transport level with https.</p>
+
+<p>In addition, most client applications typically authenticate two
+different things, the caller application and the user consuming the API
+on behalf of that application. For most cases, the schema is simplified
+by using a single set of username and password for authenticating both,
+making necessary to store those credentials temporally somewhere in
+memory.</p>
+
+<p>The true is that you can use two different identities, one for the user
+running the application, which you might authenticate just once during
+the first call when the application is initialized, and another identity
+for the application itself that you use on every call.</p>
+
+<p>Some cloud vendors like Windows Azure or Amazon Web Services have
+adopted an schema to authenticate the caller application based on a
+Message Authentication Code (MAC) generated with a symmetric algorithm
+using a key known by the two parties, the caller and the Web API.</p>
+
+<p>The caller must include a MAC as part of the Authorization header
+created from different pieces of information in the request message such
+as the address, the host, and some other headers. The Web API can
+authenticate the caller by using the key associated to it and validating
+the attached MAC in the request message. In that way, no credentials are
+sent as part of the request message, so there is no way an attacker to
+intercept the message and get access to those credentials.</p>
+
+<p>Anyways, this schema also suffers from some deficiencies that can
+generate attacks. For example, brute force can be still used to infer
+the key used for generating the MAC, and impersonate the original
+caller. This can be mitigated by renewing keys in a relative short
+period of time. This schema as any other can be complemented with
+transport security.</p>
+
+<p>Eran Rammer, one of the brains behind OAuth, has recently published an
+specification of a protocol based on MAC for Http authentication called
+Hawk. The initial version of the spec is available
+<a href="https://github.com/hueniverse">here</a>. A curious fact is that the
+specification per se does not exist, and the specification itself is the
+code that Eran initially wrote using node.js.</p>
+
+<p>In that implementation, you can associate a key to an user, so once the
+MAC has been verified on the Web API, the user can be inferred from that
+key. Also a timestamp is used to avoid replay attacks.</p>
+
+<p>As a pet project, I decided to port that code to .NET using ASP.NET Web
+API, which is available also in github under
+<a href="https://github.com/pcibraro/hawknet">https://github.com/pcibraro/hawknet</a></p>
+
+<p>Enjoy!.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1700,346 +1790,6 @@ want to use it.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2012/04/20/increasing-your-system-reliability-with-the-azure-service-bus-queues/">Increasing Your System Reliability With the Azure Service Bus Queues</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-04-20T00:00:00-03:00" pubdate data-updated="true">Apr 20<span>th</span>, 2012</time>
-        
-         | <a href="/blog/2012/04/20/increasing-your-system-reliability-with-the-azure-service-bus-queues/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>A common scenario for many web applications running in the cloud is to
-integrate with existing systems through web services (no matter the
-messaging style they use). Although in these scenarios, an SLA is
-typically used as an agreement between the two parties to assure certain
-level of availability, many things can still fail. Therefore, it is
-always a good idea to have a mechanism in place to handle any possible
-error condition and retry the execution when it is possible.</p>
-
-<p>As example, you could have a web application that calls an online CRM
-system (like Salesforce.com or MS Dynamics) for allowing the users to
-report incidents. In that scenario, we can not assume any possible call
-to the CRM system will always succeed. On the other hand, this kind of
-call does not require an immediate response for the user, so it can be
-scheduled for later execution and retried if something unexpected
-happens.</p>
-
-<p>A persistent storage for the messages like a queue is always a good
-choice for decoupling clients from services, and also accomplish the
-goal previously discussed. When you move to Windows Azure, there are two
-different queue offerings, Queues as part of the Storage service, and
-Queues (or Topics) as part of the Service Bus.</p>
-
-<p>The Service Bus SDK provides a programming model on top of WCF for
-consuming or sending messages to the queues, which makes this solution
-very appealing for this scenario. The Service Bus also provides Topics,
-which are an specific kind of queues that supports subscriptions.</p>
-
-<p>By using Service Bus Queues, the calls to any third party service could
-be eventually wrapped up in WCF services that are invoked by the web
-application. The following image illustrates the possible architecture,</p>
-
-<p><a href="http://weblogs.asp.net/blogs/cibrax/queues_131E8A64.jpg"><img src="http://weblogs.asp.net/blogs/cibrax/queues_thumb_6A33755A.jpg" title="queues" alt="queues" /></a></p>
-
-<p>One of the core classes in the WCF programming model for the Service Bus
-Queues is BrokeredMessage. This class represents a message that can be
-sent to/from an existing queue, and contains a lot of  standard
-properties such as MessageId, ReplyTo, SessionId or Label to name a few.
-It also contain a dictionary for custom properties that an application
-can assign to the message.</p>
-
-<p>In the example above, the MessageId property can be used to correlate
-the input and out messages in the queue and update the corresponding
-result in the web application. The WCF service can also use the ReplyTo
-property, which represents the queue name in which the response should
-go. Sessions is another concept supported in the Service Bus Queues,
-which are useful for correlating a set of messages as a batch for
-processing.   This is something optional and requires the queue to
-support sessions when they are created.</p>
-
-<p>In WCF, the BrokeredMessage is assigned to the service call with a
-message property BrokeredMessageProperty as it is illustrated bellow,</p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-var channelFactory = new ChannelFactory<ICRMServiceClient>(&#8220;crminput&rdquo;);
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-var clientChannel = channelFactory.CreateChannel();
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
- 
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-// Use the OperationContextScope to create a block within which to access the current OperationScope
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-using (var scope = new OperationContextScope((IContextChannel)clientChannel))
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-{
-</del></p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>// Create a new BrokeredMessageProperty object
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>var property = new BrokeredMessageProperty();
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
- 
-</del></p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>// Use the BrokeredMessageProperty object to set the BrokeredMessage properties
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>property.Label = "Incident";
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>property.MessageId = Guid.NewGuid().ToString();
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>property.ReplyTo = "sb://xxx.servicebus.windows.net/input";
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
- 
-</del></p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>// Add BrokeredMessageProperty to the OutgoingMessageProperties bag provided 
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>// by the current Operation Context 
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>OperationContext.Current.OutgoingMessageProperties.Add(BrokeredMessageProperty.Name, property);
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>//Do the service call here
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
- 
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
- 
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-}
-</del></p>
-
-<p>On the service side, the BrokeredMessageProperty instance can be
-retrieved in a similar way</p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-var incomingProperties = OperationContext.Current.IncomingMessageProperties;
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-var property = incomingProperties[BrokeredMessageProperty.Name] as BrokeredMessageProperty;
-</del></p>
-
-<p>Another important feature in the programming model for supporting
-execution retries in our example is the ReceiveContext. By decorating
-the WCF service contract with the ReceiveContextEnabled attribute, we
-can manually specify whether the operation was successfully completed or
-not. If the operation was not completed, the message will remain in the
-queue and the operation will be executed again next time.</p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-[ServiceContract()]
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-public interface ICRMService
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-{
-</del></p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>[OperationContract(IsOneWay=true)]
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}</p>
-
-<pre><code>[ReceiveContextEnabled(ManualControl = true)]
-</code></pre>
-
-<p>~~~~</p>
-
-<p>~~~~ {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}</p>
-
-<pre><code>void CreateCustomer(Customer customer);
-</code></pre>
-
-<p>~~~~</p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-}
-</del></p>
-
-<p> </p>
-
-<p>The following code shows how the operation implementation looks like,</p>
-
-<p> </p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-var incomingProperties = OperationContext.Current.IncomingMessageProperties;
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-var property = incomingProperties[BrokeredMessageProperty.Name] as BrokeredMessageProperty;
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
- 
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-//Complete the Message
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-ReceiveContext receiveContext;
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-if (ReceiveContext.TryGet(incomingProperties, out receiveContext))
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-{
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-   //Do Something              <br/>
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-   receiveContext.Complete(TimeSpan.FromSeconds(10.0d));
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-}
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-else
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-{
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: white;&ldquo;}
-   throw new InvalidOperationException(&rdquo;&hellip;&ldquo;);
-</del></p>
-
-<p><del> {style=&ldquo;margin: 0em; padding: 0px; width: 100%; text-align: left; color: black; line-height: 12pt; overflow: visible; font-family: &#8220;Courier New&rdquo;, courier, monospace; font-size: 8pt; direction: ltr; background-color: rgb(244, 244, 244);&ldquo;}
-}
-</del></p>
-
-<p>As you can see, the ReceiveContext instance is marked as complete or
-implicitly set as not complete when an exception is thrown.</p>
-
-<p>The assemblies for the Service Bus SDK are available as part of a Nuget
-package “Windows Azure Service Bus”. As part of the package
-registration, all the required configuration extensions for the WCF such
-as custom bindings and behaviors are also added in the application
-configuration file.</p>
-
-<p>NetMessagingBinding is the one you need to use for sending or receiving
-messages from a queue. That binding is constantly polling the queues for
-detecting new messages, and activating the WCF service when a new
-message arrives. For that reason, you need to keep the web application
-App pool running all the time. This can be accomplished in Windows Azure
-with a simple approach as this one mentioned by Christian Weyer in this
-<a href="http://weblogs.thinktecture.com/cweyer/2011/01/poor-mans-approach-to-application-pool-warm-up-for-iis-in-a-windows-azure-web-role.html">post</a>.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/4/">&larr; Older</a>
@@ -2057,6 +1807,10 @@ with a simple approach as this one mentioned by Christian Weyer in this
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/10/20/do-not-version-urls/">Do Not Version Urls</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
       </li>
     
@@ -2070,10 +1824,6 @@ with a simple approach as this one mentioned by Christian Weyer in this
     
       <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
   </ul>

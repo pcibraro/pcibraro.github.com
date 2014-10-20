@@ -9,9 +9,9 @@
   <meta name="author" content="Cibrax">
 
   
-  <meta name="description" content="According to the Http specification, any Http GET request should be
-idempotent and safe. In this context, these principles have the
-following meaning &hellip;">
+  <meta name="description" content="REST is not just about CRUD interfaces for your services, a complete
+long-running workflow can be modeled through the basic verbs as well. As
+my &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -72,8 +72,6 @@ following meaning &hellip;">
 <ul class="main-navigation">
   <li><a href="/">Blog</a></li>
   <li><a href="/blog/archives">Archives</a></li>
-  <li><a href="/categories">Categories</a></li>
-  <li><a href="/about">About</a></li>
 </ul>
 
 </nav>
@@ -81,6 +79,424 @@ following meaning &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2008/10/24/rest-and-workflow-services-play-well-together/">REST and Workflow Services Play Well Together</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2008-10-24T00:00:00-03:00" pubdate data-updated="true">Oct 24<span>th</span>, 2008</time>
+        
+         | <a href="/blog/2008/10/24/rest-and-workflow-services-play-well-together/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>REST is not just about CRUD interfaces for your services, a complete
+long-running workflow can be modeled through the basic verbs as well. As
+my friend <a href="http://weblogs.asp.net/gsusx/archive/2008/10/03/new-rest-quot-must-read-quot-papers.aspx">Jesus
+mentioned</a>,
+the article &ldquo;<a href="http://www.infoq.com/articles/webber-rest-workflow">How to get a cup of
+coffee</a>&rdquo; represents
+an excellent source about this topic.</p>
+
+<p>The example I will show here is based on that article, during the course
+of this post I will try to illustrate all the steps required to
+implement a workflow as the one mentioned there using WF services.
+Unfortunately, no examples exist (or at least I could not find any)
+about how to configure the WCF web model to use the new WF services, so
+I decided to create a new one from scratch.</p>
+
+<p>This example only illustrates the workflow from the customer point of
+view, he can place an order, pay it and wait for his drink. He can also
+modify the order in the middle before it is paid.</p>
+
+<p> <img src="/images/legacy/OrderWorkflow.jpg" alt="" /></p>
+
+<p>The interface for our REST service will looks like this:</p>
+
+<p>[ServiceContract]</p>
+
+<p>public interface IOrderService</p>
+
+<p>{</p>
+
+<p>  [OperationContract]</p>
+
+<p>  [WebInvoke(Method=&ldquo;POST&rdquo;, UriTemplate=&ldquo;order&rdquo;)]</p>
+
+<p>  Order PlaceOrder(Order order);</p>
+
+<p> </p>
+
+<p>  [OperationContract]</p>
+
+<p>  [WebInvoke(Method = &ldquo;PUT&rdquo;, UriTemplate = &ldquo;order/{id}&rdquo;)]</p>
+
+<p>  Order UpdateOrder(string id, Order order);</p>
+
+<p> </p>
+
+<p>  [OperationContract]</p>
+
+<p>  [WebInvoke(Method=&ldquo;PUT&rdquo;, UriTemplate=&ldquo;payment/order/{id}&rdquo;)]</p>
+
+<p>  void PayOrder(string id, Payment payment);</p>
+
+<p>}</p>
+
+<p>Only three operations available, each one maps exactly with one
+ReceiveActivity in the workflow. For instance, the receive activity
+OnOrderPlaced waits for a client call to the PlaceOrder operation and
+then moves the workflow to the next state, which is &ldquo;OrderPlaced&rdquo; in
+this case. While the workflow is in the state &ldquo;OrderPlaced&rdquo;, only the
+operations UpdateOrder and PayOrder can be executed by the client (If he
+try to execute PlaceOrder again, it will receive a 404 http error, &ldquo;Not
+found&rdquo;).</p>
+
+<p><img src="/images/legacy/OnOrderPlaced.jpg" alt="" /></p>
+
+<p>The OnOrderPlacedCode is an simple code activity that contains the
+actual operation implementation. I used a code activity for a sake of
+simplicity, a custom activity for creating the order could also be used
+there.</p>
+
+<p>The code for this activity is quite simple, most of it is hard-coded,</p>
+
+<p>private void OnOrderPlacedCode_ExecuteCode(object sender, EventArgs e)</p>
+
+<p>{</p>
+
+<p>  currentOrder = new Order();</p>
+
+<p>  currentOrder.OrderId = Guid.NewGuid().ToString();</p>
+
+<p>  currentOrder.Cost = (receivedOrder.Drink == &ldquo;latte&rdquo;) ? 6 : 10;</p>
+
+<p>  currentOrder.Drink = receivedOrder.Drink;</p>
+
+<p>  currentOrder.Next = new Next[] {</p>
+
+<p>      new Next</p>
+
+<p>      {</p>
+
+<p>         Rel = &ldquo;<a href="http://starbucks.example.org/payment">http://starbucks.example.org/payment</a>&rdquo;,</p>
+
+<p>         Uri = &ldquo;<a href="http://localhost:8000/payment/order/">http://localhost:8000/payment/order/</a>&rdquo; +
+currentOrder.OrderId.ToString(),</p>
+
+<p>      },</p>
+
+<p>      new Next</p>
+
+<p>      {</p>
+
+<p>         Rel = &ldquo;<a href="http://starbucks.example/order/update">http://starbucks.example/order/update</a>&rdquo;,</p>
+
+<p>         Uri = &ldquo;<a href="http://localhost:8000/order/">http://localhost:8000/order/</a>&rdquo; +
+currentOrder.OrderId.ToString()</p>
+
+<p>      }};</p>
+
+<p> </p>
+
+<p>  //Persist the order in some place&hellip;..</p>
+
+<p> </p>
+
+<p>  WebOperationContext.Current.OutgoingResponse.StatusCode =
+System.Net.HttpStatusCode.Created;</p>
+
+<p>}</p>
+
+<p>currentOrder contains the instance of the order that will be returned by
+the service operation whereas receivedOrder is the order sent by the
+client application. This was map to the operation signature in the
+receive activity,</p>
+
+<p> <img src="/images/legacy/ReceiveOrderSettings.jpg" alt="" /></p>
+
+<p>Once the workflow is ready to be used, all we need is to configure the
+service host so the client application can start consuming the
+operations. At this point, we will face three issues:</p>
+
+<p>​1. If you want to host a WF service, a WorkflowServiceHost class has to
+be used in the host program. Therefore, we will not have all the
+automatic infrastructure configuration provided by WebServiceHost, all
+the configuration must be done manually. It would be great to have here
+a combination of both service hosts.</p>
+
+<p>​2. There is not a context binding for WebHttpBinding, only
+BasicHttpContextBinding, NetTcpContextBinding and WsHttpContextBinding
+are supported. We will have to use a custom binding.</p>
+
+<p>​3. A cookie must be used to transfer the context information between
+the client and the service, it would much better to have support for
+http headers here. According to this <a href="http://weblogs.asp.net/gsusx/archive/2008/06/27/combining-durable-messaging-and-workflow-services-building-a-custom-context-channel.aspx">post written by
+Jesus</a>,
+this should not be complex to do.</p>
+
+<p>&lt;system.serviceModel></p>
+
+<p>  &lt;serviceHostingEnvironment aspNetCompatibilityEnabled=&ldquo;true&rdquo; /></p>
+
+<p>  &lt;services></p>
+
+<p>    &lt;service name=&ldquo;RestWorkflows.OrderWorkflow&rdquo;></p>
+
+<p>     &lt;endpoint address=&ldquo;&rdquo; behaviorConfiguration=&ldquo;MyServiceBehavior&rdquo;
+binding=&ldquo;customBinding&rdquo; bindingConfiguration=&ldquo;myServiceBinding&rdquo;
+contract=&ldquo;RestWorkflows.IOrderService&rdquo; /></p>
+
+<p>  &lt;/service></p>
+
+<p>&lt;/services></p>
+
+<p>&lt;bindings></p>
+
+<p>&lt;customBinding></p>
+
+<p>  &lt;binding name=&ldquo;myServiceBinding&rdquo;></p>
+
+<p>  &lt;webMessageEncoding>&lt;/webMessageEncoding></p>
+
+<p>  &lt;context contextExchangeMechanism=&ldquo;HttpCookie&rdquo;
+protectionLevel=&ldquo;None&rdquo;/></p>
+
+<p>  &lt;httpTransport manualAddressing=&ldquo;true&rdquo;/></p>
+
+<p>  &lt;/binding></p>
+
+<p>&lt;/customBinding></p>
+
+<p>&lt;/bindings></p>
+
+<p>&lt;behaviors></p>
+
+<p>&lt;endpointBehaviors></p>
+
+<p>  &lt;behavior name=&ldquo;MyServiceBehavior&rdquo;></p>
+
+<p>    &lt;webHttp /></p>
+
+<p>  &lt;/behavior></p>
+
+<p>&lt;/endpointBehaviors></p>
+
+<p>&lt;/behaviors></p>
+
+<p>&lt;/system.serviceModel></p>
+
+<p>The code for the client application looks also quite simple, you only
+have to remember to include the cookie with the context between calls,
+otherwise WF will try to create a new instance of the workflow resulting
+in a bad request error.</p>
+
+<p>//Lets create a new order</p>
+
+<p>Order order = new Order { Drink = &ldquo;latte&rdquo; };</p>
+
+<p> </p>
+
+<p>HttpWebRequest createOrderRequest = CreateRequest(new
+Uri(&ldquo;<a href="http://localhost:8000/order">http://localhost:8000/order</a>&rdquo;), &ldquo;POST&rdquo;, null, order);</p>
+
+<p>string context =
+GetContext((HttpWebResponse)createOrderRequest.GetResponse());</p>
+
+<p>order = Execute&lt;Order>(createOrderRequest.GetResponse());</p>
+
+<p> </p>
+
+<p>Console.WriteLine(&ldquo;Order Cost {0}&rdquo;, order.Cost);</p>
+
+<p>foreach (Next next in order.Next)</p>
+
+<p>{</p>
+
+<p>  Console.WriteLine(&ldquo;Possible next step {0}&rdquo;, next.Uri);</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>//Lets update the existing order&hellip;.</p>
+
+<p>order.Drink = &ldquo;cappuchino&rdquo;;</p>
+
+<p> </p>
+
+<p>Uri updateOrderUri = new Uri(order.Next.Where(n => n.Rel ==
+&ldquo;<a href="http://starbucks.example/order/update">http://starbucks.example/order/update</a>&rdquo;).Single().Uri);</p>
+
+<p>HttpWebRequest updateOrderRequest = CreateRequest(updateOrderUri, &ldquo;PUT&rdquo;,
+context, order);</p>
+
+<p>Order updatedOrder = Execute&lt;Order>(updateOrderRequest.GetResponse());</p>
+
+<p> </p>
+
+<p>Console.WriteLine(&ldquo;Order Cost {0}&rdquo;, updatedOrder.Cost);</p>
+
+<p>foreach (Next next in updatedOrder.Next)</p>
+
+<p>{</p>
+
+<p>  Console.WriteLine(&ldquo;Possible next step {0}&rdquo;, next.Uri);</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>//Lets have our drink&hellip;</p>
+
+<p>Payment payment = new Payment { Name = &ldquo;John Doe&rdquo;, CardNumber =
+&ldquo;1234567&rdquo;, Expires = &ldquo;06/08&rdquo;, Amount =
+updatedOrder.Cost.GetValueOrDefault() };</p>
+
+<p> </p>
+
+<p>Uri payOrderUri = new Uri(order.Next.Where(n => n.Rel ==
+&ldquo;<a href="http://starbucks.example.org/payment">http://starbucks.example.org/payment</a>&rdquo;).Single().Uri);</p>
+
+<p>HttpWebRequest payOrderRequest = CreateRequest(payOrderUri, &ldquo;PUT&rdquo;,
+context, payment);</p>
+
+<p> </p>
+
+<p>int statusCode = Execute(payOrderRequest.GetResponse());</p>
+
+<p> </p>
+
+<p>if (statusCode == 201)</p>
+
+<p>  Console.WriteLine(&ldquo;Here is your drink!!!&rdquo;);</p>
+
+<p>else</p>
+
+<p>  Console.WriteLine(&ldquo;Sorry, there was some error while trying to process
+the payment&rdquo;);</p>
+
+<p>As you can see in the code above, I used some helper methods to execute
+the operations and retrieve the response/context information. These
+methods only represent a few lines of code,</p>
+
+<p>static HttpWebRequest CreateRequest(Uri address, string method, string
+context, object contract)</p>
+
+<p>{</p>
+
+<p>  HttpWebRequest webRequest =
+(HttpWebRequest)WebRequest.Create(address);</p>
+
+<p>  webRequest.ContentType = &ldquo;application/xml&rdquo;;</p>
+
+<p>  webRequest.Timeout = 30000;</p>
+
+<p>  webRequest.Method = method;</p>
+
+<p>  webRequest.CookieContainer = new CookieContainer();</p>
+
+<p> </p>
+
+<p>  if (context != null)</p>
+
+<p>  {</p>
+
+<p>    Cookie cookie = new Cookie(&ldquo;WscContext&rdquo;, context,
+address.PathAndQuery, address.Authority);</p>
+
+<p>    webRequest.CookieContainer.Add(cookie);</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  DataContractSerializer serializer = new
+DataContractSerializer(contract.GetType());</p>
+
+<p>  using (Stream stream = webRequest.GetRequestStream())</p>
+
+<p>  {</p>
+
+<p>    serializer.WriteObject(stream, contract);</p>
+
+<p>    stream.Flush();</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  return webRequest;</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>static string GetContext(HttpWebResponse response)</p>
+
+<p>{</p>
+
+<p>  if (response.Cookies[&ldquo;WscContext&rdquo;] != null)</p>
+
+<p>  {</p>
+
+<p>    return response.Cookies[&ldquo;WscContext&rdquo;].Value;</p>
+
+<p>  }</p>
+
+<p> </p>
+
+<p>  return null;</p>
+
+<p>}</p>
+
+<p> </p>
+
+<p>static T Execute&lt;T>(WebResponse response)</p>
+
+<p>{</p>
+
+<p>  DataContractSerializer serializer = new
+DataContractSerializer(typeof(T));</p>
+
+<p>  using (Stream stream = response.GetResponseStream())</p>
+
+<p>  {</p>
+
+<p>    return (T)serializer.ReadObject(stream);   </p>
+
+<p>  }</p>
+
+<p>}</p>
+
+<p>The complete solution is available to download from
+<a href="/images/legacy/RestWorkflows.zip">here</a>.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1453,861 +1869,6 @@ TypeMock, anyone is free to use the tool that works best for his needs.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2008/05/16/unit-tests-for-wcf/">Unit Tests for WCF (and Moq)</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2008-05-16T00:00:00-03:00" pubdate data-updated="true">May 16<span>th</span>, 2008</time>
-        
-         | <a href="/blog/2008/05/16/unit-tests-for-wcf/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>As you may know, testing WCF services is not as simple as referencing a
-service implementation and start writing unit tests against it. If the
-service we want to test has a high dependency with the operation
-context, which is an static class, testing that service can be a very
-complicated task.</p>
-
-<p>Many times that dependency can be removed thanks to the help of some WCF
-extensibility points like behaviors, authorization managers or
-authorization policies to name a few. For instance, if an operation
-implementation in our service is looking for specific security claims to
-check user permissions, that code could be moved to an authorization
-manager to make the resulting code easier to test.</p>
-
-<p>However, there are some cases where the dependency with the context or
-other objects can not be completely removed (Or it is not solution), and
-therefore the Dependency Injection pattern comes to help us. I have
-already discussed how to use <a href="http://weblogs.asp.net/cibrax/archive/2007/12/13/wcf-dependency-injection-behavior.aspx">DI in
-WCF</a>
-before, and <a href="http://javicrespotech.blogspot.com/2008/05/dependency-injection-in-wcf-services.html">other
-people</a>
-have also done the same.</p>
-
-<p>Ok, let&rsquo;s say that we are in that scenario and we want to use DI to
-remove all the dependencies of our service with the WCF operation
-context. How can we do that ?. The WCF context is neither a base class
-nor an interface, we can not mock it at all at first glance.
-Fortunately, there is a easy workaround to solve this problem, it
-consists of creating a public interface with all the properties and
-methods that we want to use (and mock) from the WCF context.</p>
-
-<p>public interface IOperationContext</p>
-
-<p>{</p>
-
-<p>     event EventHandler OperationCompleted;</p>
-
-<p> </p>
-
-<p>     // Methods</p>
-
-<p>     T GetCallbackChannel&lt;T>();</p>
-
-<p>     void SetTransactionComplete();</p>
-
-<p> </p>
-
-<p>     // Properties</p>
-
-<p>     IContextChannel Channel { get; }</p>
-
-<p>     IExtensionCollection&lt;OperationContext> Extensions { get; }</p>
-
-<p>     bool HasSupportingTokens { get; }</p>
-
-<p>     ServiceHostBase Host { get; }</p>
-
-<p>     MessageHeaders IncomingMessageHeaders { get; }</p>
-
-<p>     MessageProperties IncomingMessageProperties { get; }</p>
-
-<p>     MessageVersion IncomingMessageVersion { get; }</p>
-
-<p>     InstanceContext InstanceContext { get; }</p>
-
-<p>     bool IsUserContext { get; }</p>
-
-<p>     MessageHeaders OutgoingMessageHeaders { get; }</p>
-
-<p>     MessageProperties OutgoingMessageProperties { get; }</p>
-
-<p>     RequestContext RequestContext { get; set; }</p>
-
-<p>     IServiceSecurityContext ServiceSecurityContext { get; }</p>
-
-<p>     string SessionId { get; }</p>
-
-<p>     ICollection&lt;SupportingTokenSpecification> SupportingTokens { get;
-}</p>
-
-<p>}</p>
-
-<p>Same thing can be done for the ServiceSecurityContext and
-WebOperationContext.</p>
-
-<p>public interface IServiceSecurityContext</p>
-
-<p>{</p>
-
-<p>    AuthorizationContext AuthorizationContext { get; }</p>
-
-<p>    ReadOnlyCollection&lt;IAuthorizationPolicy> AuthorizationPolicies {
-get; }</p>
-
-<p>    bool IsAnonymous { get; }</p>
-
-<p>    IIdentity PrimaryIdentity { get; }</p>
-
-<p>    WindowsIdentity WindowsIdentity { get; }</p>
-
-<p>}</p>
-
-<p> </p>
-
-<p>public interface IWebOperationContext</p>
-
-<p>{</p>
-
-<p>  IIncomingWebRequestContext IncomingRequest { get; }</p>
-
-<p>  IOutgoingWebResponseContext OutgoingResponse { get; }</p>
-
-<p>}</p>
-
-<p> </p>
-
-<p>Secondly, we need a default implementation to wrap the existing WCF
-context functionality, this wrapper will only delegates method calls to
-the original context.</p>
-
-<p>public class OperationContextWrapper : IOperationContext</p>
-
-<p>  {</p>
-
-<p>    OperationContext context;</p>
-
-<p> </p>
-
-<p>    public OperationContextWrapper(OperationContext context)</p>
-
-<p>    {</p>
-
-<p>      this.context = context;</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    #region IOperationContext Members</p>
-
-<p> </p>
-
-<p>    public event EventHandler OperationCompleted;</p>
-
-<p> </p>
-
-<p>    public T GetCallbackChannel&lt;T>()</p>
-
-<p>    {</p>
-
-<p>      return context.GetCallbackChannel&lt;T>();</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public void SetTransactionComplete()</p>
-
-<p>    {</p>
-
-<p>      context.SetTransactionComplete();</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public IContextChannel Channel</p>
-
-<p>    {</p>
-
-<p>      get { return context.Channel; }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public IExtensionCollection&lt;OperationContext> Extensions</p>
-
-<p>    {</p>
-
-<p>      get { return context.Extensions; }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public bool HasSupportingTokens</p>
-
-<p>    {</p>
-
-<p>      get { return context.HasSupportingTokens; }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public ServiceHostBase Host</p>
-
-<p>    {</p>
-
-<p>      get { return context.Host; }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public System.ServiceModel.Channels.MessageHeaders
-IncomingMessageHeaders</p>
-
-<p>    {</p>
-
-<p>      get { return context.IncomingMessageHeaders; }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public System.ServiceModel.Channels.MessageProperties
-IncomingMessageProperties</p>
-
-<p>    {</p>
-
-<p>      get { return context.IncomingMessageProperties; }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public System.ServiceModel.Channels.MessageVersion
-IncomingMessageVersion</p>
-
-<p>    {</p>
-
-<p>      get { return context.IncomingMessageVersion; }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public InstanceContext InstanceContext</p>
-
-<p>    {</p>
-
-<p>      get { return context.InstanceContext; }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public bool IsUserContext</p>
-
-<p>    {</p>
-
-<p>      get { return context.IsUserContext; }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public System.ServiceModel.Channels.MessageHeaders
-OutgoingMessageHeaders</p>
-
-<p>    {</p>
-
-<p>      get { return context.OutgoingMessageHeaders; }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public System.ServiceModel.Channels.MessageProperties
-OutgoingMessageProperties</p>
-
-<p>    {</p>
-
-<p>      get { return context.OutgoingMessageProperties; }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public System.ServiceModel.Channels.RequestContext RequestContext</p>
-
-<p>    {</p>
-
-<p>      get</p>
-
-<p>      {</p>
-
-<p>        return context.RequestContext;</p>
-
-<p>      }</p>
-
-<p>      set</p>
-
-<p>      {</p>
-
-<p>        context.RequestContext = value;</p>
-
-<p>      }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public IServiceSecurityContext ServiceSecurityContext</p>
-
-<p>    {</p>
-
-<p>      get { return new
-ServiceSecurityContextWrapper(context.ServiceSecurityContext); }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public string SessionId</p>
-
-<p>    {</p>
-
-<p>      get { return context.SessionId; }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public
-ICollection&lt;System.ServiceModel.Security.SupportingTokenSpecification>
-SupportingTokens</p>
-
-<p>    {</p>
-
-<p>      get { return context.SupportingTokens; }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    #endregion</p>
-
-<p>  }</p>
-
-<p> </p>
-
-<p>public class ServiceSecurityContextWrapper : IServiceSecurityContext</p>
-
-<p>  {</p>
-
-<p>    ServiceSecurityContext context;</p>
-
-<p> </p>
-
-<p>    public ServiceSecurityContextWrapper(ServiceSecurityContext context)</p>
-
-<p>    {</p>
-
-<p>      this.context = context;</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    #region IServiceSecurityContext Members</p>
-
-<p> </p>
-
-<p>    public System.IdentityModel.Policy.AuthorizationContext
-AuthorizationContext</p>
-
-<p>    {</p>
-
-<p>      get</p>
-
-<p>      {</p>
-
-<p>        return this.context.AuthorizationContext;</p>
-
-<p>      }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public ReadOnlyCollection&lt;IAuthorizationPolicy>
-AuthorizationPolicies</p>
-
-<p>    {</p>
-
-<p>      get</p>
-
-<p>      {</p>
-
-<p>        return this.context.AuthorizationPolicies;</p>
-
-<p>      }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public bool IsAnonymous</p>
-
-<p>    {</p>
-
-<p>      get</p>
-
-<p>      {</p>
-
-<p>        return this.context.IsAnonymous;</p>
-
-<p>      }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public System.Security.Principal.IIdentity PrimaryIdentity</p>
-
-<p>    {</p>
-
-<p>      get</p>
-
-<p>      {</p>
-
-<p>        return this.context.PrimaryIdentity;</p>
-
-<p>      }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public System.Security.Principal.WindowsIdentity WindowsIdentity</p>
-
-<p>    {</p>
-
-<p>      get</p>
-
-<p>      {</p>
-
-<p>        return this.context.WindowsIdentity;</p>
-
-<p>      }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    #endregion</p>
-
-<p>  }</p>
-
-<p> </p>
-
-<p>public class WebOperationContextWrapper : IWebOperationContext</p>
-
-<p>  {</p>
-
-<p>    private WebOperationContext context;</p>
-
-<p> </p>
-
-<p>    public WebOperationContextWrapper(WebOperationContext context)</p>
-
-<p>    {</p>
-
-<p>      this.context = context;</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    #region IWebOperationContext Members</p>
-
-<p> </p>
-
-<p>    public IIncomingWebRequestContext IncomingRequest</p>
-
-<p>    {</p>
-
-<p>      get { return new
-IncomingWebRequestContextWrapper(context.IncomingRequest); }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public IOutgoingWebResponseContext OutgoingResponse</p>
-
-<p>    {</p>
-
-<p>      get { return new
-OutgoingWebResponseContextWrapper(context.OutgoingResponse); }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    #endregion</p>
-
-<p>  }</p>
-
-<p>Thirdly, the context must be injected as a dependency into the service.
-This can be done through a constructor or a property setter, (This is
-what our Unit test is going to use). If you do not want to deal with a
-DI framework at all because it can complicates the service
-implementation somehow, the service can have a default constructor to
-set up the default context implementation (the wrapper). This is the
-constructor that WCF will call by default when the service is created.
-In the example bellow, I will show how to do that for a simple REST
-service that uses the WCF WebOperationContext.</p>
-
-<p>[ServiceContract]</p>
-
-<p>public interface ICustomerService</p>
-
-<p>{</p>
-
-<p>    [OperationContract]</p>
-
-<p>    [WebGet(UriTemplate = &ldquo;/customers/{id}&rdquo;)]</p>
-
-<p>    Customer FindCustomer(string id);</p>
-
-<p>}</p>
-
-<p> </p>
-
-<p>public class CustomerService : ICustomerService</p>
-
-<p>{</p>
-
-<p>  IWebOperationContext context;</p>
-
-<p> </p>
-
-<p>  public CustomerService()</p>
-
-<p>  {</p>
-
-<p>    context = new
-WebOperationContextWrapper(WebOperationContext.Current);</p>
-
-<p>  }</p>
-
-<p> </p>
-
-<p>  public CustomerService(IWebOperationContext context)</p>
-
-<p>  {</p>
-
-<p>    this.context = context;</p>
-
-<p>  }</p>
-
-<p>Now that we have all the infrastructure in place, we only need a good
-mocking framework that helps us to create the mock objects for our
-tests. In this part, I should recommend
-<a href="http://code.google.com/p/moq/">Moq</a> as the framework to use :). My
-friend <a href="http://weblogs.asp.net/cazzu">Daniel Cazzulino</a> has made an
-excellent work developing this framework.</p>
-
-<p>The pattern for using Moq or other similar framework in a unit test is
-the following:</p>
-
-<p>​1. You create a mock object from an existing interface or base class.
-(The framework provides a way to do this).</p>
-
-<p>​2. You set the expectations for that mock object. This is what you want
-to be called, returned, set, etc.</p>
-
-<p>​3. You pass the mock object to the object under testing.</p>
-
-<p>​4. You call some methods on the object under testing, and afterwards,
-you verify that all the expectations were met.</p>
-
-<p>An interesting thing that we can do with Moq is to mock the complete
-object graph of the WebOperationContext so we can reuse across all our
-tests.</p>
-
-<p>public class MockWebContext : Mock&lt;IWebOperationContext></p>
-
-<p>{</p>
-
-<p>    Mock&lt;IIncomingWebRequestContext> requestContextMock = new
-Mock&lt;IIncomingWebRequestContext>();</p>
-
-<p>    Mock&lt;IOutgoingWebResponseContext> responseContextMock = new
-Mock&lt;IOutgoingWebResponseContext>();</p>
-
-<p> </p>
-
-<p>    public MockWebContext()</p>
-
-<p>      : base()</p>
-
-<p>    {</p>
-
-<p>      this.ExpectGet(webContext =>
-webContext.OutgoingResponse).Returns(responseContextMock.Object);</p>
-
-<p>      this.ExpectGet(webContext =>
-webContext.IncomingRequest).Returns(requestContextMock.Object);</p>
-
-<p> </p>
-
-<p>      WebHeaderCollection requestHeaders = new WebHeaderCollection();</p>
-
-<p>      WebHeaderCollection responseHeaders = new WebHeaderCollection();</p>
-
-<p>      UriTemplateMatch uriTemplateMatch = new UriTemplateMatch();</p>
-
-<p> </p>
-
-<p>      requestContextMock.ExpectGet(requestContext =>
-requestContext.Headers).Returns(requestHeaders);</p>
-
-<p>      requestContextMock.ExpectGet(requestContext =>
-requestContext.UriTemplateMatch).Returns(uriTemplateMatch);</p>
-
-<p>      responseContextMock.ExpectGet(responseContext =>
-responseContext.Headers).Returns(responseHeaders);</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public Mock&lt;IIncomingWebRequestContext> IncomingRequest</p>
-
-<p>    {</p>
-
-<p>      get { return requestContextMock; }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public Mock&lt;IOutgoingWebResponseContext> OutgoingResponse</p>
-
-<p>    {</p>
-
-<p>      get { return responseContextMock; }</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public override void Verify()</p>
-
-<p>    {</p>
-
-<p>      base.Verify();</p>
-
-<p>      requestContextMock.Verify();</p>
-
-<p>      responseContextMock.Verify();</p>
-
-<p>    }</p>
-
-<p> </p>
-
-<p>    public override void VerifyAll()</p>
-
-<p>    {</p>
-
-<p>      base.VerifyAll();</p>
-
-<p>      requestContextMock.VerifyAll();</p>
-
-<p>      responseContextMock.VerifyAll();</p>
-
-<p>    }</p>
-
-<p>}</p>
-
-<p>As you can see in that code, I basically created a mock for the
-IWebOperationContext that also returns mock objects for the inner
-properties like the IncomingRequest or OutgoingResponse. All the
-expectations like default collections or contexts were set in the
-constructor. We will use this mock later in the unit tests for the REST
-service.</p>
-
-<p>Our REST service implementation is quite simple, it only looks for a
-customer with an specific identifier.</p>
-
-<p>public Customer FindCustomer(string id)</p>
-
-<p>{</p>
-
-<p>   if (context.IncomingRequest.ContentType != &ldquo;application/xml&rdquo;)</p>
-
-<p>   {</p>
-
-<p>      context.OutgoingResponse.StatusCode =
-System.Net.HttpStatusCode.BadRequest;</p>
-
-<p>      context.OutgoingResponse.SuppressEntityBody = true;</p>
-
-<p>      return null;</p>
-
-<p>   }</p>
-
-<p> </p>
-
-<p>   if (id == &ldquo;1&rdquo;)</p>
-
-<p>      return new Customer { FirstName = &ldquo;John&rdquo;, LastName = &ldquo;Doe&rdquo;,
-Address = &ldquo;Address&rdquo; };</p>
-
-<p> </p>
-
-<p>   context.OutgoingResponse.StatusCode =
-System.Net.HttpStatusCode.NotFound;</p>
-
-<p>   context.OutgoingResponse.SuppressEntityBody = true;</p>
-
-<p> </p>
-
-<p>   return null;</p>
-
-<p>}</p>
-
-<p> </p>
-
-<p>The service is expecting a &ldquo;ContentType&rdquo; http header equal to
-&ldquo;application/xml&rdquo;, and returning a &ldquo;Not Found&rdquo; status code if the
-customer does not exists.</p>
-
-<p>We can now write some unit tests to verify that our service is working
-as we initially expected. The first one will verify that a valid
-&ldquo;Customer&rdquo; instance is returned by the service is the &ldquo;ContentType&rdquo;
-header is set correctly, and the right customer id is passed as argument
-to the FindCustomer operation.</p>
-
-<p>[Test]</p>
-
-<p>public void ShouldReturnCustomer()</p>
-
-<p>{</p>
-
-<p>  MockWebContext mock = new MockWebContext();</p>
-
-<p>  mock.IncomingRequest.ExpectGet(incomingRequest =>
-incomingRequest.ContentType).Returns(&ldquo;application/xml&rdquo;);</p>
-
-<p> </p>
-
-<p>  CustomerService service = new CustomerService(mock.Object);</p>
-
-<p>  Customer customer = service.FindCustomer(&ldquo;1&rdquo;);</p>
-
-<p> </p>
-
-<p>  Assert.IsNotNull(customer);</p>
-
-<p>}</p>
-
-<p>The most important parts of the test above are:</p>
-
-<p>​1. If the service ask for the content type, it should get
-&ldquo;application/xml&rdquo;.</p>
-
-<p>mock.IncomingRequest.ExpectGet(incomingRequest =>
-incomingRequest.ContentType).Returns(&ldquo;application/xml&rdquo;);</p>
-
-<p>​2. The mock object is passed as argument to the service implementation.</p>
-
-<p>CustomerService service = new CustomerService(mock.Object);</p>
-
-<p> </p>
-
-<p>We can create a second test to verify that the status code is set to
-&ldquo;NotFound&rdquo; when an invalid customer id is passed as argument to the
-FindCustomer operation.</p>
-
-<p>[Test]</p>
-
-<p>public void ShouldSetStatusCodeIfCustomerNotFound()</p>
-
-<p>{</p>
-
-<p>   MockWebContext mock = new MockWebContext();</p>
-
-<p>   mock.IncomingRequest.ExpectGet(incomingRequest =>
-incomingRequest.ContentType).Returns(&ldquo;application/xml&rdquo;);</p>
-
-<p>   mock.OutgoingResponse.ExpectSet(outgoingResponse =>
-outgoingResponse.StatusCode).Callback(sc =>
-Assert.AreEqual(HttpStatusCode.NotFound, sc));</p>
-
-<p> </p>
-
-<p>   CustomerService service = new CustomerService(mock.Object);</p>
-
-<p>   Customer customer = service.FindCustomer(&ldquo;5&rdquo;);</p>
-
-<p>}</p>
-
-<p>\
-We are setting an expectation that the StatusCode should be &ldquo;NotFound&rdquo;
-when the customer id is not equal to &ldquo;1&rdquo;. (This is done in Moq by means
-of a Callback).</p>
-
-<p>mock.OutgoingResponse.ExpectSet(outgoingResponse =>
-outgoingResponse.StatusCode).Callback(sc =>
-Assert.AreEqual(HttpStatusCode.NotFound, sc));</p>
-
-<p>Moq really simplifies everything, including the testing of services that
-depends on the WCF operation context :).</p>
-
-<p>Another approach to test WCF services, as
-<a href="http://blogs.msdn.com/ploeh">Ploeh</a> mentioned in this
-<a href="http://blogs.msdn.com/ploeh/archive/2006/12/04/IntegrationTestingWcfServices.aspx">post</a>,
-is what he call integration testing. If you do integration testing, you
-are basically executing the service as a black box (the unit test in
-this case plays the role of the client application) using all the
-channel infrastructure provided by WCF. As you can notice, this approach
-will require a lot of plumbing code and configuration to host the
-service and set up the channels elements (Bindings and Behaviors).</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/19/">&larr; Older</a>
@@ -2325,6 +1886,10 @@ service and set up the channels elements (Bindings and Behaviors).</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/10/20/do-not-version-urls/">Do Not Version Urls</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/07/23/selfhost-utilities/">SelfHost Utilities</a>
       </li>
     
@@ -2338,10 +1903,6 @@ service and set up the channels elements (Bindings and Behaviors).</p>
     
       <li class="post">
         <a href="/blog/2014/01/13/coordinating-async-work-in-node-dot-js/">Coordinating Async Work in Node.js</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/12/27/oauth-bridge-for-adfs-with-thinkteckture-authorization-server/">OAuth Bridge for ADFS With ThinkTecture Authorization Server</a>
       </li>
     
   </ul>
